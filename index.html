@@ -25,26 +25,75 @@
         canvas {
             border: 1px solid #333;
             box-shadow: 0 0 60px rgba(255, 30, 0, 0.5);
+            max-width: 100vw;
+            max-height: 100vh;
+            width: auto;
+            height: auto;
+        }
+        
+        @media (max-width: 768px) {
+            canvas {
+                width: 100vw !important;
+                height: 100vh !important;
+                border: none;
+            }
+        }
+        
+        #fullscreenBtn {
+            position: fixed;
+            top: 10px;
+            right: 10px;
+            z-index: 10000;
+            background: rgba(0, 0, 0, 0.7);
+            color: #fff;
+            border: 2px solid #fff;
+            padding: 10px 15px;
+            border-radius: 5px;
+            font-family: 'Courier New', monospace;
+            font-size: 12px;
+            cursor: pointer;
+            display: none;
+        }
+        
+        #fullscreenBtn:hover {
+            background: rgba(255, 255, 255, 0.2);
+        }
+        
+        @media (max-width: 768px) {
+            #fullscreenBtn {
+                display: block;
+            }
         }
     </style>
     <script src="https://cdn.jsdelivr.net/npm/phaser@3.60.0/dist/phaser.min.js"></script>
 </head>
 <body>
+<button id="fullscreenBtn" onclick="toggleFullscreen()">⛶ Pantalla Completa</button>
 
 <script>
-// Función global para solicitar pantalla completa en móviles
+// Función global mejorada para pantalla completa
 (function() {
     const isMobile = /Android|webOS|iPhone|iPad|iPod|BlackBerry|IEMobile|Opera Mini/i.test(navigator.userAgent);
-    let fullscreenRequested = false;
     
-    function requestFullscreen() {
-        if (fullscreenRequested || !isMobile) return;
-        
-        const element = document.documentElement;
+    function getFullscreenElement() {
+        return document.fullscreenElement || 
+               document.webkitFullscreenElement || 
+               document.mozFullScreenElement || 
+               document.msFullscreenElement;
+    }
+    
+    function isFullscreen() {
+        return !!getFullscreenElement();
+    }
+    
+    function requestFullscreen(element) {
+        if (!element) element = document.documentElement;
         
         // Intentar diferentes APIs de fullscreen
         if (element.requestFullscreen) {
-            element.requestFullscreen().catch(() => {});
+            return element.requestFullscreen().catch(err => {
+                console.log('Fullscreen error:', err);
+            });
         } else if (element.webkitRequestFullscreen) { // Safari
             element.webkitRequestFullscreen();
         } else if (element.webkitEnterFullscreen) { // iOS Safari
@@ -54,25 +103,69 @@
         } else if (element.msRequestFullscreen) { // IE/Edge
             element.msRequestFullscreen();
         }
-        
-        fullscreenRequested = true;
     }
     
-    // Solicitar fullscreen en el primer toque/interacción
-    const events = ['touchstart', 'touchend', 'click', 'pointerdown'];
-    const requestOnFirstInteraction = (e) => {
-        requestFullscreen();
-        events.forEach(event => {
-            document.removeEventListener(event, requestOnFirstInteraction);
-        });
-    };
+    function exitFullscreen() {
+        if (document.exitFullscreen) {
+            document.exitFullscreen();
+        } else if (document.webkitExitFullscreen) {
+            document.webkitExitFullscreen();
+        } else if (document.mozCancelFullScreen) {
+            document.mozCancelFullScreen();
+        } else if (document.msExitFullscreen) {
+            document.msExitFullscreen();
+        }
+    }
     
-    events.forEach(event => {
-        document.addEventListener(event, requestOnFirstInteraction, { once: true, passive: true });
+    function toggleFullscreen(element) {
+        if (isFullscreen()) {
+            exitFullscreen();
+        } else {
+            requestFullscreen(element);
+        }
+    }
+    
+    // Actualizar botón cuando cambia el estado de fullscreen
+    function updateFullscreenButton() {
+        const btn = document.getElementById('fullscreenBtn');
+        if (btn) {
+            btn.textContent = isFullscreen() ? '⛶ Salir Pantalla Completa' : '⛶ Pantalla Completa';
+        }
+    }
+    
+    // Listeners para cambios de fullscreen
+    ['fullscreenchange', 'webkitfullscreenchange', 'mozfullscreenchange', 'MSFullscreenChange'].forEach(event => {
+        document.addEventListener(event, updateFullscreenButton);
     });
     
-    // Exponer función globalmente para uso en Phaser
-    window.requestFullscreenMobile = requestFullscreen;
+    // Exponer funciones globalmente
+    window.requestFullscreenMobile = (element) => requestFullscreen(element);
+    window.toggleFullscreen = (element) => toggleFullscreen(element);
+    window.isFullscreen = isFullscreen;
+    
+    // En móviles, intentar fullscreen automáticamente en el primer toque
+    // Esperar a que el canvas esté disponible
+    if (isMobile) {
+        const requestOnFirstInteraction = () => {
+            // Intentar usar el canvas si está disponible, sino usar documentElement
+            const canvas = document.querySelector('canvas');
+            if (canvas) {
+                requestFullscreen(canvas);
+            } else {
+                requestFullscreen();
+            }
+            ['touchstart', 'touchend', 'click'].forEach(event => {
+                document.removeEventListener(event, requestOnFirstInteraction);
+            });
+        };
+        
+        // Esperar un poco para que Phaser cree el canvas
+        setTimeout(() => {
+            ['touchstart', 'touchend', 'click'].forEach(event => {
+                document.addEventListener(event, requestOnFirstInteraction, { once: true, passive: true });
+            });
+        }, 500);
+    }
 })();
 
 class MainScene extends Phaser.Scene {
@@ -190,9 +283,18 @@ class MainScene extends Phaser.Scene {
         this.input.on('pointerdown', (pointer) => {
             if (this.isGameOver) return;
             if (!this.gameStarted) { 
-                // Solicitar fullscreen en móvil al iniciar (si la función global existe)
-                if (this.isMobile && window.requestFullscreenMobile) {
-                    window.requestFullscreenMobile();
+                // Solicitar fullscreen en móvil al iniciar usando el canvas
+                if (this.isMobile && this.game.canvas) {
+                    const canvas = this.game.canvas;
+                    if (canvas.requestFullscreen) {
+                        canvas.requestFullscreen().catch(() => {});
+                    } else if (canvas.webkitRequestFullscreen) {
+                        canvas.webkitRequestFullscreen();
+                    } else if (canvas.webkitEnterFullscreen) {
+                        canvas.webkitEnterFullscreen();
+                    } else if (window.requestFullscreenMobile) {
+                        window.requestFullscreenMobile(canvas);
+                    }
                 }
                 this.startGame(); 
                 return; 
@@ -495,10 +597,56 @@ const config = {
     backgroundColor: '#000',
     input: { activePointers: 3 },
     physics: { default: 'arcade', arcade: { gravity: { y: 0 }, debug: false } },
-    scene: MainScene
+    scene: MainScene,
+    scale: {
+        mode: Phaser.Scale.FIT,
+        autoCenter: Phaser.Scale.CENTER_BOTH,
+        width: 400,
+        height: 600
+    }
 };
 
 const game = new Phaser.Game(config);
+
+// Actualizar función toggleFullscreen para usar el canvas del juego
+const originalToggleFullscreen = window.toggleFullscreen;
+window.toggleFullscreen = function() {
+    const canvas = game.canvas;
+    if (canvas && window.isFullscreen) {
+        if (window.isFullscreen()) {
+            // Salir de fullscreen
+            if (document.exitFullscreen) {
+                document.exitFullscreen();
+            } else if (document.webkitExitFullscreen) {
+                document.webkitExitFullscreen();
+            } else if (document.mozCancelFullScreen) {
+                document.mozCancelFullScreen();
+            } else if (document.msExitFullscreen) {
+                document.msExitFullscreen();
+            }
+        } else {
+            // Entrar a fullscreen usando el canvas
+            if (canvas.requestFullscreen) {
+                canvas.requestFullscreen().catch(err => console.log('Fullscreen error:', err));
+            } else if (canvas.webkitRequestFullscreen) {
+                canvas.webkitRequestFullscreen();
+            } else if (canvas.webkitEnterFullscreen) {
+                canvas.webkitEnterFullscreen();
+            } else if (canvas.mozRequestFullScreen) {
+                canvas.mozRequestFullScreen();
+            } else if (canvas.msRequestFullscreen) {
+                canvas.msRequestFullscreen();
+            } else {
+                // Fallback: usar documentElement
+                if (window.requestFullscreenMobile) {
+                    window.requestFullscreenMobile(document.documentElement);
+                }
+            }
+        }
+    } else if (originalToggleFullscreen) {
+        originalToggleFullscreen();
+    }
+};
 </script>
 </body>
 </html>
