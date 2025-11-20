@@ -1,0 +1,412 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <title>Vertical Runner v14 - Dynamic Lava & Sticky Fix</title>
+    <style>
+        body {
+            margin: 0;
+            padding: 0;
+            background-color: #000;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            height: 100vh;
+            overflow: hidden;
+            touch-action: none;
+            font-family: 'Courier New', monospace;
+            user-select: none;
+            -webkit-user-select: none;
+        }
+        canvas {
+            border: 1px solid #333;
+            box-shadow: 0 0 60px rgba(255, 30, 0, 0.5);
+        }
+    </style>
+    <script src="https://cdn.jsdelivr.net/npm/phaser@3.60.0/dist/phaser.min.js"></script>
+</head>
+<body>
+
+<script>
+class MainScene extends Phaser.Scene {
+    constructor() {
+        super({ key: 'MainScene' });
+    }
+
+    preload() {
+        let g = this.make.graphics({x:0, y:0});
+
+        // Assets
+        g.fillStyle(0x00ffff, 1); g.fillRoundedRect(0,0,24,24,6); g.lineStyle(2,0xffffff,0.8); g.strokeRoundedRect(0,0,24,24,6); g.generateTexture('player', 24, 24);
+        g.clear(); g.fillStyle(0xff00aa, 1); g.fillRoundedRect(0,0,100,18,4); g.generateTexture('platform', 100, 18);
+        g.clear(); g.fillStyle(0x0088ff, 1); g.fillRoundedRect(0,0,100,18,4); g.lineStyle(2, 0xffffff, 0.5); g.strokeRoundedRect(0,0,100,18,4); g.generateTexture('platform_moving', 100, 18);
+        g.clear(); g.fillStyle(0xff0000, 1); g.beginPath(); g.moveTo(10,0); g.lineTo(20,20); g.lineTo(0,20); g.closePath(); g.fill(); g.generateTexture('enemy', 20, 20);
+        
+        // Lava (Textura grande)
+        g.clear(); g.fillStyle(0xcc2200, 0.95); g.fillRect(0,0,400,800);
+        g.fillStyle(0xff6600, 0.8); for(let i=0; i<40; i++) g.fillCircle(Phaser.Math.Between(0,400), Phaser.Math.Between(0,800), Phaser.Math.Between(5,15));
+        g.generateTexture('lava_texture', 400, 800);
+
+        // UI
+        g.clear(); g.lineStyle(2, 0xffffff, 0.5); g.strokeCircle(20,20,20); g.generateTexture('joystick_base', 40, 40);
+        g.clear(); g.fillStyle(0x222222, 1); g.fillRect(0,0,32,64); g.generateTexture('wall', 32, 64);
+        g.clear(); g.fillStyle(0xffffff, 1); g.fillRect(0,0,6,6); g.generateTexture('particle_dust', 6, 6);
+        g.clear(); g.fillStyle(0xffff00, 1); g.fillCircle(3,3,3); g.generateTexture('particle_spark', 6, 6);
+        g.clear(); g.fillStyle(0xffd700, 1); g.fillCircle(10,10,8); g.generateTexture('coin', 20, 20);
+    }
+
+    create() {
+        this.input.addPointer(3);
+        this.physics.world.setBounds(0, -1000000, 400, 1000000 + 800);
+        this.cameras.main.setBackgroundColor('#050505');
+
+        const SPLIT_X = 280;
+        this.moveAnchorX = null; 
+        this.joystickVisual = this.add.image(0, 0, 'joystick_base').setAlpha(0).setScrollFactor(0).setDepth(999);
+
+        // UI Division
+        let splitLine = this.add.graphics();
+        splitLine.lineStyle(2, 0xffffff, 0.15);
+        splitLine.beginPath(); splitLine.moveTo(SPLIT_X, 600); splitLine.lineTo(SPLIT_X, 400); splitLine.strokePath();
+        splitLine.setScrollFactor(0).setDepth(0);
+        this.add.text(140, 560, '< HOLD & SLIDE >', {fontSize:'12px', color:'#fff', alpha:0.4}).setOrigin(0.5).setScrollFactor(0);
+        this.add.text(340, 560, 'JUMP', {fontSize:'12px', color:'#fff', alpha:0.4}).setOrigin(0.5).setScrollFactor(0);
+
+        // Variables
+        this.jumps = 0;
+        this.maxJumps = 3;
+        this.gameStarted = false;
+        this.isGameOver = false;
+        this.totalScore = 0;
+        this.currentHeight = 0;
+        this.lastPlatformY = 500;
+        this.platformCount = 0;
+
+        // Stamina Pared
+        this.lastWallTouched = null;
+        this.wallJumpConsecutive = 0;
+
+        // Grupos
+        this.platforms = this.physics.add.group({allowGravity: false, immovable: true}); 
+        this.coins = this.physics.add.staticGroup();
+        this.enemies = this.physics.add.group({allowGravity: false, immovable: true});
+
+        this.leftWall = this.add.tileSprite(16, 300, 32, 800, 'wall').setDepth(1);
+        this.rightWall = this.add.tileSprite(384, 300, 32, 800, 'wall').setDepth(1);
+        this.physics.add.existing(this.leftWall, true);
+        this.physics.add.existing(this.rightWall, true);
+
+        this.player = this.physics.add.sprite(200, 400, 'player');
+        this.player.setGravityY(1200); 
+        this.player.setMaxVelocity(400, 1000);
+        this.player.setDragX(1200);
+        this.player.setCollideWorldBounds(false);
+        this.player.setDepth(5);
+        this.player.currentPlatform = null; // Tracking plataforma
+
+        // Iniciar Nivel
+        this.spawnPlatform(200, 450, 140, false);
+        for(let i=0; i<6; i++) this.generateNextRow();
+
+        // Lava
+        this.lava = this.add.tileSprite(200, 900, 400, 800, 'lava_texture').setOrigin(0.5, 0);
+        this.physics.add.existing(this.lava);
+        this.lava.body.allowGravity = false;
+        this.lava.body.immovable = true;
+        this.lava.setDepth(50); 
+        
+        // Variables LAVA DINÁMICA
+        this.baseLavaSpeed = -60; // Velocidad base
+        this.currentLavaSpeed = this.baseLavaSpeed;
+
+        this.dustEmitter = this.add.particles(0, 0, 'particle_dust', { lifespan: 400, speed: {min:50, max:100}, scale: {start:1, end:0}, gravityY: 100, emitting: false, depth: 5 });
+        this.sparkEmitter = this.add.particles(0, 0, 'particle_spark', { lifespan: 300, speed: {min:200, max:400}, blendMode: 'ADD', scale: {start:1, end:0}, emitting: false, depth: 5 });
+
+        this.scoreText = this.add.text(10, 10, 'SCORE: 0', { fontSize: '24px', color: '#ffd700', fontStyle: 'bold' }).setScrollFactor(0).setDepth(100);
+        this.heightText = this.add.text(10, 40, 'ALTURA: 0m', { fontSize: '14px', color: '#fff' }).setScrollFactor(0).setDepth(100);
+        this.uiText = this.add.text(200, 200, '¡CORRE! LA LAVA ACELERA\nSI SUBES RÁPIDO', { fontSize: '18px', color: '#00ffff', align: 'center', fontStyle: 'bold' }).setOrigin(0.5).setScrollFactor(0).setDepth(100);
+
+        // Inputs
+        this.input.on('pointerdown', (pointer) => {
+            if (this.isGameOver) return;
+            if (!this.gameStarted) { this.startGame(); return; }
+            if (pointer.x > SPLIT_X) this.handleJump();
+        });
+
+        // Colisiones
+        this.physics.add.collider(this.player, this.platforms, (player, platform) => {
+            if (player.body.touching.down) {
+                this.jumps = 0;
+                this.lastWallTouched = null;
+                this.wallJumpConsecutive = 0;
+                player.clearTint();
+                player.angle = 0;
+                // Guardamos referencia CLAVE para el fix
+                player.currentPlatform = platform;
+            }
+        });
+
+        this.physics.add.collider(this.player, this.leftWall, () => this.handleWallTouch('left'));
+        this.physics.add.collider(this.player, this.rightWall, () => this.handleWallTouch('right'));
+        this.physics.add.overlap(this.player, this.coins, this.collectCoin, null, this);
+        this.physics.add.overlap(this.player, this.enemies, this.hitEnemy, null, this);
+
+        this.cameras.main.startFollow(this.player, true, 0, 0.1);
+    }
+
+    update() {
+        // Game Over: Lava Fullscreen
+        if (this.isGameOver) {
+            const targetY = this.cameras.main.scrollY;
+            if (this.lava.y > targetY - 50) this.lava.y -= 15;
+            this.lava.tilePositionY -= 2;
+            return;
+        }
+
+        if (!this.gameStarted) return;
+
+        // Resetear plataforma si estamos en el aire
+        if (!this.player.body.touching.down) {
+            this.player.currentPlatform = null;
+        }
+
+        // --- JOYSTICK LOGIC ---
+        const SPLIT_X = 280;
+        let movePointer = null;
+        this.input.manager.pointers.forEach((pointer) => {
+            if (pointer.isDown && pointer.x <= SPLIT_X) movePointer = pointer;
+        });
+
+        if (movePointer) {
+            // --- USUARIO MOVIENDO ---
+            if (this.moveAnchorX === null) {
+                this.moveAnchorX = movePointer.x;
+                this.joystickVisual.setPosition(this.moveAnchorX, movePointer.y).setAlpha(0.5);
+            }
+            const diffX = movePointer.x - this.moveAnchorX;
+            if (Math.abs(diffX) > 10) {
+                const force = 1200;
+                this.player.setAccelerationX(diffX > 0 ? force : -force);
+            } else {
+                this.player.setAccelerationX(0);
+            }
+        } else {
+            // --- USUARIO NO MUEVE (IDLE) ---
+            this.moveAnchorX = null;
+            this.joystickVisual.setAlpha(0);
+            
+            // Desactivar aceleración manual
+            this.player.setAccelerationX(0);
+
+            // === FIX STICKY PLATFORM (CORREGIDO) ===
+            if (this.player.currentPlatform && this.player.currentPlatform.getData('isMoving')) {
+                // 1. Anulamos la velocidad X propia
+                // 2. Copiamos la velocidad de la plataforma
+                this.player.setVelocityX(this.player.currentPlatform.body.velocity.x);
+            }
+        }
+
+        // --- LAVA DINÁMICA (URGENCIA) ---
+        // Calculamos distancia: (Player Y) - (Lava Y). Ej: 400 - 1000 = -600
+        let distanceToLava = this.player.y - this.lava.y;
+        
+        // Velocidad base que aumenta ligeramente con el tiempo
+        let targetSpeed = this.baseLavaSpeed; 
+        this.baseLavaSpeed -= 0.01; 
+
+        // MECÁNICA RUBBER BAND:
+        // Si la distancia es grande (ej. -700px, estás muy arriba), la lava acelera MUCHO.
+        if (distanceToLava < -700) {
+            // Aceleración extra para alcanzar al jugador
+            targetSpeed = -180; // Muy rápido
+        } else if (distanceToLava < -500) {
+            targetSpeed = -120; // Rápido
+        }
+
+        // Interpolación suave para cambiar velocidad (evita saltos bruscos)
+        this.currentLavaSpeed = Phaser.Math.Linear(this.currentLavaSpeed, targetSpeed, 0.05);
+        
+        // Aplicar movimiento
+        this.lava.y += this.currentLavaSpeed * (1/60);
+        this.lava.tilePositionY -= 1;
+
+        // Game Over Check
+        if (this.player.y > this.lava.y + 100) this.gameOver();
+
+        // Paredes infinitas
+        this.leftWall.y = this.cameras.main.scrollY + 300; this.leftWall.body.updateFromGameObject();
+        this.rightWall.y = this.cameras.main.scrollY + 300; this.rightWall.body.updateFromGameObject();
+
+        if (this.lastPlatformY > this.cameras.main.scrollY - 300) this.generateNextRow();
+
+        // Limpieza
+        this.platforms.children.iterate((c) => { if(c && c.y > this.player.y + 900) c.destroy(); });
+        this.coins.children.iterate((c) => { if(c && c.y > this.player.y + 900) c.destroy(); });
+        this.enemies.children.iterate((c) => { if(c && c.y > this.player.y + 900) c.destroy(); });
+
+        // Score
+        let h = Math.floor((400 - this.player.y) / 10);
+        if (h > this.currentHeight) this.currentHeight = h;
+        this.heightText.setText(`ALTURA: ${this.currentHeight}m`);
+
+        // Movimiento Plataformas
+        this.platforms.children.iterate((plat) => {
+            if (plat.getData('isMoving')) {
+                if (plat.x < 70) plat.setVelocityX(100);
+                else if (plat.x > 330) plat.setVelocityX(-100);
+            }
+        });
+    }
+
+    handleJump() {
+        if (this.player.body.touching.left) {
+            if (this.checkWallStamina('left')) {
+                this.player.setVelocity(400, -580);
+                this.jumps = 1; 
+                this.sparkEmitter.emitParticleAt(this.player.x - 10, this.player.y, 10);
+            }
+            return;
+        }
+        if (this.player.body.touching.right) {
+            if (this.checkWallStamina('right')) {
+                this.player.setVelocity(-400, -580);
+                this.jumps = 1;
+                this.sparkEmitter.emitParticleAt(this.player.x + 10, this.player.y, 10);
+            }
+            return;
+        }
+        if (this.jumps < this.maxJumps) {
+            if (this.jumps === 0) this.dustEmitter.emitParticleAt(this.player.x, this.player.y + 12, 10);
+            else {
+                this.doFrontFlip();
+                this.dustEmitter.emitParticleAt(this.player.x, this.player.y + 12, 5);
+            }
+            this.player.setVelocityY(-550);
+            this.jumps++;
+        }
+    }
+
+    checkWallStamina(side) {
+        if (this.lastWallTouched !== side) {
+            this.wallJumpConsecutive = 0;
+            this.player.clearTint();
+        }
+        if (this.wallJumpConsecutive >= 5) return false;
+        this.lastWallTouched = side;
+        this.wallJumpConsecutive++;
+        return true;
+    }
+
+    handleWallTouch(wallSide) {
+        if (this.lastWallTouched === wallSide && this.wallJumpConsecutive >= 5) {
+            if (this.player.body.velocity.y > 0) this.player.setVelocityY(400);
+            this.player.setTint(0x555555); 
+            return; 
+        }
+        if (this.player.body.velocity.y > 0) this.player.setVelocityY(80);
+        if (this.lastWallTouched !== wallSide) {
+            this.jumps = 0;
+            this.player.clearTint();
+            this.tweens.killTweensOf(this.player);
+            this.player.angle = 0;
+        }
+    }
+
+    doFrontFlip() {
+        this.tweens.killTweensOf(this.player);
+        this.player.angle = 0; 
+        this.tweens.add({ targets: this.player, angle: 360, duration: 400, ease: 'Cubic.easeOut' });
+    }
+
+    hitEnemy(player, enemy) {
+        player.setTint(0xff0000);
+        this.cameras.main.shake(100, 0.01);
+        this.time.delayedCall(200, () => player.clearTint());
+        const kickX = Phaser.Math.Between(-300, 300);
+        player.setVelocity(kickX, 300);
+    }
+
+    generateNextRow() {
+        this.platformCount++;
+        let gap = Phaser.Math.Between(170, 340);
+        this.lastPlatformY -= gap;
+        let x = Phaser.Math.Between(70, 330);
+        let width = Phaser.Math.Between(80, 120);
+
+        if (Phaser.Math.Between(0, 100) < 80) {
+            let isMoving = (this.platformCount > 10 && Phaser.Math.Between(0, 100) < 25);
+            let plat = this.spawnPlatform(x, this.lastPlatformY, width, isMoving);
+            if (this.platformCount > 5 && Phaser.Math.Between(0, 100) < 30) {
+                this.spawnEnemy(plat);
+            } else if (Phaser.Math.Between(0, 100) < 70) {
+                this.coins.create(x, this.lastPlatformY - 40, 'coin');
+            }
+        } else {
+            let coinX = (Phaser.Math.Between(0,1)===0) ? 60 : 340;
+            this.coins.create(coinX, this.lastPlatformY, 'coin');
+        }
+    }
+
+    spawnPlatform(x, y, width, isMoving) {
+        let texture = isMoving ? 'platform_moving' : 'platform';
+        let p = this.platforms.create(x, y, texture);
+        p.setDisplaySize(width, 18);
+        p.refreshBody();
+        p.setDepth(5);
+        if (isMoving) {
+            p.setData('isMoving', true);
+            p.setVelocityX(100);
+        }
+        return p;
+    }
+
+    spawnEnemy(platform) {
+        if (platform.getData('isMoving')) return;
+        let ex = platform.x;
+        let ey = platform.y - 20;
+        let enemy = this.enemies.create(ex, ey, 'enemy');
+        enemy.setDepth(6);
+        let range = (platform.displayWidth / 2) - 10;
+        this.tweens.add({ targets: enemy, x: ex + range, duration: 1000, yoyo: true, repeat: -1, ease: 'Sine.easeInOut' });
+    }
+
+    collectCoin(player, coin) {
+        coin.destroy();
+        this.totalScore += 1; 
+        this.scoreText.setText('SCORE: ' + this.totalScore);
+        let t = this.add.text(player.x, player.y-30, '+1', {fontSize:'18px', fontStyle:'bold', color:'#ffff00'}).setDepth(101);
+        this.tweens.add({targets:t, y:player.y-80, alpha:0, duration:600, onComplete:()=>t.destroy()});
+    }
+
+    startGame() { this.gameStarted = true; this.uiText.setVisible(false); }
+
+    gameOver() {
+        this.isGameOver = true;
+        this.physics.pause();
+        this.player.setTint(0xff0000);
+        this.uiText.setText(`GAME OVER\nScore: ${this.totalScore}\nTap para Reiniciar`);
+        this.uiText.setVisible(true);
+        this.uiText.setDepth(200); 
+        this.scoreText.setDepth(200);
+        this.time.delayedCall(1000, () => {
+            this.input.once('pointerdown', () => this.scene.restart());
+        });
+    }
+}
+
+const config = {
+    type: Phaser.AUTO,
+    width: 400,
+    height: 600,
+    backgroundColor: '#000',
+    input: { activePointers: 3 },
+    physics: { default: 'arcade', arcade: { gravity: { y: 0 }, debug: false } },
+    scene: MainScene
+};
+
+const game = new Phaser.Game(config);
+</script>
+</body>
+</html>
+
