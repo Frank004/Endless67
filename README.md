@@ -5,7 +5,7 @@ Un juego de plataformas vertical infinito desarrollado con Phaser.js. Escapa de 
 ## 🎯 Características
 
 - **Gameplay adictivo**: Escapa de la lava que acelera dinámicamente
-- **Controles táctiles**: Optimizado para dispositivos móviles
+- **Controles multiplataforma**: Táctiles para móvil y teclado para computadora
 - **Mecánicas avanzadas**:
   - Triple salto
   - Wall jump con sistema de stamina
@@ -15,8 +15,13 @@ Un juego de plataformas vertical infinito desarrollado con Phaser.js. Escapa de 
 
 ## 🎮 Controles
 
+### 📱 Móvil/Tablet
 - **Izquierda de la pantalla**: Mantén presionado y desliza para mover al personaje
 - **Derecha de la pantalla**: Toca para saltar
+
+### 💻 Computadora
+- **Flechas ← →**: Mover al personaje izquierda/derecha
+- **SPACE**: Saltar
 - **Wall Jump**: Salta contra las paredes laterales (máximo 5 consecutivos)
 
 ## 🚀 Cómo Jugar
