@@ -3,6 +3,9 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <meta name="apple-mobile-web-app-capable" content="yes">
+    <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+    <meta name="mobile-web-app-capable" content="yes">
     <title>Vertical Runner v14 - Dynamic Lava & Sticky Fix</title>
     <style>
         body {
@@ -29,6 +32,49 @@
 <body>
 
 <script>
+// Función global para solicitar pantalla completa en móviles
+(function() {
+    const isMobile = /Android|webOS|iPhone|iPad|iPod|BlackBerry|IEMobile|Opera Mini/i.test(navigator.userAgent);
+    let fullscreenRequested = false;
+    
+    function requestFullscreen() {
+        if (fullscreenRequested || !isMobile) return;
+        
+        const element = document.documentElement;
+        
+        // Intentar diferentes APIs de fullscreen
+        if (element.requestFullscreen) {
+            element.requestFullscreen().catch(() => {});
+        } else if (element.webkitRequestFullscreen) { // Safari
+            element.webkitRequestFullscreen();
+        } else if (element.webkitEnterFullscreen) { // iOS Safari
+            element.webkitEnterFullscreen();
+        } else if (element.mozRequestFullScreen) { // Firefox
+            element.mozRequestFullScreen();
+        } else if (element.msRequestFullscreen) { // IE/Edge
+            element.msRequestFullscreen();
+        }
+        
+        fullscreenRequested = true;
+    }
+    
+    // Solicitar fullscreen en el primer toque/interacción
+    const events = ['touchstart', 'touchend', 'click', 'pointerdown'];
+    const requestOnFirstInteraction = (e) => {
+        requestFullscreen();
+        events.forEach(event => {
+            document.removeEventListener(event, requestOnFirstInteraction);
+        });
+    };
+    
+    events.forEach(event => {
+        document.addEventListener(event, requestOnFirstInteraction, { once: true, passive: true });
+    });
+    
+    // Exponer función globalmente para uso en Phaser
+    window.requestFullscreenMobile = requestFullscreen;
+})();
+
 class MainScene extends Phaser.Scene {
     constructor() {
         super({ key: 'MainScene' });
@@ -133,6 +179,7 @@ class MainScene extends Phaser.Scene {
         
         // Detectar si es dispositivo móvil
         this.isMobile = /Android|webOS|iPhone|iPad|iPod|BlackBerry|IEMobile|Opera Mini/i.test(navigator.userAgent);
+        this.fullscreenRequested = false;
         
         // Mostrar controles según dispositivo
         if (!this.isMobile) {
@@ -142,7 +189,14 @@ class MainScene extends Phaser.Scene {
         // Inputs táctiles
         this.input.on('pointerdown', (pointer) => {
             if (this.isGameOver) return;
-            if (!this.gameStarted) { this.startGame(); return; }
+            if (!this.gameStarted) { 
+                // Solicitar fullscreen en móvil al iniciar (si la función global existe)
+                if (this.isMobile && window.requestFullscreenMobile) {
+                    window.requestFullscreenMobile();
+                }
+                this.startGame(); 
+                return; 
+            }
             if (pointer.x > SPLIT_X) this.handleJump();
         });
         
