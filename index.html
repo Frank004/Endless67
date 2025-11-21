@@ -4,7 +4,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover">
-    <title>Vertical Runner v30 - PowerUp Cooldown & Speed Boost</title>
+    <title>ENDLESS67 v0.0.30 - Vertical Runner</title>
     <style>
         body {
             margin: 0;
@@ -59,16 +59,94 @@
             margin: 0;
             padding: 0;
         }
+
+        /* Loader */
+        #loader {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: linear-gradient(135deg, #1a1a2e 0%, #16213e 50%, #0f3460 100%);
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            z-index: 10001;
+            color: #fff;
+            font-family: 'Courier New', monospace;
+        }
+
+        #loader.hidden {
+            display: none;
+        }
+
+        .loader-content {
+            text-align: center;
+        }
+
+        .loader-title {
+            font-size: 24px;
+            font-weight: bold;
+            margin-bottom: 10px;
+            color: #ffd700;
+            text-shadow: 0 0 10px rgba(255, 215, 0, 0.5);
+        }
+
+        .loader-version {
+            font-size: 12px;
+            color: #888;
+            margin-bottom: 20px;
+            font-family: 'Courier New', monospace;
+        }
+
+        .loader-spinner {
+            width: 50px;
+            height: 50px;
+            border: 4px solid rgba(255, 255, 255, 0.1);
+            border-top-color: #ffd700;
+            border-radius: 50%;
+            animation: spin 1s linear infinite;
+            margin: 0 auto 20px;
+        }
+
+        @keyframes spin {
+            to { transform: rotate(360deg); }
+        }
+
+        .loader-text {
+            font-size: 14px;
+            color: #ccc;
+            margin-top: 10px;
+        }
+
+        #loader-dots {
+            display: inline-block;
+            min-width: 20px;
+        }
     </style>
     <script src="https://cdn.jsdelivr.net/npm/phaser@3.60.0/dist/phaser.min.js"></script>
 </head>
 
 <body>
 
+    <!-- Loader -->
+    <div id="loader">
+        <div class="loader-content">
+            <div class="loader-title">ENDLESS67</div>
+            <div id="loader-version" class="loader-version">v0.0.30</div>
+            <div class="loader-spinner"></div>
+            <div class="loader-text">Cargando<span id="loader-dots">...</span></div>
+        </div>
+    </div>
+
     <div id="error-log"
         style="display:none; position:fixed; top:0; left:0; width:100%; height:50%; background:rgba(0,0,0,0.8); color:red; overflow:auto; z-index:10000; padding:10px; pointer-events:none; font-size:12px; font-family:monospace;">
     </div>
     <script>
+        // Versión del juego
+        const GAME_VERSION = 'v0.0.30';
+        
         window.onerror = function (msg, url, lineNo, columnNo, error) {
             var log = document.getElementById('error-log');
             log.style.display = 'block';
@@ -84,6 +162,26 @@
             log.innerHTML += 'Console Error: ' + args.join(' ') + '<br>';
             originalConsoleError.apply(console, arguments);
         };
+        
+        // Mostrar versión en el loader
+        (function() {
+            var versionElement = document.getElementById('loader-version');
+            if (versionElement) {
+                versionElement.textContent = GAME_VERSION;
+            }
+        })();
+        
+        // Animación de puntos del loader
+        (function() {
+            var dots = document.getElementById('loader-dots');
+            if (dots) {
+                var dotCount = 0;
+                setInterval(function() {
+                    dotCount = (dotCount + 1) % 4;
+                    dots.textContent = '.'.repeat(dotCount);
+                }, 500);
+            }
+        })();
     </script>
     <script>
         class LavaPipeline extends Phaser.Renderer.WebGL.Pipelines.PostFXPipeline {
@@ -174,6 +272,12 @@
             }
 
             create() {
+                // Ocultar el loader cuando el juego esté listo
+                const loader = document.getElementById('loader');
+                if (loader) {
+                    loader.classList.add('hidden');
+                }
+                
                 this.input.addPointer(3);
                 this.physics.world.setBounds(0, -1000000, 400, 1000000 + 800);
                 this.cameras.main.setBackgroundColor('#050505');
