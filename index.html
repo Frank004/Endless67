@@ -27,7 +27,10 @@
             height: 100vh;
             height: 100dvh; /* Dynamic viewport height para móviles modernos */
             display: flex;
-            align-items: stretch;
+            align-items: flex-start; /* Alinear al inicio para que no haya espacio arriba */
+            justify-content: center;
+            padding: 0;
+            margin: 0;
         }
 
         body.mobile canvas {
@@ -36,7 +39,10 @@
             width: 100vw !important;
             height: 100vh !important;
             height: 100dvh !important; /* Dynamic viewport height */
-            object-fit: cover;
+            object-fit: fill; /* Fill para que ocupe toda la altura sin recortar */
+            position: fixed;
+            top: 0;
+            left: 0;
         }
     </style>
     <script src="https://cdn.jsdelivr.net/npm/phaser@3.60.0/dist/phaser.min.js"></script>
@@ -171,14 +177,19 @@
                     document.body.classList.add('mobile');
                 }
 
+                // Obtener altura de la cámara para posicionar controles
+                const cameraHeight = this.cameras.main.height;
+                
                 if (this.isMobile) {
                     let splitLine = this.add.graphics();
                     splitLine.lineStyle(2, 0xffffff, 0.15);
-                    splitLine.beginPath(); splitLine.moveTo(SPLIT_X, 600); splitLine.lineTo(SPLIT_X, 550); splitLine.strokePath();
+                    splitLine.beginPath(); splitLine.moveTo(SPLIT_X, cameraHeight); splitLine.lineTo(SPLIT_X, cameraHeight - 50); splitLine.strokePath();
                     splitLine.setScrollFactor(0).setDepth(0);
 
-                    this.add.text(140, 560, '< HOLD & SLIDE >', { fontSize: '12px', color: '#fff', alpha: 0.4 }).setOrigin(0.5).setScrollFactor(0);
-                    this.add.text(340, 560, 'JUMP', { fontSize: '12px', color: '#fff', alpha: 0.4 }).setOrigin(0.5).setScrollFactor(0);
+                    // Controles en la parte inferior, usando altura dinámica
+                    const controlY = cameraHeight - 40; // 40px desde el fondo
+                    this.add.text(140, controlY, '< HOLD & SLIDE >', { fontSize: '12px', color: '#fff', alpha: 0.4 }).setOrigin(0.5).setScrollFactor(0).setDepth(100);
+                    this.add.text(340, controlY, 'JUMP', { fontSize: '12px', color: '#fff', alpha: 0.4 }).setOrigin(0.5).setScrollFactor(0).setDepth(100);
                 } else {
                     this.add.text(200, 560, '← → MOVER | SPACE SALTAR', { fontSize: '12px', color: '#fff', alpha: 0.4 }).setOrigin(0.5).setScrollFactor(0);
                 }
@@ -218,8 +229,10 @@
                 this.projectiles = this.physics.add.group({ allowGravity: false });
                 this.mazeWalls = this.physics.add.staticGroup();
 
-                this.leftWall = this.add.tileSprite(16, 300, 32, 1200, 'wall').setDepth(60);
-                this.rightWall = this.add.tileSprite(384, 300, 32, 1200, 'wall').setDepth(60);
+                // Paredes en los bordes para móvil
+                const gameWidth = this.game.config.width; // 400px
+                this.leftWall = this.add.tileSprite(0, 300, 32, 1200, 'wall').setOrigin(0, 0.5).setDepth(60);
+                this.rightWall = this.add.tileSprite(gameWidth, 300, 32, 1200, 'wall').setOrigin(1, 0.5).setDepth(60);
                 this.physics.add.existing(this.leftWall, true);
                 this.physics.add.existing(this.rightWall, true);
 
@@ -259,9 +272,11 @@
                     tint: [0xffd700, 0xffffff, 0xffaa00],
                     emitting: false, depth: 200
                 });
-                // UI
-                this.scoreText = this.add.text(10, 10, 'SCORE: 0', { fontSize: '24px', color: '#ffd700', fontStyle: 'bold' }).setScrollFactor(0).setDepth(100);
-                this.heightText = this.add.text(10, 40, 'ALTURA: 0m', { fontSize: '14px', color: '#fff' }).setScrollFactor(0).setDepth(100);
+                // UI - Ajustar márgenes para móvil
+                const scoreX = this.isMobile ? 20 : 10; // Más margen en móvil para evitar que se corte
+                const scoreY = this.isMobile ? 20 : 10; // Más margen superior en móvil
+                this.scoreText = this.add.text(scoreX, scoreY, 'SCORE: 0', { fontSize: '24px', color: '#ffd700', fontStyle: 'bold' }).setScrollFactor(0).setDepth(100);
+                this.heightText = this.add.text(scoreX, scoreY + 30, 'ALTURA: 0m', { fontSize: '14px', color: '#fff' }).setScrollFactor(0).setDepth(100);
                 this.uiText = this.add.text(200, 200, '¡SUBE!', { fontSize: '18px', color: '#00ffff', align: 'center', fontStyle: 'bold' }).setOrigin(0.5).setScrollFactor(0).setDepth(100);
 
                 // --- PAUSE BUTTON ---
@@ -491,11 +506,16 @@
                 }
 
                 if (this.leftWall && this.leftWall.active && this.leftWall.body) {
-                    this.leftWall.y = this.cameras.main.scrollY + 300; this.leftWall.body.updateFromGameObject();
+                    this.leftWall.y = this.cameras.main.scrollY + 300;
+                    this.leftWall.x = 0; // Mantener en el borde izquierdo
+                    this.leftWall.body.updateFromGameObject();
                 }
 
                 if (this.rightWall && this.rightWall.active && this.rightWall.body) {
-                    this.rightWall.y = this.cameras.main.scrollY + 300; this.rightWall.body.updateFromGameObject();
+                    this.rightWall.y = this.cameras.main.scrollY + 300;
+                    const gameWidth = this.game.config.width; // Usar ancho dinámico
+                    this.rightWall.x = gameWidth; // Mantener en el borde derecho
+                    this.rightWall.body.updateFromGameObject();
                 }
 
                 if (this.lastPlatformY > this.cameras.main.scrollY - 300) this.generateNextRow();
