@@ -994,26 +994,33 @@ export class Game extends Phaser.Scene {
         }
     }
 
+    toggleJoystickVisual() {
+        this.joystickVisible = !this.joystickVisible;
+        this.joystickToggleButton.setText(this.joystickVisible ? '🕹️ JOYSTICK: ON' : '🕹️ JOYSTICK: OFF');
+    }
+
     togglePauseMenu() {
         if (this.isGameOver || !this.gameStarted) return;
 
         this.isPaused = !this.isPaused;
 
         if (this.isPaused) {
-            // Show pause menu and stop everything
             this.physics.pause();
             this.pauseMenuBg.setVisible(true);
             this.pauseMenuTitle.setVisible(true);
+            if (this.versionText) this.versionText.setVisible(true);
             this.continueButton.setVisible(true);
             this.soundToggleButton.setVisible(true);
+            this.joystickToggleButton.setVisible(true);
             this.pauseButton.setText('▶');
         } else {
-            // Hide pause menu and resume everything
             this.physics.resume();
             this.pauseMenuBg.setVisible(false);
             this.pauseMenuTitle.setVisible(false);
+            if (this.versionText) this.versionText.setVisible(false);
             this.continueButton.setVisible(false);
             this.soundToggleButton.setVisible(false);
+            this.joystickToggleButton.setVisible(false);
             this.pauseButton.setText('⏸');
         }
     }
