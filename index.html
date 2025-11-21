@@ -169,8 +169,8 @@
                     splitLine.beginPath(); splitLine.moveTo(SPLIT_X, 600); splitLine.lineTo(SPLIT_X, 580); splitLine.strokePath();
                     splitLine.setScrollFactor(0).setDepth(0);
 
-                    // Controles en la parte inferior de la pantalla móvil
-                    const controlY = 580; // Más abajo, cerca del final
+                    // Controles en la parte inferior de la pantalla móvil (30px desde el fondo)
+                    const controlY = 570; // 600px altura - 30px = 570px
                     this.add.text(140, controlY, '< HOLD & SLIDE >', { fontSize: '12px', color: '#fff', alpha: 0.3, backgroundColor: 'rgba(0, 0, 0, 0.2)' }).setOrigin(0.5).setScrollFactor(0);
                     this.add.text(340, controlY, 'TAP', { fontSize: '12px', color: '#fff', alpha: 0.3, backgroundColor: 'rgba(0, 0, 0, 0.2)' }).setOrigin(0.5).setScrollFactor(0);
                 } else {
@@ -212,9 +212,15 @@
                 this.projectiles = this.physics.add.group({ allowGravity: false });
                 this.mazeWalls = this.physics.add.staticGroup();
 
-                // Paredes completamente en las esquinas (x=0 y x=368 para que quepan los 32px de ancho)
-                this.leftWall = this.add.tileSprite(0, 300, 32, 1200, 'wall').setOrigin(0, 0.5).setDepth(60);
-                this.rightWall = this.add.tileSprite(400, 300, 32, 1200, 'wall').setOrigin(1, 0.5).setDepth(60);
+                // Paredes completamente en los bordes de la pantalla
+                // Usar el ancho del juego para asegurar que cubran completamente
+                const gameWidth = this.game.config.width; // 400px
+                const wallWidth = 32;
+                
+                // Pared izquierda: empieza exactamente en x=0, se extiende hacia la derecha
+                this.leftWall = this.add.tileSprite(0, 300, wallWidth, 1200, 'wall').setOrigin(0, 0.5).setDepth(60);
+                // Pared derecha: termina exactamente en x=gameWidth (borde derecho), se extiende hacia la izquierda
+                this.rightWall = this.add.tileSprite(gameWidth, 300, wallWidth, 1200, 'wall').setOrigin(1, 0.5).setDepth(60);
                 this.physics.add.existing(this.leftWall, true);
                 this.physics.add.existing(this.rightWall, true);
 
@@ -489,13 +495,14 @@
 
                 if (this.leftWall && this.leftWall.active && this.leftWall.body) {
                     this.leftWall.y = this.cameras.main.scrollY + 300;
-                    this.leftWall.x = 0; // Mantener en la esquina izquierda
+                    this.leftWall.x = 0; // Mantener en el borde izquierdo (x=0)
                     this.leftWall.body.updateFromGameObject();
                 }
 
                 if (this.rightWall && this.rightWall.active && this.rightWall.body) {
                     this.rightWall.y = this.cameras.main.scrollY + 300;
-                    this.rightWall.x = 400; // Mantener en la esquina derecha
+                    const gameWidth = this.game.config.width; // Usar ancho dinámico
+                    this.rightWall.x = gameWidth; // Mantener en el borde derecho
                     this.rightWall.body.updateFromGameObject();
                 }
 
