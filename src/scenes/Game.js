@@ -15,7 +15,11 @@ export class Game extends Phaser.Scene {
 
         const SPLIT_X = 280;
         this.moveAnchorX = null;
-        this.joystickVisual = this.add.image(0, 0, 'joystick_base').setAlpha(0).setScrollFactor(0).setDepth(999);
+        this.moveAnchorY = null;
+        this.joystickVisible = true; // Default to visible
+
+        this.joystickBase = this.add.image(0, 0, 'joystick_base').setAlpha(0.5).setScrollFactor(0).setDepth(999).setVisible(false);
+        this.joystickKnob = this.add.image(0, 0, 'joystick_knob').setAlpha(0.8).setScrollFactor(0).setDepth(1000).setVisible(false);
 
         this.isMobile = /Android|webOS|iPhone|iPad|iPod|BlackBerry|IEMobile|Opera Mini/i.test(navigator.userAgent);
         if (this.isMobile) {
@@ -144,6 +148,30 @@ export class Game extends Phaser.Scene {
             .setScrollFactor(0).setDepth(150).setInteractive({ useHandCursor: true })
             .on('pointerdown', () => this.togglePauseMenu());
 
+        toggleJoystickVisual() {
+            this.joystickVisible = !this.joystickVisible;
+            this.joystickToggleButton.setText(this.joystickVisible ? '🕹️ JOYSTICK: ON' : '🕹️ JOYSTICK: OFF');
+        }
+
+        togglePauseMenu() {
+            this.isPaused = !this.isPaused;
+
+            if (this.isPaused) {
+                this.physics.pause();
+                this.pauseMenuBg.setVisible(true);
+                this.pauseMenuTitle.setVisible(true);
+                this.continueButton.setVisible(true);
+                this.soundToggleButton.setVisible(true);
+                this.joystickToggleButton.setVisible(true);
+            } else {
+                this.physics.resume();
+                this.pauseMenuBg.setVisible(false);
+                this.pauseMenuTitle.setVisible(false);
+                this.continueButton.setVisible(false);
+                this.soundToggleButton.setVisible(false);
+                this.joystickToggleButton.setVisible(false);
+            }
+        }
         // --- PAUSE MENU OVERLAY ---
         this.pauseMenuBg = this.add.rectangle(200, 300, 400, 600, 0x000000, 0.85)
             .setScrollFactor(0).setDepth(200).setVisible(false);
@@ -169,6 +197,16 @@ export class Game extends Phaser.Scene {
         }).setOrigin(0.5).setScrollFactor(0).setDepth(201).setVisible(false)
             .setInteractive({ useHandCursor: true })
             .on('pointerdown', () => this.toggleSound())
+            .on('pointerover', function () { this.setColor('#ffff00'); })
+            .on('pointerout', function () { this.setColor('#ffffff'); });
+
+        // Joystick Toggle Button
+        this.joystickToggleButton = this.add.text(200, 420, '🕹️ JOYSTICK: ON', {
+            fontSize: '24px', color: '#ffffff', fontStyle: 'bold',
+            backgroundColor: '#333333', padding: { x: 20, y: 10 }
+        }).setOrigin(0.5).setScrollFactor(0).setDepth(201).setVisible(false)
+            .setInteractive({ useHandCursor: true })
+            .on('pointerdown', () => this.toggleJoystickVisual())
             .on('pointerover', function () { this.setColor('#ffff00'); })
             .on('pointerout', function () { this.setColor('#ffffff'); });
 
@@ -310,23 +348,50 @@ export class Game extends Phaser.Scene {
         if (keyboardMove !== 0) {
             // --- MOVIMIENTO POR TECLADO ---
             this.moveAnchorX = null;
-            this.joystickVisual.setAlpha(0);
+            this.joystickBase.setVisible(false);
+            this.joystickKnob.setVisible(false);
             this.player.move(keyboardMove);
         } else if (movePointer) {
             // --- USUARIO MOVIENDO (TÁCTIL) ---
             if (this.moveAnchorX === null) {
                 this.moveAnchorX = movePointer.x;
-                this.joystickVisual.setPosition(this.moveAnchorX, movePointer.y).setAlpha(0.5);
+                this.moveAnchorY = movePointer.y;
+
+                // Position joystick at touch start
+                this.joystickBase.setPosition(this.moveAnchorX, this.moveAnchorY);
+                this.joystickKnob.setPosition(this.moveAnchorX, this.moveAnchorY);
+
+                if (this.joystickVisible) {
+                    this.joystickBase.setVisible(true);
+                    this.joystickKnob.setVisible(true);
+                }
             }
-            const diffX = movePointer.x - this.moveAnchorX;
-            if (Math.abs(diffX) > 10) {
-                this.player.move(diffX > 0 ? 1 : -1);
+
+            // Calculate delta
+            const dx = movePointer.x - this.moveAnchorX;
+            const dy = movePointer.y - this.moveAnchorY;
+            const dist = Math.sqrt(dx * dx + dy * dy);
+            const maxDist = 40; // Max joystick radius
+
+            // Clamp knob position
+            if (dist > maxDist) {
+                const angle = Math.atan2(dy, dx);
+                this.joystickKnob.x = this.moveAnchorX + Math.cos(angle) * maxDist;
+                this.joystickKnob.y = this.moveAnchorY + Math.sin(angle) * maxDist;
+            } else {
+                this.joystickKnob.setPosition(movePointer.x, movePointer.y);
+            }
+
+            // Move player if threshold passed
+            if (Math.abs(dx) > 10) {
+                this.player.move(dx > 0 ? 1 : -1);
             } else {
                 this.player.stop();
             }
         } else {
             this.moveAnchorX = null;
-            this.joystickVisual.setAlpha(0);
+            this.joystickBase.setVisible(false);
+            this.joystickKnob.setVisible(false);
             this.player.stop();
         }
 

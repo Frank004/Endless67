@@ -92,7 +92,8 @@ export class Boot extends Phaser.Scene {
         g.clear(); g.fillStyle(0xcc2200, 0.95); g.fillRect(0, 0, 400, 800); g.fillStyle(0xff6600, 0.8); for (let i = 0; i < 40; i++) g.fillCircle(Phaser.Math.Between(0, 400), Phaser.Math.Between(0, 800), Phaser.Math.Between(5, 15)); g.generateTexture('lava_texture', 400, 800);
 
         // UI & FX
-        g.clear(); g.lineStyle(2, 0xffffff, 0.5); g.strokeCircle(20, 20, 20); g.generateTexture('joystick_base', 40, 40);
+        g.clear(); g.lineStyle(4, 0xffffff, 0.3); g.strokeCircle(60, 60, 60); g.generateTexture('joystick_base', 120, 120);
+        g.clear(); g.fillStyle(0xffffff, 0.5); g.fillCircle(30, 30, 30); g.generateTexture('joystick_knob', 60, 60);
         g.clear(); g.fillStyle(0xffffff, 1); g.fillRect(0, 0, 6, 6); g.generateTexture('particle_dust', 6, 6);
         g.clear(); g.fillStyle(0xffff00, 1); g.fillCircle(3, 3, 3); g.generateTexture('particle_spark', 6, 6);
         g.clear(); g.fillStyle(0xff4400, 1); g.fillCircle(4, 4, 4); g.generateTexture('particle_burn', 8, 8);
