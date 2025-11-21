@@ -658,10 +658,7 @@ export class Game extends Phaser.Scene {
         this.time.delayedCall(200, () => this.player.clearTint());
     }
 
-    toggleJoystickVisual() {
-        this.joystickVisible = !this.joystickVisible;
-        this.joystickToggleButton.setText(this.joystickVisible ? '🕹️ JOYSTICK: ON' : '🕹️ JOYSTICK: OFF');
-    }
+
 
     togglePauseMenu() {
         this.isPaused = !this.isPaused;
@@ -994,10 +991,7 @@ export class Game extends Phaser.Scene {
         }
     }
 
-    toggleJoystickVisual() {
-        this.joystickVisible = !this.joystickVisible;
-        this.joystickToggleButton.setText(this.joystickVisible ? '🕹️ JOYSTICK: ON' : '🕹️ JOYSTICK: OFF');
-    }
+
 
     togglePauseMenu() {
         if (this.isGameOver || !this.gameStarted) return;
@@ -1034,6 +1028,15 @@ export class Game extends Phaser.Scene {
         } else {
             this.sound.setMute(true);
             this.soundToggleButton.setText('🔇 SONIDO: OFF');
+        }
+    }
+    toggleJoystickVisual() {
+        this.joystickVisible = !this.joystickVisible;
+
+        if (this.joystickVisible) {
+            this.joystickToggleButton.setText('🕹️ JOYSTICK: ON');
+        } else {
+            this.joystickToggleButton.setText('🕹️ JOYSTICK: OFF');
         }
     }
 
