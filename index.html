@@ -45,6 +45,12 @@
             originalConsoleError.apply(console, arguments);
         };
 
+        window.addEventListener('unhandledrejection', function (event) {
+            var log = document.getElementById('error-log');
+            log.style.display = 'block';
+            log.innerHTML += 'Unhandled Rejection: ' + event.reason + '<br>';
+        });
+
         // Mostrar versión en el loader
         (function () {
             var versionElement = document.getElementById('loader-version');

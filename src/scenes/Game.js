@@ -598,33 +598,43 @@ export class Game extends Phaser.Scene {
     }
 
     trigger67Celebration() {
-        this.isPausedEvent = true;
-        this.physics.pause();
-        this.cameras.main.flash(500, 255, 255, 255);
-        this.confettiEmitter.setPosition(this.cameras.main.centerX, this.cameras.main.scrollY - 50);
-        this.confettiEmitter.explode(80);
-
-        // Play celebration sound
         try {
-            if (this.sound && this.cache.audio.exists('celebration_sfx')) {
-                this.sound.play('celebration_sfx', { volume: 0.7 });
+            this.isPausedEvent = true;
+            this.physics.pause();
+            this.cameras.main.flash(500, 255, 255, 255);
+
+            if (this.confettiEmitter) {
+                this.confettiEmitter.setPosition(this.cameras.main.centerX, this.cameras.main.scrollY - 50);
+                this.confettiEmitter.explode(80);
             }
-        } catch (error) {
-            console.warn('Error playing celebration sound:', error);
-        }
 
-        let t = this.add.text(this.cameras.main.centerX, this.cameras.main.scrollY + 300, '67!', {
-            fontFamily: '"Courier New", monospace', fontSize: '100px', color: '#ffd700', fontStyle: 'bold', stroke: '#8B4500', strokeThickness: 10,
-            shadow: { offsetX: 6, offsetY: 6, color: '#000000', blur: 0, stroke: true, fill: true }
-        }).setOrigin(0.5).setDepth(200);
+            // Play celebration sound
+            try {
+                if (this.sound && this.cache.audio.exists('celebration_sfx')) {
+                    this.sound.play('celebration_sfx', { volume: 0.7 });
+                }
+            } catch (error) {
+                console.warn('Error playing celebration sound:', error);
+            }
 
-        this.tweens.add({ targets: t, scaleX: 1.3, scaleY: 1.3, duration: 300, yoyo: true, repeat: 2 });
+            let t = this.add.text(this.cameras.main.centerX, this.cameras.main.scrollY + 300, '67!', {
+                fontFamily: '"Courier New", monospace', fontSize: '100px', color: '#ffd700', fontStyle: 'bold', stroke: '#8B4500', strokeThickness: 10,
+                shadow: { offsetX: 6, offsetY: 6, color: '#000000', blur: 0, stroke: true, fill: true }
+            }).setOrigin(0.5).setDepth(200);
 
-        this.time.delayedCall(1500, () => {
-            t.destroy();
+            this.tweens.add({ targets: t, scaleX: 1.3, scaleY: 1.3, duration: 300, yoyo: true, repeat: 2 });
+
+            this.time.delayedCall(1500, () => {
+                if (t && t.destroy) t.destroy();
+                this.physics.resume();
+                this.isPausedEvent = false;
+            });
+        } catch (e) {
+            console.error('Error in trigger67Celebration:', e);
+            // Ensure game resumes if error occurs
             this.physics.resume();
             this.isPausedEvent = false;
-        });
+        }
     }
 
     collectCoin(player, coin) {
