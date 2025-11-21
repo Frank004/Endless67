@@ -148,30 +148,7 @@ export class Game extends Phaser.Scene {
             .setScrollFactor(0).setDepth(150).setInteractive({ useHandCursor: true })
             .on('pointerdown', () => this.togglePauseMenu());
 
-        toggleJoystickVisual() {
-            this.joystickVisible = !this.joystickVisible;
-            this.joystickToggleButton.setText(this.joystickVisible ? '🕹️ JOYSTICK: ON' : '🕹️ JOYSTICK: OFF');
-        }
 
-        togglePauseMenu() {
-            this.isPaused = !this.isPaused;
-
-            if (this.isPaused) {
-                this.physics.pause();
-                this.pauseMenuBg.setVisible(true);
-                this.pauseMenuTitle.setVisible(true);
-                this.continueButton.setVisible(true);
-                this.soundToggleButton.setVisible(true);
-                this.joystickToggleButton.setVisible(true);
-            } else {
-                this.physics.resume();
-                this.pauseMenuBg.setVisible(false);
-                this.pauseMenuTitle.setVisible(false);
-                this.continueButton.setVisible(false);
-                this.soundToggleButton.setVisible(false);
-                this.joystickToggleButton.setVisible(false);
-            }
-        }
         // --- PAUSE MENU OVERLAY ---
         this.pauseMenuBg = this.add.rectangle(200, 300, 400, 600, 0x000000, 0.85)
             .setScrollFactor(0).setDepth(200).setVisible(false);
@@ -660,6 +637,31 @@ export class Game extends Phaser.Scene {
         this.auraEmitter.stop();
         this.player.setTint(0xaaaaaa);
         this.time.delayedCall(200, () => this.player.clearTint());
+    }
+
+    toggleJoystickVisual() {
+        this.joystickVisible = !this.joystickVisible;
+        this.joystickToggleButton.setText(this.joystickVisible ? '🕹️ JOYSTICK: ON' : '🕹️ JOYSTICK: OFF');
+    }
+
+    togglePauseMenu() {
+        this.isPaused = !this.isPaused;
+
+        if (this.isPaused) {
+            this.physics.pause();
+            this.pauseMenuBg.setVisible(true);
+            this.pauseMenuTitle.setVisible(true);
+            this.continueButton.setVisible(true);
+            this.soundToggleButton.setVisible(true);
+            this.joystickToggleButton.setVisible(true);
+        } else {
+            this.physics.resume();
+            this.pauseMenuBg.setVisible(false);
+            this.pauseMenuTitle.setVisible(false);
+            this.continueButton.setVisible(false);
+            this.soundToggleButton.setVisible(false);
+            this.joystickToggleButton.setVisible(false);
+        }
     }
 
     trigger67Celebration() {
