@@ -3,7 +3,7 @@
 
 <head>
     <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover">
     <title>Vertical Runner v30 - PowerUp Cooldown & Speed Boost</title>
     <style>
         body {
@@ -23,9 +23,20 @@
             box-shadow: 0 0 60px rgba(255, 215, 0, 0.4);
         }
 
+        body.mobile {
+            height: 100vh;
+            height: 100dvh; /* Dynamic viewport height para móviles modernos */
+            display: flex;
+            align-items: stretch;
+        }
+
         body.mobile canvas {
             border: none;
             box-shadow: none;
+            width: 100vw !important;
+            height: 100vh !important;
+            height: 100dvh !important; /* Dynamic viewport height */
+            object-fit: cover;
         }
     </style>
     <script src="https://cdn.jsdelivr.net/npm/phaser@3.60.0/dist/phaser.min.js"></script>
