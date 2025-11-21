@@ -54,6 +54,36 @@
         };
     </script>
     <script>
+        class LavaPipeline extends Phaser.Renderer.WebGL.Pipelines.PostFXPipeline {
+            constructor(game) {
+                super({
+                    game: game,
+                    name: 'LavaPipeline',
+                    fragShader: `
+                        precision mediump float;
+                        uniform sampler2D uMainSampler;
+                        uniform float uTime;
+                        varying vec2 outTexCoord;
+                        void main() {
+                            vec2 uv = outTexCoord;
+                            // Wave effect: distort X based on Y and Time, and Y based on X and Time
+                            // This creates a "heat haze" or liquid wobble effect
+                            float waveX = sin(uv.y * 20.0 + uTime * 2.0) * 0.005;
+                            float waveY = cos(uv.x * 20.0 + uTime * 3.0) * 0.005;
+                            
+                            vec2 distortedUV = uv + vec2(waveX, waveY);
+                            gl_FragColor = texture2D(uMainSampler, distortedUV);
+                        }
+                    `
+                });
+            }
+
+            onPreRender() {
+                this.set1f('uTime', this.game.loop.time / 1000);
+            }
+        }
+    </script>
+    <script>
         class MainScene extends Phaser.Scene {
             constructor() {
                 super({ key: 'MainScene' });
@@ -92,12 +122,34 @@
                 g.clear(); g.fillStyle(0xff6600, 1); g.fillCircle(15, 15, 15); g.lineStyle(2, 0x000000, 1); g.strokeCircle(15, 15, 15); g.beginPath(); g.moveTo(15, 0); g.lineTo(15, 30); g.strokePath(); g.beginPath(); g.moveTo(0, 15); g.lineTo(30, 15); g.strokePath(); g.generateTexture('powerup_ball', 30, 30);
                 g.clear(); g.fillStyle(0xffdd00, 0.8); g.fillCircle(4, 4, 4); g.generateTexture('particle_aura', 8, 8);
                 g.clear(); g.fillStyle(0xffffff, 1); g.fillRect(0, 0, 8, 8); g.generateTexture('confetti', 8, 8);
+
+
+                // --- AUDIO ---
+                this.load.audio('coin_sfx_1', 'Sounds%20FX/Collecting%20coins/Several%20Coins%2001.mp3');
+                this.load.audio('coin_sfx_2', 'Sounds%20FX/Collecting%20coins/Several%20Coins%2002.mp3');
+                this.load.audio('coin_sfx_3', 'Sounds%20FX/Collecting%20coins/Several%20Coins%2003.mp3');
+                this.load.audio('damage_sfx_1', 'Sounds%20FX/take%20damage/Retro%20Game%20Low%20Take%20Damage.wav');
+                this.load.audio('damage_sfx_2', 'Sounds%20FX/take%20damage/Retro%20Game%20Low%20Take%20Damage%202.wav');
+                this.load.audio('damage_sfx_3', 'Sounds%20FX/take%20damage/Retro%20Game%20Low%20Take%20Damage%203.wav');
+                this.load.audio('damage_sfx_4', 'Sounds%20FX/take%20damage/Retro%20Game%20Low%20Take%20Damage%204.wav');
+                this.load.audio('damage_sfx_5', 'Sounds%20FX/take%20damage/Retro%20Game%20Low%20Take%20Damage%205.wav');
+                this.load.audio('lava_ambient', 'Sounds%20FX/lava/Lava.wav');
+                this.load.audio('bg_music', 'Sounds%20FX/bgmusic/retro-game-music/Retro%20hiphop.mp3');
+                this.load.audio('lava_drop', 'Sounds%20FX/lavaDrop/lava-drop-in.wav');
+                this.load.audio('jump_sfx', 'Sounds%20FX/jumps/jumping.wav');
+                this.load.audio('destroy_sfx', 'Sounds%20FX/destroy/destroy.wav');
+                this.load.audio('celebration_sfx', 'Sounds%20FX/67/67.WAV');
             }
 
             create() {
                 this.input.addPointer(3);
                 this.physics.world.setBounds(0, -1000000, 400, 1000000 + 800);
                 this.cameras.main.setBackgroundColor('#050505');
+
+                // Register and apply Lava Pipeline
+                if (this.game.renderer.type === Phaser.WEBGL) {
+                    this.renderer.pipelines.addPostPipeline('LavaPipeline', LavaPipeline);
+                }
 
                 const SPLIT_X = 280;
                 this.moveAnchorX = null;
@@ -143,6 +195,10 @@
                 this.lastPowerupSpawnHeight = -1000;
                 this.lastPowerupTime = -15000; // Allow immediate spawn
 
+                // PAUSE & SOUND STATE
+                this.isPaused = false;
+                this.soundEnabled = true;
+
                 // --- GRUPOS ---
                 this.platforms = this.physics.add.group({ allowGravity: false, immovable: true });
                 this.coins = this.physics.add.staticGroup();
@@ -177,6 +233,10 @@
                 this.baseLavaSpeed = -60;
                 this.currentLavaSpeed = this.baseLavaSpeed;
 
+                if (this.game.renderer.type === Phaser.WEBGL) {
+                    this.lava.setPostPipeline('LavaPipeline');
+                }
+
                 // --- PARTÍCULAS ---
                 this.dustEmitter = this.add.particles(0, 0, 'particle_dust', { lifespan: 400, speed: { min: 50, max: 100 }, scale: { start: 1, end: 0 }, gravityY: 100, emitting: false, depth: 20 });
                 this.sparkEmitter = this.add.particles(0, 0, 'particle_spark', { lifespan: 300, speed: { min: 200, max: 400 }, blendMode: 'ADD', scale: { start: 1, end: 0 }, emitting: false, depth: 20 });
@@ -192,6 +252,39 @@
                 this.scoreText = this.add.text(10, 10, 'SCORE: 0', { fontSize: '24px', color: '#ffd700', fontStyle: 'bold' }).setScrollFactor(0).setDepth(100);
                 this.heightText = this.add.text(10, 40, 'ALTURA: 0m', { fontSize: '14px', color: '#fff' }).setScrollFactor(0).setDepth(100);
                 this.uiText = this.add.text(200, 200, '¡SUBE!', { fontSize: '18px', color: '#00ffff', align: 'center', fontStyle: 'bold' }).setOrigin(0.5).setScrollFactor(0).setDepth(100);
+
+                // --- PAUSE BUTTON ---
+                this.pauseButton = this.add.text(370, 10, '⏸', { fontSize: '24px', color: '#ffffff' })
+                    .setScrollFactor(0).setDepth(150).setInteractive({ useHandCursor: true })
+                    .on('pointerdown', () => this.togglePauseMenu());
+
+                // --- PAUSE MENU OVERLAY ---
+                this.pauseMenuBg = this.add.rectangle(200, 300, 400, 600, 0x000000, 0.85)
+                    .setScrollFactor(0).setDepth(200).setVisible(false);
+
+                this.pauseMenuTitle = this.add.text(200, 200, 'PAUSA', {
+                    fontSize: '48px', color: '#ffd700', fontStyle: 'bold'
+                }).setOrigin(0.5).setScrollFactor(0).setDepth(201).setVisible(false);
+
+                // Continue Button
+                this.continueButton = this.add.text(200, 280, 'CONTINUAR', {
+                    fontSize: '24px', color: '#00ff00', fontStyle: 'bold',
+                    backgroundColor: '#333333', padding: { x: 20, y: 10 }
+                }).setOrigin(0.5).setScrollFactor(0).setDepth(201).setVisible(false)
+                    .setInteractive({ useHandCursor: true })
+                    .on('pointerdown', () => this.togglePauseMenu())
+                    .on('pointerover', function () { this.setColor('#00ffff'); })
+                    .on('pointerout', function () { this.setColor('#00ff00'); });
+
+                // Sound Toggle Button
+                this.soundToggleButton = this.add.text(200, 350, '🔊 SONIDO: ON', {
+                    fontSize: '24px', color: '#ffffff', fontStyle: 'bold',
+                    backgroundColor: '#333333', padding: { x: 20, y: 10 }
+                }).setOrigin(0.5).setScrollFactor(0).setDepth(201).setVisible(false)
+                    .setInteractive({ useHandCursor: true })
+                    .on('pointerdown', () => this.toggleSound())
+                    .on('pointerover', function () { this.setColor('#ffff00'); })
+                    .on('pointerout', function () { this.setColor('#ffffff'); });
 
                 // Controles de teclado para PC
                 this.cursors = this.input.keyboard.createCursorKeys();
@@ -256,6 +349,19 @@
                 this.physics.add.overlap(this.player, this.lava, this.touchLava, null, this);
 
                 this.cameras.main.startFollow(this.player, true, 0, 0.1);
+
+                // --- LAVA AMBIENT SOUND ---
+                try {
+                    if (this.sound && this.cache.audio.exists('lava_ambient')) {
+                        this.lavaSound = this.sound.add('lava_ambient', { loop: true, volume: 0 });
+                        this.lavaSound.play();
+                        console.log('Lava sound started successfully');
+                    } else {
+                        console.warn('Lava ambient sound not found in cache');
+                    }
+                } catch (error) {
+                    console.warn('Error starting lava sound:', error);
+                }
             }
 
             update() {
@@ -265,7 +371,7 @@
                     this.lava.tilePositionY -= 2;
                     return;
                 }
-                if (this.isPausedEvent) return;
+                if (this.isPausedEvent || this.isPaused) return;
                 if (!this.gameStarted) return;
 
                 this.player.x = Phaser.Math.Clamp(this.player.x, 14, 386);
@@ -332,6 +438,46 @@
                 this.currentLavaSpeed = Phaser.Math.Linear(this.currentLavaSpeed, targetSpeed, 0.02);
                 this.lava.y += this.currentLavaSpeed * (1 / 60);
                 this.lava.tilePositionY -= 1;
+
+                // Update lava sound volume based on distance and viewport visibility
+                if (this.lavaSound && this.lavaSound.isPlaying) {
+                    // Check if lava is visible in the camera viewport
+                    const cameraBottom = this.cameras.main.scrollY + this.cameras.main.height;
+                    const lavaTop = this.lava.y;
+                    const lavaVisible = lavaTop < cameraBottom + 200; // Add 200px buffer
+
+                    let lavaTargetVolume = 0;
+
+                    if (lavaVisible) {
+                        // Calculate volume based on distance (closer = louder)
+                        // Max volume at 100px or closer, fade out by 200px
+                        if (distanceToLava < 100) {
+                            lavaTargetVolume = 1.0; // Maximum volume when very close
+                        } else if (distanceToLava < 200) {
+                            // Linear fade from 1.0 to 0 between 100 and 200 pixels
+                            lavaTargetVolume = 1.0 * (1 - (distanceToLava - 100) / 100);
+                        }
+                    }
+
+                    // Smooth volume transition to avoid abrupt cuts
+                    const currentLavaVolume = this.lavaSound.volume;
+                    const newLavaVolume = Phaser.Math.Linear(currentLavaVolume, lavaTargetVolume, 0.05);
+                    this.lavaSound.setVolume(newLavaVolume);
+                }
+
+                // Separate control for background music ducking
+                if (this.bgMusic && this.bgMusic.isPlaying) {
+                    let musicVolume = 0.80; // Default volume
+                    if (distanceToLava < 100) {
+                        // Reduce music when lava is very close
+                        musicVolume = 0.50;
+                    } else if (distanceToLava < 200) {
+                        // Gradual transition from 0.50 to 0.80 between 100 and 200 pixels
+                        const fadeRatio = (distanceToLava - 100) / 100;
+                        musicVolume = 0.50 + (fadeRatio * 0.30);
+                    }
+                    this.bgMusic.setVolume(musicVolume);
+                }
 
                 if (this.leftWall && this.leftWall.active && this.leftWall.body) {
                     this.leftWall.y = this.cameras.main.scrollY + 300; this.leftWall.body.updateFromGameObject();
@@ -508,6 +654,17 @@
                         projectile.destroy();
                     }
 
+                    // Play random damage sound
+                    try {
+                        const damageKeys = ['damage_sfx_1', 'damage_sfx_2', 'damage_sfx_3', 'damage_sfx_4', 'damage_sfx_5'];
+                        const randomKey = Phaser.Utils.Array.GetRandom(damageKeys);
+                        if (this.sound && this.cache.audio.exists(randomKey)) {
+                            this.sound.play(randomKey, { volume: 0.5 });
+                        }
+                    } catch (error) {
+                        console.warn('Error playing damage sound:', error);
+                    }
+
                     let dir = (player.x < projX) ? -1 : 1;
                     if (projVelX > 0) dir = 1; else if (projVelX < 0) dir = -1;
                     player.setVelocity(dir * 400, -200);
@@ -526,6 +683,15 @@
                 this.physics.pause();
                 player.setTint(0xffff00);
                 this.auraEmitter.start();
+
+                // Play celebration sound immediately
+                try {
+                    if (this.sound && this.cache.audio.exists('celebration_sfx')) {
+                        this.sound.play('celebration_sfx', { volume: 0.6 });
+                    }
+                } catch (error) {
+                    console.warn('Error playing celebration sound:', error);
+                }
 
                 // Registrar altura para Cooldown (Moved to spawn time for better distribution control)
                 // this.lastPowerupSpawnHeight = this.currentHeight;
@@ -565,6 +731,15 @@
                 this.confettiEmitter.setPosition(this.cameras.main.centerX, this.cameras.main.scrollY - 50);
                 this.confettiEmitter.explode(80);
 
+                // Play celebration sound
+                try {
+                    if (this.sound && this.cache.audio.exists('celebration_sfx')) {
+                        this.sound.play('celebration_sfx', { volume: 0.7 });
+                    }
+                } catch (error) {
+                    console.warn('Error playing celebration sound:', error);
+                }
+
                 let t = this.add.text(this.cameras.main.centerX, this.cameras.main.scrollY + 300, '67!', {
                     fontFamily: '"Courier New", monospace', fontSize: '100px', color: '#ffd700', fontStyle: 'bold', stroke: '#8B4500', strokeThickness: 10,
                     shadow: { offsetX: 6, offsetY: 6, color: '#000000', blur: 0, stroke: true, fill: true }
@@ -586,6 +761,20 @@
                 let t = this.add.text(player.x, player.y - 30, '+1', { fontSize: '18px', fontStyle: 'bold', color: '#ffff00' }).setDepth(101);
                 this.tweens.add({ targets: t, y: player.y - 80, alpha: 0, duration: 600, onComplete: () => t.destroy() });
 
+                // Play random coin sound with pitch variation
+                try {
+                    const soundKeys = ['coin_sfx_1', 'coin_sfx_2', 'coin_sfx_3'];
+                    const randomKey = Phaser.Utils.Array.GetRandom(soundKeys);
+                    // Check if sound exists before playing
+                    if (this.sound && this.cache.audio.exists(randomKey)) {
+                        // Detune varies pitch: 100 cents = 1 semitone. Range -200 to 200 is +/- 2 semitones.
+                        const randomDetune = Phaser.Math.Between(-200, 200);
+                        this.sound.play(randomKey, { detune: randomDetune, volume: 0.6 });
+                    }
+                } catch (error) {
+                    console.warn('Error playing coin sound:', error);
+                }
+
                 let strScore = this.totalScore.toString();
                 if (strScore === '67' || strScore.endsWith('67')) {
                     this.trigger67Celebration();
@@ -593,7 +782,33 @@
             }
 
             hitEnemy(player, enemy) {
-                if (this.isInvincible) { enemy.destroy(); this.sparkEmitter.emitParticleAt(enemy.x, enemy.y, 20); return; }
+                if (this.isInvincible) {
+                    enemy.destroy();
+                    this.sparkEmitter.emitParticleAt(enemy.x, enemy.y, 20);
+
+                    // Play destroy sound
+                    try {
+                        if (this.sound && this.cache.audio.exists('destroy_sfx')) {
+                            this.sound.play('destroy_sfx', { volume: 0.5 });
+                        }
+                    } catch (error) {
+                        console.warn('Error playing destroy sound:', error);
+                    }
+
+                    return;
+                }
+
+                // Play random damage sound
+                try {
+                    const damageKeys = ['damage_sfx_1', 'damage_sfx_2', 'damage_sfx_3', 'damage_sfx_4', 'damage_sfx_5'];
+                    const randomKey = Phaser.Utils.Array.GetRandom(damageKeys);
+                    if (this.sound && this.cache.audio.exists(randomKey)) {
+                        this.sound.play(randomKey, { volume: 0.5 });
+                    }
+                } catch (error) {
+                    console.warn('Error playing damage sound:', error);
+                }
+
                 player.setTint(0xff0000); this.cameras.main.shake(100, 0.01); this.time.delayedCall(200, () => player.clearTint());
                 const kickX = Phaser.Math.Between(-300, 300); player.setVelocity(kickX, 300);
             }
@@ -606,6 +821,16 @@
                     this.tweens.add({ targets: t, y: player.y - 150, alpha: 0, duration: 1000, onComplete: () => t.destroy() });
                     return;
                 }
+
+                // Play lava drop sound
+                try {
+                    if (this.sound && this.cache.audio.exists('lava_drop')) {
+                        this.sound.play('lava_drop', { volume: 0.7 });
+                    }
+                } catch (error) {
+                    console.warn('Error playing lava drop sound:', error);
+                }
+
                 this.isGameOver = true; this.burnEmitter.emitParticleAt(player.x, player.y, 50); player.setTint(0x000000); player.setVelocity(0, 0);
                 this.physics.pause(); this.uiText.setText(`GAME OVER\nScore: ${this.totalScore}\nTap or Space to Restart`); this.uiText.setVisible(true); this.uiText.setDepth(200); this.scoreText.setDepth(200);
 
@@ -638,6 +863,17 @@
             handleJump() {
                 // --- APLICAR SPEED BOOST ---
                 let boost = this.isInvincible ? 1.25 : 1.0; // 25% Extra Force
+
+                // Play jump sound with random pitch variation
+                try {
+                    if (this.sound && this.cache.audio.exists('jump_sfx')) {
+                        const randomDetune = Phaser.Math.Between(-300, 300); // Wider range for more variety
+                        this.sound.play('jump_sfx', { detune: randomDetune, volume: 0.15 });
+                    }
+                } catch (error) {
+                    console.warn('Error playing jump sound:', error);
+                }
+
                 if (this.player.body.touching.left) { if (this.checkWallStamina('left')) { this.player.setVelocity(400 * boost, -580 * boost); this.jumps = 1; this.sparkEmitter.emitParticleAt(this.player.x - 10, this.player.y, 10); } return; }
                 if (this.player.body.touching.right) { if (this.checkWallStamina('right')) { this.player.setVelocity(-400 * boost, -580 * boost); this.jumps = 1; this.sparkEmitter.emitParticleAt(this.player.x + 10, this.player.y, 10); } return; }
                 if (this.jumps < this.maxJumps) {
@@ -758,7 +994,56 @@
                 else enemy.body.setVelocityX(platform.body.velocity.x);
             }
 
-            startGame() { this.gameStarted = true; this.uiText.setVisible(false); }
+            togglePauseMenu() {
+                if (this.isGameOver || !this.gameStarted) return;
+
+                this.isPaused = !this.isPaused;
+
+                if (this.isPaused) {
+                    // Show pause menu and stop everything
+                    this.physics.pause();
+                    this.pauseMenuBg.setVisible(true);
+                    this.pauseMenuTitle.setVisible(true);
+                    this.continueButton.setVisible(true);
+                    this.soundToggleButton.setVisible(true);
+                    this.pauseButton.setText('▶');
+                } else {
+                    // Hide pause menu and resume everything
+                    this.physics.resume();
+                    this.pauseMenuBg.setVisible(false);
+                    this.pauseMenuTitle.setVisible(false);
+                    this.continueButton.setVisible(false);
+                    this.soundToggleButton.setVisible(false);
+                    this.pauseButton.setText('⏸');
+                }
+            }
+
+            toggleSound() {
+                this.soundEnabled = !this.soundEnabled;
+
+                if (this.soundEnabled) {
+                    this.sound.setMute(false);
+                    this.soundToggleButton.setText('🔊 SONIDO: ON');
+                } else {
+                    this.sound.setMute(true);
+                    this.soundToggleButton.setText('🔇 SONIDO: OFF');
+                }
+            }
+
+            startGame() {
+                this.gameStarted = true;
+                this.uiText.setVisible(false);
+
+                // Start background music
+                try {
+                    if (this.sound && this.cache.audio.exists('bg_music') && !this.bgMusic) {
+                        this.bgMusic = this.sound.add('bg_music', { loop: true, volume: 0.80 });
+                        this.bgMusic.play();
+                    }
+                } catch (error) {
+                    console.warn('Error starting background music:', error);
+                }
+            }
         }
 
         const config = {
