@@ -196,10 +196,24 @@ export class Game extends Phaser.Scene {
         this.spaceKey = this.input.keyboard.addKey(Phaser.Input.Keyboard.KeyCodes.SPACE);
 
         // Inputs táctiles
+        // Inputs táctiles
         this.input.on('pointerdown', (pointer) => {
             if (this.isGameOver || this.isPausedEvent) return;
             if (!this.gameStarted) { this.startGame(); return; }
-            if (pointer.x > SPLIT_X) this.handleJump();
+            if (pointer.x > SPLIT_X) {
+                this.handleJump();
+                // Visual feedback for jump
+                let feedback = this.add.image(pointer.x, pointer.y, 'jump_feedback')
+                    .setAlpha(0.8).setDepth(1000).setScrollFactor(0);
+                this.tweens.add({
+                    targets: feedback,
+                    scaleX: 1.5,
+                    scaleY: 1.5,
+                    alpha: 0,
+                    duration: 300,
+                    onComplete: () => feedback.destroy()
+                });
+            }
         });
 
         // Inputs de teclado
