@@ -157,6 +157,10 @@ export class Game extends Phaser.Scene {
             fontSize: '48px', color: '#ffd700', fontStyle: 'bold'
         }).setOrigin(0.5).setScrollFactor(0).setDepth(201).setVisible(false);
 
+        this.versionText = this.add.text(200, 220, 'v0.0.31', {
+            fontSize: '14px', color: '#888888'
+        }).setOrigin(0.5).setScrollFactor(0).setDepth(201).setVisible(false);
+
         // Continue Button
         this.continueButton = this.add.text(200, 260, 'CONTINUAR', {
             fontSize: '24px', color: '#00ff00', fontStyle: 'bold',
@@ -651,6 +655,7 @@ export class Game extends Phaser.Scene {
             this.physics.pause();
             this.pauseMenuBg.setVisible(true);
             this.pauseMenuTitle.setVisible(true);
+            if (this.versionText) this.versionText.setVisible(true);
             this.continueButton.setVisible(true);
             this.soundToggleButton.setVisible(true);
             this.joystickToggleButton.setVisible(true);
@@ -658,6 +663,7 @@ export class Game extends Phaser.Scene {
             this.physics.resume();
             this.pauseMenuBg.setVisible(false);
             this.pauseMenuTitle.setVisible(false);
+            if (this.versionText) this.versionText.setVisible(false);
             this.continueButton.setVisible(false);
             this.soundToggleButton.setVisible(false);
             this.joystickToggleButton.setVisible(false);
