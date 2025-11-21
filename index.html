@@ -138,7 +138,10 @@
                 // POWER UP STATE
                 this.isInvincible = false;
                 this.powerupTimer = null;
-                this.lastPowerupSpawnHeight = -1000; // Para el Cooldown (Empezamos en negativo para que pueda salir al inicio si queremos)
+                this.isInvincible = false;
+                this.powerupTimer = null;
+                this.lastPowerupSpawnHeight = -1000;
+                this.lastPowerupTime = -15000; // Allow immediate spawn
 
                 // --- GRUPOS ---
                 this.platforms = this.physics.add.group({ allowGravity: false, immovable: true });
@@ -524,8 +527,8 @@
                 player.setTint(0xffff00);
                 this.auraEmitter.start();
 
-                // Registrar altura para Cooldown
-                this.lastPowerupSpawnHeight = this.currentHeight;
+                // Registrar altura para Cooldown (Moved to spawn time for better distribution control)
+                // this.lastPowerupSpawnHeight = this.currentHeight;
 
                 let t = this.add.text(this.cameras.main.centerX, this.cameras.main.scrollY + 200, 'POWERUP 67', {
                     fontSize: '40px', color: '#ffd700', fontStyle: 'bold', stroke: '#000000', strokeThickness: 6
@@ -661,7 +664,7 @@
             generateNextRow() {
                 const height = this.currentHeight;
                 const allowMaze = height > 200; const allowMoving = height > 500; const allowSpikes = height > 1000; const allowSpikesMoving = height > 2000;
-                const allowShooters = height > 200;
+                const allowShooters = height > 2500;
 
                 if (this.mazeSequenceRemaining > 0) {
                     this.spawnMazeRow(this.lastPlatformY, this.lastMazeSide, allowMoving, allowSpikes);
@@ -679,7 +682,11 @@
 
                 let gap = Phaser.Math.Between(150, 200);
                 if (this.justFinishedMaze) { this.lastPlatformY -= 200; this.justFinishedMaze = false; } else { this.lastPlatformY -= gap; }
-                let x = Phaser.Math.Between(70, 330); let width = Phaser.Math.Between(80, 120);
+                let width = Phaser.Math.Between(80, 120);
+                // Constrain X to be within walls (32px) + padding (10px)
+                let minX = 32 + 10 + (width / 2);
+                let maxX = 368 - 10 - (width / 2);
+                let x = Phaser.Math.Between(minX, maxX);
 
                 if (Phaser.Math.Between(0, 100) < 80) {
                     let isMoving = (allowMoving && Phaser.Math.Between(0, 100) < 30);
@@ -692,9 +699,19 @@
                     if (!enemySpawned && Phaser.Math.Between(0, 100) < 70) {
                         // LOGICA DE COOLDOWN POWERUP
                         let powerupChance = 5;
-                        // Si hace menos de 300m que salió uno, chance 0
-                        if (this.currentHeight - this.lastPowerupSpawnHeight < 300) powerupChance = 0;
-                        if (Phaser.Math.Between(0, 100) < powerupChance) this.powerups.create(x, this.lastPlatformY - 40, 'powerup_ball');
+                        const timeCooldown = 15000; // 15 seconds
+                        const heightCooldown = 500; // 500m
+                        const now = this.time.now;
+
+                        if (this.currentHeight - this.lastPowerupSpawnHeight < heightCooldown || now - this.lastPowerupTime < timeCooldown) {
+                            powerupChance = 0;
+                        }
+
+                        if (Phaser.Math.Between(0, 100) < powerupChance) {
+                            this.powerups.create(x, this.lastPlatformY - 40, 'powerup_ball');
+                            this.lastPowerupSpawnHeight = this.currentHeight;
+                            this.lastPowerupTime = now;
+                        }
                         else this.coins.create(x, this.lastPlatformY - 40, 'coin');
                     }
                 } else {
@@ -708,9 +725,19 @@
 
                 // Cooldown en laberinto tambien
                 let powerupChance = 5;
-                if (this.currentHeight - this.lastPowerupSpawnHeight < 300) powerupChance = 0;
+                const timeCooldown = 15000;
+                const heightCooldown = 500;
+                const now = this.time.now;
 
-                if (Phaser.Math.Between(0, 100) < powerupChance) this.powerups.create(gapX, y - 50, 'powerup_ball'); else this.coins.create(gapX, y - 50, 'coin');
+                if (this.currentHeight - this.lastPowerupSpawnHeight < heightCooldown || now - this.lastPowerupTime < timeCooldown) {
+                    powerupChance = 0;
+                }
+
+                if (Phaser.Math.Between(0, 100) < powerupChance) {
+                    this.powerups.create(gapX, y - 50, 'powerup_ball');
+                    this.lastPowerupSpawnHeight = this.currentHeight;
+                    this.lastPowerupTime = now;
+                } else this.coins.create(gapX, y - 50, 'coin');
                 if (allowSpikes && Phaser.Math.Between(0, 100) < 50) {
                     let enemyX = (side === 0) ? blockWidth / 2 : 400 - (blockWidth / 2);
                     let enemy = this.enemies.create(enemyX, y - 40, 'enemy_spike'); enemy.setDepth(20);
