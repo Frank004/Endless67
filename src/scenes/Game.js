@@ -150,14 +150,15 @@ export class Game extends Phaser.Scene {
 
 
         // --- PAUSE MENU OVERLAY ---
-        this.pauseMenuBg = this.add.rectangle(200, 300, 400, 600, 0x000000, 0.85)
-            .setScrollFactor(0).setDepth(200).setVisible(false);
+        // Full screen background that blocks input
+        this.pauseMenuBg = this.add.rectangle(this.cameras.main.centerX, this.cameras.main.centerY, this.cameras.main.width, this.cameras.main.height, 0x000000, 0.9)
+            .setScrollFactor(0).setDepth(200).setVisible(false).setInteractive();
 
         this.pauseMenuTitle = this.add.text(200, 180, 'PAUSA', {
             fontSize: '48px', color: '#ffd700', fontStyle: 'bold'
         }).setOrigin(0.5).setScrollFactor(0).setDepth(201).setVisible(false);
 
-        this.versionText = this.add.text(200, 220, 'v0.0.31', {
+        this.versionText = this.add.text(200, 220, 'v0.0.32', {
             fontSize: '14px', color: '#888888'
         }).setOrigin(0.5).setScrollFactor(0).setDepth(201).setVisible(false);
 
@@ -198,7 +199,7 @@ export class Game extends Phaser.Scene {
         // Inputs táctiles
         // Inputs táctiles
         this.input.on('pointerdown', (pointer) => {
-            if (this.isGameOver || this.isPausedEvent) return;
+            if (this.isGameOver || this.isPausedEvent || this.isPaused) return;
             if (!this.gameStarted) { this.startGame(); return; }
             if (pointer.x > SPLIT_X) {
                 this.handleJump();
@@ -218,7 +219,7 @@ export class Game extends Phaser.Scene {
 
         // Inputs de teclado
         this.spaceKey.on('down', () => {
-            if (this.isGameOver || this.isPausedEvent) return;
+            if (this.isGameOver || this.isPausedEvent || this.isPaused) return;
             if (!this.gameStarted) { this.startGame(); return; }
             this.handleJump();
         });
