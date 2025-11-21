@@ -378,10 +378,10 @@ export class Game extends Phaser.Scene {
 
         // Lava
         let distanceToLava = this.player.y - this.lava.y;
-        let tierSpeed = -60;
+        let tierSpeed = -45; // 25% slower start (was -60)
         if (this.currentHeight > 1000) tierSpeed = -72;
         if (this.currentHeight > 2000) tierSpeed = -85;
-        if (this.currentHeight > 3000) tierSpeed = -100;
+        if (this.currentHeight > 3000) tierSpeed = -115; // 15% faster than previous max (was -100)
 
         let targetSpeed = tierSpeed;
         if (distanceToLava < -800) targetSpeed = -200;
