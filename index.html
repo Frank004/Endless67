@@ -1,5 +1,6 @@
 <!DOCTYPE html>
 <html lang="es">
+
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
@@ -19,6 +20,7 @@
             user-select: none;
             -webkit-user-select: none;
         }
+
         canvas {
             border: 1px solid #333;
             box-shadow: 0 0 60px rgba(255, 215, 0, 0.4);
@@ -26,639 +28,693 @@
     </style>
     <script src="https://cdn.jsdelivr.net/npm/phaser@3.60.0/dist/phaser.min.js"></script>
 </head>
+
 <body>
 
-<script>
-class MainScene extends Phaser.Scene {
-    constructor() {
-        super({ key: 'MainScene' });
-    }
-
-    preload() {
-        let g = this.make.graphics({x:0, y:0});
-
-        // Assets
-        g.fillStyle(0x00ffff, 1); g.fillRoundedRect(0,0,24,24,6); g.lineStyle(2,0xffffff,0.8); g.strokeRoundedRect(0,0,24,24,6); g.generateTexture('player', 24, 24);
-        g.clear(); g.fillStyle(0xff00aa, 1); g.fillRoundedRect(0,0,100,18,4); g.generateTexture('platform', 100, 18);
-        g.clear(); g.fillStyle(0x0088ff, 1); g.fillRoundedRect(0,0,100,18,4); g.lineStyle(2, 0xffffff, 0.5); g.strokeRoundedRect(0,0,100,18,4); g.generateTexture('platform_moving', 100, 18);
-        // Enemigos
-        g.clear(); g.fillStyle(0xff0000, 1); g.beginPath(); g.moveTo(10,0); g.lineTo(20,20); g.lineTo(0,20); g.closePath(); g.fill(); g.generateTexture('enemy_spike', 20, 20);
-        g.clear(); g.fillStyle(0xff8800, 1); g.fillRect(0,0,20,20); g.fillStyle(0xffffff, 1); g.fillRect(5,5,10,10); g.generateTexture('enemy_shooter', 20, 20);
-        
-        // Proyectil (Amarillo brillante)
-        g.clear(); g.fillStyle(0xffff00, 1); g.fillCircle(6,6,6); g.generateTexture('projectile', 12, 12);
-
-        // Bloque Laberinto
-        g.clear(); g.fillStyle(0x222222, 1); g.fillRect(0,0,100,60); 
-        g.beginPath(); g.lineStyle(4, 0x444444, 1); g.moveTo(0,0); g.lineTo(100,0); g.moveTo(0,60); g.lineTo(100,60); g.strokePath();
-        g.generateTexture('maze_block', 100, 60);
-
-        // Entorno
-        g.clear(); g.fillStyle(0x222222, 1); g.fillRect(0,0,32,64); g.generateTexture('wall', 32, 64);
-        g.clear(); g.fillStyle(0xcc2200, 0.95); g.fillRect(0,0,400,800); g.fillStyle(0xff6600, 0.8); for(let i=0; i<40; i++) g.fillCircle(Phaser.Math.Between(0,400), Phaser.Math.Between(0,800), Phaser.Math.Between(5,15)); g.generateTexture('lava_texture', 400, 800);
-
-        // UI & FX
-        g.clear(); g.lineStyle(2, 0xffffff, 0.5); g.strokeCircle(20,20,20); g.generateTexture('joystick_base', 40, 40);
-        g.clear(); g.fillStyle(0xffffff, 1); g.fillRect(0,0,6,6); g.generateTexture('particle_dust', 6, 6);
-        g.clear(); g.fillStyle(0xffff00, 1); g.fillCircle(3,3,3); g.generateTexture('particle_spark', 6, 6);
-        g.clear(); g.fillStyle(0xff4400, 1); g.fillCircle(4,4,4); g.generateTexture('particle_burn', 8, 8);
-        g.clear(); g.fillStyle(0xffd700, 1); g.fillCircle(10,10,8); g.generateTexture('coin', 20, 20);
-        // Power Up & Confetti
-        g.clear(); g.fillStyle(0xff6600, 1); g.fillCircle(15,15,15); g.lineStyle(2, 0x000000, 1); g.strokeCircle(15,15,15); g.beginPath(); g.moveTo(15,0); g.lineTo(15,30); g.strokePath(); g.beginPath(); g.moveTo(0,15); g.lineTo(30,15); g.strokePath(); g.generateTexture('powerup_ball', 30, 30);
-        g.clear(); g.fillStyle(0xffdd00, 0.8); g.fillCircle(4,4,4); g.generateTexture('particle_aura', 8, 8);
-        g.clear(); g.fillStyle(0xffffff, 1); g.fillRect(0,0,8,8); g.generateTexture('confetti', 8, 8);
-    }
-
-    create() {
-        this.input.addPointer(3);
-        this.physics.world.setBounds(0, -1000000, 400, 1000000 + 800);
-        this.cameras.main.setBackgroundColor('#050505');
-
-        const SPLIT_X = 280;
-        this.moveAnchorX = null; 
-        this.joystickVisual = this.add.image(0, 0, 'joystick_base').setAlpha(0).setScrollFactor(0).setDepth(999);
-
-        let splitLine = this.add.graphics();
-        splitLine.lineStyle(2, 0xffffff, 0.15);
-        splitLine.beginPath(); splitLine.moveTo(SPLIT_X, 600); splitLine.lineTo(SPLIT_X, 400); splitLine.strokePath();
-        splitLine.setScrollFactor(0).setDepth(0);
-        this.add.text(140, 560, '< HOLD & SLIDE >', {fontSize:'12px', color:'#fff', alpha:0.4}).setOrigin(0.5).setScrollFactor(0);
-        this.add.text(340, 560, 'JUMP', {fontSize:'12px', color:'#fff', alpha:0.4}).setOrigin(0.5).setScrollFactor(0);
-
-        // --- VARIABLES ---
-        this.jumps = 0;
-        this.maxJumps = 3;
-        this.gameStarted = false;
-        this.isGameOver = false;
-        this.isPausedEvent = false;
-        this.totalScore = 0;
-        this.currentHeight = 0;
-        this.lastPlatformY = 500;
-        this.lastWallTouched = null;
-        this.wallJumpConsecutive = 0;
-        this.mazeSequenceRemaining = 0;
-        this.lastMazeSide = 0; 
-        this.justFinishedMaze = false;
-        
-        // POWER UP STATE
-        this.isInvincible = false;
-        this.powerupTimer = null;
-        this.lastPowerupSpawnHeight = -1000; // Para el Cooldown (Empezamos en negativo para que pueda salir al inicio si queremos)
-
-        // --- GRUPOS ---
-        this.platforms = this.physics.add.group({allowGravity: false, immovable: true}); 
-        this.coins = this.physics.add.staticGroup();
-        this.powerups = this.physics.add.staticGroup();
-        this.enemies = this.physics.add.group({allowGravity: false, immovable: true});
-        this.projectiles = this.physics.add.group({allowGravity: false});
-        this.mazeWalls = this.physics.add.staticGroup();
-
-        this.leftWall = this.add.tileSprite(16, 300, 32, 800, 'wall').setDepth(1);
-        this.rightWall = this.add.tileSprite(384, 300, 32, 800, 'wall').setDepth(1);
-        this.physics.add.existing(this.leftWall, true);
-        this.physics.add.existing(this.rightWall, true);
-
-        this.player = this.physics.add.sprite(200, 400, 'player');
-        this.player.setGravityY(1200); 
-        this.player.setMaxVelocity(400, 1000);
-        this.player.setDragX(1200);
-        this.player.setCollideWorldBounds(false);
-        this.player.setDepth(20);
-        this.player.currentPlatform = null; 
-
-        this.spawnPlatform(200, 450, 140, false);
-        for(let i=0; i<6; i++) this.generateNextRow();
-
-        this.lava = this.add.tileSprite(200, 900, 400, 800, 'lava_texture').setOrigin(0.5, 0);
-        this.physics.add.existing(this.lava);
-        this.lava.body.allowGravity = false;
-        this.lava.body.immovable = true;
-        this.lava.body.setSize(400, 780); 
-        this.lava.body.setOffset(0, 20); 
-        this.lava.setDepth(50); 
-        this.baseLavaSpeed = -60; 
-        this.currentLavaSpeed = this.baseLavaSpeed;
-
-        // --- PARTÍCULAS ---
-        this.dustEmitter = this.add.particles(0, 0, 'particle_dust', { lifespan: 400, speed: {min:50, max:100}, scale: {start:1, end:0}, gravityY: 100, emitting: false, depth: 20 });
-        this.sparkEmitter = this.add.particles(0, 0, 'particle_spark', { lifespan: 300, speed: {min:200, max:400}, blendMode: 'ADD', scale: {start:1, end:0}, emitting: false, depth: 20 });
-        this.burnEmitter = this.add.particles(0, 0, 'particle_burn', { lifespan: 600, speed: {min:100, max:300}, angle: {min: 200, max: 340}, scale: {start:1.5, end:0}, blendMode: 'ADD', tint: [0xff0000, 0xff8800], emitting: false, depth: 51 });
-        this.auraEmitter = this.add.particles(0, 0, 'particle_aura', { speedY: {min: -100, max: -250}, speedX: {min: -20, max: 20}, scale: {start: 1.2, end: 0}, lifespan: 400, blendMode: 'ADD', follow: this.player, emitting: false, depth: 19 });
-        this.confettiEmitter = this.add.particles(0, 0, 'confetti', {
-            speed: {min: 200, max: 500}, angle: {min: 180, max: 360}, gravityY: 300, lifespan: 1200,
-            scale: {start: 1.5, end: 0}, 
-            tint: [0xffd700, 0xffffff, 0xffaa00],
-            emitting: false, depth: 200
-        });
-        // UI
-        this.scoreText = this.add.text(10, 10, 'SCORE: 0', { fontSize: '24px', color: '#ffd700', fontStyle: 'bold' }).setScrollFactor(0).setDepth(100);
-        this.heightText = this.add.text(10, 40, 'ALTURA: 0m', { fontSize: '14px', color: '#fff' }).setScrollFactor(0).setDepth(100);
-        this.uiText = this.add.text(200, 200, '¡SUBE!', { fontSize: '18px', color: '#00ffff', align: 'center', fontStyle: 'bold' }).setOrigin(0.5).setScrollFactor(0).setDepth(100);
-
-        // Controles de teclado para PC
-        this.cursors = this.input.keyboard.createCursorKeys();
-        this.spaceKey = this.input.keyboard.addKey(Phaser.Input.Keyboard.KeyCodes.SPACE);
-        this.isMobile = /Android|webOS|iPhone|iPad|iPod|BlackBerry|IEMobile|Opera Mini/i.test(navigator.userAgent);
-        
-        if (!this.isMobile) {
-            this.add.text(200, 520, '← → MOVER | SPACE SALTAR', {fontSize:'10px', color:'#fff', alpha:0.3}).setOrigin(0.5).setScrollFactor(0);
-        }
-
-        // Inputs táctiles
-        this.input.on('pointerdown', (pointer) => {
-            if (this.isGameOver || this.isPausedEvent) return;
-            if (!this.gameStarted) { this.startGame(); return; }
-            if (pointer.x > SPLIT_X) this.handleJump();
-        });
-        
-        // Inputs de teclado
-        this.spaceKey.on('down', () => {
-            if (this.isGameOver || this.isPausedEvent) return;
-            if (!this.gameStarted) { this.startGame(); return; }
-            this.handleJump();
-        });
-
-        // --- COLISIONES ---
-        this.physics.add.collider(this.player, this.platforms, this.handlePlatformCollision, null, this);
-        this.physics.add.collider(this.player, this.mazeWalls, this.handleLand, null, this);
-        this.physics.add.collider(this.player, this.leftWall, () => this.handleWallTouch('left'));
-        this.physics.add.collider(this.player, this.rightWall, () => this.handleWallTouch('right'));
-        
-        // Corrección Proyectiles vs Pared (usando overlap para asegurar destrucción)
-        // Usar processCallback para validar antes de procesar
-        this.physics.add.overlap(
-            this.projectiles, 
-            this.leftWall, 
-            this.projectileHitWall, 
-            (projectile, wall) => {
-                // Validar que el proyectil está activo y no ha sido procesado
-                return projectile && projectile.active && !projectile.getData('processed');
-            }, 
-            this
-        );
-        this.physics.add.overlap(
-            this.projectiles, 
-            this.rightWall, 
-            this.projectileHitWall, 
-            (projectile, wall) => {
-                return projectile && projectile.active && !projectile.getData('processed');
-            }, 
-            this
-        );
-        
-        this.physics.add.overlap(this.player, this.coins, this.collectCoin, null, this);
-        this.physics.add.overlap(this.player, this.powerups, this.collectPowerup, null, this);
-        this.physics.add.overlap(this.player, this.enemies, this.hitEnemy, null, this);
-        this.physics.add.overlap(
-            this.player, 
-            this.projectiles, 
-            this.hitByProjectile, 
-            (player, projectile) => {
-                // Validar que el proyectil está activo y no ha sido procesado
-                return projectile && projectile.active && !projectile.getData('processed');
-            }, 
-            this
-        );
-        this.physics.add.overlap(this.player, this.lava, this.touchLava, null, this);
-
-        this.cameras.main.startFollow(this.player, true, 0, 0.1);
-    }
-
-    update() {
-        if (this.isGameOver) {
-            const targetY = this.cameras.main.scrollY;
-            if (this.lava.y > targetY - 50) this.lava.y -= 15;
-            this.lava.tilePositionY -= 2;
-            return;
-        }
-        if (this.isPausedEvent) return;
-        if (!this.gameStarted) return;
-        
-        this.player.x = Phaser.Math.Clamp(this.player.x, 14, 386);
-        if (!this.player.body.touching.down) this.player.currentPlatform = null;
-
-        // --- CONTROLES: TECLADO O TÁCTIL ---
-        const SPLIT_X = 280;
-        let movePointer = null;
-        let keyboardMove = 0;
-        
-        // Detectar movimiento por teclado
-        if (this.cursors.left.isDown) {
-            keyboardMove = -1;
-        } else if (this.cursors.right.isDown) {
-            keyboardMove = 1;
-        }
-        
-        // Detectar movimiento táctil (solo si no hay input de teclado o es móvil)
-        if (this.isMobile || keyboardMove === 0) {
-            this.input.manager.pointers.forEach((pointer) => {
-                if (pointer.isDown && pointer.x <= SPLIT_X) movePointer = pointer;
-            });
-        }
-
-        if (keyboardMove !== 0) {
-            // --- MOVIMIENTO POR TECLADO ---
-            this.moveAnchorX = null;
-            this.joystickVisual.setAlpha(0);
-            const force = 1200;
-            this.player.setAccelerationX(keyboardMove * force);
-        } else if (movePointer) {
-            // --- USUARIO MOVIENDO (TÁCTIL) ---
-            if (this.moveAnchorX === null) {
-                this.moveAnchorX = movePointer.x;
-                this.joystickVisual.setPosition(this.moveAnchorX, movePointer.y).setAlpha(0.5);
+    <script>
+        class MainScene extends Phaser.Scene {
+            constructor() {
+                super({ key: 'MainScene' });
             }
-            const diffX = movePointer.x - this.moveAnchorX;
-            if (Math.abs(diffX) > 10) {
-                const force = 1200;
-                this.player.setAccelerationX(diffX > 0 ? force : -force);
-            } else {
-                this.player.setAccelerationX(0);
+
+            preload() {
+                let g = this.make.graphics({ x: 0, y: 0 });
+
+                // Assets
+                g.fillStyle(0x00ffff, 1); g.fillRoundedRect(0, 0, 24, 24, 6); g.lineStyle(2, 0xffffff, 0.8); g.strokeRoundedRect(0, 0, 24, 24, 6); g.generateTexture('player', 24, 24);
+                g.clear(); g.fillStyle(0xff00aa, 1); g.fillRoundedRect(0, 0, 100, 18, 4); g.generateTexture('platform', 100, 18);
+                g.clear(); g.fillStyle(0x0088ff, 1); g.fillRoundedRect(0, 0, 100, 18, 4); g.lineStyle(2, 0xffffff, 0.5); g.strokeRoundedRect(0, 0, 100, 18, 4); g.generateTexture('platform_moving', 100, 18);
+                // Enemigos
+                g.clear(); g.fillStyle(0xff0000, 1); g.beginPath(); g.moveTo(10, 0); g.lineTo(20, 20); g.lineTo(0, 20); g.closePath(); g.fill(); g.generateTexture('enemy_spike', 20, 20);
+                g.clear(); g.fillStyle(0xff8800, 1); g.fillRect(0, 0, 20, 20); g.fillStyle(0xffffff, 1); g.fillRect(5, 5, 10, 10); g.generateTexture('enemy_shooter', 20, 20);
+
+                // Proyectil (Amarillo brillante)
+                g.clear(); g.fillStyle(0xffff00, 1); g.fillCircle(6, 6, 6); g.generateTexture('projectile', 12, 12);
+
+                // Bloque Laberinto
+                g.clear(); g.fillStyle(0x222222, 1); g.fillRect(0, 0, 100, 60);
+                g.beginPath(); g.lineStyle(4, 0x444444, 1); g.moveTo(0, 0); g.lineTo(100, 0); g.moveTo(0, 60); g.lineTo(100, 60); g.strokePath();
+                g.generateTexture('maze_block', 100, 60);
+
+                // Entorno
+                g.clear(); g.fillStyle(0x222222, 1); g.fillRect(0, 0, 32, 64); g.generateTexture('wall', 32, 64);
+                g.clear(); g.fillStyle(0xcc2200, 0.95); g.fillRect(0, 0, 400, 800); g.fillStyle(0xff6600, 0.8); for (let i = 0; i < 40; i++) g.fillCircle(Phaser.Math.Between(0, 400), Phaser.Math.Between(0, 800), Phaser.Math.Between(5, 15)); g.generateTexture('lava_texture', 400, 800);
+
+                // UI & FX
+                g.clear(); g.lineStyle(2, 0xffffff, 0.5); g.strokeCircle(20, 20, 20); g.generateTexture('joystick_base', 40, 40);
+                g.clear(); g.fillStyle(0xffffff, 1); g.fillRect(0, 0, 6, 6); g.generateTexture('particle_dust', 6, 6);
+                g.clear(); g.fillStyle(0xffff00, 1); g.fillCircle(3, 3, 3); g.generateTexture('particle_spark', 6, 6);
+                g.clear(); g.fillStyle(0xff4400, 1); g.fillCircle(4, 4, 4); g.generateTexture('particle_burn', 8, 8);
+                g.clear(); g.fillStyle(0xffd700, 1); g.fillCircle(10, 10, 8); g.generateTexture('coin', 20, 20);
+                // Power Up & Confetti
+                g.clear(); g.fillStyle(0xff6600, 1); g.fillCircle(15, 15, 15); g.lineStyle(2, 0x000000, 1); g.strokeCircle(15, 15, 15); g.beginPath(); g.moveTo(15, 0); g.lineTo(15, 30); g.strokePath(); g.beginPath(); g.moveTo(0, 15); g.lineTo(30, 15); g.strokePath(); g.generateTexture('powerup_ball', 30, 30);
+                g.clear(); g.fillStyle(0xffdd00, 0.8); g.fillCircle(4, 4, 4); g.generateTexture('particle_aura', 8, 8);
+                g.clear(); g.fillStyle(0xffffff, 1); g.fillRect(0, 0, 8, 8); g.generateTexture('confetti', 8, 8);
             }
-        } else {
-            this.moveAnchorX = null;
-            this.joystickVisual.setAlpha(0);
-            this.player.setAccelerationX(0);
-            if (this.player.currentPlatform && this.player.currentPlatform.getData('isMoving')) {
-                this.player.setVelocityX(this.player.currentPlatform.body.velocity.x);
+
+            create() {
+                this.input.addPointer(3);
+                this.physics.world.setBounds(0, -1000000, 400, 1000000 + 800);
+                this.cameras.main.setBackgroundColor('#050505');
+
+                const SPLIT_X = 280;
+                this.moveAnchorX = null;
+                this.joystickVisual = this.add.image(0, 0, 'joystick_base').setAlpha(0).setScrollFactor(0).setDepth(999);
+
+                this.isMobile = /Android|webOS|iPhone|iPad|iPod|BlackBerry|IEMobile|Opera Mini/i.test(navigator.userAgent);
+
+                let splitLine = this.add.graphics();
+                splitLine.lineStyle(2, 0xffffff, 0.15);
+                splitLine.beginPath(); splitLine.moveTo(SPLIT_X, 600); splitLine.lineTo(SPLIT_X, 550); splitLine.strokePath();
+                splitLine.setScrollFactor(0).setDepth(0);
+
+                if (this.isMobile) {
+                    this.add.text(140, 560, '< HOLD & SLIDE >', { fontSize: '12px', color: '#fff', alpha: 0.4 }).setOrigin(0.5).setScrollFactor(0);
+                    this.add.text(340, 560, 'JUMP', { fontSize: '12px', color: '#fff', alpha: 0.4 }).setOrigin(0.5).setScrollFactor(0);
+                } else {
+                    this.add.text(200, 560, '← → MOVER | SPACE SALTAR', { fontSize: '12px', color: '#fff', alpha: 0.4 }).setOrigin(0.5).setScrollFactor(0);
+                }
+
+                // --- VARIABLES ---
+                this.jumps = 0;
+                this.maxJumps = 3;
+                this.gameStarted = false;
+                this.isGameOver = false;
+                this.isPausedEvent = false;
+                this.totalScore = 0;
+                this.currentHeight = 0;
+                this.lastPlatformY = 500;
+                this.lastWallTouched = null;
+                this.wallJumpConsecutive = 0;
+                this.mazeSequenceRemaining = 0;
+                this.lastMazeSide = 0;
+                this.justFinishedMaze = false;
+
+                // POWER UP STATE
+                this.isInvincible = false;
+                this.powerupTimer = null;
+                this.lastPowerupSpawnHeight = -1000; // Para el Cooldown (Empezamos en negativo para que pueda salir al inicio si queremos)
+
+                // --- GRUPOS ---
+                this.platforms = this.physics.add.group({ allowGravity: false, immovable: true });
+                this.coins = this.physics.add.staticGroup();
+                this.powerups = this.physics.add.staticGroup();
+                this.enemies = this.physics.add.group({ allowGravity: false, immovable: true });
+                this.projectiles = this.physics.add.group({ allowGravity: false });
+                this.mazeWalls = this.physics.add.staticGroup();
+
+                this.leftWall = this.add.tileSprite(16, 300, 32, 800, 'wall').setDepth(60);
+                this.rightWall = this.add.tileSprite(384, 300, 32, 800, 'wall').setDepth(60);
+                this.physics.add.existing(this.leftWall, true);
+                this.physics.add.existing(this.rightWall, true);
+
+                this.player = this.physics.add.sprite(200, 400, 'player');
+                this.player.setGravityY(1200);
+                this.player.setMaxVelocity(400, 1000);
+                this.player.setDragX(1200);
+                this.player.setCollideWorldBounds(false);
+                this.player.setDepth(20);
+                this.player.currentPlatform = null;
+
+                this.spawnPlatform(200, 450, 140, false);
+                for (let i = 0; i < 6; i++) this.generateNextRow();
+
+                this.lava = this.add.tileSprite(200, 900, 400, 800, 'lava_texture').setOrigin(0.5, 0);
+                this.physics.add.existing(this.lava);
+                this.lava.body.allowGravity = false;
+                this.lava.body.immovable = true;
+                this.lava.body.setSize(400, 780);
+                this.lava.body.setOffset(0, 20);
+                this.lava.setDepth(50);
+                this.baseLavaSpeed = -60;
+                this.currentLavaSpeed = this.baseLavaSpeed;
+
+                // --- PARTÍCULAS ---
+                this.dustEmitter = this.add.particles(0, 0, 'particle_dust', { lifespan: 400, speed: { min: 50, max: 100 }, scale: { start: 1, end: 0 }, gravityY: 100, emitting: false, depth: 20 });
+                this.sparkEmitter = this.add.particles(0, 0, 'particle_spark', { lifespan: 300, speed: { min: 200, max: 400 }, blendMode: 'ADD', scale: { start: 1, end: 0 }, emitting: false, depth: 20 });
+                this.burnEmitter = this.add.particles(0, 0, 'particle_burn', { lifespan: 600, speed: { min: 100, max: 300 }, angle: { min: 200, max: 340 }, scale: { start: 1.5, end: 0 }, blendMode: 'ADD', tint: [0xff0000, 0xff8800], emitting: false, depth: 51 });
+                this.auraEmitter = this.add.particles(0, 0, 'particle_aura', { speedY: { min: -100, max: -250 }, speedX: { min: -20, max: 20 }, scale: { start: 1.2, end: 0 }, lifespan: 400, blendMode: 'ADD', follow: this.player, emitting: false, depth: 19 });
+                this.confettiEmitter = this.add.particles(0, 0, 'confetti', {
+                    speed: { min: 200, max: 500 }, angle: { min: 180, max: 360 }, gravityY: 300, lifespan: 1200,
+                    scale: { start: 1.5, end: 0 },
+                    tint: [0xffd700, 0xffffff, 0xffaa00],
+                    emitting: false, depth: 200
+                });
+                // UI
+                this.scoreText = this.add.text(10, 10, 'SCORE: 0', { fontSize: '24px', color: '#ffd700', fontStyle: 'bold' }).setScrollFactor(0).setDepth(100);
+                this.heightText = this.add.text(10, 40, 'ALTURA: 0m', { fontSize: '14px', color: '#fff' }).setScrollFactor(0).setDepth(100);
+                this.uiText = this.add.text(200, 200, '¡SUBE!', { fontSize: '18px', color: '#00ffff', align: 'center', fontStyle: 'bold' }).setOrigin(0.5).setScrollFactor(0).setDepth(100);
+
+                // Controles de teclado para PC
+                this.cursors = this.input.keyboard.createCursorKeys();
+                this.spaceKey = this.input.keyboard.addKey(Phaser.Input.Keyboard.KeyCodes.SPACE);
+
+                // Inputs táctiles
+                this.input.on('pointerdown', (pointer) => {
+                    if (this.isGameOver || this.isPausedEvent) return;
+                    if (!this.gameStarted) { this.startGame(); return; }
+                    if (pointer.x > SPLIT_X) this.handleJump();
+                });
+
+                // Inputs de teclado
+                this.spaceKey.on('down', () => {
+                    if (this.isGameOver || this.isPausedEvent) return;
+                    if (!this.gameStarted) { this.startGame(); return; }
+                    this.handleJump();
+                });
+
+                // --- COLISIONES ---
+                this.physics.add.collider(this.player, this.platforms, this.handlePlatformCollision, null, this);
+                this.physics.add.collider(this.player, this.mazeWalls, this.handleLand, null, this);
+                this.physics.add.collider(this.player, this.leftWall, () => this.handleWallTouch('left'));
+                this.physics.add.collider(this.player, this.rightWall, () => this.handleWallTouch('right'));
+
+                // Corrección Proyectiles vs Pared (usando overlap para asegurar destrucción)
+                // Usar processCallback para validar antes de procesar
+                this.physics.add.overlap(
+                    this.projectiles,
+                    this.leftWall,
+                    this.projectileHitWall,
+                    (obj1, obj2) => {
+                        let proj = (obj1.texture && obj1.texture.key === 'projectile') ? obj1 : (obj2.texture && obj2.texture.key === 'projectile' ? obj2 : null);
+                        return proj && proj.active && !proj.getData('processed');
+                    },
+                    this
+                );
+                this.physics.add.overlap(
+                    this.projectiles,
+                    this.rightWall,
+                    this.projectileHitWall,
+                    (obj1, obj2) => {
+                        let proj = (obj1.texture && obj1.texture.key === 'projectile') ? obj1 : (obj2.texture && obj2.texture.key === 'projectile' ? obj2 : null);
+                        return proj && proj.active && !proj.getData('processed');
+                    },
+                    this
+                );
+
+                this.physics.add.overlap(this.player, this.coins, this.collectCoin, null, this);
+                this.physics.add.overlap(this.player, this.powerups, this.collectPowerup, null, this);
+                this.physics.add.overlap(this.player, this.enemies, this.hitEnemy, null, this);
+                this.physics.add.overlap(
+                    this.player,
+                    this.projectiles,
+                    this.hitByProjectile,
+                    (player, projectile) => {
+                        // Validar que el proyectil está activo y no ha sido procesado
+                        return projectile && projectile.active && !projectile.getData('processed');
+                    },
+                    this
+                );
+                this.physics.add.overlap(this.player, this.lava, this.touchLava, null, this);
+
+                this.cameras.main.startFollow(this.player, true, 0, 0.1);
             }
-        }
 
-        // Lava
-        let distanceToLava = this.player.y - this.lava.y;
-        let tierSpeed = -60; 
-        if (this.currentHeight > 1000) tierSpeed = -72;
-        if (this.currentHeight > 2000) tierSpeed = -85; 
-        if (this.currentHeight > 3000) tierSpeed = -100;
+            update() {
+                if (this.isGameOver) {
+                    const targetY = this.cameras.main.scrollY;
+                    if (this.lava.y > targetY - 50) this.lava.y -= 15;
+                    this.lava.tilePositionY -= 2;
+                    return;
+                }
+                if (this.isPausedEvent) return;
+                if (!this.gameStarted) return;
 
-        let targetSpeed = tierSpeed;
-        if (distanceToLava < -800) targetSpeed = -200; 
-        else if (distanceToLava < -600) targetSpeed = -140; 
+                this.player.x = Phaser.Math.Clamp(this.player.x, 14, 386);
+                if (!this.player.body.touching.down) this.player.currentPlatform = null;
 
-        this.currentLavaSpeed = Phaser.Math.Linear(this.currentLavaSpeed, targetSpeed, 0.02);
-        this.lava.y += this.currentLavaSpeed * (1/60);
-        this.lava.tilePositionY -= 1;
+                // --- CONTROLES: TECLADO O TÁCTIL ---
+                const SPLIT_X = 280;
+                let movePointer = null;
+                let keyboardMove = 0;
 
-        this.leftWall.y = this.cameras.main.scrollY + 300; this.leftWall.body.updateFromGameObject();
-        this.rightWall.y = this.cameras.main.scrollY + 300; this.rightWall.body.updateFromGameObject();
+                // Detectar movimiento por teclado
+                if (this.cursors.left.isDown) {
+                    keyboardMove = -1;
+                } else if (this.cursors.right.isDown) {
+                    keyboardMove = 1;
+                }
 
-        if (this.lastPlatformY > this.cameras.main.scrollY - 300) this.generateNextRow();
+                // Detectar movimiento táctil (solo si no hay input de teclado o es móvil)
+                if (this.isMobile || keyboardMove === 0) {
+                    this.input.manager.pointers.forEach((pointer) => {
+                        if (pointer.isDown && pointer.x <= SPLIT_X) movePointer = pointer;
+                    });
+                }
 
-        const limitY = this.player.y + 900;
-        this.platforms.children.iterate((c) => { if(c && c.y > limitY) c.destroy(); });
-        this.coins.children.iterate((c) => { if(c && c.y > limitY) c.destroy(); });
-        this.powerups.children.iterate((c) => { if(c && c.y > limitY) c.destroy(); });
-        this.enemies.children.iterate((c) => { if(c && c.y > limitY) c.destroy(); });
-        this.mazeWalls.children.iterate((c) => { if(c && c.y > limitY) c.destroy(); });
-        
-        // Cleanup Proyectiles (Red de seguridad) - Mejorado
-        this.projectiles.children.iterate((c) => { 
-            if (c && c.active) {
-                if (c.y > limitY || c.x < -50 || c.x > 450) {
-                    try {
-                        c.setActive(false);
-                        c.setVisible(false);
-                        c.destroy();
-                    } catch (error) {
-                        console.warn('Error cleaning up projectile:', error);
+                if (keyboardMove !== 0) {
+                    // --- MOVIMIENTO POR TECLADO ---
+                    this.moveAnchorX = null;
+                    this.joystickVisual.setAlpha(0);
+                    const force = 1200;
+                    this.player.setAccelerationX(keyboardMove * force);
+                } else if (movePointer) {
+                    // --- USUARIO MOVIENDO (TÁCTIL) ---
+                    if (this.moveAnchorX === null) {
+                        this.moveAnchorX = movePointer.x;
+                        this.joystickVisual.setPosition(this.moveAnchorX, movePointer.y).setAlpha(0.5);
+                    }
+                    const diffX = movePointer.x - this.moveAnchorX;
+                    if (Math.abs(diffX) > 10) {
+                        const force = 1200;
+                        this.player.setAccelerationX(diffX > 0 ? force : -force);
+                    } else {
+                        this.player.setAccelerationX(0);
+                    }
+                } else {
+                    this.moveAnchorX = null;
+                    this.joystickVisual.setAlpha(0);
+                    this.player.setAccelerationX(0);
+                    if (this.player.currentPlatform && this.player.currentPlatform.getData('isMoving')) {
+                        this.player.setVelocityX(this.player.currentPlatform.body.velocity.x);
+                    }
+                }
+
+                // Lava
+                let distanceToLava = this.player.y - this.lava.y;
+                let tierSpeed = -60;
+                if (this.currentHeight > 1000) tierSpeed = -72;
+                if (this.currentHeight > 2000) tierSpeed = -85;
+                if (this.currentHeight > 3000) tierSpeed = -100;
+
+                let targetSpeed = tierSpeed;
+                if (distanceToLava < -800) targetSpeed = -200;
+                else if (distanceToLava < -600) targetSpeed = -140;
+
+                this.currentLavaSpeed = Phaser.Math.Linear(this.currentLavaSpeed, targetSpeed, 0.02);
+                this.lava.y += this.currentLavaSpeed * (1 / 60);
+                this.lava.tilePositionY -= 1;
+
+                if (this.leftWall && this.leftWall.active && this.leftWall.body) {
+                    this.leftWall.y = this.cameras.main.scrollY + 300; this.leftWall.body.updateFromGameObject();
+                }
+
+                if (this.rightWall && this.rightWall.active && this.rightWall.body) {
+                    this.rightWall.y = this.cameras.main.scrollY + 300; this.rightWall.body.updateFromGameObject();
+                }
+
+                if (this.lastPlatformY > this.cameras.main.scrollY - 300) this.generateNextRow();
+
+                const limitY = this.player.y + 900;
+                this.platforms.children.iterate((c) => { if (c && c.y > limitY) c.destroy(); });
+                this.coins.children.iterate((c) => { if (c && c.y > limitY) c.destroy(); });
+                this.powerups.children.iterate((c) => { if (c && c.y > limitY) c.destroy(); });
+                this.enemies.children.iterate((c) => { if (c && c.y > limitY) c.destroy(); });
+                this.mazeWalls.children.iterate((c) => { if (c && c.y > limitY) c.destroy(); });
+
+                // Cleanup Proyectiles (Red de seguridad) - Mejorado
+                this.projectiles.children.iterate((c) => {
+                    if (c && c.active) {
+                        if (c.y > limitY || c.x < -50 || c.x > 450) {
+                            try {
+                                c.setActive(false);
+                                c.setVisible(false);
+                                c.destroy();
+                            } catch (error) {
+                                console.warn('Error cleaning up projectile:', error);
+                            }
+                        }
+                    }
+                });
+
+                let h = Math.floor((400 - this.player.y) / 10);
+                if (h > this.currentHeight) this.currentHeight = h;
+                this.heightText.setText(`ALTURA: ${this.currentHeight}m`);
+
+                this.platforms.children.iterate((plat) => {
+                    if (plat.getData('isMoving')) {
+                        if (plat.x < 90) plat.setVelocityX(100);
+                        else if (plat.x > 310) plat.setVelocityX(-100);
+                    }
+                });
+            }
+
+            // --- SISTEMA DE DISPARO ---
+            spawnShooter(platform) {
+                let ex = platform.x;
+                let ey = platform.y - 20;
+                let shooter = this.enemies.create(ex, ey, 'enemy_shooter');
+                shooter.setDepth(20);
+
+                // Timer interno
+                let delay = Phaser.Math.Between(1500, 3000);
+                let shootEvent = this.time.addEvent({
+                    delay: delay,
+                    callback: () => {
+                        if (!shooter.active) { shootEvent.remove(); return; }
+                        this.shootProjectile(shooter);
+                        shootEvent.delay = Phaser.Math.Between(1500, 3000);
+                    },
+                    loop: true
+                });
+                shooter.setData('shootEvent', shootEvent);
+            }
+
+            shootProjectile(shooter) {
+                if (!this.player.active || !shooter.active) return;
+
+                try {
+                    let direction = (this.player.x < shooter.x) ? -1 : 1;
+                    let proj = this.projectiles.create(shooter.x + (15 * direction), shooter.y, 'projectile');
+
+                    if (!proj) {
+                        console.warn('Failed to create projectile');
+                        return;
+                    }
+
+                    proj.setVelocityX(300 * direction);
+                    proj.setDepth(21);
+
+                    // Agregar flag para evitar doble procesamiento
+                    proj.setData('processed', false);
+
+                    this.tweens.add({ targets: shooter, x: shooter.x - (5 * direction), duration: 50, yoyo: true });
+                } catch (error) {
+                    console.warn('Error shooting projectile:', error);
+                }
+            }
+
+            projectileHitWall(obj1, obj2) {
+                // PARANOID CHECK: Identify explicitly
+                let projectile = null;
+                let wall = null;
+
+                if (obj1.texture && obj1.texture.key === 'projectile') projectile = obj1;
+                else if (obj2.texture && obj2.texture.key === 'projectile') projectile = obj2;
+
+                if (obj1.texture && obj1.texture.key === 'wall') wall = obj1;
+                else if (obj2.texture && obj2.texture.key === 'wall') wall = obj2;
+
+                // Fallback for wall identification if texture check fails (e.g. tileSprite might behave differently)
+                if (!wall) {
+                    if (obj1 === this.leftWall || obj1 === this.rightWall) wall = obj1;
+                    else if (obj2 === this.leftWall || obj2 === this.rightWall) wall = obj2;
+                }
+
+                // CRITICAL: If we can't find a projectile, or if the "projectile" is actually a wall, ABORT IMMEDIATELY
+                if (!projectile) return;
+                if (projectile === this.leftWall || projectile === this.rightWall) return;
+                if (projectile.texture && projectile.texture.key === 'wall') return;
+
+                // Validar que el proyectil existe y está activo antes de destruirlo
+                if (!projectile.active || projectile.getData('processed')) return;
+
+                try {
+                    // Marcar como procesado ANTES de hacer cualquier cosa
+                    projectile.setData('processed', true);
+
+                    this.sparkEmitter.emitParticleAt(projectile.x, projectile.y, 10);
+
+                    // Destruir de forma segura
+                    if (projectile.active) {
+                        projectile.setActive(false);
+                        projectile.setVisible(false);
+                        projectile.destroy();
+                    }
+                } catch (error) {
+                    // Silent catch
+                }
+            }
+
+            hitByProjectile(obj1, obj2) {
+                let player = null;
+                let projectile = null;
+
+                if (obj1.texture && obj1.texture.key === 'player') player = obj1;
+                else if (obj2.texture && obj2.texture.key === 'player') player = obj2;
+
+                if (obj1.texture && obj1.texture.key === 'projectile') projectile = obj1;
+                else if (obj2.texture && obj2.texture.key === 'projectile') projectile = obj2;
+
+                // Fallback: assume player is this.player if not found (though overlap should provide it)
+                if (!player && (obj1 === this.player || obj2 === this.player)) player = this.player;
+
+                if (!player || !projectile) return;
+
+                // Validar que el proyectil existe, está activo y no ha sido procesado
+                if (!projectile.active || projectile.getData('processed')) return;
+
+                try {
+                    // Marcar como procesado ANTES de hacer cualquier cosa
+                    projectile.setData('processed', true);
+
+                    // Guardar posición y velocidad antes de destruir
+                    const projX = projectile.x;
+                    const projVelX = projectile.body ? projectile.body.velocity.x : 0;
+
+                    if (this.isInvincible) {
+                        // Destruir de forma segura
+                        if (projectile.active) {
+                            projectile.setActive(false);
+                            projectile.setVisible(false);
+                            projectile.destroy();
+                        }
+                        this.sparkEmitter.emitParticleAt(projX, projectile.y, 10);
+                        return;
+                    }
+
+                    // Destruir de forma segura
+                    if (projectile.active) {
+                        projectile.setActive(false);
+                        projectile.setVisible(false);
+                        projectile.destroy();
+                    }
+
+                    let dir = (player.x < projX) ? -1 : 1;
+                    if (projVelX > 0) dir = 1; else if (projVelX < 0) dir = -1;
+                    player.setVelocity(dir * 400, -200);
+                    player.setTint(0xff0000);
+                    this.cameras.main.shake(100, 0.02);
+                    this.time.delayedCall(200, () => player.clearTint());
+                } catch (error) {
+                    console.warn('Error handling projectile hit:', error);
+                }
+            }
+
+            // --- EVENTOS ---
+            collectPowerup(player, powerup) {
+                powerup.destroy();
+                this.isPausedEvent = true;
+                this.physics.pause();
+                player.setTint(0xffff00);
+                this.auraEmitter.start();
+
+                // Registrar altura para Cooldown
+                this.lastPowerupSpawnHeight = this.currentHeight;
+
+                let t = this.add.text(this.cameras.main.centerX, this.cameras.main.scrollY + 200, 'POWERUP 67', {
+                    fontSize: '40px', color: '#ffd700', fontStyle: 'bold', stroke: '#000000', strokeThickness: 6
+                }).setOrigin(0.5).setDepth(200);
+
+                this.cameras.main.shake(500, 0.005);
+                this.time.delayedCall(2000, () => {
+                    t.destroy();
+                    this.physics.resume();
+                    this.isPausedEvent = false;
+                    this.activateInvincibility();
+                });
+            }
+
+            activateInvincibility() {
+                this.isInvincible = true;
+                if (this.powerupTimer) this.powerupTimer.remove();
+                this.powerupTimer = this.time.delayedCall(12000, () => {
+                    this.deactivatePowerup();
+                });
+            }
+
+            deactivatePowerup() {
+                this.isInvincible = false;
+                this.auraEmitter.stop();
+                this.player.setTint(0xaaaaaa);
+                this.time.delayedCall(200, () => this.player.clearTint());
+            }
+
+            trigger67Celebration() {
+                this.isPausedEvent = true;
+                this.physics.pause();
+                this.cameras.main.flash(500, 255, 255, 255);
+                this.confettiEmitter.setPosition(this.cameras.main.centerX, this.cameras.main.scrollY - 50);
+                this.confettiEmitter.explode(80);
+
+                let t = this.add.text(this.cameras.main.centerX, this.cameras.main.scrollY + 300, '67!', {
+                    fontFamily: '"Courier New", monospace', fontSize: '100px', color: '#ffd700', fontStyle: 'bold', stroke: '#8B4500', strokeThickness: 10,
+                    shadow: { offsetX: 6, offsetY: 6, color: '#000000', blur: 0, stroke: true, fill: true }
+                }).setOrigin(0.5).setDepth(200);
+
+                this.tweens.add({ targets: t, scaleX: 1.3, scaleY: 1.3, duration: 300, yoyo: true, repeat: 2 });
+
+                this.time.delayedCall(1500, () => {
+                    t.destroy();
+                    this.physics.resume();
+                    this.isPausedEvent = false;
+                });
+            }
+
+            collectCoin(player, coin) {
+                coin.destroy();
+                this.totalScore += 1;
+                this.scoreText.setText('SCORE: ' + this.totalScore);
+                let t = this.add.text(player.x, player.y - 30, '+1', { fontSize: '18px', fontStyle: 'bold', color: '#ffff00' }).setDepth(101);
+                this.tweens.add({ targets: t, y: player.y - 80, alpha: 0, duration: 600, onComplete: () => t.destroy() });
+
+                let strScore = this.totalScore.toString();
+                if (strScore === '67' || strScore.endsWith('67')) {
+                    this.trigger67Celebration();
+                }
+            }
+
+            hitEnemy(player, enemy) {
+                if (this.isInvincible) { enemy.destroy(); this.sparkEmitter.emitParticleAt(enemy.x, enemy.y, 20); return; }
+                player.setTint(0xff0000); this.cameras.main.shake(100, 0.01); this.time.delayedCall(200, () => player.clearTint());
+                const kickX = Phaser.Math.Between(-300, 300); player.setVelocity(kickX, 300);
+            }
+            touchLava(player, lava) {
+                if (this.isGameOver) return;
+                if (this.isInvincible) {
+                    this.deactivatePowerup(); if (this.powerupTimer) this.powerupTimer.remove();
+                    player.setVelocityY(-900);
+                    let t = this.uiText.scene.add.text(player.x, player.y - 50, 'LAVA JUMP!', { fontSize: '18px', color: '#fff', stroke: '#f00', strokeThickness: 4 }).setOrigin(0.5).setDepth(100);
+                    this.tweens.add({ targets: t, y: player.y - 150, alpha: 0, duration: 1000, onComplete: () => t.destroy() });
+                    return;
+                }
+                this.isGameOver = true; this.burnEmitter.emitParticleAt(player.x, player.y, 50); player.setTint(0x000000); player.setVelocity(0, 0);
+                this.physics.pause(); this.uiText.setText(`GAME OVER\nScore: ${this.totalScore}\nTap or Space to Restart`); this.uiText.setVisible(true); this.uiText.setDepth(200); this.scoreText.setDepth(200);
+
+                this.time.delayedCall(1000, () => {
+                    const restartFn = () => {
+                        this.spaceKey.off('down', restartFn);
+                        this.scene.restart();
+                    };
+                    this.input.once('pointerdown', restartFn);
+                    this.spaceKey.once('down', restartFn);
+                });
+            }
+
+            handleLand(player, floor) {
+                if (player.body.touching.down) {
+                    this.jumps = 0; this.lastWallTouched = null; this.wallJumpConsecutive = 0;
+                    player.clearTint(); player.angle = 0; player.currentPlatform = floor;
+                }
+            }
+
+            handlePlatformCollision(player, platform) {
+                if (player.body.touching.down && platform.body.touching.up) { this.handleLand(player, platform); return; }
+                if (platform.getData('isMoving')) {
+                    if ((player.body.touching.left && platform.body.touching.right) || (player.body.touching.right && platform.body.touching.left)) {
+                        platform.setVelocityX(platform.body.velocity.x * -1);
                     }
                 }
             }
-        });
 
-        let h = Math.floor((400 - this.player.y) / 10);
-        if (h > this.currentHeight) this.currentHeight = h;
-        this.heightText.setText(`ALTURA: ${this.currentHeight}m`);
-
-        this.platforms.children.iterate((plat) => {
-            if (plat.getData('isMoving')) {
-                if (plat.x < 90) plat.setVelocityX(100);
-                else if (plat.x > 310) plat.setVelocityX(-100);
-            }
-        });
-    }
-
-    // --- SISTEMA DE DISPARO ---
-    spawnShooter(platform) {
-        let ex = platform.x; 
-        let ey = platform.y - 20; 
-        let shooter = this.enemies.create(ex, ey, 'enemy_shooter'); 
-        shooter.setDepth(20);
-        
-        // Timer interno
-        let delay = Phaser.Math.Between(1500, 3000);
-        let shootEvent = this.time.addEvent({
-            delay: delay,
-            callback: () => {
-                if (!shooter.active) { shootEvent.remove(); return; }
-                this.shootProjectile(shooter);
-                shootEvent.delay = Phaser.Math.Between(1500, 3000);
-            },
-            loop: true
-        });
-        shooter.setData('shootEvent', shootEvent);
-    }
-
-    shootProjectile(shooter) {
-        if (!this.player.active || !shooter.active) return;
-        
-        try {
-            let direction = (this.player.x < shooter.x) ? -1 : 1;
-            let proj = this.projectiles.create(shooter.x + (15 * direction), shooter.y, 'projectile');
-            
-            if (!proj) {
-                console.warn('Failed to create projectile');
-                return;
-            }
-            
-            proj.setVelocityX(300 * direction);
-            proj.setDepth(21);
-            
-            // Agregar flag para evitar doble procesamiento
-            proj.setData('processed', false);
-            
-            this.tweens.add({targets: shooter, x: shooter.x - (5 * direction), duration: 50, yoyo: true});
-        } catch (error) {
-            console.warn('Error shooting projectile:', error);
-        }
-    }
-
-    projectileHitWall(projectile, wall) {
-        // Validar que el proyectil existe y está activo antes de destruirlo
-        if (!projectile || !projectile.active || projectile.getData('processed')) return;
-        
-        try {
-            // Marcar como procesado ANTES de hacer cualquier cosa
-            projectile.setData('processed', true);
-            
-            this.sparkEmitter.emitParticleAt(projectile.x, projectile.y, 10);
-            
-            // Destruir de forma segura
-            if (projectile.active) {
-                projectile.setActive(false);
-                projectile.setVisible(false);
-                projectile.destroy();
-            }
-        } catch (error) {
-            console.warn('Error destroying projectile on wall:', error);
-        }
-    }
-
-    hitByProjectile(player, projectile) {
-        // Validar que el proyectil existe, está activo y no ha sido procesado
-        if (!projectile || !projectile.active || projectile.getData('processed')) return;
-        
-        try {
-            // Marcar como procesado ANTES de hacer cualquier cosa
-            projectile.setData('processed', true);
-            
-            // Guardar posición y velocidad antes de destruir
-            const projX = projectile.x;
-            const projVelX = projectile.body ? projectile.body.velocity.x : 0;
-            
-            if (this.isInvincible) { 
-                // Destruir de forma segura
-                if (projectile.active) {
-                    projectile.setActive(false);
-                    projectile.setVisible(false);
-                    projectile.destroy();
+            handleJump() {
+                // --- APLICAR SPEED BOOST ---
+                let boost = this.isInvincible ? 1.25 : 1.0; // 25% Extra Force
+                if (this.player.body.touching.left) { if (this.checkWallStamina('left')) { this.player.setVelocity(400 * boost, -580 * boost); this.jumps = 1; this.sparkEmitter.emitParticleAt(this.player.x - 10, this.player.y, 10); } return; }
+                if (this.player.body.touching.right) { if (this.checkWallStamina('right')) { this.player.setVelocity(-400 * boost, -580 * boost); this.jumps = 1; this.sparkEmitter.emitParticleAt(this.player.x + 10, this.player.y, 10); } return; }
+                if (this.jumps < this.maxJumps) {
+                    if (this.jumps === 0) this.dustEmitter.emitParticleAt(this.player.x, this.player.y + 12, 10);
+                    else { this.doFrontFlip(); this.dustEmitter.emitParticleAt(this.player.x, this.player.y + 12, 5); }
+                    this.player.setVelocityY(-550 * boost); this.jumps++;
                 }
-                this.sparkEmitter.emitParticleAt(projX, projectile.y, 10); 
-                return; 
             }
-            
-            // Destruir de forma segura
-            if (projectile.active) {
-                projectile.setActive(false);
-                projectile.setVisible(false);
-                projectile.destroy();
+
+            checkWallStamina(side) {
+                if (this.lastWallTouched !== side) { this.wallJumpConsecutive = 0; this.player.clearTint(); }
+                if (this.wallJumpConsecutive >= 5) return false;
+                this.lastWallTouched = side; this.wallJumpConsecutive++; return true;
             }
-            
-            let dir = (player.x < projX) ? -1 : 1;
-            if (projVelX > 0) dir = 1; else if (projVelX < 0) dir = -1;
-            player.setVelocity(dir * 400, -200);
-            player.setTint(0xff0000);
-            this.cameras.main.shake(100, 0.02);
-            this.time.delayedCall(200, () => player.clearTint());
-        } catch (error) {
-            console.warn('Error handling projectile hit:', error);
-        }
-    }
 
-    // --- EVENTOS ---
-    collectPowerup(player, powerup) {
-        powerup.destroy();
-        this.isPausedEvent = true;
-        this.physics.pause(); 
-        player.setTint(0xffff00);
-        this.auraEmitter.start(); 
-
-        // Registrar altura para Cooldown
-        this.lastPowerupSpawnHeight = this.currentHeight;
-
-        let t = this.add.text(this.cameras.main.centerX, this.cameras.main.scrollY + 200, 'POWERUP 67', {
-            fontSize: '40px', color: '#ffd700', fontStyle: 'bold', stroke: '#000000', strokeThickness: 6
-        }).setOrigin(0.5).setDepth(200);
-        
-        this.cameras.main.shake(500, 0.005);
-        this.time.delayedCall(2000, () => {
-            t.destroy();
-            this.physics.resume(); 
-            this.isPausedEvent = false; 
-            this.activateInvincibility();
-        });
-    }
-
-    activateInvincibility() {
-        this.isInvincible = true;
-        if (this.powerupTimer) this.powerupTimer.remove();
-        this.powerupTimer = this.time.delayedCall(12000, () => {
-            this.deactivatePowerup();
-        });
-    }
-
-    deactivatePowerup() {
-        this.isInvincible = false;
-        this.auraEmitter.stop();
-        this.player.setTint(0xaaaaaa);
-        this.time.delayedCall(200, () => this.player.clearTint());
-    }
-
-    trigger67Celebration() {
-        this.isPausedEvent = true;
-        this.physics.pause();
-        this.cameras.main.flash(500, 255, 255, 255);
-        this.confettiEmitter.setPosition(this.cameras.main.centerX, this.cameras.main.scrollY - 50);
-        this.confettiEmitter.explode(80);
-
-        let t = this.add.text(this.cameras.main.centerX, this.cameras.main.scrollY + 300, '67!', {
-            fontFamily: '"Courier New", monospace', fontSize: '100px', color: '#ffd700', fontStyle: 'bold', stroke: '#8B4500', strokeThickness: 10,
-            shadow: { offsetX: 6, offsetY: 6, color: '#000000', blur: 0, stroke: true, fill: true }
-        }).setOrigin(0.5).setDepth(200);
-
-        this.tweens.add({ targets: t, scaleX: 1.3, scaleY: 1.3, duration: 300, yoyo: true, repeat: 2 });
-
-        this.time.delayedCall(1500, () => {
-            t.destroy();
-            this.physics.resume();
-            this.isPausedEvent = false;
-        });
-    }
-
-    collectCoin(player, coin) {
-        coin.destroy();
-        this.totalScore += 1; 
-        this.scoreText.setText('SCORE: ' + this.totalScore);
-        let t = this.add.text(player.x, player.y-30, '+1', {fontSize:'18px', fontStyle:'bold', color:'#ffff00'}).setDepth(101);
-        this.tweens.add({targets:t, y:player.y-80, alpha:0, duration:600, onComplete:()=>t.destroy()});
-        
-        let strScore = this.totalScore.toString();
-        if (strScore === '67' || strScore.endsWith('67')) {
-            this.trigger67Celebration();
-        }
-    }
-
-    hitEnemy(player, enemy) {
-        if (this.isInvincible) { enemy.destroy(); this.sparkEmitter.emitParticleAt(enemy.x, enemy.y, 20); return; }
-        player.setTint(0xff0000); this.cameras.main.shake(100, 0.01); this.time.delayedCall(200, () => player.clearTint());
-        const kickX = Phaser.Math.Between(-300, 300); player.setVelocity(kickX, 300);
-    }
-    touchLava(player, lava) {
-        if (this.isGameOver) return;
-        if (this.isInvincible) {
-            this.deactivatePowerup(); if (this.powerupTimer) this.powerupTimer.remove();
-            player.setVelocityY(-900);
-            let t = this.uiText.scene.add.text(player.x, player.y - 50, 'LAVA JUMP!', { fontSize: '18px', color: '#fff', stroke: '#f00', strokeThickness: 4 }).setOrigin(0.5).setDepth(100);
-            this.tweens.add({targets:t, y:player.y-150, alpha:0, duration:1000, onComplete:()=>t.destroy()});
-            return; 
-        }
-        this.isGameOver = true; this.burnEmitter.emitParticleAt(player.x, player.y, 50); player.setTint(0x000000); player.setVelocity(0, 0);
-        this.physics.pause(); this.uiText.setText(`GAME OVER\nScore: ${this.totalScore}\nTap para Reiniciar`); this.uiText.setVisible(true); this.uiText.setDepth(200); this.scoreText.setDepth(200);
-        this.time.delayedCall(1000, () => { this.input.once('pointerdown', () => this.scene.restart()); });
-    }
-
-    handleLand(player, floor) {
-        if (player.body.touching.down) {
-            this.jumps = 0; this.lastWallTouched = null; this.wallJumpConsecutive = 0;
-            player.clearTint(); player.angle = 0; player.currentPlatform = floor;
-        }
-    }
-
-    handlePlatformCollision(player, platform) {
-        if (player.body.touching.down && platform.body.touching.up) { this.handleLand(player, platform); return; }
-        if (platform.getData('isMoving')) {
-            if ((player.body.touching.left && platform.body.touching.right) || (player.body.touching.right && platform.body.touching.left)) {
-                platform.setVelocityX(platform.body.velocity.x * -1);
+            handleWallTouch(wallSide) {
+                if (this.lastWallTouched === wallSide && this.wallJumpConsecutive >= 5) { if (this.player.body.velocity.y > 0) this.player.setVelocityY(400); this.player.setTint(0x555555); return; }
+                if (this.player.body.velocity.y > 0) this.player.setVelocityY(80);
+                if (this.lastWallTouched !== wallSide) { this.jumps = 0; this.player.clearTint(); this.tweens.killTweensOf(this.player); this.player.angle = 0; }
             }
-        }
-    }
 
-    handleJump() {
-        // --- APLICAR SPEED BOOST ---
-        let boost = this.isInvincible ? 1.25 : 1.0; // 25% Extra Force
-        if (this.player.body.touching.left) { if (this.checkWallStamina('left')) { this.player.setVelocity(400 * boost, -580 * boost); this.jumps = 1; this.sparkEmitter.emitParticleAt(this.player.x - 10, this.player.y, 10); } return; }
-        if (this.player.body.touching.right) { if (this.checkWallStamina('right')) { this.player.setVelocity(-400 * boost, -580 * boost); this.jumps = 1; this.sparkEmitter.emitParticleAt(this.player.x + 10, this.player.y, 10); } return; }
-        if (this.jumps < this.maxJumps) {
-            if (this.jumps === 0) this.dustEmitter.emitParticleAt(this.player.x, this.player.y + 12, 10);
-            else { this.doFrontFlip(); this.dustEmitter.emitParticleAt(this.player.x, this.player.y + 12, 5); }
-            this.player.setVelocityY(-550 * boost); this.jumps++;
-        }
-    }
+            doFrontFlip() { this.tweens.killTweensOf(this.player); this.player.angle = 0; this.tweens.add({ targets: this.player, angle: 360, duration: 400, ease: 'Cubic.easeOut' }); }
 
-    checkWallStamina(side) {
-        if (this.lastWallTouched !== side) { this.wallJumpConsecutive = 0; this.player.clearTint(); }
-        if (this.wallJumpConsecutive >= 5) return false;
-        this.lastWallTouched = side; this.wallJumpConsecutive++; return true;
-    }
+            generateNextRow() {
+                const height = this.currentHeight;
+                const allowMaze = height > 200; const allowMoving = height > 500; const allowSpikes = height > 1000; const allowSpikesMoving = height > 2000;
+                const allowShooters = height > 200;
 
-    handleWallTouch(wallSide) {
-        if (this.lastWallTouched === wallSide && this.wallJumpConsecutive >= 5) { if (this.player.body.velocity.y > 0) this.player.setVelocityY(400); this.player.setTint(0x555555); return; }
-        if (this.player.body.velocity.y > 0) this.player.setVelocityY(80);
-        if (this.lastWallTouched !== wallSide) { this.jumps = 0; this.player.clearTint(); this.tweens.killTweensOf(this.player); this.player.angle = 0; }
-    }
+                if (this.mazeSequenceRemaining > 0) {
+                    this.spawnMazeRow(this.lastPlatformY, this.lastMazeSide, allowMoving, allowSpikes);
+                    this.lastMazeSide = (this.lastMazeSide === 0) ? 1 : 0;
+                    this.mazeSequenceRemaining--; this.lastPlatformY -= 220;
+                    if (this.mazeSequenceRemaining === 0) this.justFinishedMaze = true; return;
+                }
 
-    doFrontFlip() { this.tweens.killTweensOf(this.player); this.player.angle = 0; this.tweens.add({ targets: this.player, angle: 360, duration: 400, ease: 'Cubic.easeOut' }); }
+                let startMazeChance = allowMaze ? (height > 1500 ? 45 : 25) : 0;
+                if (!this.justFinishedMaze && Phaser.Math.Between(0, 100) < startMazeChance) {
+                    this.mazeSequenceRemaining = Phaser.Math.Between(3, 6); this.lastMazeSide = Phaser.Math.Between(0, 1);
+                    this.lastPlatformY -= 200; this.spawnMazeRow(this.lastPlatformY, this.lastMazeSide, allowMoving, allowSpikes);
+                    this.lastMazeSide = (this.lastMazeSide === 0) ? 1 : 0; this.mazeSequenceRemaining--; this.lastPlatformY -= 220; return;
+                }
 
-    generateNextRow() {
-        const height = this.currentHeight;
-        const allowMaze = height > 200; const allowMoving = height > 500; const allowSpikes = height > 1000; const allowSpikesMoving = height > 2000; const allowShooters = height > 200; // TEST MODE
+                let gap = Phaser.Math.Between(150, 200);
+                if (this.justFinishedMaze) { this.lastPlatformY -= 200; this.justFinishedMaze = false; } else { this.lastPlatformY -= gap; }
+                let x = Phaser.Math.Between(70, 330); let width = Phaser.Math.Between(80, 120);
 
-        if (this.mazeSequenceRemaining > 0) {
-            this.spawnMazeRow(this.lastPlatformY, this.lastMazeSide, allowMoving, allowSpikes);
-            this.lastMazeSide = (this.lastMazeSide === 0) ? 1 : 0;
-            this.mazeSequenceRemaining--; this.lastPlatformY -= 220;
-            if (this.mazeSequenceRemaining === 0) this.justFinishedMaze = true; return;
-        }
-
-        let startMazeChance = allowMaze ? (height > 1500 ? 45 : 25) : 0;
-        if (!this.justFinishedMaze && Phaser.Math.Between(0, 100) < startMazeChance) {
-            this.mazeSequenceRemaining = Phaser.Math.Between(3, 6); this.lastMazeSide = Phaser.Math.Between(0, 1);
-            this.lastPlatformY -= 200; this.spawnMazeRow(this.lastPlatformY, this.lastMazeSide, allowMoving, allowSpikes);
-            this.lastMazeSide = (this.lastMazeSide === 0) ? 1 : 0; this.mazeSequenceRemaining--; this.lastPlatformY -= 220; return;
-        }
-
-        let gap = Phaser.Math.Between(150, 200);
-        if (this.justFinishedMaze) { this.lastPlatformY -= 200; this.justFinishedMaze = false; } else { this.lastPlatformY -= gap; }
-        let x = Phaser.Math.Between(70, 330); let width = Phaser.Math.Between(80, 120);
-
-        if (Phaser.Math.Between(0, 100) < 80) {
-            let isMoving = (allowMoving && Phaser.Math.Between(0, 100) < 30);
-            let plat = this.spawnPlatform(x, this.lastPlatformY, width, isMoving);
-            let enemySpawned = false;
-            if (!isMoving && allowShooters && Phaser.Math.Between(0, 100) < 30) { this.spawnShooter(plat); enemySpawned = true; }
-            else if (!enemySpawned && allowSpikes && Phaser.Math.Between(0, 100) < 40) {
-                if (!isMoving || allowSpikesMoving) { this.spawnSpike(plat); enemySpawned = true; }
+                if (Phaser.Math.Between(0, 100) < 80) {
+                    let isMoving = (allowMoving && Phaser.Math.Between(0, 100) < 30);
+                    let plat = this.spawnPlatform(x, this.lastPlatformY, width, isMoving);
+                    let enemySpawned = false;
+                    if (!isMoving && allowShooters && Phaser.Math.Between(0, 100) < 30) { this.spawnShooter(plat); enemySpawned = true; }
+                    else if (!enemySpawned && allowSpikes && Phaser.Math.Between(0, 100) < 40) {
+                        if (!isMoving || allowSpikesMoving) { this.spawnSpike(plat); enemySpawned = true; }
+                    }
+                    if (!enemySpawned && Phaser.Math.Between(0, 100) < 70) {
+                        // LOGICA DE COOLDOWN POWERUP
+                        let powerupChance = 5;
+                        // Si hace menos de 300m que salió uno, chance 0
+                        if (this.currentHeight - this.lastPowerupSpawnHeight < 300) powerupChance = 0;
+                        if (Phaser.Math.Between(0, 100) < powerupChance) this.powerups.create(x, this.lastPlatformY - 40, 'powerup_ball');
+                        else this.coins.create(x, this.lastPlatformY - 40, 'coin');
+                    }
+                } else {
+                    let coinX = (Phaser.Math.Between(0, 1) === 0) ? 60 : 340; this.coins.create(coinX, this.lastPlatformY, 'coin');
+                }
             }
-            if (!enemySpawned && Phaser.Math.Between(0, 100) < 70) {
-                // LOGICA DE COOLDOWN POWERUP
+
+            spawnMazeRow(y, side, allowMoving, allowSpikes) {
+                let blockWidth = Phaser.Math.Between(240, 300); let x = (side === 0) ? 0 : 400; let originX = (side === 0) ? 0 : 1; let gapX = (side === 0) ? blockWidth + (400 - blockWidth) / 2 : (400 - blockWidth) / 2;
+                let block = this.mazeWalls.create(x, y, 'maze_block'); block.setOrigin(originX, 0.5).setDisplaySize(blockWidth, 60).refreshBody().setDepth(10);
+
+                // Cooldown en laberinto tambien
                 let powerupChance = 5;
-                // Si hace menos de 300m que salió uno, chance 0
                 if (this.currentHeight - this.lastPowerupSpawnHeight < 300) powerupChance = 0;
-                if (Phaser.Math.Between(0,100) < powerupChance) this.powerups.create(x, this.lastPlatformY - 40, 'powerup_ball');
-                else this.coins.create(x, this.lastPlatformY - 40, 'coin');
+
+                if (Phaser.Math.Between(0, 100) < powerupChance) this.powerups.create(gapX, y - 50, 'powerup_ball'); else this.coins.create(gapX, y - 50, 'coin');
+                if (allowSpikes && Phaser.Math.Between(0, 100) < 50) {
+                    let enemyX = (side === 0) ? blockWidth / 2 : 400 - (blockWidth / 2);
+                    let enemy = this.enemies.create(enemyX, y - 40, 'enemy_spike'); enemy.setDepth(20);
+                    this.tweens.add({ targets: enemy, x: enemyX + 40, duration: 1000, yoyo: true, repeat: -1 });
+                }
+                if (allowMoving && Phaser.Math.Between(0, 100) < 10) this.spawnPlatform(gapX, y + 10, 90, true);
             }
-        } else {
-            let coinX = (Phaser.Math.Between(0,1)===0) ? 60 : 340; this.coins.create(coinX, this.lastPlatformY, 'coin');
+
+            spawnPlatform(x, y, width, isMoving) {
+                let texture = isMoving ? 'platform_moving' : 'platform';
+                let p = this.platforms.create(x, y, texture); p.setDisplaySize(width, 18).refreshBody().setDepth(5);
+                if (isMoving) { p.setData('isMoving', true); p.setVelocityX(100); } return p;
+            }
+
+            spawnSpike(platform) {
+                let ex = platform.x; let ey = platform.y - 20; let enemy = this.enemies.create(ex, ey, 'enemy_spike'); enemy.setDepth(20);
+                if (!platform.getData('isMoving')) { let range = (platform.displayWidth / 2) - 10; this.tweens.add({ targets: enemy, x: ex + range, duration: 1000, yoyo: true, repeat: -1, ease: 'Sine.easeInOut' }); }
+                else enemy.body.setVelocityX(platform.body.velocity.x);
+            }
+
+            startGame() { this.gameStarted = true; this.uiText.setVisible(false); }
         }
-    }
 
-    spawnMazeRow(y, side, allowMoving, allowSpikes) {
-        let blockWidth = Phaser.Math.Between(240, 300); let x = (side === 0) ? 0 : 400; let originX = (side === 0) ? 0 : 1; let gapX = (side === 0) ? blockWidth + (400-blockWidth)/2 : (400-blockWidth)/2;
-        let block = this.mazeWalls.create(x, y, 'maze_block'); block.setOrigin(originX, 0.5).setDisplaySize(blockWidth, 60).refreshBody().setDepth(10);
-        
-        // Cooldown en laberinto tambien
-        let powerupChance = 5;
-        if (this.currentHeight - this.lastPowerupSpawnHeight < 300) powerupChance = 0;
-
-        if (Phaser.Math.Between(0,100) < powerupChance) this.powerups.create(gapX, y - 50, 'powerup_ball'); else this.coins.create(gapX, y - 50, 'coin');
-        if (allowSpikes && Phaser.Math.Between(0,100) < 50) {
-            let enemyX = (side === 0) ? blockWidth / 2 : 400 - (blockWidth / 2);
-            let enemy = this.enemies.create(enemyX, y - 40, 'enemy_spike'); enemy.setDepth(20);
-            this.tweens.add({targets:enemy, x: enemyX + 40, duration: 1000, yoyo:true, repeat:-1});
-        }
-        if (allowMoving && Phaser.Math.Between(0,100) < 10) this.spawnPlatform(gapX, y + 10, 90, true);
-    }
-
-    spawnPlatform(x, y, width, isMoving) {
-        let texture = isMoving ? 'platform_moving' : 'platform';
-        let p = this.platforms.create(x, y, texture); p.setDisplaySize(width, 18).refreshBody().setDepth(5);
-        if (isMoving) { p.setData('isMoving', true); p.setVelocityX(100); } return p;
-    }
-
-    spawnSpike(platform) {
-        let ex = platform.x; let ey = platform.y - 20; let enemy = this.enemies.create(ex, ey, 'enemy_spike'); enemy.setDepth(20);
-        if (!platform.getData('isMoving')) { let range = (platform.displayWidth / 2) - 10; this.tweens.add({ targets: enemy, x: ex + range, duration: 1000, yoyo: true, repeat: -1, ease: 'Sine.easeInOut' }); }
-        else enemy.body.setVelocityX(platform.body.velocity.x);
-    }
-
-    startGame() { this.gameStarted = true; this.uiText.setVisible(false); }
-}
-
-const config = {
-    type: Phaser.AUTO, width: 400, height: 600, backgroundColor: '#000',
-    input: { activePointers: 3 }, physics: { default: 'arcade', arcade: { gravity: { y: 0 }, debug: false } }, scene: MainScene
-};
-const game = new Phaser.Game(config);
-</script>
+        const config = {
+            type: Phaser.AUTO, width: 400, height: 600, backgroundColor: '#000',
+            input: { activePointers: 3 }, physics: { default: 'arcade', arcade: { gravity: { y: 0 }, debug: false } }, scene: MainScene
+        };
+        const game = new Phaser.Game(config);
+    </script>
 </body>
+
 </html>
