@@ -246,8 +246,9 @@
 
                 // Paredes en los bordes para móvil
                 const gameWidth = this.game.config.width; // 400px
-                this.leftWall = this.add.tileSprite(0, 300, 32, 1200, 'wall').setOrigin(0, 0.5).setDepth(60);
-                this.rightWall = this.add.tileSprite(gameWidth, 300, 32, 1200, 'wall').setOrigin(1, 0.5).setDepth(60);
+                const wallWidth = 32;
+                this.leftWall = this.add.tileSprite(0, 300, wallWidth, 1200, 'wall').setOrigin(0, 0.5).setDepth(60);
+                this.rightWall = this.add.tileSprite(gameWidth, 300, wallWidth, 1200, 'wall').setOrigin(1, 0.5).setDepth(60);
                 this.physics.add.existing(this.leftWall, true);
                 this.physics.add.existing(this.rightWall, true);
 
@@ -262,12 +263,18 @@
                 this.spawnPlatform(200, 450, 140, false);
                 for (let i = 0; i < 6; i++) this.generateNextRow();
 
-                this.lava = this.add.tileSprite(200, 900, 400, 800, 'lava_texture').setOrigin(0.5, 0);
+                // Lava dentro de las paredes (las paredes están en x=0 y x=400, cada una de 32px)
+                // La lava debe estar entre las paredes, así que ancho máximo = 400 - 64 = 336px
+                const lavaWidth = gameWidth - (wallWidth * 2); // 400 - 64 = 336px (dentro de las paredes)
+                const lavaX = gameWidth / 2; // 200px (centro)
+                
+                this.lava = this.add.tileSprite(lavaX, 900, lavaWidth, 800, 'lava_texture').setOrigin(0.5, 0);
                 this.physics.add.existing(this.lava);
                 this.lava.body.allowGravity = false;
                 this.lava.body.immovable = true;
-                this.lava.body.setSize(400, 780);
+                this.lava.body.setSize(lavaWidth, 780);
                 this.lava.body.setOffset(0, 20);
+                this.lava.setDepth(50); // Profundidad menor que las paredes para que no se vea por detrás
                 this.lava.setDepth(50);
                 this.baseLavaSpeed = -60;
                 this.currentLavaSpeed = this.baseLavaSpeed;
@@ -407,8 +414,18 @@
 
             update() {
                 if (this.isGameOver) {
-                    const targetY = this.cameras.main.scrollY;
-                    if (this.lava.y > targetY - 50) this.lava.y -= 15;
+                    // En Game Over, la lava debe cubrir completamente la parte inferior de la pantalla
+                    const cameraBottom = this.cameras.main.scrollY + this.cameras.main.height;
+                    // Posicionar la lava para que cubra los últimos 200px de la pantalla
+                    const targetY = cameraBottom - 100;
+                    
+                    // Mover la lava hacia la posición objetivo si no está ahí
+                    if (this.lava.y > targetY) {
+                        this.lava.y = Math.max(this.lava.y - 15, targetY);
+                    } else {
+                        this.lava.y = targetY; // Mantener en la posición objetivo
+                    }
+                    
                     this.lava.tilePositionY -= 2;
                     return;
                 }
