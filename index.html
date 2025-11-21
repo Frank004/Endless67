@@ -11,16 +11,28 @@
             padding: 0;
             background-color: #000;
             height: 100vh;
+            height: 100dvh; /* Dynamic viewport height para móviles */
             overflow: hidden;
             touch-action: none;
             font-family: 'Courier New', monospace;
             user-select: none;
             -webkit-user-select: none;
+            position: fixed;
+            width: 100%;
+            top: 0;
+            left: 0;
         }
 
+        /* Mobile-first: Sin glow/aura en móvil */
         canvas {
             border: 1px solid #333;
-            box-shadow: 0 0 60px rgba(255, 215, 0, 0.4);
+        }
+
+        /* Solo mostrar glow en desktop */
+        @media (min-width: 768px) {
+            canvas {
+                box-shadow: 0 0 60px rgba(255, 215, 0, 0.4);
+            }
         }
 
         body.mobile {
@@ -31,11 +43,12 @@
             justify-content: center;
             padding: 0;
             margin: 0;
+            overflow: hidden;
         }
 
         body.mobile canvas {
             border: none;
-            box-shadow: none;
+            box-shadow: none !important; /* Asegurar que no haya glow */
             width: 100vw !important;
             height: 100vh !important;
             height: 100dvh !important; /* Dynamic viewport height */
@@ -43,6 +56,8 @@
             position: fixed;
             top: 0;
             left: 0;
+            margin: 0;
+            padding: 0;
         }
     </style>
     <script src="https://cdn.jsdelivr.net/npm/phaser@3.60.0/dist/phaser.min.js"></script>
@@ -1077,13 +1092,24 @@
             }
         }
 
+        // Mobile-first: Detectar dispositivo y ajustar altura
+        const isMobile = /Android|webOS|iPhone|iPad|iPod|BlackBerry|IEMobile|Opera Mini/i.test(navigator.userAgent);
+        
+        // En móvil usar altura completa, en desktop mantener 600px
+        const gameHeight = isMobile ? window.innerHeight : 600;
+        
         const config = {
-            type: Phaser.AUTO, width: 400, height: 600, backgroundColor: '#000',
+            type: Phaser.AUTO, 
+            width: 400, 
+            height: gameHeight, 
+            backgroundColor: '#000',
             scale: {
-                mode: Phaser.Scale.FIT,
-                autoCenter: Phaser.Scale.CENTER_BOTH
+                mode: isMobile ? Phaser.Scale.RESIZE : Phaser.Scale.FIT,
+                autoCenter: isMobile ? Phaser.Scale.CENTER_HORIZONTALLY : Phaser.Scale.CENTER_BOTH
             },
-            input: { activePointers: 3 }, physics: { default: 'arcade', arcade: { gravity: { y: 0 }, debug: false } }, scene: MainScene
+            input: { activePointers: 3 }, 
+            physics: { default: 'arcade', arcade: { gravity: { y: 0 }, debug: false } }, 
+            scene: MainScene
         };
         const game = new Phaser.Game(config);
     </script>
