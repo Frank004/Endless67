@@ -153,12 +153,12 @@ export class Game extends Phaser.Scene {
         this.pauseMenuBg = this.add.rectangle(200, 300, 400, 600, 0x000000, 0.85)
             .setScrollFactor(0).setDepth(200).setVisible(false);
 
-        this.pauseMenuTitle = this.add.text(200, 200, 'PAUSA', {
+        this.pauseMenuTitle = this.add.text(200, 180, 'PAUSA', {
             fontSize: '48px', color: '#ffd700', fontStyle: 'bold'
         }).setOrigin(0.5).setScrollFactor(0).setDepth(201).setVisible(false);
 
         // Continue Button
-        this.continueButton = this.add.text(200, 280, 'CONTINUAR', {
+        this.continueButton = this.add.text(200, 260, 'CONTINUAR', {
             fontSize: '24px', color: '#00ff00', fontStyle: 'bold',
             backgroundColor: '#333333', padding: { x: 20, y: 10 }
         }).setOrigin(0.5).setScrollFactor(0).setDepth(201).setVisible(false)
@@ -168,7 +168,7 @@ export class Game extends Phaser.Scene {
             .on('pointerout', function () { this.setColor('#00ff00'); });
 
         // Sound Toggle Button
-        this.soundToggleButton = this.add.text(200, 350, '🔊 SONIDO: ON', {
+        this.soundToggleButton = this.add.text(200, 330, '🔊 SONIDO: ON', {
             fontSize: '24px', color: '#ffffff', fontStyle: 'bold',
             backgroundColor: '#333333', padding: { x: 20, y: 10 }
         }).setOrigin(0.5).setScrollFactor(0).setDepth(201).setVisible(false)
@@ -178,7 +178,7 @@ export class Game extends Phaser.Scene {
             .on('pointerout', function () { this.setColor('#ffffff'); });
 
         // Joystick Toggle Button
-        this.joystickToggleButton = this.add.text(200, 420, '🕹️ JOYSTICK: ON', {
+        this.joystickToggleButton = this.add.text(200, 400, '🕹️ JOYSTICK: ON', {
             fontSize: '24px', color: '#ffffff', fontStyle: 'bold',
             backgroundColor: '#333333', padding: { x: 20, y: 10 }
         }).setOrigin(0.5).setScrollFactor(0).setDepth(201).setVisible(false)
