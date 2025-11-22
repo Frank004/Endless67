@@ -1069,12 +1069,4 @@ export class Game extends Phaser.Scene {
     }
 }
 
-function spawnTestEnemies(scene) {
-    // Spawn a shooter enemy
-    scene.spawnShooter({ x: 100, y: 300 });
 
-    // Spawn a jumper shooter enemy
-    scene.spawnJumperShooter({ x: 300, y: 300 });
-
-    console.log('Test enemies spawned');
-}
