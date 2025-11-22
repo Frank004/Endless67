@@ -1,4 +1,4 @@
-export const MAZE_PATTERNS = [
+export const MAZE_PATTERNS_EASY = [
     // Pattern 1: Standard Zig-Zag
     [
         { type: 'left', width: 250 },
@@ -6,22 +6,6 @@ export const MAZE_PATTERNS = [
         { type: 'left', width: 250 },
         { type: 'right', width: 250 },
         { type: 'left', width: 250 }
-    ],
-    // Pattern 2: Narrow S-Bends (Tight gaps)
-    [
-        { type: 'left', width: 320 },
-        { type: 'right', width: 320 },
-        { type: 'left', width: 320 },
-        { type: 'right', width: 320 },
-        { type: 'left', width: 320 }
-    ],
-    // Pattern 3: The Tunnel (Center gap)
-    [
-        { type: 'split', width: 140, width2: 140 },
-        { type: 'split', width: 140, width2: 140 },
-        { type: 'split', width: 140, width2: 140 },
-        { type: 'split', width: 140, width2: 140 },
-        { type: 'split', width: 140, width2: 140 }
     ],
     // Pattern 4: The Staircase
     [
@@ -31,6 +15,25 @@ export const MAZE_PATTERNS = [
         { type: 'right', width: 100 },
         { type: 'right', width: 200 },
         { type: 'right', width: 300 }
+    ],
+    // Pattern 3: The Tunnel (Center gap)
+    [
+        { type: 'split', width: 140, width2: 140 },
+        { type: 'split', width: 140, width2: 140 },
+        { type: 'split', width: 140, width2: 140 },
+        { type: 'split', width: 140, width2: 140 },
+        { type: 'split', width: 140, width2: 140 }
+    ]
+];
+
+export const MAZE_PATTERNS_HARD = [
+    // Pattern 2: Narrow S-Bends (Tight gaps)
+    [
+        { type: 'left', width: 320 },
+        { type: 'right', width: 320 },
+        { type: 'left', width: 320 },
+        { type: 'right', width: 320 },
+        { type: 'left', width: 320 }
     ],
     // Pattern 5: Floating Islands (Center blocks)
     [
@@ -58,3 +61,6 @@ export const MAZE_PATTERNS = [
         { type: 'left', width: 280 }
     ]
 ];
+
+// Keep for backward compatibility if needed, or just combine
+export const MAZE_PATTERNS = [...MAZE_PATTERNS_EASY, ...MAZE_PATTERNS_HARD];

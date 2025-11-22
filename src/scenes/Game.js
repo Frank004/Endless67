@@ -2,7 +2,7 @@ import { Player } from '../objects/Player.js';
 import { SpikeEnemy, ShooterEnemy, JumperShooterEnemy } from '../objects/Enemy.js';
 import { Projectile } from '../objects/Projectile.js';
 import { spawnTestEnemies } from '../utils/TestEnemies.js';
-import { MAZE_PATTERNS } from '../data/MazePatterns.js';
+import { MAZE_PATTERNS, MAZE_PATTERNS_EASY, MAZE_PATTERNS_HARD } from '../data/MazePatterns.js';
 
 export class Game extends Phaser.Scene {
     constructor() {
@@ -1025,8 +1025,16 @@ export class Game extends Phaser.Scene {
         // Chance to start a new maze
         let startMazeChance = allowMaze ? (height > 1500 ? 45 : 25) : 0;
         if (!this.justFinishedMaze && Phaser.Math.Between(0, 100) < startMazeChance) {
-            // Pick a random pattern
-            this.currentMazePattern = Phaser.Utils.Array.GetRandom(MAZE_PATTERNS);
+            // Pick a random pattern based on difficulty
+            let patternPool = MAZE_PATTERNS_EASY;
+
+            if (height > 3000) {
+                // Above 3000m, use all patterns (Easy + Hard)
+                // Or we could prioritize Hard ones
+                patternPool = MAZE_PATTERNS;
+            }
+
+            this.currentMazePattern = Phaser.Utils.Array.GetRandom(patternPool);
             this.currentMazeRowIndex = 0;
 
             // Random Mirroring
