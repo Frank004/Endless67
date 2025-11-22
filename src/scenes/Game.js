@@ -1106,35 +1106,7 @@ export class Game extends Phaser.Scene {
         }
     }
 
-    spawnMazeRow(y, side, allowMoving, allowSpikes) {
-        let blockWidth = Phaser.Math.Between(240, 300); let x = (side === 0) ? 0 : 400; let originX = (side === 0) ? 0 : 1; let gapX = (side === 0) ? blockWidth + (400 - blockWidth) / 2 : (400 - blockWidth) / 2;
-        let block = this.mazeWalls.create(x, y, 'maze_block'); block.setOrigin(originX, 0.5).setDisplaySize(blockWidth, 60).refreshBody().setDepth(10);
 
-        // Cooldown en laberinto tambien
-        let powerupChance = 5;
-        const timeCooldown = 15000;
-        const heightCooldown = 500;
-        const now = this.time.now;
-
-        if (this.currentHeight - this.lastPowerupSpawnHeight < heightCooldown || now - this.lastPowerupTime < timeCooldown) {
-            powerupChance = 0;
-        }
-
-        if (Phaser.Math.Between(0, 100) < powerupChance) {
-            this.powerups.create(gapX, y - 50, 'powerup_ball');
-            this.lastPowerupSpawnHeight = this.currentHeight;
-            this.lastPowerupTime = now;
-        } else this.coins.create(gapX, y - 50, 'coin');
-        if (allowSpikes && Phaser.Math.Between(0, 100) < 50) {
-            let enemyX = (side === 0) ? blockWidth / 2 : 400 - (blockWidth / 2);
-            let enemy = this.spikeEnemies.get(enemyX, y - 40);
-            if (enemy) {
-                enemy.spawn(enemyX, y - 40);
-                enemy.startMoving(enemyX + 40, 1000);
-            }
-        }
-        if (allowMoving && Phaser.Math.Between(0, 100) < 10) this.spawnPlatform(gapX, y + 10, 90, true);
-    }
 
     spawnPlatform(x, y, width, isMoving) {
         let texture = isMoving ? 'platform_moving' : 'platform';
