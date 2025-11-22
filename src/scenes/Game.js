@@ -2,7 +2,7 @@ import { Player } from '../objects/Player.js';
 import { SpikeEnemy, ShooterEnemy, JumperShooterEnemy } from '../objects/Enemy.js';
 import { Projectile } from '../objects/Projectile.js';
 import { spawnTestEnemies } from '../utils/TestEnemies.js';
-import { MAZE_PATTERNS, MAZE_PATTERNS_EASY, MAZE_PATTERNS_HARD } from '../data/MazePatterns.js';
+import { MAZE_PATTERNS, MAZE_PATTERNS_EASY, MAZE_PATTERNS_HARD, MAZE_PATTERNS_NUMBERED } from '../data/MazePatterns.js';
 
 export class Game extends Phaser.Scene {
     constructor() {
@@ -271,6 +271,9 @@ export class Game extends Phaser.Scene {
         this.physics.add.collider(this.jumperShooterEnemies, this.platforms); // Needs to stand on platforms
         this.physics.add.collider(this.shooterEnemies, this.platforms);
         this.physics.add.collider(this.spikeEnemies, this.platforms);
+        this.physics.add.collider(this.spikeEnemies, this.mazeWalls);
+        this.physics.add.collider(this.shooterEnemies, this.mazeWalls);
+        this.physics.add.collider(this.jumperShooterEnemies, this.mazeWalls);
         this.physics.add.overlap(
             this.player,
             this.projectiles,
@@ -930,15 +933,35 @@ export class Game extends Phaser.Scene {
         }
 
         // Spawning Items/Enemies in gaps
-        // Calculate gap center for item placement
+        // Calculate gap span and clamp placement to keep coins/powerups off the walls
         let gapX = 200;
-        if (type === 'left') gapX = w1 + (400 - w1) / 2;
-        else if (type === 'right') gapX = (400 - w1) / 2;
-        else if (type === 'split') gapX = w1 + (400 - w1 - w2) / 2;
-        else if (type === 'center') {
+        let gapStart = 0;
+        let gapEnd = 400;
+        if (type === 'left') {
+            gapStart = w1;
+            gapEnd = 400;
+            gapX = gapStart + (gapEnd - gapStart) / 2;
+        } else if (type === 'right') {
+            gapStart = 0;
+            gapEnd = 400 - w1;
+            gapX = gapStart + (gapEnd - gapStart) / 2;
+        } else if (type === 'split') {
+            gapStart = w1;
+            gapEnd = 400 - w2;
+            gapX = gapStart + (gapEnd - gapStart) / 2;
+        } else if (type === 'center') {
             // Two gaps, pick one randomly
-            gapX = (Phaser.Math.Between(0, 1) === 0) ? (200 - w1 / 2) / 2 : 200 + w1 / 2 + (200 - w1 / 2) / 2;
+            const leftGapEnd = 200 - w1 / 2;
+            const rightGapStart = 200 + w1 / 2;
+            const useLeftGap = Phaser.Math.Between(0, 1) === 0;
+            gapStart = useLeftGap ? 0 : rightGapStart;
+            gapEnd = useLeftGap ? leftGapEnd : 400;
+            gapX = gapStart + (gapEnd - gapStart) / 2;
         }
+
+        const gapWidth = Math.max(10, gapEnd - gapStart);
+        const gapMargin = Math.min(20, gapWidth * 0.25); // Keep collectibles away from the edges
+        gapX = Phaser.Math.Clamp(gapX, gapStart + gapMargin, gapEnd - gapMargin);
 
         // Cooldown logic
         let powerupChance = 5;
@@ -958,8 +981,17 @@ export class Game extends Phaser.Scene {
             this.coins.create(gapX, y - 50, 'coin');
         }
 
-        // Spawn enemies with ground detection
-        if (allowSpikes && Phaser.Math.Between(0, 100) < 40) {
+        // Spawn enemies with ground detection - dificultad progresiva
+        let enemySpawnChance = 0;
+        if (allowSpikes) {
+            // Aumentar probabilidad de enemigos según altura
+            if (this.currentHeight > 3000) enemySpawnChance = 60;
+            else if (this.currentHeight > 2000) enemySpawnChance = 50;
+            else if (this.currentHeight > 1000) enemySpawnChance = 40;
+            else enemySpawnChance = 30;
+        }
+        
+        if (enemySpawnChance > 0 && Phaser.Math.Between(0, 100) < enemySpawnChance) {
             // Try to spawn enemy - it will detect if there's ground below
             let spawnAttempts = [
                 { x: w1 / 2, side: 'left' },
@@ -1054,7 +1086,7 @@ export class Game extends Phaser.Scene {
             this.spawnMazeRowFromConfig(this.lastPlatformY, config, allowMoving, allowSpikes);
 
             this.currentMazeRowIndex++;
-            this.lastPlatformY -= 220; // Spacing between maze rows
+            this.lastPlatformY -= 160; // Spacing between maze rows (reducido para mejor jugabilidad)
 
             if (this.currentMazeRowIndex >= this.currentMazePattern.length) {
                 this.currentMazePattern = null;
@@ -1063,26 +1095,65 @@ export class Game extends Phaser.Scene {
             return null; // Mazes don't return a single platform for enemies usually
         }
 
-        // Chance to start a new maze
-        let startMazeChance = allowMaze ? (height > 1500 ? 45 : 25) : 0;
+        // Chance to start a new maze - aumenta con la altura
+        let startMazeChance = 0;
+        if (allowMaze) {
+            if (height > 3000) startMazeChance = 60;      // Muy frecuente en niveles altos
+            else if (height > 2000) startMazeChance = 50; // Frecuente
+            else if (height > 1500) startMazeChance = 45; // Moderado
+            else if (height > 1000) startMazeChance = 35; // Moderado-bajo
+            else startMazeChance = 25;                    // Bajo en niveles iniciales
+        }
         if (!this.justFinishedMaze && Phaser.Math.Between(0, 100) < startMazeChance) {
-            // Pick a random pattern based on difficulty
-            let patternPool = MAZE_PATTERNS_EASY;
-
-            if (height > 3000) {
-                // Above 3000m, use all patterns (Easy + Hard)
-                // Or we could prioritize Hard ones
-                patternPool = MAZE_PATTERNS;
+            // Sistema de rotación por pares cada 1000m
+            // 0-1000m: Maze 1, 2
+            // 1000-2000m: Maze 3, 4
+            // 2000-3000m: Maze 5, 6
+            // 3000-4000m: Maze 7, 1 (rotación)
+            // 4000-5000m: Maze 2, 3 (rotación)
+            // etc.
+            
+            const mazeTier = Math.floor(height / 1000); // Tier basado en miles de metros
+            const mazePairIndex = mazeTier % 4; // Rotación de 4 pares (0-3)
+            
+            let mazePair = [];
+            switch (mazePairIndex) {
+                case 0: // 0-1000m, 4000-5000m, etc.
+                    mazePair = [MAZE_PATTERNS_NUMBERED[0], MAZE_PATTERNS_NUMBERED[1]]; // Maze 1, 2
+                    break;
+                case 1: // 1000-2000m, 5000-6000m, etc.
+                    mazePair = [MAZE_PATTERNS_NUMBERED[2], MAZE_PATTERNS_NUMBERED[3]]; // Maze 3, 4
+                    break;
+                case 2: // 2000-3000m, 6000-7000m, etc.
+                    mazePair = [MAZE_PATTERNS_NUMBERED[4], MAZE_PATTERNS_NUMBERED[5]]; // Maze 5, 6
+                    break;
+                case 3: // 3000-4000m, 7000-8000m, etc.
+                    mazePair = [MAZE_PATTERNS_NUMBERED[6], MAZE_PATTERNS_NUMBERED[0]]; // Maze 7, 1
+                    break;
             }
-
-            this.currentMazePattern = Phaser.Utils.Array.GetRandom(patternPool);
+            
+            // Seleccionar aleatoriamente uno de los dos mazes del par
+            this.currentMazePattern = Phaser.Utils.Array.GetRandom(mazePair);
             this.currentMazeRowIndex = 0;
 
-            // Random Mirroring
-            this.mazeMirrorX = Phaser.Math.Between(0, 1) === 1;
-            this.mazeMirrorY = Phaser.Math.Between(0, 1) === 1;
+            // Random Mirroring (menos frecuente en niveles bajos para mantener consistencia)
+            const mirrorChance = height > 2000 ? 50 : 30; // Más mirroring en niveles altos
+            this.mazeMirrorX = Phaser.Math.Between(0, 100) < mirrorChance;
+            this.mazeMirrorY = Phaser.Math.Between(0, 100) < mirrorChance;
 
-            this.lastPlatformY -= 200; // Gap before maze starts
+            // Gap antes del maze - mínimo 100px desde la última plataforma
+            // La plataforma de entrada estará 140px antes del primer bloque del maze
+            // Para mantener mínimo 100px desde última plataforma: gapBeforeMaze debe ser >= 240
+            const gapBeforeMaze = Math.max(240, Phaser.Math.Between(240, 300));
+            this.lastPlatformY -= gapBeforeMaze;
+
+            // Plataforma de entrada del maze - centrada en el gap de entrada (x=200)
+            // Distancia razonable antes del primer bloque del maze (140px antes, ajustado al nuevo espaciado)
+            // Esto asegura al menos 100px de distancia desde la última plataforma normal
+            const entryPlatformY = this.lastPlatformY + 140;
+            const entryPlatformX = 200; // Centro del gap de entrada
+            const entryPlatformWidth = 120; // Ancho razonable para saltar cómodamente
+            this.spawnPlatform(entryPlatformX, entryPlatformY, entryPlatformWidth, false);
 
             // Spawn first row immediately
             let index = this.currentMazeRowIndex;
@@ -1093,13 +1164,21 @@ export class Game extends Phaser.Scene {
             this.spawnMazeRowFromConfig(this.lastPlatformY, config, allowMoving, allowSpikes);
 
             this.currentMazeRowIndex++;
-            this.lastPlatformY -= 220;
+            this.lastPlatformY -= 160; // Spacing between maze rows (reducido para mejor jugabilidad)
             return null;
         }
 
         // --- NORMAL PLATFORM GENERATION ---
-        let gap = Phaser.Math.Between(150, 200);
-        if (this.justFinishedMaze) { this.lastPlatformY -= 200; this.justFinishedMaze = false; } else { this.lastPlatformY -= gap; }
+        // Gap mínimo de 100px, máximo de 250px para evitar áreas extensas sin plataformas
+        let gap = Phaser.Math.Between(100, 250);
+        if (this.justFinishedMaze) { 
+            // Gap después de terminar un maze - mínimo 100px
+            const gapAfterMaze = Math.max(100, Phaser.Math.Between(100, 200));
+            this.lastPlatformY -= gapAfterMaze; 
+            this.justFinishedMaze = false; 
+        } else { 
+            this.lastPlatformY -= gap; 
+        }
         let width = Phaser.Math.Between(80, 120);
         // Constrain X to be within walls (32px) + padding (10px)
         let minX = 32 + 10 + (width / 2);
@@ -1236,5 +1315,3 @@ export class Game extends Phaser.Scene {
         }
     }
 }
-
-
