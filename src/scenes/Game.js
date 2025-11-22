@@ -63,10 +63,12 @@ export class Game extends Phaser.Scene {
 
         // === PLATFORM DESIGN CONSTANTS ===
         this.singleJumpHeight = (550 * 550) / (2 * 1200); // ≈ 126px, mantén sincronizado con Player
+        this.doubleJumpHeight = this.singleJumpHeight * 2.0; // ≈ 252px para double jump
         this.minPlatformsPerScreen = 3.5; // early game
         this.maxPlatformsPerScreen = 2.3; // late game (más difícil)
         this.worldHeightForMaxDifficulty = 4000; // altura donde ya estás en máximo challenge
         this.maxHorizontalDelta = 170; // max diferencia horizontal entre plataformas consecutivas
+        this.tutorialHeight = 300; // Altura hasta donde enseñamos mecánicas básicas
 
         // New Maze System State
         this.currentMazePattern = null;
@@ -1233,17 +1235,100 @@ export class Game extends Phaser.Scene {
         let screenHeight = this.game.config.height || 600;
         let avgGap = screenHeight / platformsPerScreen;
 
-        // A partir del gap promedio calculamos rango min/max
-        // Usamos el salto como límite duro
-        let minGap = Math.max(this.singleJumpHeight * 0.7, avgGap * 0.7);
-        let maxGap = Math.min(this.singleJumpHeight * 2.0, avgGap * 1.4);
-
-        // Clamp final para evitar locuras
-        minGap = Phaser.Math.Clamp(minGap, 80, 220);
-        maxGap = Phaser.Math.Clamp(maxGap, minGap + 10, 260);
-
-        // gap final random dentro del rango
-        let gap = Phaser.Math.Between(Math.round(minGap), Math.round(maxGap));
+        // Sistema de enseñanza progresiva
+        let gap;
+        if (this.currentHeight <= this.tutorialHeight) {
+            // Primeros 300m: Tutorial básico - 60% single jump, 40% double jump
+            const isSingleJump = Phaser.Math.Between(0, 100) < 60;
+            if (isSingleJump) {
+                // Single jump: gap entre 80px y singleJumpHeight (126px)
+                gap = Phaser.Math.Between(80, Math.round(this.singleJumpHeight));
+            } else {
+                // Double jump: gap entre singleJumpHeight y doubleJumpHeight (126px - 252px)
+                gap = Phaser.Math.Between(
+                    Math.round(this.singleJumpHeight) + 10, 
+                    Math.round(this.doubleJumpHeight)
+                );
+            }
+        } else if (this.currentHeight <= this.tutorialHeight + 200) {
+            // 300m - 500m: Introducir gaps que requieren wall jump
+            // 30% chance de gap que requiere wall jump (muy grande o cerca de pared)
+            const needsWallJump = Phaser.Math.Between(0, 100) < 30;
+            
+            if (needsWallJump) {
+                // Gap grande que requiere wall jump: más de double jump
+                gap = Phaser.Math.Between(
+                    Math.round(this.doubleJumpHeight) + 20,
+                    Math.round(this.doubleJumpHeight * 1.5) // Hasta ~378px
+                );
+            } else {
+                // Gaps normales basados en dificultad
+                let minGap = Math.max(this.singleJumpHeight * 0.7, avgGap * 0.7);
+                let maxGap = Math.min(this.doubleJumpHeight, avgGap * 1.4);
+                minGap = Phaser.Math.Clamp(minGap, 80, 220);
+                maxGap = Phaser.Math.Clamp(maxGap, minGap + 10, 260);
+                gap = Phaser.Math.Between(Math.round(minGap), Math.round(maxGap));
+            }
+        } else if (this.currentHeight <= 1500) {
+            // 500m - 1500m: Dificultad gradual aumentando 10% cada 100m desde 800m
+            // A los 800m: 10% más difícil que básico
+            // A los 1500m: dificultad normal completa
+            
+            const learningStartHeight = 800;
+            const learningEndHeight = 1500;
+            
+            if (this.currentHeight >= learningStartHeight) {
+                // Calcular factor de dificultad (0.0 a 1.0 entre 800m y 1500m)
+                const learningProgress = Phaser.Math.Clamp(
+                    (this.currentHeight - learningStartHeight) / (learningEndHeight - learningStartHeight),
+                    0, 1
+                );
+                
+                // Dificultad base (tutorial) + incremento gradual hasta normal
+                // Base: gaps como en tutorial pero con 10% más de dificultad inicial
+                const baseDifficulty = 1.1; // 10% más difícil que básico
+                const normalDifficulty = 1.0; // Dificultad normal
+                const difficultyMultiplier = Phaser.Math.Linear(baseDifficulty, normalDifficulty, learningProgress);
+                
+                // Aplicar multiplicador a los gaps
+                const isSingleJump = Phaser.Math.Between(0, 100) < 60;
+                let baseGap;
+                if (isSingleJump) {
+                    baseGap = Phaser.Math.Between(80, Math.round(this.singleJumpHeight));
+                } else {
+                    baseGap = Phaser.Math.Between(
+                        Math.round(this.singleJumpHeight) + 10, 
+                        Math.round(this.doubleJumpHeight)
+                    );
+                }
+                gap = Math.round(baseGap * difficultyMultiplier);
+                
+                // Clamp para evitar gaps imposibles
+                gap = Phaser.Math.Clamp(gap, 80, Math.round(this.doubleJumpHeight * 1.2));
+            } else {
+                // 500m - 800m: Mantener dificultad de tutorial
+                const isSingleJump = Phaser.Math.Between(0, 100) < 60;
+                if (isSingleJump) {
+                    gap = Phaser.Math.Between(80, Math.round(this.singleJumpHeight));
+                } else {
+                    gap = Phaser.Math.Between(
+                        Math.round(this.singleJumpHeight) + 10, 
+                        Math.round(this.doubleJumpHeight)
+                    );
+                }
+            }
+        } else {
+            // Después de 1500m: Sistema normal completo
+            let minGap = Math.max(this.singleJumpHeight * 0.7, avgGap * 0.7);
+            let maxGap = Math.min(this.singleJumpHeight * 2.0, avgGap * 1.4);
+            
+            // Clamp final para evitar locuras
+            minGap = Phaser.Math.Clamp(minGap, 80, 220);
+            maxGap = Phaser.Math.Clamp(maxGap, minGap + 10, 260);
+            
+            // gap final random dentro del rango
+            gap = Phaser.Math.Between(Math.round(minGap), Math.round(maxGap));
+        }
 
         if (this.justFinishedMaze) {
             const gapAfterMaze = Math.max(100, Phaser.Math.Between(100, 200));
@@ -1266,19 +1351,34 @@ export class Game extends Phaser.Scene {
         let minX = wallLeft + (width / 2);
         let maxX = wallRight - (width / 2);
         
-        // Mejorar posición X: limitar delta horizontal entre plataformas consecutivas
+        // Si el gap requiere wall jump (muy grande), posicionar plataforma cerca de una pared
+        const isWallJumpGap = gap > this.doubleJumpHeight + 10;
         let x = null;
-        for (let i = 0; i < 10; i++) { // hasta 10 intentos
-            let candidateX = Phaser.Math.Between(minX, maxX);
-            
-            if (this.lastPlatformX == null || 
-                Math.abs(candidateX - this.lastPlatformX) <= this.maxHorizontalDelta) {
-                x = candidateX;
-                break;
+        
+        if (isWallJumpGap && this.currentHeight > this.tutorialHeight && this.currentHeight <= 1500) {
+            // Enseñar wall jump: posicionar plataforma cerca de una pared (izquierda o derecha)
+            const useLeftWall = Phaser.Math.Between(0, 1) === 0;
+            if (useLeftWall) {
+                // Pegar a la pared izquierda para facilitar wall jump
+                x = wallLeft + width / 2 + 5; // Muy cerca de la pared izquierda
+            } else {
+                // Pegar a la pared derecha para facilitar wall jump
+                x = wallRight - width / 2 - 5; // Muy cerca de la pared derecha
             }
+        } else {
+            // Mejorar posición X: limitar delta horizontal entre plataformas consecutivas
+            for (let i = 0; i < 10; i++) { // hasta 10 intentos
+                let candidateX = Phaser.Math.Between(minX, maxX);
+                
+                if (this.lastPlatformX == null || 
+                    Math.abs(candidateX - this.lastPlatformX) <= this.maxHorizontalDelta) {
+                    x = candidateX;
+                    break;
+                }
+            }
+            // fallback por si acaso
+            if (x == null) x = Phaser.Math.Between(minX, maxX);
         }
-        // fallback por si acaso
-        if (x == null) x = Phaser.Math.Between(minX, maxX);
         
         // Ajuste para plataformas estáticas cerca de paredes: gap cómodo o pegadas
         let isMoving = (allowMoving && Phaser.Math.Between(0, 100) < 30);
