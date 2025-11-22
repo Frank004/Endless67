@@ -959,11 +959,33 @@ export class Game extends Phaser.Scene {
         }
 
         if (allowSpikes && Phaser.Math.Between(0, 100) < 40) {
-            let enemy = this.spikeEnemies.get(gapX, y - 40);
-            if (enemy) {
-                enemy.spawn(gapX, y - 40);
-                // Small movement in gap
-                enemy.startMoving(gapX + 30, 1000);
+            // Spawn enemy ON A WALL, not in the gap
+            let enemyX = 0;
+            let minX = 0;
+            let maxX = 0;
+            let validSpawn = false;
+
+            if (type === 'left') {
+                minX = 10; maxX = w1 - 10; enemyX = w1 / 2; validSpawn = true;
+            } else if (type === 'right') {
+                minX = 400 - w1 + 10; maxX = 390; enemyX = 400 - (w1 / 2); validSpawn = true;
+            } else if (type === 'center') {
+                minX = 200 - (w1 / 2) + 10; maxX = 200 + (w1 / 2) - 10; enemyX = 200; validSpawn = true;
+            } else if (type === 'split') {
+                // Pick random side
+                if (Phaser.Math.Between(0, 1) === 0) {
+                    minX = 10; maxX = w1 - 10; enemyX = w1 / 2; validSpawn = true;
+                } else {
+                    minX = 400 - w2 + 10; maxX = 390; enemyX = 400 - (w2 / 2); validSpawn = true;
+                }
+            }
+
+            if (validSpawn && (maxX - minX > 40)) { // Only spawn if enough space
+                let enemy = this.spikeEnemies.get(enemyX, y - 40);
+                if (enemy) {
+                    enemy.spawn(enemyX, y - 40);
+                    enemy.patrol(minX, maxX, 60);
+                }
             }
         }
 
@@ -1119,8 +1141,10 @@ export class Game extends Phaser.Scene {
             enemy.spawn(ex, ey);
 
             if (!platform.getData('isMoving')) {
-                let range = (platform.displayWidth / 2) - 10;
-                enemy.startMoving(ex + range, 1000);
+                let halfWidth = platform.displayWidth / 2;
+                let minX = platform.x - halfWidth + 10;
+                let maxX = platform.x + halfWidth - 10;
+                enemy.patrol(minX, maxX, 60);
             } else {
                 enemy.body.setVelocityX(platform.body.velocity.x);
             }

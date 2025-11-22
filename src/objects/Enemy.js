@@ -4,7 +4,9 @@ export class SpikeEnemy extends Phaser.Physics.Arcade.Sprite {
         // scene.add.existing(this); // Group handles this
         // scene.physics.add.existing(this); // Group handles this
         this.setDepth(20);
-        this.moveTween = null;
+        this.minX = 0;
+        this.maxX = 400;
+        this.patrolSpeed = 0;
     }
 
     spawn(x, y) {
@@ -15,29 +17,34 @@ export class SpikeEnemy extends Phaser.Physics.Arcade.Sprite {
         this.setActive(true);
         this.setVisible(true);
         this.setDepth(20);
+        this.setVelocityX(0);
     }
 
-    startMoving(targetX, duration) {
-        if (this.moveTween) this.moveTween.remove();
-        this.moveTween = this.scene.tweens.add({
-            targets: this,
-            x: targetX,
-            duration: duration,
-            yoyo: true,
-            repeat: -1,
-            ease: 'Sine.easeInOut'
-        });
+    patrol(minX, maxX, speed = 60) {
+        this.minX = minX;
+        this.maxX = maxX;
+        this.patrolSpeed = speed;
+        this.setVelocityX(speed);
     }
 
     stopMoving() {
-        if (this.moveTween) {
-            this.moveTween.remove();
-            this.moveTween = null;
-        }
+        this.setVelocityX(0);
     }
 
     preUpdate(time, delta) {
         super.preUpdate(time, delta);
+
+        // Patrol Logic
+        if (this.patrolSpeed > 0) {
+            if (this.x >= this.maxX) {
+                this.setVelocityX(-this.patrolSpeed);
+                this.setFlipX(true); // Face left
+            } else if (this.x <= this.minX) {
+                this.setVelocityX(this.patrolSpeed);
+                this.setFlipX(false); // Face right
+            }
+        }
+
         if (this.y > this.scene.player.y + 900) {
             this.stopMoving();
             this.setActive(false);
