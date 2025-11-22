@@ -9,8 +9,9 @@ export class SpikeEnemy extends Phaser.Physics.Arcade.Sprite {
 
     spawn(x, y) {
         this.body.reset(x, y);
-        this.body.allowGravity = false;
-        this.body.immovable = true;
+        this.body.allowGravity = true;
+        this.setGravityY(1200);
+        this.body.immovable = false;
         this.setActive(true);
         this.setVisible(true);
         this.setDepth(20);
@@ -58,8 +59,9 @@ export class ShooterEnemy extends Phaser.Physics.Arcade.Sprite {
 
     spawn(x, y) {
         this.body.reset(x, y);
-        this.body.allowGravity = false;
-        this.body.immovable = true;
+        this.body.allowGravity = true;
+        this.setGravityY(1200);
+        this.body.immovable = false;
         this.setActive(true);
         this.setVisible(true);
         this.setDepth(20);

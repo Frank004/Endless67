@@ -269,6 +269,8 @@ export class Game extends Phaser.Scene {
         this.physics.add.overlap(this.player, this.shooterEnemies, this.hitEnemy, null, this);
         this.physics.add.overlap(this.player, this.jumperShooterEnemies, this.hitEnemy, null, this);
         this.physics.add.collider(this.jumperShooterEnemies, this.platforms); // Needs to stand on platforms
+        this.physics.add.collider(this.shooterEnemies, this.platforms);
+        this.physics.add.collider(this.spikeEnemies, this.platforms);
         this.physics.add.overlap(
             this.player,
             this.projectiles,
