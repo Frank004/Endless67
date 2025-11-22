@@ -4,6 +4,7 @@ export class Projectile extends Phaser.Physics.Arcade.Sprite {
     }
 
     fire(x, y, direction) {
+        if (!this.body) return; // Safety check
         this.body.reset(x, y);
         this.setActive(true);
         this.setVisible(true);
@@ -13,12 +14,20 @@ export class Projectile extends Phaser.Physics.Arcade.Sprite {
     }
 
     preUpdate(time, delta) {
+        // Stop if not active or scene is gone
+        if (!this.active || !this.scene) return;
+
         super.preUpdate(time, delta);
 
         // Out of bounds check
         if (this.y > this.scene.player.y + 900 || this.x < -50 || this.x > 450) {
-            this.setActive(false);
-            this.setVisible(false);
+            this.kill();
         }
+    }
+
+    kill() {
+        this.setActive(false);
+        this.setVisible(false);
+        if (this.body) this.body.stop();
     }
 }

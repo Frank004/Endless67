@@ -76,7 +76,12 @@ export class Game extends Phaser.Scene {
         this.spikeEnemies = this.physics.add.group({ classType: SpikeEnemy, allowGravity: false, immovable: true, runChildUpdate: true });
         this.shooterEnemies = this.physics.add.group({ classType: ShooterEnemy, allowGravity: false, immovable: true, runChildUpdate: true });
         this.jumperShooterEnemies = this.physics.add.group({ classType: JumperShooterEnemy, allowGravity: true, immovable: false, runChildUpdate: true });
-        this.projectiles = this.physics.add.group({ classType: Projectile, allowGravity: false, runChildUpdate: true });
+        this.projectiles = this.physics.add.group({
+            classType: Projectile,
+            allowGravity: false,
+            runChildUpdate: true,
+            maxSize: 50 // Limit total projectiles to prevent memory leaks
+        });
         this.mazeWalls = this.physics.add.staticGroup();
 
         // Paredes en los bordes para móvil
