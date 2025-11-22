@@ -96,8 +96,6 @@ export class Game extends Phaser.Scene {
 
         this.spawnPlatform(200, 450, 140, false);
 
-        this.spawnPlatform(200, 450, 140, false);
-
         // --- TEST ENEMIES (Uncomment to enable) ---
         spawnTestEnemies(this);
 
