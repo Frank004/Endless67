@@ -5,7 +5,7 @@ export class Player extends Phaser.Physics.Arcade.Sprite {
         scene.physics.add.existing(this);
 
         this.setGravityY(1200);
-        this.setMaxVelocity(400, 1000);
+        this.setMaxVelocity(300, 1000); // Reduced from 400
         this.setDragX(1200);
         this.setCollideWorldBounds(false);
         this.setDepth(20);
@@ -35,7 +35,7 @@ export class Player extends Phaser.Physics.Arcade.Sprite {
             keyboardMove = 1;
         }
 
-        const force = 1200;
+        const force = 900; // Reduced from 1200
 
         if (keyboardMove !== 0) {
             this.setAccelerationX(keyboardMove * force);
@@ -55,7 +55,7 @@ export class Player extends Phaser.Physics.Arcade.Sprite {
     }
 
     move(direction) {
-        const force = 1200;
+        const force = 900; // Reduced from 1200
         this.setAccelerationX(direction * force);
     }
 
