@@ -1,7 +1,7 @@
 export function spawnTestEnemies(scene) {
     // Start generating much higher to leave room for test enemies
     scene.lastPlatformY = -500;
-    for (let i = 0; i < 3; i++) scene.generateNextRow();
+    // for (let i = 0; i < 3; i++) scene.generateNextRow();
 
     // --- TEST ENEMIES ---
     // Jumper Shooter Enemy (Closest to player, Y=250)
