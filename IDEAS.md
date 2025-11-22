@@ -4,6 +4,53 @@ Este documento contiene ideas de nuevas mecánicas y elementos de juego con deta
 
 ---
 
+## 📈 Sistema de Progresión por Altura (Niveles Implícitos)
+
+### Concepto
+El juego debe sentir un efecto de niveles sin niveles explícitos. Cada **1000m alcanzado** representa un mini progreso con:
+- Nuevos enemigos
+- Nuevas mecánicas
+- Combinaciones de funciones existentes
+- Aumento gradual de dificultad
+
+### Estructura de Progresión Sugerida
+
+- **0-1000m**: Tutorial y mecánicas básicas
+  - Single jump, double jump, wall jump
+  - Enemigos básicos (spikes)
+  - Plataformas estáticas y móviles básicas
+
+- **1000-2000m**: Introducción de nuevas mecánicas
+  - Plataformas temporales
+  - Enemigos voladores
+  - Púas en paredes/piso
+  - Combinaciones básicas
+
+- **2000-3000m**: Mecánicas intermedias
+  - Plataforma trampolín
+  - Enemigo disparador diagonal
+  - Pared resbaladiza
+  - Combinaciones más complejas
+
+- **3000-4000m**: Mecánicas avanzadas
+  - Plataformas sube y baja
+  - Tubo (pipe) - muy raro
+  - Combinaciones avanzadas de todas las mecánicas
+
+- **4000m+**: Máxima dificultad
+  - Todas las mecánicas disponibles
+  - Combinaciones complejas y desafiantes
+  - Nuevos patrones de enemigos
+  - Variaciones de mecánicas existentes
+
+### Implementación
+- Cada mecánica debe tener una **altura mínima** para aparecer
+- La **probabilidad de spawn** puede aumentar gradualmente con la altura
+- Las **combinaciones** de mecánicas deben ser más frecuentes en alturas mayores
+- Cada 1000m puede tener un "checkpoint visual" o efecto especial (opcional)
+
+---
+
 ## 🚀 1. Plataforma Trampolín
 
 ### Descripción
@@ -18,6 +65,8 @@ Plataforma especial que da un impulso extra al jugador cuando aterriza en ella, 
 - **Spawn**: 
   - Probabilidad baja (5-10%) en plataformas normales
   - Puede reemplazar una plataforma estática ocasionalmente
+  - **Altura mínima: 2000m+** (Segunda etapa de progresión)
+  - Probabilidad aumenta gradualmente: 5% a 2000m → 10% a 3000m+
 - **Código**:
   ```js
   // En spawnPlatform o nueva función spawnTrampoline
@@ -43,8 +92,23 @@ Tubo vertical que permite al jugador "entrar" y aparecer más arriba, acortando 
   - Efecto visual: fade out/in o animación de "entrar al tubo"
 - **Spawn**:
   - Muy raro (1-2% de probabilidad)
-  - Altura mínima: 500m+
+  - **Altura mínima: 3000m+** (Tercera etapa de progresión - mecánica avanzada)
   - Debe tener espacio vertical suficiente (gap de 300-400px entre entrada y salida)
+  - Probabilidad aumenta ligeramente con altura: 1% a 3000m → 2% a 4000m+
+- **Efecto Visual - Animación/Shader dentro del Pipe**:
+  - **Opción 1: Shader Pipeline (Recomendado)**:
+    - Crear `PipePipeline.js` similar a `LavaPipeline.js`
+    - Efecto de "túnel" usando distorsión radial y oscurecimiento
+    - Shader que simula estar dentro de un tubo circular
+    - Variables: `uTime` para animación, `uDepth` para efecto de profundidad
+  - **Opción 2: Animación con Sprites**:
+    - Secuencia de sprites que muestran el interior del tubo
+    - Frames animados de "entrando al tubo" → "dentro del tubo" → "saliendo"
+    - Usar `tweens` para fade y scale durante la transición
+  - **Opción 3: Efecto Híbrido**:
+    - Shader para el efecto visual base (distorsión, oscurecimiento)
+    - Partículas o sprites animados para detalles (líneas de velocidad, brillos)
+    - Overlay oscuro con borde circular que simula la vista desde dentro
 - **Código**:
   ```js
   // Nueva clase Pipe o en Game.js
@@ -52,8 +116,70 @@ Tubo vertical que permite al jugador "entrar" y aparecer más arriba, acortando 
     let entry = this.pipes.create(200, entryY, 'pipe_entry');
     let exit = this.pipes.create(200, exitY, 'pipe_exit');
     entry.setData('exitY', exitY);
-    // Overlap: if (player overlaps entry) player.y = exitY - 50;
+    // Overlap: if (player overlaps entry) {
+    //   this.enterPipe(player, exitY);
+    // }
   }
+  
+  enterPipe(player, exitY) {
+    // Aplicar shader/overlay de "dentro del tubo"
+    if (this.game.renderer.type === Phaser.WEBGL) {
+      player.setPostPipeline('PipePipeline');
+    }
+    
+    // Animación de entrada
+    this.tweens.add({
+      targets: player,
+      scaleX: 0.5,
+      scaleY: 0.5,
+      alpha: 0.3,
+      duration: 300,
+      onComplete: () => {
+        // Teletransportar
+        player.y = exitY - 50;
+        // Animación de salida
+        this.tweens.add({
+          targets: player,
+          scaleX: 1,
+          scaleY: 1,
+          alpha: 1,
+          duration: 300,
+          onComplete: () => {
+            player.clearPostPipeline();
+          }
+        });
+      }
+    });
+  }
+  ```
+- **Shader Pipeline (PipePipeline.js)**:
+  ```js
+  // Efecto de túnel circular con distorsión
+  fragShader: `
+    precision mediump float;
+    uniform sampler2D uMainSampler;
+    uniform float uTime;
+    uniform float uDepth;
+    varying vec2 outTexCoord;
+    
+    void main() {
+      vec2 uv = outTexCoord;
+      vec2 center = vec2(0.5, 0.5);
+      float dist = distance(uv, center);
+      
+      // Efecto de túnel: distorsión radial
+      float angle = atan(uv.y - center.y, uv.x - center.x);
+      float radius = dist * (1.0 + sin(uTime * 2.0) * 0.1);
+      vec2 tunnelUV = center + vec2(cos(angle), sin(angle)) * radius;
+      
+      // Oscurecimiento hacia los bordes (simula estar dentro del tubo)
+      float vignette = 1.0 - smoothstep(0.3, 0.5, dist);
+      vec4 color = texture2D(uMainSampler, tunnelUV);
+      color.rgb *= vignette * (0.5 + uDepth * 0.5); // Más oscuro = más profundo
+      
+      gl_FragColor = color;
+    }
+  `
   ```
 
 ---
@@ -61,27 +187,54 @@ Tubo vertical que permite al jugador "entrar" y aparecer más arriba, acortando 
 ## ⚖️ 3. Plataformas Sube y Baja (See-Saw)
 
 ### Descripción
-Plataforma que se balancea cuando el jugador está en ella, creando movimiento dinámico.
+Plataforma que se mueve verticalmente (sube y baja) cuando el jugador está en ella, creando movimiento dinámico. El jugador puede moverse horizontalmente mientras la plataforma oscila verticalmente.
 
 ### Implementación
 - **Sprite**: Textura `seesaw` o usar plataforma normal con física especial
 - **Física**:
-  - Usar `setAngularVelocity()` o `setRotation()` basado en posición del jugador
-  - Si jugador está a la izquierda, rotar hacia la izquierda
-  - Si jugador está a la derecha, rotar hacia la derecha
-  - Aplicar fuerza al jugador basada en la rotación
+  - Movimiento vertical oscilante usando `setVelocityY()` o `setY()` con función seno/coseno
+  - Cuando el jugador está en la plataforma, la plataforma sube y baja automáticamente
+  - El jugador puede moverse horizontalmente normalmente mientras está en la plataforma
+  - Velocidad vertical de la plataforma: oscilación suave (ej: -100 a +100 px/s)
+  - El jugador mantiene su velocidad horizontal pero hereda la velocidad vertical de la plataforma
 - **Spawn**:
   - Probabilidad media (15-20%)
-  - Altura mínima: 300m+
+  - **Altura mínima: 3000m+** (Tercera etapa de progresión - mecánica avanzada)
+  - Probabilidad aumenta gradualmente: 15% a 3000m → 20% a 4000m+
 - **Código**:
   ```js
-  // En update() o en clase SeesawPlatform
-  if (player.x < seesaw.x) {
-    seesaw.setAngularVelocity(-50);
-  } else {
-    seesaw.setAngularVelocity(50);
+  // En clase SeesawPlatform o en update()
+  class SeesawPlatform extends Phaser.Physics.Arcade.Sprite {
+    constructor(scene, x, y) {
+      super(scene, x, y, 'seesaw');
+      this.baseY = y; // Posición base
+      this.oscillationSpeed = 2; // Velocidad de oscilación
+      this.oscillationRange = 60; // Rango de movimiento vertical (px)
+      this.time = 0;
+    }
+    
+    update(time, delta) {
+      this.time += delta;
+      // Movimiento vertical oscilante
+      this.y = this.baseY + Math.sin(this.time / 1000 * this.oscillationSpeed) * this.oscillationRange;
+      
+      // Si el jugador está en la plataforma, aplicar velocidad vertical
+      if (this.body.touching.up && this.scene.player.body.touching.down) {
+        // El jugador hereda la velocidad vertical de la plataforma
+        this.scene.player.body.velocity.y = this.body.velocity.y;
+      }
+    }
   }
-  // Aplicar impulso al jugador basado en rotación
+  
+  // O usando tweens para movimiento más suave
+  // this.tweens.add({
+  //   targets: seesaw,
+  //   y: seesaw.y - 60,
+  //   duration: 1000,
+  //   yoyo: true,
+  //   repeat: -1,
+  //   ease: 'Sine.easeInOut'
+  // });
   ```
 
 ---
@@ -100,8 +253,9 @@ Enemigos que vuelan en un patrón circular. El área no debe tener plataformas e
   - Puede tener una plataforma en el centro que el enemigo rodea
 - **Spawn**:
   - Crear "zona de vuelo" sin plataformas en el área del círculo
-  - Probabilidad: 10-15% después de 1000m
-  - Altura mínima: 1000m+
+  - **Altura mínima: 1000m+** (Primera etapa de progresión)
+  - Probabilidad: 10% a 1000m → 15% a 2000m+
+  - A partir de 3000m: variaciones con diferentes radios y velocidades
 - **Código**:
   ```js
   // Nueva clase FlyingEnemy
@@ -130,9 +284,10 @@ Enemigo posicionado en esquinas (superior izquierda/derecha) que dispara proyect
   - Dispara proyectiles con velocidad diagonal (velX: ±200, velY: 200)
   - Proyectiles siguen patrón diagonal hacia abajo
 - **Spawn**:
-  - Probabilidad: 20-25% después de 1500m
-  - Altura mínima: 1500m+
+  - **Altura mínima: 2000m+** (Segunda etapa de progresión)
+  - Probabilidad: 20% a 2000m → 25% a 3000m+
   - Solo en esquinas, no en el centro
+  - A partir de 3000m: puede combinarse con otras mecánicas (ej: esquina con púas)
 - **Código**:
   ```js
   // Extender ShooterEnemy o nueva clase CornerShooter
@@ -157,8 +312,10 @@ Plataformas que aparecen y desaparecen con un timer, creando desafíos de timing
   - Usar `setVisible()` y `setActive()` para toggle
   - Opcional: efecto visual de "fade" antes de desaparecer
 - **Spawn**:
-  - Probabilidad: 15-20% después de 800m
-  - Altura mínima: 800m+
+  - **Altura mínima: 1000m+** (Primera etapa de progresión)
+  - Probabilidad: 15% a 1000m → 20% a 2000m+
+  - A partir de 2000m: variaciones con diferentes timers (más rápidas/más lentas)
+  - A partir de 3000m: puede combinarse con otras mecánicas (ej: temporal + trampolín)
 - **Código**:
   ```js
   // En spawnPlatform o nueva función
@@ -183,12 +340,14 @@ Púas estáticas que dañan al jugador al tocarlas. Pueden estar en paredes, tec
   - Al tocar: daño al jugador (similar a `hitEnemy`)
   - Posición: puede estar en cualquier superficie
 - **Spawn**:
-  - Probabilidad: 10-15% después de 1000m
-  - Altura mínima: 1000m+
+  - **Altura mínima: 1000m+** (Primera etapa de progresión)
+  - Probabilidad: 10% a 1000m → 15% a 2000m+
   - Pueden estar en:
     - Paredes (izquierda/derecha)
     - Techos (parte superior de bloques)
     - Bordes de plataformas
+  - A partir de 2000m: más variaciones de posicionamiento
+  - A partir de 3000m: combinaciones con otras mecánicas (ej: púas + plataforma temporal)
 - **Código**:
   ```js
   // Nueva clase Spike o función spawnSpike
@@ -214,10 +373,11 @@ Zona corta de pared que es resbaladiza, el jugador no puede hacer wall jump y re
   - Aplicar velocidad hacia abajo constante (resbalar)
   - Zona corta: 100-150px de altura
 - **Spawn**:
-  - Probabilidad: 10-15% después de 1200m
-  - Altura mínima: 1200m+
+  - **Altura mínima: 2000m+** (Segunda etapa de progresión)
+  - Probabilidad: 10% a 2000m → 15% a 3000m+
   - Solo en paredes (izquierda o derecha)
   - Debe haber plataforma de escape cerca
+  - A partir de 3000m: zonas más largas o múltiples zonas consecutivas
 - **Código**:
   ```js
   // Nueva clase SlipperyWallZone
@@ -233,21 +393,38 @@ Zona corta de pared que es resbaladiza, el jugador no puede hacer wall jump y re
 
 ---
 
-## 📋 Prioridades Sugeridas
+## 📋 Prioridades y Progresión por Altura
 
-1. **Alta Prioridad** (Fácil de implementar, gran impacto):
-   - Plataformas Temporales
-   - Púas en Paredes/Piso
-   - Enemigo Disparador Diagonal
+### Distribución Sugerida por Altura
 
-2. **Media Prioridad** (Moderada complejidad):
-   - Plataforma Trampolín
-   - Enemigos Voladores en Círculo
-   - Pared Resbaladiza
+1. **1000-2000m** (Primera etapa de progresión):
+   - ✅ Plataformas Temporales (15-20% spawn)
+   - ✅ Púas en Paredes/Piso (10-15% spawn)
+   - ✅ Enemigos Voladores en Círculo (10-15% spawn)
 
-3. **Baja Prioridad** (Más complejo, requiere más trabajo):
-   - Tubo (Pipe)
-   - Plataformas Sube y Baja
+2. **2000-3000m** (Segunda etapa de progresión):
+   - ✅ Plataforma Trampolín (5-10% spawn)
+   - ✅ Enemigo Disparador Diagonal (20-25% spawn)
+   - ✅ Pared Resbaladiza (10-15% spawn)
+   - 🔄 Combinaciones: Púas + Temporales, Voladores + Trampolín
+
+3. **3000-4000m** (Tercera etapa de progresión):
+   - ✅ Plataformas Sube y Baja (15-20% spawn)
+   - ✅ Tubo (Pipe) - Muy raro (1-2% spawn)
+   - 🔄 Combinaciones avanzadas: Múltiples mecánicas juntas
+   - 🔄 Variaciones: Enemigos voladores con diferentes patrones
+
+4. **4000m+** (Máxima dificultad):
+   - ✅ Todas las mecánicas disponibles
+   - 🔄 Combinaciones complejas y desafiantes
+   - 🔄 Patrones de enemigos más agresivos
+   - 🔄 Variaciones de todas las mecánicas
+
+### Notas de Implementación
+- **Altura mínima**: Cada mecánica debe respetar su altura mínima
+- **Probabilidad progresiva**: Aumentar probabilidad de spawn gradualmente después de la altura mínima
+- **Combinaciones**: A partir de 2000m, permitir que múltiples mecánicas aparezcan juntas
+- **Variaciones**: En alturas mayores, crear variaciones de mecánicas existentes (ej: enemigos voladores con diferentes radios, plataformas temporales con diferentes timers)
 
 ---
 

@@ -47,7 +47,11 @@ Un juego de plataformas vertical infinito desarrollado con Phaser.js. Escapa de 
 
 ## 🌐 Jugar Online
 
-El juego está disponible en GitHub Pages. Visita la página del repositorio para acceder al juego.
+El juego está disponible en GitHub Pages:
+
+🎮 **[Jugar Ahora](https://frank004.github.io/Endless67/)**
+
+O visita el repositorio: [https://github.com/Frank004/Endless67](https://github.com/Frank004/Endless67)
 
 ## 📝 Licencia
 
