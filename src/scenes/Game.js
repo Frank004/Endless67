@@ -483,22 +483,30 @@ export class Game extends Phaser.Scene {
 
     // --- SISTEMA DE DISPARO ---
     spawnShooter(platform) {
-        let ex = platform.x;
-        let ey = platform.y - 20;
-        let shooter = this.shooterEnemies.get(ex, ey);
-        if (shooter) {
-            shooter.spawn(ex, ey);
-            shooter.startShooting(this.projectiles);
+        try {
+            let ex = platform.x;
+            let ey = platform.y - 20;
+            let shooter = this.shooterEnemies.get(ex, ey);
+            if (shooter) {
+                shooter.spawn(ex, ey);
+                shooter.startShooting(this.projectiles);
+            }
+        } catch (e) {
+            console.warn('Error spawning shooter:', e);
         }
     }
 
     spawnJumperShooter(platform) {
-        let ex = platform.x;
-        let ey = platform.y - 50; // Spawn higher to ensure it falls and registers collision
-        let jumper = this.jumperShooterEnemies.get(ex, ey);
-        if (jumper) {
-            jumper.spawn(ex, ey);
-            jumper.startBehavior(this.projectiles);
+        try {
+            let ex = platform.x;
+            let ey = platform.y - 50; // Spawn higher to ensure it falls and registers collision
+            let jumper = this.jumperShooterEnemies.get(ex, ey);
+            if (jumper) {
+                jumper.spawn(ex, ey);
+                jumper.startBehavior(this.projectiles);
+            }
+        } catch (e) {
+            console.warn('Error spawning jumper shooter:', e);
         }
     }
 
