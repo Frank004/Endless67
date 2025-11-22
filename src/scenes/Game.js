@@ -97,12 +97,12 @@ export class Game extends Phaser.Scene {
         this.spawnPlatform(200, 450, 140, false);
 
         // --- TEST ENEMIES (Uncomment to enable) ---
-        spawnTestEnemies(this);
+        // spawnTestEnemies(this);
 
         // --- NORMAL GENERATION (Default) ---
         // If you enable test enemies, you might want to comment this block out to avoid overlap
         this.lastPlatformY = 450;
-        // for (let i = 0; i < 6; i++) this.generateNextRow();
+        for (let i = 0; i < 6; i++) this.generateNextRow();
         // -----------------------------------
 
         // Lava dentro de las paredes con offset para el efecto wave
