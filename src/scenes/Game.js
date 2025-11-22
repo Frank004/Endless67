@@ -2,6 +2,7 @@ import { Player } from '../objects/Player.js';
 import { SpikeEnemy, ShooterEnemy, JumperShooterEnemy } from '../objects/Enemy.js';
 import { Projectile } from '../objects/Projectile.js';
 import { spawnTestEnemies } from '../utils/TestEnemies.js';
+import { MAZE_PATTERNS } from '../data/MazePatterns.js';
 
 export class Game extends Phaser.Scene {
     constructor() {
@@ -58,6 +59,12 @@ export class Game extends Phaser.Scene {
         this.mazeSequenceRemaining = 0;
         this.lastMazeSide = 0;
         this.justFinishedMaze = false;
+
+        // New Maze System State
+        this.currentMazePattern = null;
+        this.currentMazeRowIndex = 0;
+        this.mazeMirrorX = false;
+        this.mazeMirrorY = false;
 
         // POWER UP STATE
         this.isInvincible = false;
@@ -884,26 +891,140 @@ export class Game extends Phaser.Scene {
 
 
 
+    spawnMazeRowFromConfig(y, config, allowMoving, allowSpikes) {
+        let type = config.type;
+        let w1 = config.width;
+        let w2 = config.width2 || 0;
+
+        // Handle Horizontal Mirroring
+        if (this.mazeMirrorX) {
+            if (type === 'left') type = 'right';
+            else if (type === 'right') type = 'left';
+            else if (type === 'split') {
+                let temp = w1; w1 = w2; w2 = temp;
+            }
+        }
+
+        // Spawn Walls based on type
+        if (type === 'left') {
+            // Wall on left side
+            let block = this.mazeWalls.create(0, y, 'maze_block');
+            block.setOrigin(0, 0.5).setDisplaySize(w1, 60).refreshBody().setDepth(10);
+        } else if (type === 'right') {
+            // Wall on right side
+            let block = this.mazeWalls.create(400, y, 'maze_block');
+            block.setOrigin(1, 0.5).setDisplaySize(w1, 60).refreshBody().setDepth(10);
+        } else if (type === 'split') {
+            // Walls on both sides
+            let b1 = this.mazeWalls.create(0, y, 'maze_block');
+            b1.setOrigin(0, 0.5).setDisplaySize(w1, 60).refreshBody().setDepth(10);
+
+            let b2 = this.mazeWalls.create(400, y, 'maze_block');
+            b2.setOrigin(1, 0.5).setDisplaySize(w2, 60).refreshBody().setDepth(10);
+        } else if (type === 'center') {
+            // Wall in center
+            let block = this.mazeWalls.create(200, y, 'maze_block');
+            block.setOrigin(0.5, 0.5).setDisplaySize(w1, 60).refreshBody().setDepth(10);
+        }
+
+        // Spawning Items/Enemies in gaps
+        // Calculate gap center for item placement
+        let gapX = 200;
+        if (type === 'left') gapX = w1 + (400 - w1) / 2;
+        else if (type === 'right') gapX = (400 - w1) / 2;
+        else if (type === 'split') gapX = w1 + (400 - w1 - w2) / 2;
+        else if (type === 'center') {
+            // Two gaps, pick one randomly
+            gapX = (Phaser.Math.Between(0, 1) === 0) ? (200 - w1 / 2) / 2 : 200 + w1 / 2 + (200 - w1 / 2) / 2;
+        }
+
+        // Cooldown logic
+        let powerupChance = 5;
+        const timeCooldown = 15000;
+        const heightCooldown = 500;
+        const now = this.time.now;
+
+        if (this.currentHeight - this.lastPowerupSpawnHeight < heightCooldown || now - this.lastPowerupTime < timeCooldown) {
+            powerupChance = 0;
+        }
+
+        if (Phaser.Math.Between(0, 100) < powerupChance) {
+            this.powerups.create(gapX, y - 50, 'powerup_ball');
+            this.lastPowerupSpawnHeight = this.currentHeight;
+            this.lastPowerupTime = now;
+        } else {
+            this.coins.create(gapX, y - 50, 'coin');
+        }
+
+        if (allowSpikes && Phaser.Math.Between(0, 100) < 40) {
+            let enemy = this.spikeEnemies.get(gapX, y - 40);
+            if (enemy) {
+                enemy.spawn(gapX, y - 40);
+                // Small movement in gap
+                enemy.startMoving(gapX + 30, 1000);
+            }
+        }
+
+        // Small chance for a platform in the gap to help traverse
+        if (allowMoving && Phaser.Math.Between(0, 100) < 20) {
+            this.spawnPlatform(gapX, y + 10, 80, true);
+        }
+    }
+
     generateNextRow() {
         const height = this.currentHeight;
         const allowMaze = height > 200; const allowMoving = height > 500; const allowSpikes = height > 1000; const allowSpikesMoving = height > 2000;
         const allowShooters = height > 2500;
         const allowJumperShooters = height > 4000;
 
-        if (this.mazeSequenceRemaining > 0) {
-            this.spawnMazeRow(this.lastPlatformY, this.lastMazeSide, allowMoving, allowSpikes);
-            this.lastMazeSide = (this.lastMazeSide === 0) ? 1 : 0;
-            this.mazeSequenceRemaining--; this.lastPlatformY -= 220;
-            if (this.mazeSequenceRemaining === 0) this.justFinishedMaze = true; return;
+        // --- NEW MAZE GENERATION LOGIC ---
+        if (this.currentMazePattern) {
+            // Continue spawning current pattern
+            let index = this.currentMazeRowIndex;
+            if (this.mazeMirrorY) {
+                index = this.currentMazePattern.length - 1 - this.currentMazeRowIndex;
+            }
+
+            let config = this.currentMazePattern[index];
+            this.spawnMazeRowFromConfig(this.lastPlatformY, config, allowMoving, allowSpikes);
+
+            this.currentMazeRowIndex++;
+            this.lastPlatformY -= 220; // Spacing between maze rows
+
+            if (this.currentMazeRowIndex >= this.currentMazePattern.length) {
+                this.currentMazePattern = null;
+                this.justFinishedMaze = true;
+            }
+            return null; // Mazes don't return a single platform for enemies usually
         }
 
+        // Chance to start a new maze
         let startMazeChance = allowMaze ? (height > 1500 ? 45 : 25) : 0;
         if (!this.justFinishedMaze && Phaser.Math.Between(0, 100) < startMazeChance) {
-            this.mazeSequenceRemaining = Phaser.Math.Between(3, 6); this.lastMazeSide = Phaser.Math.Between(0, 1);
-            this.lastPlatformY -= 200; this.spawnMazeRow(this.lastPlatformY, this.lastMazeSide, allowMoving, allowSpikes);
-            this.lastMazeSide = (this.lastMazeSide === 0) ? 1 : 0; this.mazeSequenceRemaining--; this.lastPlatformY -= 220; return;
+            // Pick a random pattern
+            this.currentMazePattern = Phaser.Utils.Array.GetRandom(MAZE_PATTERNS);
+            this.currentMazeRowIndex = 0;
+
+            // Random Mirroring
+            this.mazeMirrorX = Phaser.Math.Between(0, 1) === 1;
+            this.mazeMirrorY = Phaser.Math.Between(0, 1) === 1;
+
+            this.lastPlatformY -= 200; // Gap before maze starts
+
+            // Spawn first row immediately
+            let index = this.currentMazeRowIndex;
+            if (this.mazeMirrorY) {
+                index = this.currentMazePattern.length - 1 - this.currentMazeRowIndex;
+            }
+            let config = this.currentMazePattern[index];
+            this.spawnMazeRowFromConfig(this.lastPlatformY, config, allowMoving, allowSpikes);
+
+            this.currentMazeRowIndex++;
+            this.lastPlatformY -= 220;
+            return null;
         }
 
+        // --- NORMAL PLATFORM GENERATION ---
         let gap = Phaser.Math.Between(150, 200);
         if (this.justFinishedMaze) { this.lastPlatformY -= 200; this.justFinishedMaze = false; } else { this.lastPlatformY -= gap; }
         let width = Phaser.Math.Between(80, 120);
