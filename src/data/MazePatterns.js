@@ -18,8 +18,8 @@ export const MAZE_1 = [
 export const MAZE_2 = [
     { type: 'split', width: 140, width2: 140 }, // Entrada central
     { type: 'left', width: 200 },
-    { type: 'right', width: 280 }, // Bloque más largo que conecta con vertical
-    { type: 'right', width: 320 }, // Bloque vertical simulado (más ancho)
+    { type: 'right', width: 250 }, // Bloque más largo que conecta con vertical (reducido para gap más cómodo)
+    { type: 'right', width: 260 }, // Bloque vertical simulado (reducido de 320 a 260 para gap de ~140px)
     { type: 'left', width: 180 },
     { type: 'split', width: 140, width2: 140 }  // Salida central
 ];
@@ -35,15 +35,14 @@ export const MAZE_3 = [
     { type: 'split', width: 140, width2: 140 }  // Salida central
 ];
 
-// MAZE 4: Dos Pares de Bloques con Gaps Centrales
-// Basado en Panel 4 de la imagen
+// MAZE 4: Túnel Central Mejorado (más corto y con variación)
+// Basado en Panel 4 de la imagen, pero más corto y con alternancia para facilitar subida
 export const MAZE_4 = [
     { type: 'split', width: 140, width2: 140 }, // Entrada central
     { type: 'split', width: 140, width2: 140 },
+    { type: 'left', width: 200 }, // Alternancia: bloque izquierdo para variar y facilitar subida
     { type: 'split', width: 140, width2: 140 },
-    { type: 'split', width: 140, width2: 140 },
-    { type: 'split', width: 140, width2: 140 },
-    { type: 'split', width: 140, width2: 140 }  // Salida central
+    { type: 'split', width: 140, width2: 140 }  // Salida central (reducido de 6 a 4 filas)
 ];
 
 // MAZE 5: Tres Bloques Horizontales Alternados

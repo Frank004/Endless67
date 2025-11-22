@@ -54,11 +54,19 @@ export class Game extends Phaser.Scene {
         this.totalScore = 0;
         this.currentHeight = 0;
         this.lastPlatformY = 500;
+        this.lastPlatformX = null; // Para limitar delta horizontal entre plataformas
         this.lastWallTouched = null;
         this.wallJumpConsecutive = 0;
         this.mazeSequenceRemaining = 0;
         this.lastMazeSide = 0;
         this.justFinishedMaze = false;
+
+        // === PLATFORM DESIGN CONSTANTS ===
+        this.singleJumpHeight = (550 * 550) / (2 * 1200); // ≈ 126px, mantén sincronizado con Player
+        this.minPlatformsPerScreen = 3.5; // early game
+        this.maxPlatformsPerScreen = 2.3; // late game (más difícil)
+        this.worldHeightForMaxDifficulty = 4000; // altura donde ya estás en máximo challenge
+        this.maxHorizontalDelta = 170; // max diferencia horizontal entre plataformas consecutivas
 
         // New Maze System State
         this.currentMazePattern = null;
@@ -128,7 +136,7 @@ export class Game extends Phaser.Scene {
         // Offset del cuerpo de física para centrarlo (el visual es más ancho)
         this.lava.body.setOffset(waveOffset, 20);
         this.lava.setDepth(50); // Profundidad menor que las paredes para que no se vea por detrás
-        this.baseLavaSpeed = -60;
+        this.baseLavaSpeed = -54; // Reducido 10% (era -60)
         this.currentLavaSpeed = this.baseLavaSpeed;
 
         if (this.game.renderer.type === Phaser.WEBGL) {
@@ -408,14 +416,14 @@ export class Game extends Phaser.Scene {
 
         // Lava
         let distanceToLava = this.player.y - this.lava.y;
-        let tierSpeed = -45; // 25% slower start (was -60)
-        if (this.currentHeight > 1000) tierSpeed = -72;
-        if (this.currentHeight > 2000) tierSpeed = -85;
-        if (this.currentHeight > 3000) tierSpeed = -115; // 15% faster than previous max (was -100)
+        let tierSpeed = -41; // Reducido 10% (era -45)
+        if (this.currentHeight > 1000) tierSpeed = -59; // Reducido 10% (era -65)
+        if (this.currentHeight > 2000) tierSpeed = -72; // Reducido 10% (era -80)
+        if (this.currentHeight > 3000) tierSpeed = -90; // Reducido 10% (era -100)
 
         let targetSpeed = tierSpeed;
-        if (distanceToLava < -800) targetSpeed = -200;
-        else if (distanceToLava < -600) targetSpeed = -140;
+        if (distanceToLava < -800) targetSpeed = -180; // Reducido 10% (era -200)
+        else if (distanceToLava < -600) targetSpeed = -126; // Reducido 10% (era -140)
 
         this.currentLavaSpeed = Phaser.Math.Linear(this.currentLavaSpeed, targetSpeed, 0.02);
         this.lava.y += this.currentLavaSpeed * (1 / 60);
@@ -896,7 +904,7 @@ export class Game extends Phaser.Scene {
 
 
 
-    spawnMazeRowFromConfig(y, config, allowMoving, allowSpikes) {
+    spawnMazeRowFromConfig(y, config, allowMoving, allowSpikes, rowIndex = null, pattern = null) {
         let type = config.type;
         let w1 = config.width;
         let w2 = config.width2 || 0;
@@ -1066,6 +1074,47 @@ export class Game extends Phaser.Scene {
         if (allowMoving && Phaser.Math.Between(0, 100) < 20) {
             this.spawnPlatform(gapX, y + 10, 80, true);
         }
+
+        // Spawnear monedas peligrosas en bloques que bloquean un lado
+        // Solo si hay filas arriba y abajo (no es la primera ni última fila)
+        if (rowIndex !== null && pattern !== null && rowIndex > 0 && rowIndex < pattern.length - 1) {
+            const dangerousCoinChance = 60; // 60% de probabilidad de moneda peligrosa
+            
+            // Bloque izquierdo bloquea el lado izquierdo
+            if (type === 'left' && Phaser.Math.Between(0, 100) < dangerousCoinChance) {
+                // Moneda en el centro del bloque izquierdo (riesgo: puede quedar atrapado)
+                const coinX = w1 / 2; // Centro del bloque izquierdo
+                this.coins.create(coinX, y - 50, 'coin');
+            }
+            
+            // Bloque derecho bloquea el lado derecho
+            if (type === 'right' && Phaser.Math.Between(0, 100) < dangerousCoinChance) {
+                // Moneda en el centro del bloque derecho (riesgo: puede quedar atrapado)
+                const coinX = 400 - (w1 / 2); // Centro del bloque derecho
+                this.coins.create(coinX, y - 50, 'coin');
+            }
+            
+            // Bloque central bloquea ambos lados
+            if (type === 'center' && Phaser.Math.Between(0, 100) < dangerousCoinChance) {
+                // Moneda en el centro del bloque central (riesgo: puede quedar atrapado)
+                const coinX = 200; // Centro del bloque central
+                this.coins.create(coinX, y - 50, 'coin');
+            }
+            
+            // En splits, los bloques bloquean sus respectivos lados
+            if (type === 'split') {
+                // Moneda en bloque izquierdo
+                if (Phaser.Math.Between(0, 100) < dangerousCoinChance) {
+                    const coinX = w1 / 2; // Centro del bloque izquierdo
+                    this.coins.create(coinX, y - 50, 'coin');
+                }
+                // Moneda en bloque derecho
+                if (Phaser.Math.Between(0, 100) < dangerousCoinChance) {
+                    const coinX = 400 - (w2 / 2); // Centro del bloque derecho
+                    this.coins.create(coinX, y - 50, 'coin');
+                }
+            }
+        }
     }
 
     generateNextRow() {
@@ -1083,7 +1132,7 @@ export class Game extends Phaser.Scene {
             }
 
             let config = this.currentMazePattern[index];
-            this.spawnMazeRowFromConfig(this.lastPlatformY, config, allowMoving, allowSpikes);
+            this.spawnMazeRowFromConfig(this.lastPlatformY, config, allowMoving, allowSpikes, this.currentMazeRowIndex, this.currentMazePattern);
 
             this.currentMazeRowIndex++;
             this.lastPlatformY -= 160; // Spacing between maze rows (reducido para mejor jugabilidad)
@@ -1161,7 +1210,7 @@ export class Game extends Phaser.Scene {
                 index = this.currentMazePattern.length - 1 - this.currentMazeRowIndex;
             }
             let config = this.currentMazePattern[index];
-            this.spawnMazeRowFromConfig(this.lastPlatformY, config, allowMoving, allowSpikes);
+            this.spawnMazeRowFromConfig(this.lastPlatformY, config, allowMoving, allowSpikes, this.currentMazeRowIndex, this.currentMazePattern);
 
             this.currentMazeRowIndex++;
             this.lastPlatformY -= 160; // Spacing between maze rows (reducido para mejor jugabilidad)
@@ -1169,24 +1218,106 @@ export class Game extends Phaser.Scene {
         }
 
         // --- NORMAL PLATFORM GENERATION ---
-        // Gap mínimo de 100px, máximo de 250px para evitar áreas extensas sin plataformas
-        let gap = Phaser.Math.Between(100, 250);
-        if (this.justFinishedMaze) { 
-            // Gap después de terminar un maze - mínimo 100px
-            const gapAfterMaze = Math.max(100, Phaser.Math.Between(100, 200));
-            this.lastPlatformY -= gapAfterMaze; 
-            this.justFinishedMaze = false; 
-        } else { 
-            this.lastPlatformY -= gap; 
-        }
-        let width = Phaser.Math.Between(80, 120);
-        // Constrain X to be within walls (32px) + padding (10px)
-        let minX = 32 + 10 + (width / 2);
-        let maxX = 368 - 10 - (width / 2);
-        let x = Phaser.Math.Between(minX, maxX);
+        // targetPlatformsPerScreen va bajando con la altura (más alto = menos plataformas)
+        let difficultyT = Phaser.Math.Clamp(
+            this.currentHeight / this.worldHeightForMaxDifficulty,
+            0, 1
+        );
 
-        if (Phaser.Math.Between(0, 100) < 80) {
-            let isMoving = (allowMoving && Phaser.Math.Between(0, 100) < 30);
+        let platformsPerScreen = Phaser.Math.Linear(
+            this.minPlatformsPerScreen, // muchas plataformas al inicio
+            this.maxPlatformsPerScreen, // menos plataformas luego
+            difficultyT
+        );
+
+        let screenHeight = this.game.config.height || 600;
+        let avgGap = screenHeight / platformsPerScreen;
+
+        // A partir del gap promedio calculamos rango min/max
+        // Usamos el salto como límite duro
+        let minGap = Math.max(this.singleJumpHeight * 0.7, avgGap * 0.7);
+        let maxGap = Math.min(this.singleJumpHeight * 2.0, avgGap * 1.4);
+
+        // Clamp final para evitar locuras
+        minGap = Phaser.Math.Clamp(minGap, 80, 220);
+        maxGap = Phaser.Math.Clamp(maxGap, minGap + 10, 260);
+
+        // gap final random dentro del rango
+        let gap = Phaser.Math.Between(Math.round(minGap), Math.round(maxGap));
+
+        if (this.justFinishedMaze) {
+            const gapAfterMaze = Math.max(100, Phaser.Math.Between(100, 200));
+            this.lastPlatformY -= gapAfterMaze;
+            this.justFinishedMaze = false;
+        } else {
+            this.lastPlatformY -= gap;
+        }
+
+        let width = Phaser.Math.Between(80, 120);
+        
+        // Para plataformas estáticas cerca de pared: gap cómodo (3x ancho personaje ~90px) o pegadas
+        // Ancho del personaje estimado: ~30px, así que 3x = ~90px
+        const playerWidth = 30;
+        const comfortableGap = playerWidth * 3; // ~90px
+        const wallLeft = 32; // Posición de pared izquierda
+        const wallRight = 368; // Posición de pared derecha (400 - 32)
+        
+        // Constrain X: si está cerca de la pared, debe tener gap cómodo o estar pegada
+        let minX = wallLeft + (width / 2);
+        let maxX = wallRight - (width / 2);
+        
+        // Mejorar posición X: limitar delta horizontal entre plataformas consecutivas
+        let x = null;
+        for (let i = 0; i < 10; i++) { // hasta 10 intentos
+            let candidateX = Phaser.Math.Between(minX, maxX);
+            
+            if (this.lastPlatformX == null || 
+                Math.abs(candidateX - this.lastPlatformX) <= this.maxHorizontalDelta) {
+                x = candidateX;
+                break;
+            }
+        }
+        // fallback por si acaso
+        if (x == null) x = Phaser.Math.Between(minX, maxX);
+        
+        // Ajuste para plataformas estáticas cerca de paredes: gap cómodo o pegadas
+        let isMoving = (allowMoving && Phaser.Math.Between(0, 100) < 30);
+        if (!isMoving) {
+            const leftEdge = x - width / 2;
+            const rightEdge = x + width / 2;
+            const distanceToLeftWall = leftEdge - wallLeft;
+            const distanceToRightWall = wallRight - rightEdge;
+            
+            // Si está cerca de la pared izquierda pero no lo suficiente para gap cómodo
+            if (distanceToLeftWall > 0 && distanceToLeftWall < comfortableGap) {
+                // Mover para tener gap cómodo o pegarla completamente
+                if (distanceToLeftWall < comfortableGap / 2) {
+                    x = wallLeft + width / 2; // Pegar a la pared
+                } else {
+                    x = wallLeft + width / 2 + comfortableGap; // Gap cómodo
+                }
+            }
+            // Si está cerca de la pared derecha pero no lo suficiente para gap cómodo
+            else if (distanceToRightWall > 0 && distanceToRightWall < comfortableGap) {
+                // Mover para tener gap cómodo o pegarla completamente
+                if (distanceToRightWall < comfortableGap / 2) {
+                    x = wallRight - width / 2; // Pegar a la pared
+                } else {
+                    x = wallRight - width / 2 - comfortableGap; // Gap cómodo
+                }
+            }
+            // Clamp final
+            x = Phaser.Math.Clamp(x, minX, maxX);
+        }
+        
+        this.lastPlatformX = x;
+
+        // Ajuste de rate de plataformas vs gaps según dificultad
+        // Early game: más plataformas (95%), late game: menos (75%)
+        let basePlatformChance = 95 - (difficultyT * 20); // 95% al inicio, 75% al final
+        basePlatformChance = Phaser.Math.Clamp(basePlatformChance, 75, 95);
+        
+        if (Phaser.Math.Between(0, 100) < basePlatformChance) {
             let plat = this.spawnPlatform(x, this.lastPlatformY, width, isMoving);
             let enemySpawned = false;
 
