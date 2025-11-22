@@ -109,12 +109,19 @@ export class ShooterEnemy extends Phaser.Physics.Arcade.Sprite {
     }
 
     stopShooting() {
-        if (this.shootEvent) {
-            this.shootEvent.remove();
+        try {
+            if (this.shootEvent) {
+                this.shootEvent.remove();
+                this.shootEvent = null;
+            }
+            if (this.recoilTween) {
+                this.recoilTween.remove();
+                this.recoilTween = null;
+            }
+        } catch (e) {
+            console.warn('Error stopping shooter:', e);
+            // Force nullify to prevent further errors
             this.shootEvent = null;
-        }
-        if (this.recoilTween) {
-            this.recoilTween.remove();
             this.recoilTween = null;
         }
     }
@@ -204,8 +211,14 @@ export class JumperShooterEnemy extends Phaser.Physics.Arcade.Sprite {
     }
 
     stopBehavior() {
-        if (this.jumpEvent) { this.jumpEvent.remove(); this.jumpEvent = null; }
-        if (this.shootEvent) { this.shootEvent.remove(); this.shootEvent = null; }
+        try {
+            if (this.jumpEvent) { this.jumpEvent.remove(); this.jumpEvent = null; }
+            if (this.shootEvent) { this.shootEvent.remove(); this.shootEvent = null; }
+        } catch (e) {
+            console.warn('Error stopping jumper behavior:', e);
+            this.jumpEvent = null;
+            this.shootEvent = null;
+        }
     }
 
     destroy(fromScene) {
