@@ -73,12 +73,16 @@ export class ShooterEnemy extends Phaser.Physics.Arcade.Sprite {
         this.shootEvent = this.scene.time.addEvent({
             delay: delay,
             callback: () => {
-                if (!this.active) {
-                    if (this.shootEvent) this.shootEvent.remove();
-                    return;
+                try {
+                    if (!this.active) {
+                        if (this.shootEvent) this.shootEvent.remove();
+                        return;
+                    }
+                    this.shoot(projectilesGroup);
+                    if (this.shootEvent) this.shootEvent.delay = Phaser.Math.Between(1500, 3000);
+                } catch (e) {
+                    console.warn('Error in shooter callback:', e);
                 }
-                this.shoot(projectilesGroup);
-                if (this.shootEvent) this.shootEvent.delay = Phaser.Math.Between(1500, 3000);
             },
             loop: true
         });
@@ -153,13 +157,17 @@ export class JumperShooterEnemy extends Phaser.Physics.Arcade.Sprite {
         this.jumpEvent = this.scene.time.addEvent({
             delay: Phaser.Math.Between(1000, 2000),
             callback: () => {
-                if (!this.active) return;
-                // Debug log
-                // console.log('Jumper check:', this.body.touching.down, this.body.velocity.y);
+                try {
+                    if (!this.active) return;
+                    // Debug log
+                    // console.log('Jumper check:', this.body.touching.down, this.body.velocity.y);
 
-                // Check if touching down OR if velocity is near zero (stuck)
-                if (this.body.touching.down || (Math.abs(this.body.velocity.y) < 10 && this.y < 800)) {
-                    this.setVelocityY(-400); // Smaller jump
+                    // Check if touching down OR if velocity is near zero (stuck)
+                    if (this.body && (this.body.touching.down || (Math.abs(this.body.velocity.y) < 10 && this.y < 800))) {
+                        this.setVelocityY(-400); // Smaller jump
+                    }
+                } catch (e) {
+                    console.warn('Error in jumper jump callback:', e);
                 }
             },
             loop: true
@@ -169,8 +177,12 @@ export class JumperShooterEnemy extends Phaser.Physics.Arcade.Sprite {
         this.shootEvent = this.scene.time.addEvent({
             delay: Phaser.Math.Between(1500, 2500), // More frequent
             callback: () => {
-                if (!this.active) return;
-                this.shoot(projectilesGroup);
+                try {
+                    if (!this.active) return;
+                    this.shoot(projectilesGroup);
+                } catch (e) {
+                    console.warn('Error in jumper shoot callback:', e);
+                }
             },
             loop: true
         });
