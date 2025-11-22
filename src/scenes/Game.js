@@ -958,40 +958,77 @@ export class Game extends Phaser.Scene {
             this.coins.create(gapX, y - 50, 'coin');
         }
 
-        // DISABLED: Don't spawn enemies in mazes to keep exits clear
-        // Enemies will only spawn on normal platforms
-        /*
+        // Spawn enemies with ground detection
         if (allowSpikes && Phaser.Math.Between(0, 100) < 40) {
-            // Spawn enemy ON A WALL, not in the gap
-            let enemyX = 0;
-            let minX = 0;
-            let maxX = 0;
-            let validSpawn = false;
+            // Try to spawn enemy - it will detect if there's ground below
+            let spawnAttempts = [
+                { x: w1 / 2, side: 'left' },
+                { x: 400 - w1 / 2, side: 'right' },
+                { x: 200, side: 'center' }
+            ];
 
-            if (type === 'left') {
-                minX = 10; maxX = w1 - 10; enemyX = w1 / 2; validSpawn = true;
-            } else if (type === 'right') {
-                minX = 400 - w1 + 10; maxX = 390; enemyX = 400 - (w1 / 2); validSpawn = true;
-            } else if (type === 'center') {
-                minX = 200 - (w1 / 2) + 10; maxX = 200 + (w1 / 2) - 10; enemyX = 200; validSpawn = true;
-            } else if (type === 'split') {
-                // Pick random side
-                if (Phaser.Math.Between(0, 1) === 0) {
-                    minX = 10; maxX = w1 - 10; enemyX = w1 / 2; validSpawn = true;
-                } else {
-                    minX = 400 - w2 + 10; maxX = 390; enemyX = 400 - (w2 / 2); validSpawn = true;
-                }
+            // Pick a random spawn attempt based on maze type
+            let validAttempts = [];
+            if (type === 'left') validAttempts.push(spawnAttempts[0]);
+            else if (type === 'right') validAttempts.push(spawnAttempts[1]);
+            else if (type === 'center') validAttempts.push(spawnAttempts[2]);
+            else if (type === 'split') {
+                validAttempts.push(spawnAttempts[0]);
+                validAttempts.push(spawnAttempts[1]);
             }
 
-            if (validSpawn && (maxX - minX > 40)) { // Only spawn if enough space
-                let enemy = this.spikeEnemies.get(enemyX, y - 40);
-                if (enemy) {
-                    enemy.spawn(enemyX, y - 40);
-                    enemy.patrol(minX, maxX, 60);
+            if (validAttempts.length > 0) {
+                let attempt = Phaser.Utils.Array.GetRandom(validAttempts);
+                let enemyX = attempt.x;
+                let enemyY = y - 40;
+
+                // Check if there's ground below using a raycast
+                let hasGround = this.physics.overlapRect(
+                    enemyX - 10,
+                    y - 5,
+                    20,
+                    10
+                ).some(body => {
+                    return body.gameObject &&
+                        (body.gameObject.texture.key === 'maze_block' ||
+                            body.gameObject.texture.key === 'platform');
+                });
+
+                if (hasGround) {
+                    let enemy = this.spikeEnemies.get(enemyX, enemyY);
+                    if (enemy) {
+                        enemy.spawn(enemyX, enemyY);
+
+                        // Set patrol bounds based on wall width
+                        let minX = 10;
+                        let maxX = 390;
+
+                        if (type === 'left') {
+                            minX = 10;
+                            maxX = w1 - 10;
+                        } else if (type === 'right') {
+                            minX = 400 - w1 + 10;
+                            maxX = 390;
+                        } else if (type === 'center') {
+                            minX = 200 - (w1 / 2) + 10;
+                            maxX = 200 + (w1 / 2) - 10;
+                        } else if (type === 'split') {
+                            if (attempt.side === 'left') {
+                                minX = 10;
+                                maxX = w1 - 10;
+                            } else {
+                                minX = 400 - w2 + 10;
+                                maxX = 390;
+                            }
+                        }
+
+                        if (maxX - minX > 40) {
+                            enemy.patrol(minX, maxX, 60);
+                        }
+                    }
                 }
             }
         }
-        */
 
         // Small chance for a platform in the gap to help traverse
         if (allowMoving && Phaser.Math.Between(0, 100) < 20) {
