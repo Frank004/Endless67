@@ -958,6 +958,9 @@ export class Game extends Phaser.Scene {
             this.coins.create(gapX, y - 50, 'coin');
         }
 
+        // DISABLED: Don't spawn enemies in mazes to keep exits clear
+        // Enemies will only spawn on normal platforms
+        /*
         if (allowSpikes && Phaser.Math.Between(0, 100) < 40) {
             // Spawn enemy ON A WALL, not in the gap
             let enemyX = 0;
@@ -988,6 +991,7 @@ export class Game extends Phaser.Scene {
                 }
             }
         }
+        */
 
         // Small chance for a platform in the gap to help traverse
         if (allowMoving && Phaser.Math.Between(0, 100) < 20) {
