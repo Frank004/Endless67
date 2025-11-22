@@ -946,8 +946,10 @@ export class Game extends Phaser.Scene {
                 }
                 else this.coins.create(x, this.lastPlatformY - 40, 'coin');
             }
+            return plat;
         } else {
             let coinX = (Phaser.Math.Between(0, 1) === 0) ? 60 : 340; this.coins.create(coinX, this.lastPlatformY, 'coin');
+            return null;
         }
     }
 

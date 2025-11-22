@@ -1,19 +1,34 @@
 export function spawnTestEnemies(scene) {
     // Start generating much higher to leave room for test enemies
     scene.lastPlatformY = -500;
-    // for (let i = 0; i < 3; i++) scene.generateNextRow();
+
+    let platforms = [];
+    let attempts = 0;
+
+    // Generate rows until we have at least 3 platforms
+    while (platforms.length < 3 && attempts < 10) {
+        let plat = scene.generateNextRow();
+        if (plat) {
+            platforms.push(plat);
+        }
+        attempts++;
+    }
 
     // --- TEST ENEMIES ---
-    // Jumper Shooter Enemy (Closest to player, Y=250)
-    let pTest1 = scene.spawnPlatform(200, 250, 100, false);
-    scene.spawnJumperShooter(pTest1);
+    // Spawn enemies on the generated platforms
+    if (platforms.length > 0) {
+        // Jumper Shooter Enemy (Closest to player)
+        scene.spawnJumperShooter(platforms[0]);
+    }
 
-    // Shooter Enemy (Middle, Y=0) - Increased gap
-    let pTest2 = scene.spawnPlatform(300, 0, 100, false);
-    scene.spawnShooter(pTest2);
+    if (platforms.length > 1) {
+        // Shooter Enemy (Middle)
+        scene.spawnShooter(platforms[1]);
+    }
 
-    // Spike Enemy (Highest, Y=-250) - Increased gap
-    let pTest3 = scene.spawnPlatform(100, -250, 100, false);
-    scene.spawnSpike(pTest3);
+    if (platforms.length > 2) {
+        // Spike Enemy (Highest)
+        scene.spawnSpike(platforms[2]);
+    }
     // --------------------
 }
