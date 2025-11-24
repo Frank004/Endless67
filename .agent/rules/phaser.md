@@ -76,6 +76,12 @@ Usa scopes que describan la parte del juego:
 
 ⸻
 
+Actualiza antes de cada push esta linea en el index
+<script type="module" src="src/main.js?v=20241124-1738"> </script>
+para que cuando suba el githubpage actualice la versión y el cache para todos los testers.
+incluyelo como un commit antes del push
+
+
 🛎️ Y recuerda:
 “Don’t forget to commit!”
 

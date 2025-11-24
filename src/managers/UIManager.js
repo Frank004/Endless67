@@ -300,19 +300,47 @@ export class UIManager {
 
         // Name Display
         let name = '';
-        const nameText = scene.add.text(centerX, 310, '_ _ _', {
-            fontSize: '48px', color: '#00ffff', fontStyle: 'bold', letterSpacing: 10
+        const nameText = scene.add.text(centerX, centerY + 20, '_ _ _', {
+            fontSize: '48px',
+            color: '#00ff00',
+            fontStyle: 'bold'
         }).setOrigin(0.5).setDepth(301).setScrollFactor(0);
 
-        // Confirm Button
-        const confirmBtn = scene.add.text(centerX, 380, 'CONFIRM', {
-            fontSize: '24px', color: '#00ff00', backgroundColor: '#333', padding: { x: 10, y: 5 }
+        // Add blinking cursor effect to the first underscore
+        let cursorVisible = true;
+        const updateNameTextDisplay = () => {
+            const display = name.padEnd(3, '_').split('').join(' ');
+            if (name.length < 3 && cursorVisible) {
+                // Replace the first underscore with a blinking cursor
+                const chars = display.split(' ');
+                chars[name.length] = '|';
+                nameText.setText(chars.join(' '));
+            } else {
+                nameText.setText(display);
+            }
+        };
+
+        const blinkInterval = scene.time.addEvent({
+            delay: 500,
+            callback: () => {
+                cursorVisible = !cursorVisible;
+                updateNameTextDisplay();
+            },
+            loop: true
+        });
+
+        const confirmBtn = scene.add.text(centerX, centerY + 100, 'CONFIRM', {
+            fontSize: '24px',
+            color: '#ffffff',
+            backgroundColor: '#00aa00',
+            padding: { x: 20, y: 10 }
         }).setOrigin(0.5).setDepth(301).setScrollFactor(0).setInteractive({ useHandCursor: true });
 
         // Use InputManager to create mobile text input
         const htmlInput = scene.inputManager.createMobileTextInput({
             onInputChange: (value) => {
-                name = value;
+                name = value.toUpperCase().substring(0, 3);
+                updateNameTextDisplay();
             },
             onEnter: (value) => {
                 name = value;
@@ -355,20 +383,19 @@ export class UIManager {
                 onBackspace: () => {
                     if (name.length > 0) {
                         name = name.slice(0, -1);
-                        const display = name.padEnd(3, '_').split('').join(' ');
-                        nameText.setText(display);
+                        updateNameTextDisplay();
                     }
                 },
                 onEnter: () => {
                     if (name.length > 0) {
+                        blinkInterval.remove();
                         this.confirmScore(scoreManager, name, keyListener, [bg, title, prompt, nameText, confirmBtn], htmlInput);
                     }
                 },
                 onKeyPress: (key) => {
                     if (name.length < 3 && /[a-zA-Z0-9]/.test(key)) {
                         name += key.toUpperCase();
-                        const display = name.padEnd(3, '_').split('').join(' ');
-                        nameText.setText(display);
+                        updateNameTextDisplay();
                     }
                 }
             });
@@ -380,6 +407,10 @@ export class UIManager {
                 if (isMobile && htmlInput) {
                     name = htmlInput.value.toUpperCase().substring(0, 3);
                 }
+
+                // Stop blinking
+                blinkInterval.remove();
+
                 this.confirmScore(scoreManager, name, keyListener, [bg, title, prompt, nameText, confirmBtn], htmlInput);
             }
         });
