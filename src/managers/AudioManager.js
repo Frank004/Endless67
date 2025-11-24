@@ -8,6 +8,32 @@ export class AudioManager {
         scene.sound.mute = !this.soundEnabled;
         this.bgMusic = null;
         this.lavaSound = null;
+
+        // Resume audio context on user interaction
+        this.setupAudioContextResume();
+    }
+
+    setupAudioContextResume() {
+        const scene = this.scene;
+
+        // Resume audio context when user interacts with the page
+        const resumeAudio = () => {
+            if (scene.sound && scene.sound.context) {
+                scene.sound.context.resume().catch(err => {
+                    console.warn('Could not resume audio context:', err);
+                });
+            }
+        };
+
+        // Listen for user interactions
+        scene.input.on('pointerdown', resumeAudio, this);
+
+        // Also try to resume when the page becomes visible again
+        document.addEventListener('visibilitychange', () => {
+            if (!document.hidden) {
+                resumeAudio();
+            }
+        });
     }
 
     setupAudio() {
@@ -19,7 +45,11 @@ export class AudioManager {
                     this.lavaSound.stop();
                 }
                 this.lavaSound = scene.sound.add('lava_ambient', { loop: true, volume: 0 });
-                this.lavaSound.play();
+
+                // Try to play, but catch any errors
+                this.lavaSound.play().catch(err => {
+                    console.warn('Could not start lava sound:', err);
+                });
             }
 
             // Ensure audio stops when scene shuts down (e.g. on restart)
@@ -45,7 +75,11 @@ export class AudioManager {
         try {
             if (scene.sound && scene.cache.audio.exists('bg_music') && !this.bgMusic) {
                 this.bgMusic = scene.sound.add('bg_music', { loop: true, volume: 0.80 });
-                this.bgMusic.play();
+
+                // Try to play, but catch any errors
+                this.bgMusic.play().catch(err => {
+                    console.warn('Could not start background music:', err);
+                });
             }
         } catch (error) {
             console.warn('Error starting background music:', error);
