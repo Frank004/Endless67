@@ -25,7 +25,7 @@ export class MainMenu extends Phaser.Scene {
 		const settingsBtn = this.createButton(width / 2, 410, 'SETTINGS', '#ffffff', () => this.scene.start('Settings'));
 
 		// Version
-		this.add.text(width / 2, height - 30, 'v0.0.33', {
+		this.add.text(width / 2, height - 30, 'v0.0.34', {
 			fontSize: '14px',
 			color: '#444'
 		}).setOrigin(0.5);
