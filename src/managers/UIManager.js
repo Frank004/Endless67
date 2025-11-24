@@ -10,7 +10,7 @@ export class UIManager {
         const isMobile = scene.isMobile;
 
         // UI - Ajustar márgenes para móvil
-        const scoreX = isMobile ? 20 : 10;
+        const scoreX = 25; // 5px from left wall
         const scoreY = isMobile ? 20 : 10;
         const centerX = scene.cameras.main.centerX;
         const gameWidth = scene.cameras.main.width;
@@ -30,21 +30,6 @@ export class UIManager {
         // --- PAUSE MENU OVERLAY ---
         scene.pauseMenuBg = scene.add.rectangle(scene.cameras.main.centerX, scene.cameras.main.centerY, scene.cameras.main.width, scene.cameras.main.height, 0x000000, 0.9)
             .setScrollFactor(0).setDepth(200).setVisible(false).setInteractive();
-
-        // Score Text
-        scene.scoreText = scene.add.text(25, 20, 'SCORE: 0', {
-            fontSize: '32px',
-            color: '#ffd700',
-            fontStyle: 'bold',
-            fontFamily: 'Courier'
-        }).setScrollFactor(0).setDepth(100);
-
-        // Distance Text
-        scene.distanceText = scene.add.text(25, 60, 'ALTURA: 0m', {
-            fontSize: '16px',
-            color: '#ffffff',
-            fontFamily: 'Courier'
-        }).setScrollFactor(0).setDepth(100).setVisible(false);
 
         scene.pauseMenuTitle = scene.add.text(centerX, 180, 'PAUSA', {
             fontSize: '48px', color: '#ffd700', fontStyle: 'bold'
