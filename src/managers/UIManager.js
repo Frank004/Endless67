@@ -1,4 +1,5 @@
 import { ScoreManager } from './ScoreManager.js';
+import { UIHelpers } from '../utils/UIHelpers.js';
 
 export class UIManager {
     constructor(scene) {
@@ -39,83 +40,57 @@ export class UIManager {
             fontSize: '14px', color: '#888888'
         }).setOrigin(0.5).setScrollFactor(0).setDepth(201).setVisible(false);
 
-        // Continue Button (Text)
-        scene.continueButton = scene.add.text(centerX, 280, 'CONTINUAR', {
-            fontSize: '24px', color: '#00ff00', fontStyle: 'bold',
-            backgroundColor: '#333333', padding: { x: 20, y: 10 }
-        }).setOrigin(0.5).setScrollFactor(0).setDepth(201).setVisible(false)
-            .setInteractive({ useHandCursor: true })
-            .on('pointerdown', () => this.togglePauseMenu())
-            .on('pointerover', function () { this.setColor('#00ffff'); })
-            .on('pointerout', function () { this.setColor('#00ff00'); });
+        // Button spacing
+        const buttonSpacing = 70;
+        let buttonY = 280;
 
-        // Sound Toggle Button (Text + Icon)
+        // Continue Button (Text only, no icon)
+        scene.continueButton = UIHelpers.createTextButton(scene, centerX, buttonY, 'CONTINUAR', {
+            textColor: '#00ff00',
+            hoverColor: '#00ffff',
+            callback: () => this.togglePauseMenu()
+        });
+        scene.continueButton.setVisible(false);
+        buttonY += buttonSpacing;
+
+        // Sound Toggle Button (Icon + Text)
         const soundEnabled = scene.registry.get('soundEnabled') !== false;
         const soundTextStr = soundEnabled ? 'SONIDO: ON' : 'SONIDO: OFF';
         const soundIconFrame = soundEnabled ? 'volume-up' : 'volume-mute';
 
-        // Position icon inside the button area or nicely aligned
-        // Let's create a container-like visual by placing them relative to center
+        const soundButton = UIHelpers.createIconButton(scene, centerX, buttonY, soundIconFrame, soundTextStr, {
+            callback: () => scene.toggleSound()
+        });
+        scene.soundToggleContainer = soundButton.container;
+        scene.soundToggleText = soundButton.text;
+        scene.soundToggleIcon = soundButton.icon;
+        scene.soundToggleContainer.setVisible(false);
+        buttonY += buttonSpacing;
 
-        scene.soundToggleButton = scene.add.text(centerX + 25, 350, soundTextStr, {
-            fontSize: '24px', color: '#ffffff', fontStyle: 'bold',
-            backgroundColor: '#333333', padding: { x: 20, y: 10 }
-        }).setOrigin(0.5).setScrollFactor(0).setDepth(201).setVisible(false)
-            .setInteractive({ useHandCursor: true });
-
-        // Icon to the left of text, centered vertically
-        scene.soundToggleIcon = scene.add.image(centerX - 85, 350, 'ui_icons', soundIconFrame)
-            .setOrigin(0.5).setScrollFactor(0).setDepth(202).setVisible(false).setScale(0.4)
-            .setTint(0xffffff); // Ensure white
-
-        scene.soundToggleButton.on('pointerdown', () => scene.toggleSound())
-            .on('pointerover', function () { this.setColor('#ffff00'); scene.soundToggleIcon.setTint(0xffff00); })
-            .on('pointerout', function () { this.setColor('#ffffff'); scene.soundToggleIcon.setTint(0xffffff); });
-
-        // Joystick Toggle Button (Text + Icon)
+        // Joystick Toggle Button (Icon + Text)
         const showJoystick = scene.registry.get('showJoystick') !== false;
         const joystickTextStr = showJoystick ? 'JOYSTICK: ON' : 'JOYSTICK: OFF';
 
-        scene.joystickToggleButton = scene.add.text(centerX + 25, 420, joystickTextStr, {
-            fontSize: '24px', color: '#ffffff', fontStyle: 'bold',
-            backgroundColor: '#333333', padding: { x: 20, y: 10 }
-        }).setOrigin(0.5).setScrollFactor(0).setDepth(201).setVisible(false)
-            .setInteractive({ useHandCursor: true });
+        const joystickButton = UIHelpers.createIconButton(scene, centerX, buttonY, 'gamepad', joystickTextStr, {
+            callback: () => scene.inputManager.toggleJoystickVisual()
+        });
+        scene.joystickToggleContainer = joystickButton.container;
+        scene.joystickToggleText = joystickButton.text;
+        scene.joystickToggleIcon = joystickButton.icon;
+        scene.joystickToggleContainer.setVisible(false);
+        buttonY += buttonSpacing;
 
-        scene.joystickToggleIcon = scene.add.image(centerX - 95, 420, 'ui_icons', 'gamepad')
-            .setOrigin(0.5).setScrollFactor(0).setDepth(202).setVisible(false).setScale(0.4)
-            .setTint(0xffffff); // Ensure white
-
-        scene.joystickToggleButton.on('pointerdown', () => scene.inputManager.toggleJoystickVisual())
-            .on('pointerover', function () { this.setColor('#ffff00'); scene.joystickToggleIcon.setTint(0xffff00); })
-            .on('pointerout', function () { this.setColor('#ffffff'); scene.joystickToggleIcon.setTint(0xffffff); });
-
-        // Exit Button (Text + Icon)
-        // User said "Aun esta el emoji de puesta. Cambiarlo por un icon."
-        // So we should use text "SALIR AL MENÚ" and an icon "door" (logout-box-r-line or similar)
-
-        scene.exitButton = scene.add.text(centerX + 25, 490, 'SALIR AL MENÚ', {
-            fontSize: '24px', color: '#ff6666', fontStyle: 'bold',
-            backgroundColor: '#333333', padding: { x: 20, y: 10 }
-        }).setOrigin(0.5).setScrollFactor(0).setDepth(201).setVisible(false)
-            .setInteractive({ useHandCursor: true });
-
-        // Use 'door' icon (logout)
-        // We need to make sure 'door' exists in atlas. In generate-atlas.js we mapped 'door' to 'System/logout-box-r-line.svg' (or similar check)
-        // Wait, I didn't verify 'door' mapping in generate-atlas.js. Let me check the script content or just use a known one.
-        // In previous steps I didn't see 'door' explicitly added. I should check generate-atlas.js content again or add it.
-        // Assuming 'door' might not be there, I should use 'close' or 'logout' if available. 
-        // Let's assume I need to add 'door' to atlas in next step. For now, code it as if it exists.
-
-        scene.exitButtonIcon = scene.add.image(centerX - 100, 490, 'ui_icons', 'door')
-            .setOrigin(0.5).setScrollFactor(0).setDepth(202).setVisible(false).setScale(0.4)
-            .setTint(0xff6666);
-
-        scene.exitButton.on('pointerdown', () => {
-            scene.scene.start('MainMenu');
-        })
-            .on('pointerover', function () { this.setColor('#ff0000'); scene.exitButtonIcon.setTint(0xff0000); })
-            .on('pointerout', function () { this.setColor('#ff6666'); scene.exitButtonIcon.setTint(0xff6666); });
+        // Exit Button (Icon + Text)
+        const exitButton = UIHelpers.createIconButton(scene, centerX, buttonY, 'door', 'SALIR AL MENÚ', {
+            textColor: '#ff6666',
+            hoverColor: '#ff0000',
+            iconTint: 0xff6666,
+            callback: () => scene.scene.start('MainMenu')
+        });
+        scene.exitButtonContainer = exitButton.container;
+        scene.exitButtonText = exitButton.text;
+        scene.exitButtonIcon = exitButton.icon;
+        scene.exitButtonContainer.setVisible(false);
 
         // Joystick UI (created here but controlled by InputManager)
         scene.joystickBase = scene.add.image(0, 0, 'joystick_base').setAlpha(0.5).setScrollFactor(0).setDepth(999).setVisible(false);
@@ -203,19 +178,19 @@ export class UIManager {
 
         if (scene.isPaused) {
             scene.physics.pause();
-            // Update button icons to reflect current registry state
+            // Update button icons and text to reflect current registry state
             const soundEnabled = scene.registry.get('soundEnabled') !== false;
             const soundTextStr = soundEnabled ? 'SONIDO: ON' : 'SONIDO: OFF';
             const soundIcon = soundEnabled ? 'volume-up' : 'volume-mute';
-            if (scene.soundToggleButton) {
-                scene.soundToggleButton.setText(soundTextStr);
+            if (scene.soundToggleText) {
+                scene.soundToggleText.setText(soundTextStr);
                 scene.soundToggleIcon.setFrame(soundIcon);
             }
 
             const showJoystick = scene.registry.get('showJoystick') !== false;
             const joystickTextStr = showJoystick ? 'JOYSTICK: ON' : 'JOYSTICK: OFF';
-            if (scene.joystickToggleButton) {
-                scene.joystickToggleButton.setText(joystickTextStr);
+            if (scene.joystickToggleText) {
+                scene.joystickToggleText.setText(joystickTextStr);
                 scene.joystickToggleIcon.setAlpha(showJoystick ? 1 : 0.5);
             }
 
@@ -223,12 +198,9 @@ export class UIManager {
             scene.pauseMenuTitle.setVisible(true);
             if (scene.versionText) scene.versionText.setVisible(true);
             scene.continueButton.setVisible(true);
-            scene.soundToggleButton.setVisible(true);
-            scene.soundToggleIcon.setVisible(true);
-            scene.joystickToggleButton.setVisible(true);
-            scene.joystickToggleIcon.setVisible(true);
-            scene.exitButton.setVisible(true);
-            if (scene.exitButtonIcon) scene.exitButtonIcon.setVisible(true);
+            scene.soundToggleContainer.setVisible(true);
+            scene.joystickToggleContainer.setVisible(true);
+            scene.exitButtonContainer.setVisible(true);
             scene.pauseButton.setFrame('play'); // Play icon
             scene.tweens.pauseAll();
         } else {
@@ -237,12 +209,9 @@ export class UIManager {
             scene.pauseMenuTitle.setVisible(false);
             if (scene.versionText) scene.versionText.setVisible(false);
             scene.continueButton.setVisible(false);
-            scene.soundToggleButton.setVisible(false);
-            scene.soundToggleIcon.setVisible(false);
-            scene.joystickToggleButton.setVisible(false);
-            scene.joystickToggleIcon.setVisible(false);
-            scene.exitButton.setVisible(false);
-            if (scene.exitButtonIcon) scene.exitButtonIcon.setVisible(false);
+            scene.soundToggleContainer.setVisible(false);
+            scene.joystickToggleContainer.setVisible(false);
+            scene.exitButtonContainer.setVisible(false);
             scene.pauseButton.setFrame('pause'); // Pause icon
             scene.tweens.resumeAll();
         }
