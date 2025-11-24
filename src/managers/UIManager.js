@@ -82,15 +82,23 @@ export class UIManager {
         // Mobile Controls UI
         if (isMobile) {
             const cameraHeight = scene.cameras.main.height;
-            const SPLIT_X = 280;
+            const cameraWidth = scene.cameras.main.width;
+            // Dynamic split based on game width (70% for mobile)
+            const SPLIT_X = Math.round(cameraWidth * 0.70);
+            
             let splitLine = scene.add.graphics();
             splitLine.lineStyle(2, 0xffffff, 0.15);
             splitLine.beginPath(); splitLine.moveTo(SPLIT_X, cameraHeight); splitLine.lineTo(SPLIT_X, cameraHeight - 50); splitLine.strokePath();
             splitLine.setScrollFactor(0).setDepth(0);
 
             const controlY = cameraHeight - 40;
-            scene.add.text(140, controlY, '< HOLD & SLIDE >', { fontSize: '12px', color: '#fff', alpha: 0.4 }).setOrigin(0.5).setScrollFactor(0).setDepth(100);
-            scene.add.text(340, controlY, 'JUMP', { fontSize: '12px', color: '#fff', alpha: 0.4 }).setOrigin(0.5).setScrollFactor(0).setDepth(100);
+            // Left side text: center of left area (SPLIT_X / 2)
+            const leftTextX = Math.round(SPLIT_X / 2);
+            // Right side text: center of right area (SPLIT_X + (cameraWidth - SPLIT_X) / 2)
+            const rightTextX = Math.round(SPLIT_X + (cameraWidth - SPLIT_X) / 2);
+            
+            scene.add.text(leftTextX, controlY, '< HOLD & SLIDE >', { fontSize: '12px', color: '#fff', alpha: 0.4 }).setOrigin(0.5).setScrollFactor(0).setDepth(100);
+            scene.add.text(rightTextX, controlY, 'JUMP', { fontSize: '12px', color: '#fff', alpha: 0.4 }).setOrigin(0.5).setScrollFactor(0).setDepth(100);
         } else {
             scene.add.text(centerX, 560, '← → MOVER | SPACE SALTAR', { fontSize: '12px', color: '#fff', alpha: 0.4 }).setOrigin(0.5).setScrollFactor(0);
         }

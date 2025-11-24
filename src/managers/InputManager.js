@@ -6,12 +6,18 @@ export class InputManager {
         // Read setting from registry (default true)
         this.joystickVisible = scene.registry.get('showJoystick') !== false;
 
-        // Constants
-        this.SPLIT_X = 280;
+        // SPLIT_X will be calculated in setupInputs() when cameras are available
+        this.SPLIT_X = 280; // Default fallback
     }
 
     setupInputs() {
         const scene = this.scene;
+
+        // Calculate SPLIT_X dynamically based on game width (70% of width)
+        // For 360px mobile: 360 * 0.70 = 252px
+        // For 400px desktop: 400 * 0.70 = 280px
+        const gameWidth = scene.cameras.main.width;
+        this.SPLIT_X = Math.round(gameWidth * 0.70);
 
         // Joystick UI
         scene.joystickBase = scene.add.image(0, 0, 'joystick_base').setAlpha(0.5).setScrollFactor(0).setDepth(999).setVisible(false);

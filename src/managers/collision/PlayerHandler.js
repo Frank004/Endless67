@@ -107,14 +107,19 @@ export class PlayerHandler {
             fontSize: '48px', color: '#00ffff', fontStyle: 'bold', letterSpacing: 10
         }).setOrigin(0.5).setDepth(301).setScrollFactor(0);
 
+        // Confirm Button (defined early so it can be referenced in mobile input)
+        const confirmBtn = scene.add.text(centerX, 380, 'CONFIRM', {
+            fontSize: '24px', color: '#00ff00', backgroundColor: '#333', padding: { x: 10, y: 5 }
+        }).setOrigin(0.5).setDepth(301).setScrollFactor(0).setInteractive({ useHandCursor: true });
+
         // Mobile: Create HTML input to trigger keyboard
         let htmlInput = null;
         const isMobile = scene.isMobile;
         
-        console.log('[PlayerHandler] showNameInput - isMobile:', isMobile);
-        
-        if (isMobile) {
-            // Create invisible HTML input for mobile keyboard
+        // Function to create and focus HTML input
+        const createMobileInput = () => {
+            if (!isMobile || htmlInput) return;
+            
             htmlInput = document.createElement('input');
             htmlInput.type = 'text';
             htmlInput.maxLength = 3;
@@ -122,49 +127,56 @@ export class PlayerHandler {
             htmlInput.style.top = '50%';
             htmlInput.style.left = '50%';
             htmlInput.style.transform = 'translate(-50%, -50%)';
-            htmlInput.style.width = '200px';
-            htmlInput.style.height = '40px';
-            htmlInput.style.opacity = '0.01'; // Almost invisible but still focusable
+            htmlInput.style.width = '250px';
+            htmlInput.style.height = '50px';
+            htmlInput.style.opacity = '0';
             htmlInput.style.zIndex = '10000';
             htmlInput.style.textTransform = 'uppercase';
             htmlInput.style.textAlign = 'center';
-            htmlInput.style.fontSize = '20px';
+            htmlInput.style.fontSize = '24px';
+            htmlInput.style.border = 'none';
+            htmlInput.style.background = 'transparent';
+            htmlInput.style.outline = 'none';
             htmlInput.autocomplete = 'off';
             htmlInput.autocapitalize = 'characters';
             htmlInput.inputMode = 'text';
             document.body.appendChild(htmlInput);
             
-            console.log('[PlayerHandler] HTML input created, attempting focus...');
-            
-            // Focus and show keyboard - try multiple methods for better compatibility
+            // Focus immediately
             setTimeout(() => {
                 try {
                     htmlInput.focus();
-                    htmlInput.select();
-                    // Force keyboard on mobile
-                    if (htmlInput.setSelectionRange) {
-                        htmlInput.setSelectionRange(0, 0);
-                    }
-                    console.log('[PlayerHandler] Input focused');
+                    htmlInput.click();
                 } catch (e) {
                     console.error('[PlayerHandler] Error focusing input:', e);
                 }
-            }, 200);
+            }, 100);
             
             // Listen to input changes
             htmlInput.addEventListener('input', (e) => {
                 name = e.target.value.toUpperCase().substring(0, 3);
                 let display = name.padEnd(3, '_').split('').join(' ');
                 nameText.setText(display);
-                console.log('[PlayerHandler] Input changed:', name);
             });
             
-            // Also listen to keydown for better compatibility
+            // Listen to keydown
             htmlInput.addEventListener('keydown', (e) => {
-                if (e.key === 'Enter' && name.length === 3) {
+                if (e.key === 'Enter' && name.length > 0) {
                     confirmBtn.emit('pointerdown');
                 }
             });
+        };
+        
+        // Make nameText clickable on mobile to open keyboard
+        if (isMobile) {
+            nameText.setInteractive({ useHandCursor: true });
+            nameText.on('pointerdown', () => {
+                createMobileInput();
+            });
+            // Also try to create input automatically after a short delay
+            setTimeout(() => {
+                createMobileInput();
+            }, 300);
         }
 
         // Virtual Keyboard Listener (for desktop)
@@ -190,10 +202,6 @@ export class PlayerHandler {
         if (!isMobile) {
             scene.input.keyboard.on('keydown', keyListener);
         }
-
-        const confirmBtn = scene.add.text(centerX, 380, 'CONFIRM', {
-            fontSize: '24px', color: '#00ff00', backgroundColor: '#333', padding: { x: 10, y: 5 }
-        }).setOrigin(0.5).setDepth(301).setScrollFactor(0).setInteractive({ useHandCursor: true });
 
         confirmBtn.on('pointerdown', () => {
             if (name.length > 0) {
