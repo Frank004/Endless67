@@ -109,8 +109,8 @@ export const LEVEL_CONFIG = {
                 },
                 enemies: {
                     spawnChance: 20,
-                    types: ['spike'],
-                    distribution: { spike: 100, shooter: 0, jumper: 0 }
+                    types: ['patrol'],
+                    distribution: { patrol: 100, shooter: 0, jumper: 0 }
                 },
                 maze: {
                     enabled: true,
@@ -142,8 +142,8 @@ export const LEVEL_CONFIG = {
                 },
                 enemies: {
                     spawnChance: 30,
-                    types: ['spike'],
-                    distribution: { spike: 100, shooter: 0, jumper: 0 }
+                    types: ['patrol'],
+                    distribution: { patrol: 100, shooter: 0, jumper: 0 }
                 },
                 maze: {
                     enabled: true,
@@ -176,7 +176,7 @@ export const LEVEL_CONFIG = {
                 enemies: {
                     spawnChance: 40,
                     types: ['shooter'],
-                    distribution: { spike: 0, shooter: 100, jumper: 0 }, // Exclusive
+                    distribution: { patrol: 0, shooter: 100, jumper: 0 }, // Exclusive
                     projectiles: { count: 1, speed: 'normal' }
                 },
                 maze: {
@@ -209,8 +209,8 @@ export const LEVEL_CONFIG = {
                 },
                 enemies: {
                     spawnChance: 55,
-                    types: ['spike', 'shooter'],
-                    distribution: { spike: 50, shooter: 50, jumper: 0 }, // Mixed
+                    types: ['patrol', 'shooter'],
+                    distribution: { patrol: 50, shooter: 50, jumper: 0 }, // Mixed
                     projectiles: { count: 1, speed: 'normal' }
                 },
                 maze: {
@@ -244,7 +244,7 @@ export const LEVEL_CONFIG = {
                 enemies: {
                     spawnChance: 60,
                     types: ['jumper'],
-                    distribution: { spike: 0, shooter: 0, jumper: 100 }, // Exclusive
+                    distribution: { patrol: 0, shooter: 0, jumper: 100 }, // Exclusive
                     projectiles: { count: 2, speed: 'fast' }
                 },
                 maze: {
@@ -277,8 +277,8 @@ export const LEVEL_CONFIG = {
                 },
                 enemies: {
                     spawnChance: 70,
-                    types: ['spike', 'shooter', 'jumper'],
-                    distribution: { spike: 20, shooter: 40, jumper: 40 }, // All Mixed
+                    types: ['patrol', 'shooter', 'jumper'],
+                    distribution: { patrol: 20, shooter: 40, jumper: 40 }, // All Mixed
                     projectiles: { count: 3, speed: 'very_fast' }
                 },
                 maze: {

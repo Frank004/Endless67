@@ -1,5 +1,5 @@
 import { Player } from '../prefabs/Player.js';
-import { SpikeEnemy, ShooterEnemy, JumperShooterEnemy } from '../prefabs/Enemy.js';
+import { PatrolEnemy, ShooterEnemy, JumperShooterEnemy } from '../prefabs/Enemy.js';
 import { Projectile } from '../prefabs/Projectile.js';
 import { CollisionManager } from '../managers/CollisionManager.js';
 import { LevelManager } from '../managers/LevelManager.js';
@@ -165,7 +165,7 @@ export class Game extends Phaser.Scene {
         this.coins = this.physics.add.group({ allowGravity: false, immovable: true });
         this.powerups = this.physics.add.group({ allowGravity: false, immovable: true });
 
-        this.spikeEnemies = this.physics.add.group({ classType: SpikeEnemy, allowGravity: false, immovable: true, runChildUpdate: true });
+        this.patrolEnemies = this.physics.add.group({ classType: PatrolEnemy, allowGravity: false, immovable: true, runChildUpdate: true });
         this.shooterEnemies = this.physics.add.group({ classType: ShooterEnemy, allowGravity: false, immovable: true, runChildUpdate: true });
         this.jumperShooterEnemies = this.physics.add.group({ classType: JumperShooterEnemy, allowGravity: true, immovable: false, runChildUpdate: true });
         this.projectiles = this.physics.add.group({

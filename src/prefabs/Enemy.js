@@ -1,6 +1,6 @@
 import { enablePlatformRider, updatePlatformRider } from '../utils/platformRider.js';
 
-export class SpikeEnemy extends Phaser.Physics.Arcade.Sprite {
+export class PatrolEnemy extends Phaser.Physics.Arcade.Sprite {
     constructor(scene, x, y) {
         super(scene, x, y, 'enemy_spike');
         this.setDepth(20);

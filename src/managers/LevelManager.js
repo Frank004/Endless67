@@ -1,4 +1,4 @@
-import { SpikeEnemy, ShooterEnemy, JumperShooterEnemy } from '../prefabs/Enemy.js';
+import { PatrolEnemy, ShooterEnemy, JumperShooterEnemy } from '../prefabs/Enemy.js';
 import { MAZE_PATTERNS, MAZE_PATTERNS_EASY, MAZE_PATTERNS_HARD, MAZE_PATTERNS_NUMBERED } from '../data/MazePatterns.js';
 import { getLevelConfig, LEVEL_CONFIG } from '../data/LevelConfig.js';
 import { enablePlatformRider } from '../utils/platformRider.js';
@@ -135,9 +135,9 @@ export class LevelManager {
                 let roll = Phaser.Math.Between(0, 100);
                 let dist = config.enemies.distribution;
 
-                if (roll < dist.spike) {
-                    this.spawnSpike(plat);
-                } else if (roll < dist.spike + dist.shooter) {
+                if (roll < dist.patrol) {
+                    this.spawnPatrol(plat);
+                } else if (roll < dist.patrol + dist.shooter) {
                     this.spawnShooter(plat);
                 } else {
                     this.spawnJumperShooter(plat);
@@ -165,8 +165,8 @@ export class LevelManager {
                         if (c.active && Math.abs(c.y - (y - 40)) < 80) canSpawnCoin = false;
                     });
 
-                    // Increased coin chance from 60 to 70
-                    if (canSpawnCoin && Phaser.Math.Between(0, 100) < 70) {
+                    // Increased coin chance from 70 to 80
+                    if (canSpawnCoin && Phaser.Math.Between(0, 100) < 80) {
                         const coin = scene.coins.create(x, y - 40, 'coin');
                         enablePlatformRider(coin, { mode: 'carry', marginX: 2 });
                     }
@@ -318,8 +318,8 @@ export class LevelManager {
             scene.lastPowerupSpawnHeight = scene.currentHeight;
             scene.lastPowerupTime = now;
         } else {
-            // 1. Dynamic Coin Spawning in Mazes: 50% chance
-            if (Phaser.Math.Between(0, 100) < 50) {
+            // 1. Dynamic Coin Spawning in Mazes: 80% chance
+            if (Phaser.Math.Between(0, 100) < 80) {
                 const coin = scene.coins.create(gapX, y - 50, 'coin');
                 enablePlatformRider(coin, { mode: 'carry', marginX: 2 });
             }
@@ -330,12 +330,13 @@ export class LevelManager {
             return;
         }
 
-        // Enemy Logic from Config
+        // Enemy Spawning (Patrol Enemies only in maze)
         let enemySpawnChance = levelConfig.maze.enemyChance;
         let maxEnemies = Phaser.Math.Between(levelConfig.maze.enemyCount.min, levelConfig.maze.enemyCount.max);
         maxEnemies = Math.min(wallSegments.length, maxEnemies);
 
-        if (enemySpawnChance > 0 && Phaser.Math.Between(0, 100) < enemySpawnChance) {
+        // SKIP first row (rowIndex === 0) to prevent immediate danger/falling issues
+        if (rowIndex > 0 && enemySpawnChance > 0 && Phaser.Math.Between(0, 100) < enemySpawnChance && scene.patrolEnemies.countActive() < maxEnemies) {
             Phaser.Utils.Array.Shuffle(wallSegments);
 
             for (let i = 0; i < maxEnemies; i++) {
@@ -348,25 +349,28 @@ export class LevelManager {
 
                 if (safeMax > safeMin + 20) {
                     let enemyX = Phaser.Math.Between(safeMin, safeMax);
-                    let enemy = scene.spikeEnemies.get(enemyX, y - 20);
+                    // Spawn higher to avoid spawning inside the wall (Wall height 60, top is y-30)
+                    // y - 60 puts it well above to fall safely
+                    let enemy = scene.patrolEnemies.get(enemyX, y - 60);
 
                     if (enemy && enemy.body) {
-                        enemy.spawn(enemyX, y - 20);
+                        enemy.spawn(enemyX, y - 60);
+                        // No manual patrol call needed - PatrolEnemy handles it via platformRider
                     }
                 }
             }
         }
     }
 
-    spawnSpike(platform) {
+    spawnPatrol(platform) {
         if (!platform || !platform.active) {
-            console.warn('spawnSpike: Invalid platform');
+            console.warn('spawnPatrol: Invalid platform');
             return;
         }
         const scene = this.scene;
         let ex = platform.x;
-        let ey = platform.y - 20;
-        let enemy = scene.spikeEnemies.get(ex, ey);
+        let ey = platform.y - 40; // Spawn higher to avoid embedding
+        let enemy = scene.patrolEnemies.get(ex, ey);
         if (enemy) {
             enemy.spawn(ex, ey);
         }
@@ -397,7 +401,7 @@ export class LevelManager {
             return;
         }
         if (platform.getData('isMoving')) {
-            this.spawnSpike(platform);
+            this.spawnPatrol(platform);
             return;
         }
         const scene = this.scene;

@@ -13,7 +13,7 @@ export class CollisionManager {
     }
 
     setupCollisions() {
-        const { player, platforms, mazeWalls, leftWall, rightWall, spikeEnemies, shooterEnemies, jumperShooterEnemies, coins, powerups, lava, projectiles } = this.scene;
+        const { player, platforms, mazeWalls, leftWall, rightWall, patrolEnemies, shooterEnemies, jumperShooterEnemies, coins, powerups, lava, projectiles } = this.scene;
 
         // --- PLAYER COLLISIONS ---
         this.scene.physics.add.collider(player, platforms, this.playerHandler.handlePlatformCollision, null, this.playerHandler);
@@ -22,13 +22,13 @@ export class CollisionManager {
         this.scene.physics.add.collider(player, rightWall, () => this.playerHandler.handleWallTouch(player, rightWall, 'right'));
 
         // --- ENEMY COLLISIONS ---
-        const enemyGroups = [spikeEnemies, shooterEnemies, jumperShooterEnemies];
+        const enemyGroups = [patrolEnemies, shooterEnemies, jumperShooterEnemies];
 
         enemyGroups.forEach(group => {
             // Player vs Enemy
             this.scene.physics.add.overlap(player, group, this.enemyHandler.hitEnemy, null, this.enemyHandler);
 
-            if (group === spikeEnemies) {
+            if (group === patrolEnemies) {
                 // Spikes: use platformRider for both platforms AND mazeWalls
                 this.scene.physics.add.collider(
                     group,
@@ -52,7 +52,7 @@ export class CollisionManager {
 
             // Side walls - only for patrol enemies and jumpers
             // ShooterEnemies don't need wall collision (they're static on platforms)
-            if (group === spikeEnemies || group === jumperShooterEnemies) {
+            if (group === patrolEnemies || group === jumperShooterEnemies) {
                 this.scene.physics.add.collider(group, leftWall);
                 this.scene.physics.add.collider(group, rightWall);
             }

@@ -175,7 +175,7 @@ export function updatePlatformRider(rider) {
         // CRITICAL: Stop running in air for patrol mode
         // Prevents enemies from running off when sections haven't rendered
         if (rider.riderMode === 'bound' || (rider.riderMode === 'patrol' && rider.riderAutoPatrol)) {
-            body.velocity.x = 0;
+            rider.body.velocity.x = 0;
         }
     }
 }

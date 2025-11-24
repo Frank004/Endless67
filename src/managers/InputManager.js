@@ -3,7 +3,8 @@ export class InputManager {
         this.scene = scene;
         this.moveAnchorX = null;
         this.moveAnchorY = null;
-        this.joystickVisible = true;
+        // Read setting from registry (default true)
+        this.joystickVisible = scene.registry.get('showJoystick') !== false;
 
         // Constants
         this.SPLIT_X = 280;

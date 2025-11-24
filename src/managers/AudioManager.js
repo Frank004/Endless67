@@ -1,7 +1,7 @@
 export class AudioManager {
     constructor(scene) {
         this.scene = scene;
-        this.soundEnabled = true;
+        this.soundEnabled = !scene.sound.mute;
         this.bgMusic = null;
         this.lavaSound = null;
     }
@@ -10,11 +10,29 @@ export class AudioManager {
         const scene = this.scene;
         try {
             if (scene.sound && scene.cache.audio.exists('lava_ambient')) {
+                // Stop any existing lava sound to prevent duplicates
+                if (this.lavaSound) {
+                    this.lavaSound.stop();
+                }
                 this.lavaSound = scene.sound.add('lava_ambient', { loop: true, volume: 0 });
                 this.lavaSound.play();
             }
+
+            // Ensure audio stops when scene shuts down (e.g. on restart)
+            scene.events.once('shutdown', this.stopAudio, this);
         } catch (error) {
             console.warn('Error starting lava sound:', error);
+        }
+    }
+
+    stopAudio() {
+        if (this.lavaSound) {
+            this.lavaSound.stop();
+            this.lavaSound = null;
+        }
+        if (this.bgMusic) {
+            this.bgMusic.stop();
+            this.bgMusic = null;
         }
     }
 
