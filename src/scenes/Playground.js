@@ -35,11 +35,16 @@ export class Playground extends Game {
             this.mazeWalls.children.iterate((c) => { if (c && c.y > limitY) c.destroy(); });
 
             // Update moving platforms
+            const gameWidth = this.cameras.main.width;
+            const wallWidth = 32;
+            const minPlatformX = wallWidth + 50; // 32px (wall) + 50px margen
+            const maxPlatformX = gameWidth - wallWidth - 50; // gameWidth - 32px (wall) - 50px margen
+            
             this.platforms.children.iterate((plat) => {
                 if (plat.getData('isMoving')) {
                     let speed = plat.getData('speed') || 100;
-                    if (plat.x < 90) plat.setVelocityX(speed);
-                    else if (plat.x > 310) plat.setVelocityX(-speed);
+                    if (plat.x < minPlatformX) plat.setVelocityX(speed);
+                    else if (plat.x > maxPlatformX) plat.setVelocityX(-speed);
                 }
             });
         };

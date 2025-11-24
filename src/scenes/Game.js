@@ -41,10 +41,11 @@ export class Game extends Phaser.Scene {
         // --- PHYSICS & CAMERA SETUP ---
         this.input.addPointer(3);
         // Physics bounds: dinámico basado en el ancho del juego
-        // Margen de 14px a cada lado, ancho disponible = gameWidth - 28
+        // Las paredes tienen 32px de ancho, así que el área jugable es gameWidth - 64 (32px a cada lado)
         const gameWidth = this.cameras.main.width;
-        const physicsWidth = gameWidth - 28; // 14px margen a cada lado
-        this.physics.world.setBounds(14, -1000000, physicsWidth, 1000000 + 800);
+        const wallWidth = 32;
+        const physicsWidth = gameWidth - (wallWidth * 2); // 32px margen a cada lado para las paredes
+        this.physics.world.setBounds(wallWidth, -1000000, physicsWidth, 1000000 + 800);
         this.cameras.main.setBackgroundColor('#050505');
 
         // --- DEVICE DETECTION ---

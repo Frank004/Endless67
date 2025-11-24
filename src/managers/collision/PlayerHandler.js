@@ -107,12 +107,53 @@ export class PlayerHandler {
             fontSize: '48px', color: '#00ffff', fontStyle: 'bold', letterSpacing: 10
         }).setOrigin(0.5).setDepth(301).setScrollFactor(0);
 
-        // Virtual Keyboard Listener
+        // Mobile: Create HTML input to trigger keyboard
+        let htmlInput = null;
+        const isMobile = scene.isMobile;
+        
+        if (isMobile) {
+            // Create invisible HTML input for mobile keyboard
+            htmlInput = document.createElement('input');
+            htmlInput.type = 'text';
+            htmlInput.maxLength = 3;
+            htmlInput.style.position = 'fixed';
+            htmlInput.style.top = '50%';
+            htmlInput.style.left = '50%';
+            htmlInput.style.transform = 'translate(-50%, -50%)';
+            htmlInput.style.width = '1px';
+            htmlInput.style.height = '1px';
+            htmlInput.style.opacity = '0';
+            htmlInput.style.pointerEvents = 'none';
+            htmlInput.style.textTransform = 'uppercase';
+            htmlInput.autocomplete = 'off';
+            htmlInput.autocapitalize = 'characters';
+            document.body.appendChild(htmlInput);
+            
+            // Focus and show keyboard
+            setTimeout(() => {
+                htmlInput.focus();
+                htmlInput.click();
+            }, 100);
+            
+            // Listen to input changes
+            htmlInput.addEventListener('input', (e) => {
+                name = e.target.value.toUpperCase().substring(0, 3);
+                let display = name.padEnd(3, '_').split('').join(' ');
+                nameText.setText(display);
+            });
+        }
+
+        // Virtual Keyboard Listener (for desktop)
         const keyListener = (event) => {
+            if (isMobile && htmlInput) {
+                // On mobile, let HTML input handle it
+                return;
+            }
+            
             if (event.keyCode === 8 && name.length > 0) { // Backspace
                 name = name.slice(0, -1);
             } else if (event.keyCode === 13 && name.length > 0) { // Enter
-                this.confirmScore(scene, scoreManager, name, keyListener, [bg, title, prompt, nameText, confirmBtn]);
+                this.confirmScore(scene, scoreManager, name, keyListener, [bg, title, prompt, nameText, confirmBtn], htmlInput);
             } else if (name.length < 3 && event.key.length === 1 && /[a-zA-Z0-9]/.test(event.key)) {
                 name += event.key.toUpperCase();
             }
@@ -122,7 +163,9 @@ export class PlayerHandler {
             nameText.setText(display);
         };
 
-        scene.input.keyboard.on('keydown', keyListener);
+        if (!isMobile) {
+            scene.input.keyboard.on('keydown', keyListener);
+        }
 
         const confirmBtn = scene.add.text(centerX, 380, 'CONFIRM', {
             fontSize: '24px', color: '#00ff00', backgroundColor: '#333', padding: { x: 10, y: 5 }
@@ -130,14 +173,27 @@ export class PlayerHandler {
 
         confirmBtn.on('pointerdown', () => {
             if (name.length > 0) {
-                this.confirmScore(scene, scoreManager, name, keyListener, [bg, title, prompt, nameText, confirmBtn]);
+                // Get final name from HTML input if mobile
+                if (isMobile && htmlInput) {
+                    name = htmlInput.value.toUpperCase().substring(0, 3);
+                }
+                this.confirmScore(scene, scoreManager, name, keyListener, [bg, title, prompt, nameText, confirmBtn], htmlInput);
             }
         });
     }
 
-    confirmScore(scene, scoreManager, name, keyListener, elementsToDestroy) {
+    confirmScore(scene, scoreManager, name, keyListener, elementsToDestroy, htmlInput = null) {
         scoreManager.saveScore(name || 'UNK', scene.totalScore, scene.currentHeight);
-        scene.input.keyboard.off('keydown', keyListener);
+        
+        // Remove keyboard listener if desktop
+        if (!scene.isMobile) {
+            scene.input.keyboard.off('keydown', keyListener);
+        }
+        
+        // Remove HTML input if mobile
+        if (htmlInput && htmlInput.parentNode) {
+            htmlInput.parentNode.removeChild(htmlInput);
+        }
 
         // Clean up input UI
         elementsToDestroy.forEach(el => el.destroy());

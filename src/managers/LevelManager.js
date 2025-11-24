@@ -105,9 +105,11 @@ export class LevelManager {
 
         let x;
         const gameWidth = scene.cameras.main.width;
+        const wallWidth = 32;
         const centerX = scene.cameras.main.centerX;
-        const minX = 60;
-        const maxX = gameWidth - 60;
+        // Límites de generación: respetar paredes (32px) + margen de seguridad (28px)
+        const minX = wallWidth + 28; // 32px (wall) + 28px margen
+        const maxX = gameWidth - wallWidth - 28; // gameWidth - 32px (wall) - 28px margen
         // Zigzag Pattern Logic from Config
         let zigzagChance = config.platforms.zigzagChance;
         if (this.lastPlatformX !== null && Phaser.Math.Between(0, 100) < zigzagChance) {
@@ -117,16 +119,17 @@ export class LevelManager {
             } else {
                 x = Phaser.Math.Between(minX, centerX);
             }
-        } else {
-            // Normal random placement logic
-            if (this.lastPlatformX === null) {
-                x = Phaser.Math.Between(minX, maxX);
             } else {
-                let minX = Math.max(60, this.lastPlatformX - this.maxHorizontalDelta);
-                let maxX = Math.min(340, this.lastPlatformX + this.maxHorizontalDelta);
-                x = Phaser.Math.Between(minX, maxX);
+                // Normal random placement logic
+                if (this.lastPlatformX === null) {
+                    x = Phaser.Math.Between(minX, maxX);
+                } else {
+                    // Usar límites dinámicos basados en el ancho del juego
+                    const dynamicMinX = Math.max(minX, this.lastPlatformX - this.maxHorizontalDelta);
+                    const dynamicMaxX = Math.min(maxX, this.lastPlatformX + this.maxHorizontalDelta);
+                    x = Phaser.Math.Between(dynamicMinX, dynamicMaxX);
+                }
             }
-        }
 
         if (Phaser.Math.Between(0, 100) < basePlatformChance) {
             let plat = this.spawnPlatform(x, y, width, isMoving, config.platforms.movingSpeed);
@@ -439,11 +442,16 @@ export class LevelManager {
         scene.mazeWalls.children.iterate((c) => { if (c && c.y > limitY) c.destroy(); });
 
         // Update moving platforms
+        const gameWidth = scene.cameras.main.width;
+        const wallWidth = 32;
+        const minPlatformX = wallWidth + 50; // 32px (wall) + 50px margen
+        const maxPlatformX = gameWidth - wallWidth - 50; // gameWidth - 32px (wall) - 50px margen
+        
         scene.platforms.children.iterate((plat) => {
             if (plat.getData('isMoving')) {
                 let speed = plat.getData('speed') || 100; // Use stored speed or default
-                if (plat.x < 90) plat.setVelocityX(speed);
-                else if (plat.x > 310) plat.setVelocityX(-speed);
+                if (plat.x < minPlatformX) plat.setVelocityX(speed);
+                else if (plat.x > maxPlatformX) plat.setVelocityX(-speed);
             }
         });
     }
