@@ -273,41 +273,21 @@ export class Playground extends Game {
 
             if (cat.expanded) {
                 let itemY = cat.yPos + 55;
+
+                // Calculate stride based on first item type
+                const isSingle = cat.items[0] && cat.items[0].type === 'single';
+                const stride = isSingle ? 3 : 5;
+
                 for (let i = 0; i < cat.itemElements.length; i++) {
                     const elem = cat.itemElements[i];
                     elem.y = itemY;
 
-                    // Move to next row after all elements of current item
-                    // Single: bg, icon, text (3 elements)
-                    // Dual: bg, icon, text, clean, prep (5 elements)
-
-                    const itemType = cat.items[Math.floor(i / (cat.items[0].type === 'single' ? 3 : 5))];
-                    const elemsPerItem = itemType.type === 'single' ? 3 : 5;
-
-                    if (i % elemsPerItem === elemsPerItem - 1) {
-                        // Last element of the item
-                        // Logic for next row is handled by loop structure usually, but here we need to increment itemY
-                        // ONLY when we switch to the next item.
-                        // Wait, the original code logic was a bit fragile.
-                        // Let's simplify: we update Y for all elements of the current item.
-                    }
-
-                    // Actually, simpler:
-                    // We can't easily map index to itemY without tracking which item we are on.
-                    // But we know the structure.
-                    // Let's just iterate items and their elements in a structured way?
-                    // No, itemElements is flat.
-
                     // Check if this is the last element of an item
-                    // Calculate stride based on item type
-                    const isSingle = cat.items[0] && cat.items[0].type === 'single';
-                    const stride = isSingle ? 3 : 5;
-
                     if (i % stride === stride - 1) {
                         // Determine which item this element belongs to
                         const itemIndex = Math.floor(i / stride);
                         const isLastItemInCat = itemIndex === cat.items.length - 1;
-                        itemY += isLastItemInCat ? 70 : 45; // Add extra padding for the last item in the category
+                        itemY += isLastItemInCat ? 70 : 45; // Add extra padding for the last item
                     }
 
                     const itemVisible = elem.y > 80 && elem.y < 560;
