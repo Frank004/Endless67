@@ -1,0 +1,439 @@
+import { SpikeEnemy, ShooterEnemy, JumperShooterEnemy } from '../prefabs/Enemy.js';
+import { MAZE_PATTERNS, MAZE_PATTERNS_EASY, MAZE_PATTERNS_HARD, MAZE_PATTERNS_NUMBERED } from '../data/MazePatterns.js';
+import { getLevelConfig, LEVEL_CONFIG } from '../data/LevelConfig.js';
+import { enablePlatformRider } from '../utils/platformRider.js';
+
+export class LevelManager {
+    constructor(scene) {
+        this.scene = scene;
+
+        // Level Generation State
+        this.lastPlatformY = 500;
+        this.lastPlatformX = null;
+        this.mazeSequenceRemaining = 0;
+        this.lastMazeSide = 0;
+        this.justFinishedMaze = false;
+        this.currentMazePattern = null;
+        this.currentMazeRowIndex = 0;
+        this.mazeMirrorX = false;
+        this.mazeMirrorY = false;
+
+        // Constants from Config
+        const settings = LEVEL_CONFIG.world1.baseSettings;
+        this.minPlatformsPerScreen = settings.minPlatformsPerScreen;
+        this.maxPlatformsPerScreen = settings.maxPlatformsPerScreen;
+        this.worldHeightForMaxDifficulty = settings.worldHeightForMaxDifficulty;
+        this.maxHorizontalDelta = settings.maxHorizontalDelta;
+        this.platformsSinceLastMaze = 0;
+    }
+
+    generateNextRow() {
+        const scene = this.scene;
+        let y = this.lastPlatformY - 160;
+        let height = scene.currentHeight;
+
+        // Get configuration for current height
+        const config = getLevelConfig(height);
+
+        // Maze Logic
+        let allowMaze = config.maze.enabled && this.platformsSinceLastMaze > 10;
+
+        // Continue existing maze
+        if (this.mazeSequenceRemaining > 0) {
+            let mazeConfig = this.currentMazePattern[this.currentMazeRowIndex];
+
+            // Handle Vertical Mirroring
+            if (this.mazeMirrorY) {
+                mazeConfig = this.currentMazePattern[this.currentMazePattern.length - 1 - this.currentMazeRowIndex];
+            }
+
+            this.spawnMazeRowFromConfig(y, mazeConfig, config.maze.allowMovingPlatforms, config.maze.allowEnemies, this.currentMazeRowIndex, this.currentMazePattern);
+
+            this.currentMazeRowIndex++;
+            this.mazeSequenceRemaining--;
+            this.lastPlatformY = y;
+            this.justFinishedMaze = (this.mazeSequenceRemaining === 0);
+            return;
+        }
+
+        // Start new maze
+        if (allowMaze && !this.justFinishedMaze && Phaser.Math.Between(0, 100) < config.maze.chance) {
+            // Spawn Safety Platform below maze entrance
+            // This ensures the player has a safe landing spot before the maze starts
+            this.spawnPlatform(200, y, 200, false); // Centered, wide, static
+            this.lastPlatformY = y;
+
+            // Select pattern based on difficulty
+            let patternPool = MAZE_PATTERNS_EASY;
+            if (config.maze.patterns === 'medium') patternPool = MAZE_PATTERNS; // Assuming medium is standard mix
+            else if (config.maze.patterns === 'hard') patternPool = MAZE_PATTERNS_HARD;
+
+            // 50% chance to pick a numbered pattern if available
+            if (MAZE_PATTERNS_NUMBERED.length > 0 && Phaser.Math.Between(0, 100) < 50) {
+                patternPool = MAZE_PATTERNS_NUMBERED;
+            }
+
+            this.currentMazePattern = Phaser.Utils.Array.GetRandom(patternPool);
+            this.mazeSequenceRemaining = this.currentMazePattern.length;
+            this.currentMazeRowIndex = 0;
+
+            // Randomize Mirroring
+            this.mazeMirrorX = Phaser.Math.Between(0, 1) === 0;
+            this.mazeMirrorY = Phaser.Math.Between(0, 1) === 0;
+
+            this.generateNextRow(); // Recursively call to spawn first row immediately
+            this.platformsSinceLastMaze = 0; // Reset counter
+            return;
+        }
+
+        this.justFinishedMaze = false;
+
+        // --- NORMAL PLATFORM GENERATION ---
+        // Use config for platform width and moving chance
+        let width = config.platforms.width;
+        let isMoving = !config.platforms.staticOnly && Phaser.Math.Between(0, 100) < config.platforms.movingChance;
+
+        // Calculate platform chance based on density (simplified for now, can be moved to config later)
+        let difficultyT = Math.min(height / this.worldHeightForMaxDifficulty, 1);
+        let platformsPerScreen = Phaser.Math.Linear(
+            this.minPlatformsPerScreen,
+            this.maxPlatformsPerScreen,
+            difficultyT
+        );
+        let basePlatformChance = (platformsPerScreen / 4.5) * 100;
+
+        let x;
+        // Zigzag Pattern Logic from Config
+        let zigzagChance = config.platforms.zigzagChance;
+        if (this.lastPlatformX !== null && Phaser.Math.Between(0, 100) < zigzagChance) {
+            // Force a position far from the last one (zigzag)
+            if (this.lastPlatformX < 200) {
+                x = Phaser.Math.Between(200, 340);
+            } else {
+                x = Phaser.Math.Between(60, 200);
+            }
+        } else {
+            // Normal random placement logic
+            if (this.lastPlatformX === null) {
+                x = Phaser.Math.Between(60, 340);
+            } else {
+                let minX = Math.max(60, this.lastPlatformX - this.maxHorizontalDelta);
+                let maxX = Math.min(340, this.lastPlatformX + this.maxHorizontalDelta);
+                x = Phaser.Math.Between(minX, maxX);
+            }
+        }
+
+        if (Phaser.Math.Between(0, 100) < basePlatformChance) {
+            let plat = this.spawnPlatform(x, y, width, isMoving, config.platforms.movingSpeed);
+            this.lastPlatformY = y;
+            this.lastPlatformX = x;
+            this.platformsSinceLastMaze++;
+
+            // Spawn Enemy on Platform using Config
+            if (plat && plat.active && Phaser.Math.Between(0, 100) < config.enemies.spawnChance) {
+                // Determine enemy type from distribution
+                let roll = Phaser.Math.Between(0, 100);
+                let dist = config.enemies.distribution;
+
+                if (roll < dist.spike) {
+                    this.spawnSpike(plat);
+                } else if (roll < dist.spike + dist.shooter) {
+                    this.spawnShooter(plat);
+                } else {
+                    this.spawnJumperShooter(plat);
+                }
+            } else if (plat && plat.active) {
+                // Try to spawn Powerup first
+                let powerupChance = config.mechanics.powerups ? config.mechanics.powerupChance : 0;
+                const timeCooldown = 15000;
+                const heightCooldown = 500;
+                const now = scene.time.now;
+
+                if (scene.currentHeight - scene.lastPowerupSpawnHeight < heightCooldown || now - scene.lastPowerupTime < timeCooldown) {
+                    powerupChance = 0;
+                }
+
+                if (Phaser.Math.Between(0, 100) < powerupChance) {
+                    const powerup = scene.powerups.create(x, y - 50, 'powerup_ball');
+                    enablePlatformRider(powerup, { mode: 'carry', marginX: 2 });
+                    scene.lastPowerupSpawnHeight = scene.currentHeight;
+                    scene.lastPowerupTime = now;
+                } else {
+                    // Spawn Coin if no enemy and no powerup
+                    let canSpawnCoin = true;
+                    scene.coins.children.iterate(c => {
+                        if (c.active && Math.abs(c.y - (y - 40)) < 80) canSpawnCoin = false;
+                    });
+
+                    // Increased coin chance from 60 to 70
+                    if (canSpawnCoin && Phaser.Math.Between(0, 100) < 70) {
+                        const coin = scene.coins.create(x, y - 40, 'coin');
+                        enablePlatformRider(coin, { mode: 'carry', marginX: 2 });
+                    }
+                }
+            }
+        } else {
+            // Gap - maybe spawn a coin or powerup
+            let coinX = (Phaser.Math.Between(0, 1) === 0) ? 60 : 340;
+
+            // Powerup Logic from Config
+            let powerupChance = config.mechanics.powerups ? config.mechanics.powerupChance : 0;
+            const timeCooldown = 15000;
+            const heightCooldown = 500;
+            const now = scene.time.now;
+
+            if (scene.currentHeight - scene.lastPowerupSpawnHeight < heightCooldown || now - scene.lastPowerupTime < timeCooldown) {
+                powerupChance = 0;
+            }
+
+            if (Phaser.Math.Between(0, 100) < powerupChance) {
+                const powerup = scene.powerups.create(coinX, y, 'powerup_ball');
+                enablePlatformRider(powerup, { mode: 'carry', marginX: 2 });
+                scene.lastPowerupSpawnHeight = scene.currentHeight;
+                scene.lastPowerupTime = now;
+            } else {
+                // Coin Spacing Check
+                let canSpawnCoin = true;
+                scene.coins.children.iterate(c => {
+                    if (c.active && Math.abs(c.y - y) < 80) canSpawnCoin = false;
+                });
+
+                if (canSpawnCoin) {
+                    const coin = scene.coins.create(coinX, y, 'coin');
+                    enablePlatformRider(coin, { mode: 'carry', marginX: 2 });
+                }
+            }
+
+            this.lastPlatformY = y;
+            return null;
+        }
+    }
+
+    spawnPlatform(x, y, width, isMoving, speed = 100) {
+        const scene = this.scene;
+        let texture = isMoving ? 'platform_moving' : 'platform';
+        let p = scene.platforms.create(x, y, texture);
+        p.setDisplaySize(width, 18).refreshBody().setDepth(5);
+
+        // Moving Platform Physics
+        if (isMoving) {
+            p.setData('isMoving', true);
+            p.setData('speed', speed); // Store speed for update loop
+            p.setVelocityX(speed);
+            p.setFrictionX(1);
+            p.body.allowGravity = false;
+            p.body.immovable = true;
+            p.body.setBounce(1, 0);
+            p.body.setCollideWorldBounds(true);
+        }
+        return p;
+    }
+
+    spawnMazeRowFromConfig(y, config, allowMoving, allowSpikes, rowIndex = null, pattern = null) {
+        const scene = this.scene;
+        let type = config.type;
+        let w1 = config.width;
+        let w2 = config.width2 || 0;
+
+        // Handle Horizontal Mirroring
+        if (this.mazeMirrorX) {
+            if (type === 'left') type = 'right';
+            else if (type === 'right') type = 'left';
+            else if (type === 'split') {
+                let temp = w1; w1 = w2; w2 = temp;
+            }
+        }
+
+        // Spawn Walls based on type
+        if (type === 'left') {
+            let block = scene.mazeWalls.create(0, y, 'maze_block');
+            block.setOrigin(0, 0.5).setDisplaySize(w1, 60).refreshBody().setDepth(10);
+        } else if (type === 'right') {
+            let block = scene.mazeWalls.create(400, y, 'maze_block');
+            block.setOrigin(1, 0.5).setDisplaySize(w1, 60).refreshBody().setDepth(10);
+        } else if (type === 'split') {
+            let b1 = scene.mazeWalls.create(0, y, 'maze_block');
+            b1.setOrigin(0, 0.5).setDisplaySize(w1, 60).refreshBody().setDepth(10);
+
+            let b2 = scene.mazeWalls.create(400, y, 'maze_block');
+            b2.setOrigin(1, 0.5).setDisplaySize(w2, 60).refreshBody().setDepth(10);
+        } else if (type === 'center') {
+            let block = scene.mazeWalls.create(200, y, 'maze_block');
+            block.setOrigin(0.5, 0.5).setDisplaySize(w1, 60).refreshBody().setDepth(10);
+        }
+
+        // Spawning Items/Enemies
+        let gapX = 200;
+        let gapStart = 0;
+        let gapEnd = 400;
+
+        // Define wall segments for enemy spawning
+        let wallSegments = [];
+
+        if (type === 'left') {
+            gapStart = w1; gapEnd = 400;
+            wallSegments.push({ min: 0, max: w1 });
+        } else if (type === 'right') {
+            gapStart = 0; gapEnd = 400 - w1;
+            wallSegments.push({ min: 400 - w1, max: 400 });
+        } else if (type === 'split') {
+            gapStart = w1; gapEnd = 400 - w2;
+            wallSegments.push({ min: 0, max: w1 });
+            wallSegments.push({ min: 400 - w2, max: 400 });
+        } else if (type === 'center') {
+            const leftGapEnd = 200 - w1 / 2;
+            const rightGapStart = 200 + w1 / 2;
+            const useLeftGap = Phaser.Math.Between(0, 1) === 0;
+            gapStart = useLeftGap ? 0 : rightGapStart;
+            gapEnd = useLeftGap ? leftGapEnd : 400;
+            wallSegments.push({ min: leftGapEnd, max: rightGapStart });
+        }
+
+        if (type !== 'center') {
+            gapX = gapStart + (gapEnd - gapStart) / 2;
+        } else {
+            gapX = gapStart + (gapEnd - gapStart) / 2;
+        }
+
+        const gapWidth = Math.max(10, gapEnd - gapStart);
+        const gapMargin = Math.min(20, gapWidth * 0.25);
+        gapX = Phaser.Math.Clamp(gapX, gapStart + gapMargin, gapEnd - gapMargin);
+
+        // Get Config for current height
+        const levelConfig = getLevelConfig(scene.currentHeight);
+
+        // Powerup Logic from Config
+        let powerupChance = levelConfig.mechanics.powerups ? levelConfig.mechanics.powerupChance : 0;
+        const timeCooldown = 15000;
+        const heightCooldown = 500;
+        const now = scene.time.now;
+
+        if (scene.currentHeight - scene.lastPowerupSpawnHeight < heightCooldown || now - scene.lastPowerupTime < timeCooldown) {
+            powerupChance = 0;
+        }
+
+        if (Phaser.Math.Between(0, 100) < powerupChance) {
+            const powerup = scene.powerups.create(gapX, y - 50, 'powerup_ball');
+            enablePlatformRider(powerup, { mode: 'carry', marginX: 2 });
+            scene.lastPowerupSpawnHeight = scene.currentHeight;
+            scene.lastPowerupTime = now;
+        } else {
+            // 1. Dynamic Coin Spawning in Mazes: 50% chance
+            if (Phaser.Math.Between(0, 100) < 50) {
+                const coin = scene.coins.create(gapX, y - 50, 'coin');
+                enablePlatformRider(coin, { mode: 'carry', marginX: 2 });
+            }
+        }
+
+        // Spawn enemies on WALLS (floors) - with validation
+        if (wallSegments.length === 0 || !allowSpikes) {
+            return;
+        }
+
+        // Enemy Logic from Config
+        let enemySpawnChance = levelConfig.maze.enemyChance;
+        let maxEnemies = Phaser.Math.Between(levelConfig.maze.enemyCount.min, levelConfig.maze.enemyCount.max);
+        maxEnemies = Math.min(wallSegments.length, maxEnemies);
+
+        if (enemySpawnChance > 0 && Phaser.Math.Between(0, 100) < enemySpawnChance) {
+            Phaser.Utils.Array.Shuffle(wallSegments);
+
+            for (let i = 0; i < maxEnemies; i++) {
+                let segment = wallSegments[i];
+
+                if (!segment || !segment.min || !segment.max) continue;
+
+                let safeMin = segment.min + 20;
+                let safeMax = segment.max - 20;
+
+                if (safeMax > safeMin + 20) {
+                    let enemyX = Phaser.Math.Between(safeMin, safeMax);
+                    let enemy = scene.spikeEnemies.get(enemyX, y - 20);
+
+                    if (enemy && enemy.body) {
+                        enemy.spawn(enemyX, y - 20);
+                    }
+                }
+            }
+        }
+    }
+
+    spawnSpike(platform) {
+        if (!platform || !platform.active) {
+            console.warn('spawnSpike: Invalid platform');
+            return;
+        }
+        const scene = this.scene;
+        let ex = platform.x;
+        let ey = platform.y - 20;
+        let enemy = scene.spikeEnemies.get(ex, ey);
+        if (enemy) {
+            enemy.spawn(ex, ey);
+        }
+    }
+
+    spawnShooter(platform) {
+        if (!platform || !platform.active) {
+            console.warn('spawnShooter: Invalid platform');
+            return;
+        }
+        const scene = this.scene;
+        try {
+            let ex = platform.x;
+            let ey = platform.y - 20;
+            let shooter = scene.shooterEnemies.get(ex, ey);
+            if (shooter) {
+                shooter.spawn(ex, ey);
+                shooter.startShooting(scene.projectiles, scene.currentHeight);
+            }
+        } catch (e) {
+            console.warn('Error spawning shooter:', e);
+        }
+    }
+
+    spawnJumperShooter(platform) {
+        if (!platform || !platform.active) {
+            console.warn('spawnJumperShooter: Invalid platform');
+            return;
+        }
+        if (platform.getData('isMoving')) {
+            this.spawnSpike(platform);
+            return;
+        }
+        const scene = this.scene;
+        try {
+            let ex = platform.x;
+            let ey = platform.y - 50;
+            let jumper = scene.jumperShooterEnemies.get(ex, ey);
+            if (jumper) {
+                jumper.spawn(ex, ey);
+                jumper.startBehavior(scene.projectiles);
+            }
+        } catch (e) {
+            console.warn('Error spawning jumper shooter:', e);
+        }
+    }
+
+    update() {
+        const scene = this.scene;
+        if (this.lastPlatformY > scene.cameras.main.scrollY - 300) {
+            this.generateNextRow();
+        }
+
+        // Cleanup objects below the player
+        const limitY = scene.player.y + 900;
+        scene.platforms.children.iterate((c) => { if (c && c.y > limitY) c.destroy(); });
+        scene.coins.children.iterate((c) => { if (c && c.y > limitY) c.destroy(); });
+        scene.powerups.children.iterate((c) => { if (c && c.y > limitY) c.destroy(); });
+        scene.mazeWalls.children.iterate((c) => { if (c && c.y > limitY) c.destroy(); });
+
+        // Update moving platforms
+        scene.platforms.children.iterate((plat) => {
+            if (plat.getData('isMoving')) {
+                let speed = plat.getData('speed') || 100; // Use stored speed or default
+                if (plat.x < 90) plat.setVelocityX(speed);
+                else if (plat.x > 310) plat.setVelocityX(-speed);
+            }
+        });
+    }
+}

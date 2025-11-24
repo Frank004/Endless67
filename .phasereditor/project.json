@@ -1,0 +1,29 @@
+{
+  "name": "Endless67",
+  "version": "0.0.32",
+  "phaserVersion": "3.60.0",
+  "width": 400,
+  "height": 600,
+  "backgroundColor": "#050505",
+  "scenes": [
+    {
+      "key": "Boot",
+      "scriptFile": "src/scenes/Boot.js"
+    },
+    {
+      "key": "Game",
+      "scriptFile": "src/scenes/Game.js"
+    }
+  ],
+  "assets": {
+    "audio": "assets/audio",
+    "images": "assets/images"
+  },
+  "scripts": {
+    "main": "src/main.js"
+  },
+  "prefabs": {
+    "folder": "src/prefabs"
+  }
+}
+

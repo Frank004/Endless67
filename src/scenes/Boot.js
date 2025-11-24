@@ -1,5 +1,12 @@
 import LavaPipeline from '../pipelines/LavaPipeline.js';
 
+/**
+ * @phasereditor
+ * @scene Boot
+ * @width 400
+ * @height 600
+ * @backgroundColor 0x000000
+ */
 export class Boot extends Phaser.Scene {
     constructor() {
         super('Boot');
@@ -7,20 +14,21 @@ export class Boot extends Phaser.Scene {
 
     preload() {
         // --- AUDIO ---
-        this.load.audio('coin_sfx_1', 'Sounds%20FX/Collecting%20coins/Several%20Coins%2001.mp3');
-        this.load.audio('coin_sfx_2', 'Sounds%20FX/Collecting%20coins/Several%20Coins%2002.mp3');
-        this.load.audio('coin_sfx_3', 'Sounds%20FX/Collecting%20coins/Several%20Coins%2003.mp3');
-        this.load.audio('damage_sfx_1', 'Sounds%20FX/take%20damage/Retro%20Game%20Low%20Take%20Damage.wav');
-        this.load.audio('damage_sfx_2', 'Sounds%20FX/take%20damage/Retro%20Game%20Low%20Take%20Damage%202.wav');
-        this.load.audio('damage_sfx_3', 'Sounds%20FX/take%20damage/Retro%20Game%20Low%20Take%20Damage%203.wav');
-        this.load.audio('damage_sfx_4', 'Sounds%20FX/take%20damage/Retro%20Game%20Low%20Take%20Damage%204.wav');
-        this.load.audio('damage_sfx_5', 'Sounds%20FX/take%20damage/Retro%20Game%20Low%20Take%20Damage%205.wav');
-        this.load.audio('lava_ambient', 'Sounds%20FX/lava/Lava.wav');
-        this.load.audio('bg_music', 'Sounds%20FX/bgmusic/retro-game-music/Retro%20hiphop.mp3');
-        this.load.audio('lava_drop', 'Sounds%20FX/lavaDrop/lava-drop-in.wav');
-        this.load.audio('jump_sfx', 'Sounds%20FX/jumps/jumping.wav');
-        this.load.audio('destroy_sfx', 'Sounds%20FX/destroy/destroy.wav');
-        this.load.audio('celebration_sfx', 'Sounds%20FX/67/67.WAV');
+        // Estructura compatible con Phaser Editor: assets/audio/
+        this.load.audio('coin_sfx_1', 'assets/audio/collecting-coins/Several Coins 01.mp3');
+        this.load.audio('coin_sfx_2', 'assets/audio/collecting-coins/Several Coins 02.mp3');
+        this.load.audio('coin_sfx_3', 'assets/audio/collecting-coins/Several Coins 03.mp3');
+        this.load.audio('damage_sfx_1', 'assets/audio/take-damage/Retro Game Low Take Damage.wav');
+        this.load.audio('damage_sfx_2', 'assets/audio/take-damage/Retro Game Low Take Damage 2.wav');
+        this.load.audio('damage_sfx_3', 'assets/audio/take-damage/Retro Game Low Take Damage 3.wav');
+        this.load.audio('damage_sfx_4', 'assets/audio/take-damage/Retro Game Low Take Damage 4.wav');
+        this.load.audio('damage_sfx_5', 'assets/audio/take-damage/Retro Game Low Take Damage 5.wav');
+        this.load.audio('lava_ambient', 'assets/audio/lava/Lava.wav');
+        this.load.audio('bg_music', 'assets/audio/bg-music/retro-game-music/Retro hiphop.mp3');
+        this.load.audio('lava_drop', 'assets/audio/lava-drop/lava-drop-in.wav');
+        this.load.audio('jump_sfx', 'assets/audio/jumps/jumping.wav');
+        this.load.audio('destroy_sfx', 'assets/audio/destroy/destroy.wav');
+        this.load.audio('celebration_sfx', 'assets/audio/celebration/67.WAV');
 
         // Register Lava Pipeline
         if (this.game.renderer.type === Phaser.WEBGL) {

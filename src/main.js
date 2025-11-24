@@ -1,8 +1,12 @@
 import { Boot } from './scenes/Boot.js';
 import { Game } from './scenes/Game.js';
 
-// Mobile-first: Detectar dispositivo y ajustar altura
-const isMobile = /Android|webOS|iPhone|iPad|iPod|BlackBerry|IEMobile|Opera Mini/i.test(navigator.userAgent);
+// Mobile-first: Detectar dispositivo para configuración inicial
+// Nota: Phaser.Device se inicializa cuando se carga Phaser, pero para la configuración
+// inicial usamos detección básica. La detección precisa se hace en Game.js usando
+// this.sys.game.device.os.* que está disponible después de crear el juego.
+const userAgent = typeof navigator !== 'undefined' ? navigator.userAgent : '';
+const isMobile = /Android|webOS|iPhone|iPad|iPod|BlackBerry|IEMobile|Opera Mini/i.test(userAgent);
 
 // En móvil usar altura completa, en desktop mantener 600px
 const gameHeight = isMobile ? window.innerHeight : 600;

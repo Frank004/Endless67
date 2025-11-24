@@ -5,9 +5,10 @@ export class Player extends Phaser.Physics.Arcade.Sprite {
         scene.physics.add.existing(this);
 
         this.setGravityY(1200);
-        this.setMaxVelocity(300, 1000); // Reduced from 400
+        this.setMaxVelocity(300, 1000);
         this.setDragX(1200);
-        this.setCollideWorldBounds(false);
+        this.setCollideWorldBounds(true); // Use Arcade Physics for bounds
+        this.body.onWorldBounds = true;
         this.setDepth(20);
 
         // State
@@ -20,9 +21,7 @@ export class Player extends Phaser.Physics.Arcade.Sprite {
     }
 
     update(cursors, movePointer, splitX, isMobile) {
-        // Clamp position
-        this.x = Phaser.Math.Clamp(this.x, 14, 386);
-
+        // World bounds now handled by Arcade Physics
         if (!this.body.touching.down) {
             this.currentPlatform = null;
         }
@@ -48,9 +47,7 @@ export class Player extends Phaser.Physics.Arcade.Sprite {
             // Actually, let's refactor this. The scene handles input, Player just handles physics.
         } else {
             this.setAccelerationX(0);
-            if (this.currentPlatform && this.currentPlatform.getData('isMoving')) {
-                this.setVelocityX(this.currentPlatform.body.velocity.x);
-            }
+            // Friction handles moving platform velocity automatically
         }
     }
 
@@ -61,16 +58,14 @@ export class Player extends Phaser.Physics.Arcade.Sprite {
 
     stop() {
         this.setAccelerationX(0);
-        if (this.currentPlatform && this.currentPlatform.getData('isMoving')) {
-            this.setVelocityX(this.currentPlatform.body.velocity.x);
-        }
+        // Friction handles moving platform velocity automatically
     }
 
     jump(boost = 1.0) {
         // Wall Jump Left
         if (this.body.touching.left) {
             if (this.checkWallStamina('left')) {
-                this.setVelocity(400 * boost, -580 * boost);
+                this.setVelocity(400 * boost, -600 * boost); // Increased Y
                 this.jumps = 1;
                 return { type: 'wall_jump', x: this.x - 10, y: this.y };
             }
@@ -80,7 +75,7 @@ export class Player extends Phaser.Physics.Arcade.Sprite {
         // Wall Jump Right
         if (this.body.touching.right) {
             if (this.checkWallStamina('right')) {
-                this.setVelocity(-400 * boost, -580 * boost);
+                this.setVelocity(-400 * boost, -600 * boost); // Increased Y
                 this.jumps = 1;
                 return { type: 'wall_jump', x: this.x + 10, y: this.y };
             }
@@ -92,7 +87,7 @@ export class Player extends Phaser.Physics.Arcade.Sprite {
             let type = this.jumps === 0 ? 'jump' : 'double_jump';
             if (this.jumps > 0) this.doFrontFlip();
 
-            this.setVelocityY(-550 * boost);
+            this.setVelocityY(-600 * boost); // Increased from -550 to reach 140px spacing
             this.jumps++;
             return { type: type, x: this.x, y: this.y + 12 };
         }

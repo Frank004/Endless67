@@ -1,12 +1,15 @@
+import { enablePlatformRider, updatePlatformRider } from '../utils/platformRider.js';
+
 export class SpikeEnemy extends Phaser.Physics.Arcade.Sprite {
     constructor(scene, x, y) {
         super(scene, x, y, 'enemy_spike');
-        // scene.add.existing(this); // Group handles this
-        // scene.physics.add.existing(this); // Group handles this
         this.setDepth(20);
-        this.minX = 0;
-        this.maxX = 400;
-        this.patrolSpeed = 0;
+
+        // Use 'bound' mode: platformRider only provides bounds, we handle movement
+        enablePlatformRider(this, { mode: 'bound', marginX: 5 });
+
+        this.patrolSpeed = 60;
+        this.patrolDir = 1; // 1 = right, -1 = left
     }
 
     spawn(x, y) {
@@ -18,6 +21,10 @@ export class SpikeEnemy extends Phaser.Physics.Arcade.Sprite {
         this.setVisible(true);
         this.setDepth(20);
         this.setVelocityX(0);
+
+        // Pop-in effect
+        this.setScale(0);
+        this.scene.tweens.add({ targets: this, scale: 1, duration: 400, ease: 'Back.out' });
     }
 
     patrol(minX, maxX, speed = 60) {
@@ -34,17 +41,43 @@ export class SpikeEnemy extends Phaser.Physics.Arcade.Sprite {
     preUpdate(time, delta) {
         super.preUpdate(time, delta);
 
-        // Patrol Logic
-        if (this.patrolSpeed > 0) {
+        // 1) Update platform info and bounds (minX/maxX)
+        updatePlatformRider(this);
+
+        // 2) Patrol logic ONLY if on a platform
+        if (this.body.blocked.down && this.ridingPlatform) {
+            const pBody = this.ridingPlatform.body || { velocity: { x: 0 } };
+            const platformVel = pBody.velocity ? pBody.velocity.x : 0;
+
+            // Calculate velocity: platform velocity + patrol velocity
+            const base = this.patrolSpeed * this.patrolDir;
+            this.setVelocityX(platformVel + base);
+
+            // Respect bounds
             if (this.x >= this.maxX) {
-                this.setVelocityX(-this.patrolSpeed);
-                this.setFlipX(true); // Face left
+                this.x = this.maxX;
+                this.patrolDir = -1;
+                this.setFlipX(true);
             } else if (this.x <= this.minX) {
-                this.setVelocityX(this.patrolSpeed);
-                this.setFlipX(false); // Face right
+                this.x = this.minX;
+                this.patrolDir = 1;
+                this.setFlipX(false);
             }
+
+            // Check for wall collisions
+            if (this.body.blocked.left) {
+                this.patrolDir = 1;
+                this.setFlipX(false);
+            } else if (this.body.blocked.right) {
+                this.patrolDir = -1;
+                this.setFlipX(true);
+            }
+        } else {
+            // In air or no platform: STOP running to prevent falling off
+            this.setVelocityX(0);
         }
 
+        // 3) Cleanup offscreen enemies
         if (this.y > this.scene.player.y + 900) {
             this.stopMoving();
             this.setActive(false);
@@ -56,12 +89,13 @@ export class SpikeEnemy extends Phaser.Physics.Arcade.Sprite {
 export class ShooterEnemy extends Phaser.Physics.Arcade.Sprite {
     constructor(scene, x, y) {
         super(scene, x, y, 'enemy_shooter');
-        // scene.add.existing(this);
-        // scene.physics.add.existing(this);
         this.setDepth(20);
 
         this.shootEvent = null;
         this.recoilTween = null;
+
+        // Use 'carry' mode: only follow platform, no movement
+        enablePlatformRider(this, { mode: 'carry', marginX: 5 });
     }
 
     spawn(x, y) {
@@ -72,13 +106,23 @@ export class ShooterEnemy extends Phaser.Physics.Arcade.Sprite {
         this.setActive(true);
         this.setVisible(true);
         this.setDepth(20);
+
+        // 6. Tweens for Dynamic Enemies: Pop-in effect
+        this.setScale(0);
+        this.scene.tweens.add({ targets: this, scale: 1, duration: 400, ease: 'Back.out' });
     }
 
-    startShooting(projectilesGroup) {
+    startShooting(projectilesGroup, currentHeight = 0) {
         if (this.shootEvent) this.shootEvent.remove();
 
-        // Timer interno
-        let delay = Phaser.Math.Between(1500, 3000);
+        // Difficulty Progression (Issue 6)
+        let minDelay = 1500;
+        let maxDelay = 3000;
+
+        if (currentHeight > 6000) { minDelay = 800; maxDelay = 1500; }
+        else if (currentHeight > 4000) { minDelay = 1000; maxDelay = 2000; }
+
+        let delay = Phaser.Math.Between(minDelay, maxDelay);
         this.shootEvent = this.scene.time.addEvent({
             delay: delay,
             callback: () => {
@@ -87,8 +131,15 @@ export class ShooterEnemy extends Phaser.Physics.Arcade.Sprite {
                         if (this.shootEvent) this.shootEvent.remove();
                         return;
                     }
-                    this.shoot(projectilesGroup);
-                    if (this.shootEvent) this.shootEvent.delay = Phaser.Math.Between(1500, 3000);
+                    this.shoot(projectilesGroup, currentHeight);
+
+                    // Update delay for next shot
+                    let nextMin = minDelay;
+                    let nextMax = maxDelay;
+                    if (this.scene.currentHeight > 6000) { nextMin = 800; nextMax = 1500; }
+                    else if (this.scene.currentHeight > 4000) { nextMin = 1000; nextMax = 2000; }
+
+                    if (this.shootEvent) this.shootEvent.delay = Phaser.Math.Between(nextMin, nextMax);
                 } catch (e) {
                     console.warn('Error in shooter callback:', e);
                 }
@@ -97,21 +148,51 @@ export class ShooterEnemy extends Phaser.Physics.Arcade.Sprite {
         });
     }
 
-    shoot(projectilesGroup) {
+    shoot(projectilesGroup, currentHeight = 0) {
         if (!this.scene.player.active || !this.active) return;
 
         try {
             let direction = (this.scene.player.x < this.x) ? -1 : 1;
 
-            // Use pooling
-            let proj = projectilesGroup.get(this.x + (15 * direction), this.y);
+            // Determine shot count based on height (Issue 6)
+            let shotCount = 1;
+            if (currentHeight > 5000) shotCount = 3;
+            else if (currentHeight > 4000) shotCount = 2;
 
-            if (proj) {
-                proj.fire(this.x + (15 * direction), this.y, direction);
+            const fireShot = (offsetY = 0, angleOffset = 0) => {
+                let proj = projectilesGroup.get(this.x + (15 * direction), this.y + offsetY);
+                if (proj) {
+                    // We might need to adjust Projectile.fire to accept angle if we want spread
+                    // For now, just vertical offset or rapid fire
+                    proj.fire(this.x + (15 * direction), this.y + offsetY, direction);
+                }
+            };
 
-                if (this.recoilTween) this.recoilTween.remove();
-                this.recoilTween = this.scene.tweens.add({ targets: this, x: this.x - (5 * direction), duration: 50, yoyo: true });
+            // Fire shots
+            fireShot(0);
+
+            if (shotCount >= 2) {
+                this.scene.time.delayedCall(150, () => {
+                    if (this.active) fireShot(0);
+                });
             }
+
+            if (shotCount >= 3) {
+                this.scene.time.delayedCall(300, () => {
+                    if (this.active) fireShot(0);
+                });
+            }
+
+            if (this.recoilTween) this.recoilTween.remove();
+            // Use scaleX for recoil effect instead of moving position
+            this.recoilTween = this.scene.tweens.add({
+                targets: this,
+                scaleX: 0.9,
+                duration: 50,
+                yoyo: true,
+                onComplete: () => this.setScale(1)
+            });
+
         } catch (error) {
             console.warn('Error shooting projectile:', error);
         }
@@ -137,6 +218,11 @@ export class ShooterEnemy extends Phaser.Physics.Arcade.Sprite {
 
     preUpdate(time, delta) {
         super.preUpdate(time, delta);
+
+        // Update platform rider behavior
+        updatePlatformRider(this);
+
+        // Cleanup offscreen
         if (this.y > this.scene.player.y + 900) {
             this.stopShooting();
             this.setActive(false);
@@ -152,6 +238,9 @@ export class JumperShooterEnemy extends Phaser.Physics.Arcade.Sprite {
 
         this.jumpEvent = null;
         this.shootEvent = null;
+
+        // Use 'carry' mode: only follow platform, jumping is handled separately
+        enablePlatformRider(this, { mode: 'carry', marginX: 5 });
     }
 
     spawn(x, y) {
@@ -164,6 +253,10 @@ export class JumperShooterEnemy extends Phaser.Physics.Arcade.Sprite {
         this.setVisible(true);
         this.setDepth(20);
         this.setVelocityX(0);
+
+        // 6. Tweens for Dynamic Enemies: Pop-in effect
+        this.setScale(0);
+        this.scene.tweens.add({ targets: this, scale: 1, duration: 400, ease: 'Back.out' });
     }
 
     startBehavior(projectilesGroup) {
@@ -237,6 +330,11 @@ export class JumperShooterEnemy extends Phaser.Physics.Arcade.Sprite {
 
     preUpdate(time, delta) {
         super.preUpdate(time, delta);
+
+        // Update platform rider behavior
+        updatePlatformRider(this);
+
+        // Cleanup offscreen
         if (this.y > this.scene.player.y + 900) {
             this.stopBehavior();
             this.setActive(false);
