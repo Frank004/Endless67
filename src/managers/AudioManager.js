@@ -47,9 +47,12 @@ export class AudioManager {
                 this.lavaSound = scene.sound.add('lava_ambient', { loop: true, volume: 0 });
 
                 // Try to play, but catch any errors
-                this.lavaSound.play().catch(err => {
-                    console.warn('Could not start lava sound:', err);
-                });
+                const playPromise = this.lavaSound.play();
+                if (playPromise && typeof playPromise.catch === 'function') {
+                    playPromise.catch(err => {
+                        console.warn('Could not start lava sound:', err);
+                    });
+                }
             }
 
             // Ensure audio stops when scene shuts down (e.g. on restart)
@@ -77,9 +80,12 @@ export class AudioManager {
                 this.bgMusic = scene.sound.add('bg_music', { loop: true, volume: 0.80 });
 
                 // Try to play, but catch any errors
-                this.bgMusic.play().catch(err => {
-                    console.warn('Could not start background music:', err);
-                });
+                const playPromise = this.bgMusic.play();
+                if (playPromise && typeof playPromise.catch === 'function') {
+                    playPromise.catch(err => {
+                        console.warn('Could not start background music:', err);
+                    });
+                }
             }
         } catch (error) {
             console.warn('Error starting background music:', error);

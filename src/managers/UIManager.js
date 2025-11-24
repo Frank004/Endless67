@@ -284,17 +284,20 @@ export class UIManager {
 
         // Background for input
         const centerX = scene.cameras.main.centerX;
-        const bg = scene.add.rectangle(centerX, 300, 320, 240, 0x000000, 0.95).setDepth(300).setScrollFactor(0);
+        const centerY = scene.cameras.main.centerY;
+
+        const bg = scene.add.rectangle(centerX, centerY, scene.cameras.main.width, scene.cameras.main.height, 0x000000, 0.9)
+            .setOrigin(0.5).setDepth(300).setScrollFactor(0);
         bg.setStrokeStyle(2, 0xffd700);
 
-        const title = scene.add.text(centerX, 220, 'NEW HIGH SCORE!', {
+        const title = scene.add.text(centerX, centerY - 90, 'NEW HIGH SCORE!', {
             fontSize: '24px', color: '#ffd700', fontStyle: 'bold'
         }).setOrigin(0.5).setDepth(301).setScrollFactor(0);
 
         const isMobile = scene.isMobile;
         const promptText = isMobile ? 'TAP TO ENTER INITIALS' : 'ENTER 3 INITIALS:';
 
-        const prompt = scene.add.text(centerX, 260, promptText, {
+        const prompt = scene.add.text(centerX, centerY - 50, promptText, {
             fontSize: '16px', color: '#fff'
         }).setOrigin(0.5).setDepth(301).setScrollFactor(0);
 
@@ -302,7 +305,7 @@ export class UIManager {
         let name = '';
         const nameText = scene.add.text(centerX, centerY + 20, '_ _ _', {
             fontSize: '48px',
-            color: '#00ff00',
+            color: '#00ffff',
             fontStyle: 'bold'
         }).setOrigin(0.5).setDepth(301).setScrollFactor(0);
 
