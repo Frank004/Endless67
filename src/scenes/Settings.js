@@ -61,7 +61,7 @@ export class Settings extends Phaser.Scene {
         buttonY += buttonSpacing;
 
         // Back Button
-        const backBtn = UIHelpers.createTextButton(this, width / 2, height - 100, 'BACK TO MENU', {
+        const backBtn = UIHelpers.createTextButton(this, width / 2, buttonY, 'BACK TO MENU', {
             callback: () => this.scene.start('MainMenu')
         });
     }
