@@ -67,19 +67,19 @@ export class PlayerHandler {
         });
 
         scene.physics.pause();
-        scene.uiText.setText(`GAME OVER\nScore: ${scene.totalScore} \nTap or Space to Restart`);
+        scene.uiText.setText(`GAME OVER\nScore: ${scene.totalScore}`);
         scene.uiText.setVisible(true);
         scene.uiText.setDepth(200);
         scene.scoreText.setDepth(200);
 
         scene.time.delayedCall(1000, () => {
-            // Check for high score
+            // Check for high score - only show name input if score qualifies for top 10
             const scoreManager = new ScoreManager();
             if (scoreManager.isHighScore(scene.currentHeight, scene.totalScore)) {
-                // Show Input for Name
+                // Show Input for Name - this score will enter the leaderboard
                 this.showNameInput(scene, scoreManager);
             } else {
-                // Show Options directly
+                // Score doesn't qualify for top 10 - show options directly
                 this.showPostGameOptions(scene);
             }
         });

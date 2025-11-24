@@ -151,8 +151,13 @@ export class InputManager {
     }
 
     toggleJoystickVisual() {
-        this.joystickVisible = !this.joystickVisible;
+        // Read current state from registry and toggle it
+        const currentState = this.scene.registry.get('showJoystick') !== false;
+        this.joystickVisible = !currentState;
         const scene = this.scene;
+
+        // Persist state in registry
+        scene.registry.set('showJoystick', this.joystickVisible);
 
         if (this.joystickVisible) {
             scene.joystickToggleButton.setText('🕹️ JOYSTICK: ON');

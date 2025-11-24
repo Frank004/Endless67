@@ -25,10 +25,10 @@ export class ScoreManager {
 
         scores.push(newScore);
 
-        // Sort by height descending, then coins descending
+        // Sort by coins descending, then height descending
         scores.sort((a, b) => {
-            if (b.height !== a.height) return b.height - a.height;
-            return b.coins - a.coins;
+            if (b.coins !== a.coins) return b.coins - a.coins;
+            return b.height - a.height;
         });
 
         // Keep top 10
@@ -50,8 +50,8 @@ export class ScoreManager {
         if (scores.length < this.maxScores) return true;
 
         const lastScore = scores[scores.length - 1];
-        if (height > lastScore.height) return true;
-        if (height === lastScore.height && coins > lastScore.coins) return true;
+        if (coins > lastScore.coins) return true;
+        if (coins === lastScore.coins && height > lastScore.height) return true;
 
         return false;
     }

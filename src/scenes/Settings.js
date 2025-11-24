@@ -18,8 +18,9 @@ export class Settings extends Phaser.Scene {
         }).setOrigin(0.5);
 
         // --- SOUND TOGGLE ---
-        const isMuted = this.sound.mute;
-        this.soundBtn = this.add.text(width / 2, 200, isMuted ? '🔇 SOUND: OFF' : '🔊 SOUND: ON', {
+        // Read sound state from registry (default true if not set)
+        const soundEnabled = this.registry.get('soundEnabled') !== false;
+        this.soundBtn = this.add.text(width / 2, 200, soundEnabled ? '🔊 SOUND: ON' : '🔇 SOUND: OFF', {
             fontSize: '24px',
             color: '#ffffff',
             backgroundColor: '#333333',
@@ -27,8 +28,12 @@ export class Settings extends Phaser.Scene {
         }).setOrigin(0.5).setInteractive({ useHandCursor: true });
 
         this.soundBtn.on('pointerdown', () => {
-            this.sound.mute = !this.sound.mute;
-            this.soundBtn.setText(this.sound.mute ? '🔇 SOUND: OFF' : '🔊 SOUND: ON');
+            const currentState = this.registry.get('soundEnabled') !== false;
+            const newState = !currentState;
+            this.registry.set('soundEnabled', newState);
+            // Sync Phaser's sound mute state with registry
+            this.sound.mute = !newState;
+            this.soundBtn.setText(newState ? '🔊 SOUND: ON' : '🔇 SOUND: OFF');
         });
 
         // --- JOYSTICK TOGGLE ---

@@ -1,7 +1,11 @@
 export class AudioManager {
     constructor(scene) {
         this.scene = scene;
-        this.soundEnabled = !scene.sound.mute;
+        // Read sound state from registry (default true if not set)
+        const soundEnabledFromRegistry = scene.registry.get('soundEnabled');
+        this.soundEnabled = soundEnabledFromRegistry !== undefined ? soundEnabledFromRegistry : true;
+        // Sync Phaser's sound mute state with registry
+        scene.sound.mute = !this.soundEnabled;
         this.bgMusic = null;
         this.lavaSound = null;
     }
@@ -48,17 +52,25 @@ export class AudioManager {
         }
     }
 
+
     toggleSound() {
         const scene = this.scene;
         this.soundEnabled = !this.soundEnabled;
+
+        // Persist state in registry
+        scene.registry.set('soundEnabled', this.soundEnabled);
+
+        // Update Phaser's sound mute state
         scene.sound.mute = !this.soundEnabled;
 
-        // Update UI if button exists (accessing via scene reference or UIManager if possible, 
-        // but UIManager manages the button text. Ideally UIManager should listen to this state or we update it here)
-        // For simplicity, let's update the button text here if it exists in the scene
+        // Update UI button text if it exists
         if (scene.soundToggleButton) {
-            scene.soundToggleButton.setText(this.soundEnabled ? '🔊 SONIDO: ON' : '🔇 SONIDO: OFF');
+            const newText = this.soundEnabled ? '🔊 SONIDO: ON' : '🔇 SONIDO: OFF';
+            scene.soundToggleButton.setText(newText);
         }
+
+        // Log for debugging
+        console.log('Sound toggled:', this.soundEnabled ? 'ON' : 'OFF');
     }
 
     updateAudio(playerY, lavaY) {
