@@ -97,6 +97,11 @@ export class Game extends Phaser.Scene {
 
         // --- CAMERA FOLLOW ---
         this.cameras.main.startFollow(this.player, true, 0, 0.1);
+
+        // --- CLEANUP ON SCENE SHUTDOWN ---
+        this.events.once('shutdown', () => {
+            this.audioManager.stopAudio();
+        });
     }
 
     /**
