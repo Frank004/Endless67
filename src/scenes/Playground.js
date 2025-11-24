@@ -298,19 +298,16 @@ export class Playground extends Game {
                     // Let's just iterate items and their elements in a structured way?
                     // No, itemElements is flat.
 
-                    // Re-using original logic but adapted:
-                    // Single: 3 elems. Dual: 5 elems.
-                    // But wait, mixed types in same category? No, currently consistent per category.
-
-                    const isSingle = cat.items[0].type === 'single';
-                    const stride = isSingle ? 3 : 5;
-
+                    // Check if this is the last element of an item
                     if (i % stride === stride - 1) {
-                        itemY += 45;
+                        // Determine which item this element belongs to
+                        const itemIndex = Math.floor(i / stride);
+                        const isLastItemInCat = itemIndex === cat.items.length - 1;
+                        itemY += isLastItemInCat ? 70 : 45; // Add extra padding for the last item in the category
                     }
 
                     const itemVisible = elem.y > 80 && elem.y < 560;
-                    elem.setVisible(this.isDevMenuOpen && itemVisible);
+                    elem.setVisible(this.isDevMenuOpen && cat.expanded && itemVisible);
                 }
             }
         });

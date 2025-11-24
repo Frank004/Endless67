@@ -46,6 +46,10 @@ export class ScoreManager {
     }
 
     isHighScore(height, coins) {
+        // Requirements: minimum 1 coin and maximum 60m height
+        if (coins < 1) return false;
+        if (height < 60) return false;
+
         const scores = this.getTopScores();
         if (scores.length < this.maxScores) return true;
 

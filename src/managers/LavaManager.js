@@ -22,8 +22,8 @@ export class LavaManager {
         scene.physics.add.existing(this.lava);
         this.lava.body.allowGravity = false;
         this.lava.body.immovable = true;
-        this.lava.body.setSize(lavaPhysicsWidth, 780);
-        this.lava.body.setOffset(waveOffset, 20);
+        this.lava.body.setSize(lavaPhysicsWidth, 700); // Reduced from 780 to 700
+        this.lava.body.setOffset(waveOffset, 100); // Adjusted offset to match new size
         this.lava.setDepth(50);
 
         if (scene.game.renderer.type === Phaser.WEBGL) {
