@@ -299,6 +299,10 @@ export class Playground extends Game {
                     // No, itemElements is flat.
 
                     // Check if this is the last element of an item
+                    // Calculate stride based on item type
+                    const isSingle = cat.items[0] && cat.items[0].type === 'single';
+                    const stride = isSingle ? 3 : 5;
+
                     if (i % stride === stride - 1) {
                         // Determine which item this element belongs to
                         const itemIndex = Math.floor(i / stride);
