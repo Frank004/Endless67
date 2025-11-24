@@ -107,4 +107,94 @@ export class AudioManager {
             this.bgMusic.setVolume(musicVolume);
         }
     }
+
+    /**
+     * Play jump sound with random pitch variation
+     */
+    playJumpSound() {
+        const scene = this.scene;
+        try {
+            if (scene.sound && scene.cache.audio.exists('jump_sfx')) {
+                const randomDetune = Phaser.Math.Between(-300, 300);
+                scene.sound.play('jump_sfx', { detune: randomDetune, volume: 0.15 });
+            }
+        } catch (error) {
+            console.warn('Error playing jump sound:', error);
+        }
+    }
+
+    /**
+     * Play coin collection sound with random variation
+     */
+    playCoinSound() {
+        const scene = this.scene;
+        try {
+            const soundKeys = ['coin_sfx_1', 'coin_sfx_2', 'coin_sfx_3'];
+            const randomKey = Phaser.Utils.Array.GetRandom(soundKeys);
+            if (scene.sound && scene.cache.audio.exists(randomKey)) {
+                const randomDetune = Phaser.Math.Between(-200, 200);
+                scene.sound.play(randomKey, { detune: randomDetune, volume: 0.6 });
+            }
+        } catch (error) {
+            console.warn('Error playing coin sound:', error);
+        }
+    }
+
+    /**
+     * Play damage sound with random variation
+     */
+    playDamageSound() {
+        const scene = this.scene;
+        try {
+            const damageKeys = ['damage_sfx_1', 'damage_sfx_2', 'damage_sfx_3', 'damage_sfx_4', 'damage_sfx_5'];
+            const randomKey = Phaser.Utils.Array.GetRandom(damageKeys);
+            if (scene.sound && scene.cache.audio.exists(randomKey)) {
+                scene.sound.play(randomKey, { volume: 0.5 });
+            }
+        } catch (error) {
+            console.warn('Error playing damage sound:', error);
+        }
+    }
+
+    /**
+     * Play destroy sound (enemy destroyed by invincible player)
+     */
+    playDestroySound() {
+        const scene = this.scene;
+        try {
+            if (scene.sound && scene.cache.audio.exists('destroy_sfx')) {
+                scene.sound.play('destroy_sfx', { volume: 0.5 });
+            }
+        } catch (error) {
+            console.warn('Error playing destroy sound:', error);
+        }
+    }
+
+    /**
+     * Play celebration sound
+     */
+    playCelebrationSound() {
+        const scene = this.scene;
+        try {
+            if (scene.sound && scene.cache.audio.exists('celebration_sfx')) {
+                scene.sound.play('celebration_sfx', { volume: 0.6 });
+            }
+        } catch (error) {
+            console.warn('Error playing celebration sound:', error);
+        }
+    }
+
+    /**
+     * Play lava drop sound (player touches lava)
+     */
+    playLavaDropSound() {
+        const scene = this.scene;
+        try {
+            if (scene.sound && scene.cache.audio.exists('lava_drop')) {
+                scene.sound.play('lava_drop', { volume: 0.7 });
+            }
+        } catch (error) {
+            console.warn('Error playing lava drop sound:', error);
+        }
+    }
 }

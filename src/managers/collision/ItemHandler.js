@@ -14,19 +14,18 @@ export class ItemHandler {
         const scene = this.scene;
         coin.destroy();
         scene.totalScore += 1;
-        scene.scoreText.setText('SCORE: ' + scene.totalScore);
+        
+        // Update score UI - delegate to UIManager
+        if (scene.uiManager) {
+            scene.uiManager.updateScore(scene.totalScore);
+        }
+        
         let t = scene.add.text(player.x, player.y - 30, '+1', { fontSize: '18px', fontStyle: 'bold', color: '#ffff00' }).setDepth(101);
         scene.tweens.add({ targets: t, y: player.y - 80, alpha: 0, duration: 600, onComplete: () => t.destroy() });
 
-        try {
-            const soundKeys = ['coin_sfx_1', 'coin_sfx_2', 'coin_sfx_3'];
-            const randomKey = Phaser.Utils.Array.GetRandom(soundKeys);
-            if (scene.sound && scene.cache.audio.exists(randomKey)) {
-                const randomDetune = Phaser.Math.Between(-200, 200);
-                scene.sound.play(randomKey, { detune: randomDetune, volume: 0.6 });
-            }
-        } catch (error) {
-            console.warn('Error playing coin sound:', error);
+        // Play coin sound - delegate to AudioManager
+        if (scene.audioManager) {
+            scene.audioManager.playCoinSound();
         }
 
         let strScore = scene.totalScore.toString();
@@ -43,12 +42,9 @@ export class ItemHandler {
         player.setTint(0xffff00);
         scene.auraEmitter.start();
 
-        try {
-            if (scene.sound && scene.cache.audio.exists('celebration_sfx')) {
-                scene.sound.play('celebration_sfx', { volume: 0.6 });
-            }
-        } catch (error) {
-            console.warn('Error playing celebration sound:', error);
+        // Play celebration sound - delegate to AudioManager
+        if (scene.audioManager) {
+            scene.audioManager.playCelebrationSound();
         }
 
         let t = scene.add.text(scene.cameras.main.centerX, scene.cameras.main.scrollY + 200, 'POWERUP 67', {

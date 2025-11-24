@@ -16,24 +16,16 @@ export class EnemyHandler {
             enemy.destroy();
             scene.sparkEmitter.emitParticleAt(enemy.x, enemy.y, 20);
 
-            try {
-                if (scene.sound && scene.cache.audio.exists('destroy_sfx')) {
-                    scene.sound.play('destroy_sfx', { volume: 0.5 });
-                }
-            } catch (error) {
-                console.warn('Error playing destroy sound:', error);
+            // Play destroy sound - delegate to AudioManager
+            if (scene.audioManager) {
+                scene.audioManager.playDestroySound();
             }
             return;
         }
 
-        try {
-            const damageKeys = ['damage_sfx_1', 'damage_sfx_2', 'damage_sfx_3', 'damage_sfx_4', 'damage_sfx_5'];
-            const randomKey = Phaser.Utils.Array.GetRandom(damageKeys);
-            if (scene.sound && scene.cache.audio.exists(randomKey)) {
-                scene.sound.play(randomKey, { volume: 0.5 });
-            }
-        } catch (error) {
-            console.warn('Error playing damage sound:', error);
+        // Play damage sound - delegate to AudioManager
+        if (scene.audioManager) {
+            scene.audioManager.playDamageSound();
         }
 
         player.setTint(0xff0000);

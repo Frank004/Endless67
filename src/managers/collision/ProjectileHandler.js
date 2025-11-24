@@ -75,14 +75,9 @@ export class ProjectileHandler {
                 projectile.destroy();
             }
 
-            try {
-                const damageKeys = ['damage_sfx_1', 'damage_sfx_2', 'damage_sfx_3', 'damage_sfx_4', 'damage_sfx_5'];
-                const randomKey = Phaser.Utils.Array.GetRandom(damageKeys);
-                if (scene.sound && scene.cache.audio.exists(randomKey)) {
-                    scene.sound.play(randomKey, { volume: 0.5 });
-                }
-            } catch (error) {
-                console.warn('Error playing damage sound:', error);
+            // Play damage sound - delegate to AudioManager
+            if (scene.audioManager) {
+                scene.audioManager.playDamageSound();
             }
 
             let dir = (player.x < projX) ? -1 : 1;

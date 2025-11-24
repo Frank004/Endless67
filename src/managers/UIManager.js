@@ -1,3 +1,5 @@
+import { ScoreManager } from '../ScoreManager.js';
+
 export class UIManager {
     constructor(scene) {
         this.scene = scene;
@@ -79,6 +81,10 @@ export class UIManager {
             .on('pointerover', function () { this.setColor('#ff0000'); })
             .on('pointerout', function () { this.setColor('#ff6666'); });
 
+        // Joystick UI (created here but controlled by InputManager)
+        scene.joystickBase = scene.add.image(0, 0, 'joystick_base').setAlpha(0.5).setScrollFactor(0).setDepth(999).setVisible(false);
+        scene.joystickKnob = scene.add.image(0, 0, 'joystick_knob').setAlpha(0.8).setScrollFactor(0).setDepth(1000).setVisible(false);
+
         // Mobile Controls UI
         if (isMobile) {
             const cameraHeight = scene.cameras.main.height;
@@ -104,9 +110,55 @@ export class UIManager {
         }
     }
 
+    showJoystick(x, y, visible) {
+        const scene = this.scene;
+        if (scene.joystickBase && scene.joystickKnob) {
+            scene.joystickBase.setPosition(x, y);
+            scene.joystickKnob.setPosition(x, y);
+            if (visible) {
+                scene.joystickBase.setVisible(true);
+                scene.joystickKnob.setVisible(true);
+            }
+        }
+    }
+
+    updateJoystickKnob(x, y) {
+        const scene = this.scene;
+        if (scene.joystickKnob) {
+            scene.joystickKnob.setPosition(x, y);
+        }
+    }
+
+    hideJoystick() {
+        const scene = this.scene;
+        if (scene.joystickBase) scene.joystickBase.setVisible(false);
+        if (scene.joystickKnob) scene.joystickKnob.setVisible(false);
+    }
+
+    showJumpFeedback(x, y) {
+        const scene = this.scene;
+        let feedback = scene.add.image(x, y, 'jump_feedback')
+            .setAlpha(0.8).setDepth(1000).setScrollFactor(0);
+        scene.tweens.add({
+            targets: feedback,
+            scaleX: 1.5,
+            scaleY: 1.5,
+            alpha: 0,
+            duration: 300,
+            onComplete: () => feedback.destroy()
+        });
+    }
+
     update() {
         const scene = this.scene;
         scene.heightText.setText(`ALTURA: ${scene.currentHeight}m`);
+    }
+
+    updateScore(score) {
+        const scene = this.scene;
+        if (scene.scoreText) {
+            scene.scoreText.setText('SCORE: ' + score);
+        }
     }
 
     togglePauseMenu() {
@@ -163,12 +215,9 @@ export class UIManager {
                 scene.confettiEmitter.explode(80);
             }
 
-            try {
-                if (scene.sound && scene.cache.audio.exists('celebration_sfx')) {
-                    scene.sound.play('celebration_sfx', { volume: 0.7 });
-                }
-            } catch (error) {
-                console.warn('Error playing celebration sound:', error);
+            // Play celebration sound - delegate to AudioManager
+            if (scene.audioManager) {
+                scene.audioManager.playCelebrationSound();
             }
 
             let t = scene.add.text(scene.cameras.main.centerX, scene.cameras.main.scrollY + 300, '67!', {
@@ -188,5 +237,153 @@ export class UIManager {
             scene.physics.resume();
             scene.isPausedEvent = false;
         }
+    }
+
+    showNameInput(scoreManager) {
+        const scene = this.scene;
+        scene.uiText.setVisible(false); // Hide Game Over text temporarily
+
+        // Background for input
+        const centerX = scene.cameras.main.centerX;
+        const bg = scene.add.rectangle(centerX, 300, 320, 240, 0x000000, 0.95).setDepth(300).setScrollFactor(0);
+        bg.setStrokeStyle(2, 0xffd700);
+
+        const title = scene.add.text(centerX, 220, 'NEW HIGH SCORE!', {
+            fontSize: '24px', color: '#ffd700', fontStyle: 'bold'
+        }).setOrigin(0.5).setDepth(301).setScrollFactor(0);
+
+        const prompt = scene.add.text(centerX, 260, 'ENTER 3 INITIALS:', {
+            fontSize: '16px', color: '#fff'
+        }).setOrigin(0.5).setDepth(301).setScrollFactor(0);
+
+        // Name Display
+        let name = '';
+        const nameText = scene.add.text(centerX, 310, '_ _ _', {
+            fontSize: '48px', color: '#00ffff', fontStyle: 'bold', letterSpacing: 10
+        }).setOrigin(0.5).setDepth(301).setScrollFactor(0);
+
+        // Confirm Button
+        const confirmBtn = scene.add.text(centerX, 380, 'CONFIRM', {
+            fontSize: '24px', color: '#00ff00', backgroundColor: '#333', padding: { x: 10, y: 5 }
+        }).setOrigin(0.5).setDepth(301).setScrollFactor(0).setInteractive({ useHandCursor: true });
+
+        // Use InputManager to create mobile text input
+        const htmlInput = scene.inputManager.createMobileTextInput({
+            onInputChange: (value) => {
+                name = value;
+            },
+            onEnter: (value) => {
+                name = value;
+                confirmBtn.emit('pointerdown');
+            },
+            nameTextDisplay: nameText,
+            clickableText: nameText
+        });
+
+        // Use InputManager to handle keyboard input for desktop
+        const isMobile = scene.isMobile;
+        let keyListener = null;
+        
+        if (!isMobile) {
+            keyListener = scene.inputManager.createTextInputListener({
+                onBackspace: () => {
+                    if (name.length > 0) {
+                        name = name.slice(0, -1);
+                        const display = name.padEnd(3, '_').split('').join(' ');
+                        nameText.setText(display);
+                    }
+                },
+                onEnter: () => {
+                    if (name.length > 0) {
+                        this.confirmScore(scoreManager, name, keyListener, [bg, title, prompt, nameText, confirmBtn], htmlInput);
+                    }
+                },
+                onKeyPress: (key) => {
+                    if (name.length < 3 && /[a-zA-Z0-9]/.test(key)) {
+                        name += key.toUpperCase();
+                        const display = name.padEnd(3, '_').split('').join(' ');
+                        nameText.setText(display);
+                    }
+                }
+            });
+        }
+
+        confirmBtn.on('pointerdown', () => {
+            if (name.length > 0) {
+                // Get final name from HTML input if mobile
+                if (isMobile && htmlInput) {
+                    name = htmlInput.value.toUpperCase().substring(0, 3);
+                }
+                this.confirmScore(scoreManager, name, keyListener, [bg, title, prompt, nameText, confirmBtn], htmlInput);
+            }
+        });
+    }
+
+    confirmScore(scoreManager, name, keyListener, elementsToDestroy, htmlInput = null) {
+        const scene = this.scene;
+        scoreManager.saveScore(name || 'UNK', scene.totalScore, scene.currentHeight);
+        
+        // Remove keyboard listener if desktop (using InputManager method)
+        if (keyListener && !scene.isMobile) {
+            scene.inputManager.removeTextInputListener(keyListener);
+        }
+
+        // Remove HTML input if mobile (using InputManager method)
+        if (htmlInput) {
+            scene.inputManager.removeMobileTextInput(htmlInput);
+        }
+
+        // Clean up input UI
+        elementsToDestroy.forEach(el => el.destroy());
+
+        // Show Options
+        this.showPostGameOptions();
+    }
+
+    showPostGameOptions() {
+        const scene = this.scene;
+        scene.uiText.setVisible(true); // Ensure Game Over text is visible
+        scene.uiText.setText(`GAME OVER\nScore: ${scene.totalScore}`);
+
+        const centerX = scene.cameras.main.centerX;
+        const startY = 350;
+        const spacing = 60;
+
+        // Restart Button
+        const restartBtn = scene.add.text(centerX, startY, '🔄 RESTART', {
+            fontSize: '24px', color: '#00ff00', backgroundColor: '#333', padding: { x: 20, y: 10 }
+        }).setOrigin(0.5).setDepth(301).setScrollFactor(0).setInteractive({ useHandCursor: true });
+
+        restartBtn.on('pointerdown', () => {
+            scene.scene.restart();
+        });
+
+        // Leaderboard Button
+        const leaderboardBtn = scene.add.text(centerX, startY + spacing, '🏆 LEADERBOARD', {
+            fontSize: '24px', color: '#00ffff', backgroundColor: '#333', padding: { x: 20, y: 10 }
+        }).setOrigin(0.5).setDepth(301).setScrollFactor(0).setInteractive({ useHandCursor: true });
+
+        leaderboardBtn.on('pointerdown', () => {
+            scene.scene.start('Leaderboard');
+        });
+
+        // Menu Button
+        const menuBtn = scene.add.text(centerX, startY + spacing * 2, '🏠 MAIN MENU', {
+            fontSize: '24px', color: '#ffffff', backgroundColor: '#333', padding: { x: 20, y: 10 }
+        }).setOrigin(0.5).setDepth(301).setScrollFactor(0).setInteractive({ useHandCursor: true });
+
+        menuBtn.on('pointerdown', () => {
+            scene.scene.start('MainMenu');
+        });
+
+        // Hover effects
+        [restartBtn, leaderboardBtn, menuBtn].forEach(btn => {
+            btn.on('pointerover', () => btn.setColor('#ffff00'));
+            btn.on('pointerout', () => {
+                if (btn === restartBtn) btn.setColor('#00ff00');
+                else if (btn === leaderboardBtn) btn.setColor('#00ffff');
+                else btn.setColor('#ffffff');
+            });
+        });
     }
 }
