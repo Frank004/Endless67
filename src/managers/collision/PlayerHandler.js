@@ -111,6 +111,8 @@ export class PlayerHandler {
         let htmlInput = null;
         const isMobile = scene.isMobile;
         
+        console.log('[PlayerHandler] showNameInput - isMobile:', isMobile);
+        
         if (isMobile) {
             // Create invisible HTML input for mobile keyboard
             htmlInput = document.createElement('input');
@@ -120,26 +122,48 @@ export class PlayerHandler {
             htmlInput.style.top = '50%';
             htmlInput.style.left = '50%';
             htmlInput.style.transform = 'translate(-50%, -50%)';
-            htmlInput.style.width = '1px';
-            htmlInput.style.height = '1px';
-            htmlInput.style.opacity = '0';
-            htmlInput.style.pointerEvents = 'none';
+            htmlInput.style.width = '200px';
+            htmlInput.style.height = '40px';
+            htmlInput.style.opacity = '0.01'; // Almost invisible but still focusable
+            htmlInput.style.zIndex = '10000';
             htmlInput.style.textTransform = 'uppercase';
+            htmlInput.style.textAlign = 'center';
+            htmlInput.style.fontSize = '20px';
             htmlInput.autocomplete = 'off';
             htmlInput.autocapitalize = 'characters';
+            htmlInput.inputMode = 'text';
             document.body.appendChild(htmlInput);
             
-            // Focus and show keyboard
+            console.log('[PlayerHandler] HTML input created, attempting focus...');
+            
+            // Focus and show keyboard - try multiple methods for better compatibility
             setTimeout(() => {
-                htmlInput.focus();
-                htmlInput.click();
-            }, 100);
+                try {
+                    htmlInput.focus();
+                    htmlInput.select();
+                    // Force keyboard on mobile
+                    if (htmlInput.setSelectionRange) {
+                        htmlInput.setSelectionRange(0, 0);
+                    }
+                    console.log('[PlayerHandler] Input focused');
+                } catch (e) {
+                    console.error('[PlayerHandler] Error focusing input:', e);
+                }
+            }, 200);
             
             // Listen to input changes
             htmlInput.addEventListener('input', (e) => {
                 name = e.target.value.toUpperCase().substring(0, 3);
                 let display = name.padEnd(3, '_').split('').join(' ');
                 nameText.setText(display);
+                console.log('[PlayerHandler] Input changed:', name);
+            });
+            
+            // Also listen to keydown for better compatibility
+            htmlInput.addEventListener('keydown', (e) => {
+                if (e.key === 'Enter' && name.length === 3) {
+                    confirmBtn.emit('pointerdown');
+                }
             });
         }
 
