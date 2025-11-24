@@ -1,4 +1,4 @@
-import { ScoreManager } from '../ScoreManager.js';
+import { ScoreManager } from './ScoreManager.js';
 
 export class UIManager {
     constructor(scene) {
