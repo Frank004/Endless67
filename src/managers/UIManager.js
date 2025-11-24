@@ -421,6 +421,7 @@ export class UIManager {
         }).setOrigin(0.5).setDepth(301).setScrollFactor(0).setInteractive({ useHandCursor: true });
 
         restartBtn.on('pointerdown', () => {
+            scene.audioManager.stopAudio();
             scene.scene.restart();
         });
 
