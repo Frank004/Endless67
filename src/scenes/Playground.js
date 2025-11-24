@@ -56,7 +56,8 @@ export class Playground extends Game {
         this.createDevUI();
 
         // --- VISUAL INDICATOR ---
-        this.add.text(200, 100, 'DEV MODE', {
+        const gameWidth = this.cameras.main.width;
+        this.add.text(gameWidth / 2, 100, 'DEV MODE', {
             fontSize: '48px',
             color: '#ff0000',
             alpha: 0.2

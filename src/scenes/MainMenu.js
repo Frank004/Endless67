@@ -24,17 +24,22 @@ export class MainMenu extends Phaser.Scene {
 		const leaderboardBtn = this.createButton(width / 2, 330, 'LEADERBOARD', '#00ffff', () => this.scene.start('Leaderboard'));
 		const settingsBtn = this.createButton(width / 2, 410, 'SETTINGS', '#ffffff', () => this.scene.start('Settings'));
 
-		// Version
+		// Version (visible text)
 		const versionText = this.add.text(width / 2, height - 30, 'v0.0.35', {
 			fontSize: '14px',
 			color: '#444'
-		}).setOrigin(0.5).setInteractive();
+		}).setOrigin(0.5);
+
+		// Invisible larger touch area for easier mobile activation (increased size)
+		const touchArea = this.add.rectangle(width / 2, height - 30, 300, 120, 0x000000, 0)
+			.setOrigin(0.5)
+			.setInteractive({ useHandCursor: true });
 
 		// Secret Dev Mode Access
 		let clickCount = 0;
 		let lastClickTime = 0;
 
-		versionText.on('pointerdown', () => {
+		touchArea.on('pointerdown', () => {
 			const now = this.time.now;
 			if (now - lastClickTime < 500) {
 				clickCount++;
