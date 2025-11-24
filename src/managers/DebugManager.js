@@ -2,7 +2,7 @@ export class DebugManager {
     constructor(scene) {
         this.scene = scene;
         // DEBUG SETTINGS
-        this.debugStartHeight = 3000; // Set to > 0 to start at that height
+        this.debugStartHeight = 0; // Set to > 0 to start at that height
         this.enableTestEnemies = false; // Set to true to spawn test enemies
         this.enableLavaDelay = false; // Give player time to react at start
     }
