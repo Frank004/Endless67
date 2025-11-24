@@ -3,7 +3,8 @@ body {
     padding: 0;
     background-color: #000;
     height: 100vh;
-    height: 100dvh; /* Dynamic viewport height para móviles */
+    height: 100dvh;
+    /* Dynamic viewport height para móviles */
     overflow: hidden;
     touch-action: none;
     font-family: 'Courier New', monospace;
@@ -29,9 +30,11 @@ canvas {
 
 body.mobile {
     height: 100vh;
-    height: 100dvh; /* Dynamic viewport height para móviles modernos */
+    height: 100dvh;
+    /* Dynamic viewport height para móviles modernos */
     display: flex;
-    align-items: flex-start; /* Alinear al inicio para que no haya espacio arriba */
+    align-items: flex-start;
+    /* Alinear al inicio para que no haya espacio arriba */
     justify-content: center;
     padding: 0;
     margin: 0;
@@ -40,11 +43,14 @@ body.mobile {
 
 body.mobile canvas {
     border: none;
-    box-shadow: none !important; /* Asegurar que no haya glow */
+    box-shadow: none !important;
+    /* Asegurar que no haya glow */
     width: 100vw !important;
     height: 100vh !important;
-    height: 100dvh !important; /* Dynamic viewport height */
-    object-fit: fill; /* Fill para que ocupe toda la altura sin recortar */
+    height: 100dvh !important;
+    /* Dynamic viewport height */
+    object-fit: fill;
+    /* Fill para que ocupe toda la altura sin recortar */
     position: fixed;
     top: 0;
     left: 0;
@@ -103,7 +109,9 @@ body.mobile canvas {
 }
 
 @keyframes spin {
-    to { transform: rotate(360deg); }
+    to {
+        transform: rotate(360deg);
+    }
 }
 
 .loader-text {
@@ -148,18 +156,35 @@ body.mobile canvas {
 }
 
 @keyframes rotate-phone {
-    0% { transform: rotate(-90deg); }
-    50% { transform: rotate(0deg); }
-    100% { transform: rotate(-90deg); }
+    0% {
+        transform: rotate(-90deg);
+    }
+
+    50% {
+        transform: rotate(0deg);
+    }
+
+    100% {
+        transform: rotate(-90deg);
+    }
 }
 
 /* Show orientation lock only on mobile landscape */
+/* Show orientation lock on mobile devices in landscape */
+body.mobile.landscape #orientation-lock {
+    display: flex;
+}
+
+body.mobile.landscape #game-container {
+    display: none;
+}
+
+/* Fallback media query for CSS-only detection if JS fails or delays */
 @media screen and (orientation: landscape) and (max-height: 600px) {
     #orientation-lock {
         display: flex;
     }
-    
-    /* Hide game content when locked */
+
     #game-container {
         display: none;
     }

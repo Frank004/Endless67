@@ -166,7 +166,26 @@ export class Game extends Phaser.Scene {
             document.body.classList.add('mobile');
             if (this.isAndroid) document.body.classList.add('android');
             if (this.isIOS) document.body.classList.add('ios');
+
+            console.log(`Device Detection: Mobile=true, Android=${this.isAndroid}, iOS=${this.isIOS}`);
+        } else {
+            console.log('Device Detection: Mobile=false');
         }
+
+        // Orientation Check
+        const checkOrientation = () => {
+            if (window.innerWidth > window.innerHeight) {
+                document.body.classList.add('landscape');
+                document.body.classList.remove('portrait');
+            } else {
+                document.body.classList.add('portrait');
+                document.body.classList.remove('landscape');
+            }
+        };
+
+        window.addEventListener('resize', checkOrientation);
+        window.addEventListener('orientationchange', checkOrientation);
+        checkOrientation(); // Initial check
     }
 
     /**

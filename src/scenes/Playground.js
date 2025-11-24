@@ -39,7 +39,7 @@ export class Playground extends Game {
             const wallWidth = 32;
             const minPlatformX = wallWidth + 50; // 32px (wall) + 50px margen
             const maxPlatformX = gameWidth - wallWidth - 50; // gameWidth - 32px (wall) - 50px margen
-            
+
             this.platforms.children.iterate((plat) => {
                 if (plat.getData('isMoving')) {
                     let speed = plat.getData('speed') || 100;
@@ -77,10 +77,11 @@ export class Playground extends Game {
 
     createDevUI() {
         // --- TOGGLE BUTTON (Below pause button, centered) ---
-        this.toggleBtn = this.add.text(370, 40, '⚙️', {
+        const gameWidth = this.cameras.main.width;
+        this.toggleBtn = this.add.text(gameWidth - 40, 50, '⚙️', {
             fontSize: '24px',
             color: '#ffffff'
-        }).setOrigin(0, 0).setScrollFactor(0).setDepth(6000).setInteractive({ useHandCursor: true });
+        }).setOrigin(0.5).setScrollFactor(0).setDepth(6000).setInteractive({ useHandCursor: true });
 
         this.toggleBtn.on('pointerdown', () => {
             this.toggleDevMenu();
