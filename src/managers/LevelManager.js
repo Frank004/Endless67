@@ -1,5 +1,5 @@
 import { PatrolEnemy, ShooterEnemy, JumperShooterEnemy } from '../prefabs/Enemy.js';
-import { MAZE_PATTERNS, MAZE_PATTERNS_EASY, MAZE_PATTERNS_HARD, MAZE_PATTERNS_NUMBERED } from '../data/MazePatterns.js';
+import { MAZE_PATTERNS, MAZE_PATTERNS_EASY, MAZE_PATTERNS_MEDIUM, MAZE_PATTERNS_HARD, MAZE_PATTERNS_NUMBERED } from '../data/MazePatterns.js';
 import { getLevelConfig, LEVEL_CONFIG } from '../data/LevelConfig.js';
 import { enablePlatformRider } from '../utils/platformRider.js';
 
@@ -65,7 +65,7 @@ export class LevelManager {
 
             // Select pattern based on difficulty
             let patternPool = MAZE_PATTERNS_EASY;
-            if (config.maze.patterns === 'medium') patternPool = MAZE_PATTERNS; // Assuming medium is standard mix
+            if (config.maze.patterns === 'medium') patternPool = MAZE_PATTERNS_MEDIUM;
             else if (config.maze.patterns === 'hard') patternPool = MAZE_PATTERNS_HARD;
 
             // 50% chance to pick a numbered pattern if available

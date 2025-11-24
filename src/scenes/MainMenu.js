@@ -25,10 +25,39 @@ export class MainMenu extends Phaser.Scene {
 		const settingsBtn = this.createButton(width / 2, 410, 'SETTINGS', '#ffffff', () => this.scene.start('Settings'));
 
 		// Version
-		this.add.text(width / 2, height - 30, 'v0.0.34', {
+		const versionText = this.add.text(width / 2, height - 30, 'v0.0.34', {
 			fontSize: '14px',
 			color: '#444'
-		}).setOrigin(0.5);
+		}).setOrigin(0.5).setInteractive();
+
+		// Secret Dev Mode Access
+		let clickCount = 0;
+		let lastClickTime = 0;
+
+		versionText.on('pointerdown', () => {
+			const now = this.time.now;
+			if (now - lastClickTime < 500) {
+				clickCount++;
+			} else {
+				clickCount = 1;
+			}
+			lastClickTime = now;
+
+			if (clickCount === 5) {
+				this.showDevButton(width, height);
+			}
+		});
+	}
+
+	showDevButton(width, height) {
+		const devBtn = this.createButton(width / 2, height - 80, '👾 DEV MODE', '#ff0000', () => this.scene.start('Playground'));
+		this.tweens.add({
+			targets: devBtn,
+			alpha: { from: 0, to: 1 },
+			duration: 500,
+			yoyo: true,
+			repeat: -1
+		});
 	}
 
 	createButton(x, y, text, color, onClick) {

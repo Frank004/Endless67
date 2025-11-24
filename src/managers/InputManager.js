@@ -23,7 +23,7 @@ export class InputManager {
 
         // Touch Inputs
         scene.input.on('pointerdown', (pointer) => {
-            if (scene.isGameOver || scene.isPausedEvent || scene.isPaused) return;
+            if (scene.isGameOver || scene.isPausedEvent || scene.isPaused || scene.isDevMenuOpen) return;
             if (!scene.gameStarted) { scene.startGame(); return; }
             if (pointer.x > this.SPLIT_X) {
                 this.handleJump();
@@ -43,7 +43,7 @@ export class InputManager {
 
         // Keyboard Jump
         scene.spaceKey.on('down', () => {
-            if (scene.isGameOver || scene.isPausedEvent || scene.isPaused) return;
+            if (scene.isGameOver || scene.isPausedEvent || scene.isPaused || scene.isDevMenuOpen) return;
             if (!scene.gameStarted) { scene.startGame(); return; }
             this.handleJump();
         });
@@ -80,7 +80,7 @@ export class InputManager {
 
     update() {
         const scene = this.scene;
-        if (scene.isGameOver || scene.isPausedEvent || scene.isPaused || !scene.gameStarted) return;
+        if (scene.isGameOver || scene.isPausedEvent || scene.isPaused || !scene.gameStarted || scene.isDevMenuOpen) return;
 
         let movePointer = null;
         let keyboardMove = 0;

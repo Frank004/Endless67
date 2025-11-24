@@ -89,15 +89,14 @@ export const MAZE_PATTERNS_NUMBERED = [
 ];
 
 // Grupos de mazes por dificultad (para referencia)
-// Cada 1000m se usa un par de mazes
-// 0-1000m: Maze 1, 2
-// 1000-2000m: Maze 3, 4
-// 2000-3000m: Maze 5, 6
-// 3000-4000m: Maze 7, 1 (rotación)
-// 4000-5000m: Maze 2, 3 (rotación)
-// etc.
+// Nueva clasificación basada en testing:
+// EASY: Mazes 3, 4, 5, 6 (más directos y con gaps generosos)
+// MEDIUM: Mazes 1, 2 (requieren más navegación)
+// HARD: Maze 7 (más complejo y largo)
 
 // Mantener compatibilidad hacia atrás
 export const MAZE_PATTERNS = MAZE_PATTERNS_NUMBERED;
-export const MAZE_PATTERNS_EASY = [MAZE_1, MAZE_2, MAZE_3, MAZE_4];
-export const MAZE_PATTERNS_HARD = [MAZE_5, MAZE_6, MAZE_7];
+export const MAZE_PATTERNS_EASY = [MAZE_3, MAZE_4, MAZE_5, MAZE_6];
+export const MAZE_PATTERNS_MEDIUM = [MAZE_1, MAZE_2];
+export const MAZE_PATTERNS_HARD = [MAZE_7];
+

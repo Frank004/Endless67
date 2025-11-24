@@ -1,6 +1,7 @@
 import LavaPipeline from '../pipelines/LavaPipeline.js';
 import { Leaderboard } from './Leaderboard.js';
 import { Settings } from './Settings.js';
+import { Playground } from './Playground.js';
 
 /**
  * @phasereditor
@@ -125,6 +126,7 @@ export class Boot extends Phaser.Scene {
         // Register new scenes
         if (!this.scene.get('Leaderboard')) this.scene.add('Leaderboard', Leaderboard, false);
         if (!this.scene.get('Settings')) this.scene.add('Settings', Settings, false);
+        if (!this.scene.get('Playground')) this.scene.add('Playground', Playground, false);
 
         this.scene.start('MainMenu');
     }

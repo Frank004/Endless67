@@ -19,8 +19,8 @@ import { updatePlatformRider } from '../utils/platformRider.js';
  * @backgroundColor 0x050505
  */
 export class Game extends Phaser.Scene {
-    constructor() {
-        super('Game');
+    constructor(key = 'Game') {
+        super(key);
     }
 
     /**

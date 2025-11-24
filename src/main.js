@@ -3,6 +3,7 @@ import { Game } from './scenes/Game.js';
 import { MainMenu } from './scenes/MainMenu.js';
 import { Leaderboard } from './scenes/Leaderboard.js';
 import { Settings } from './scenes/Settings.js';
+import { Playground } from './scenes/Playground.js';
 
 // Mobile-first: Detectar dispositivo para configuración inicial
 // Nota: Phaser.Device se inicializa cuando se carga Phaser, pero para la configuración
@@ -26,7 +27,7 @@ const config = {
     },
     input: { activePointers: 3 },
     physics: { default: 'arcade', arcade: { gravity: { y: 0 }, debug: false } },
-    scene: [Boot, MainMenu, Game, Leaderboard, Settings]
+    scene: [Boot, MainMenu, Game, Leaderboard, Settings, Playground]
 };
 
 const game = new Phaser.Game(config);
