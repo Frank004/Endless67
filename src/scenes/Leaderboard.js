@@ -20,11 +20,15 @@ export class Leaderboard extends Phaser.Scene {
             fontStyle: 'bold'
         }).setOrigin(0.5);
 
-        // Headers
-        this.add.text(40, 120, 'RANK', { fontSize: '16px', color: '#888' });
-        this.add.text(120, 120, 'NAME', { fontSize: '16px', color: '#888' });
-        this.add.text(220, 120, 'HEIGHT', { fontSize: '16px', color: '#888' });
-        this.add.text(320, 120, 'COINS', { fontSize: '16px', color: '#888' });
+        // Headers - optimized for mobile and large numbers
+        const isMobile = width < 400;
+        const fontSize = isMobile ? '14px' : '16px';
+        const headerY = 120;
+
+        this.add.text(20, headerY, 'RANK', { fontSize: fontSize, color: '#888' });
+        this.add.text(80, headerY, 'NAME', { fontSize: fontSize, color: '#888' });
+        this.add.text(isMobile ? 160 : 200, headerY, 'HEIGHT', { fontSize: fontSize, color: '#888' });
+        this.add.text(isMobile ? 260 : 300, headerY, 'COINS', { fontSize: fontSize, color: '#888' });
 
         // Scores
         const scores = this.scoreManager.getTopScores();
@@ -39,12 +43,12 @@ export class Leaderboard extends Phaser.Scene {
             scores.forEach((score, index) => {
                 const color = index === 0 ? '#ffd700' : (index === 1 ? '#c0c0c0' : (index === 2 ? '#cd7f32' : '#ffffff'));
 
-                this.add.text(60, y, `#${index + 1}`, { fontSize: '16px', color: color }).setOrigin(0.5, 0);
-                this.add.text(140, y, score.name, { fontSize: '16px', color: color }).setOrigin(0.5, 0);
-                this.add.text(245, y, `${score.height}m`, { fontSize: '16px', color: color }).setOrigin(0.5, 0);
-                this.add.text(345, y, `${score.coins}`, { fontSize: '16px', color: color }).setOrigin(0.5, 0);
+                this.add.text(35, y, `#${index + 1}`, { fontSize: fontSize, color: color }).setOrigin(0.5, 0);
+                this.add.text(95, y, score.name, { fontSize: fontSize, color: color }).setOrigin(0.5, 0);
+                this.add.text(isMobile ? 195 : 235, y, `${score.height}m`, { fontSize: fontSize, color: color }).setOrigin(0.5, 0);
+                this.add.text(isMobile ? 295 : 335, y, `${score.coins}`, { fontSize: fontSize, color: color }).setOrigin(0.5, 0);
 
-                y += 35;
+                y += isMobile ? 32 : 35;
             });
         }
 
