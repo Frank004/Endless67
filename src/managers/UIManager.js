@@ -91,7 +91,7 @@ export class UIManager {
             const cameraWidth = scene.cameras.main.width;
             // Dynamic split based on game width (70% for mobile)
             const SPLIT_X = Math.round(cameraWidth * 0.70);
-            
+
             let splitLine = scene.add.graphics();
             splitLine.lineStyle(2, 0xffffff, 0.15);
             splitLine.beginPath(); splitLine.moveTo(SPLIT_X, cameraHeight); splitLine.lineTo(SPLIT_X, cameraHeight - 50); splitLine.strokePath();
@@ -102,7 +102,7 @@ export class UIManager {
             const leftTextX = Math.round(SPLIT_X / 2);
             // Right side text: center of right area (SPLIT_X + (cameraWidth - SPLIT_X) / 2)
             const rightTextX = Math.round(SPLIT_X + (cameraWidth - SPLIT_X) / 2);
-            
+
             scene.add.text(leftTextX, controlY, '< HOLD & SLIDE >', { fontSize: '12px', color: '#fff', alpha: 0.4 }).setOrigin(0.5).setScrollFactor(0).setDepth(100);
             scene.add.text(rightTextX, controlY, 'JUMP', { fontSize: '12px', color: '#fff', alpha: 0.4 }).setOrigin(0.5).setScrollFactor(0).setDepth(100);
         } else {
@@ -173,13 +173,13 @@ export class UIManager {
             if (scene.soundToggleButton) {
                 scene.soundToggleButton.setText(soundButtonText);
             }
-            
+
             const showJoystick = scene.registry.get('showJoystick') !== false;
             const joystickButtonText = showJoystick ? '🕹️ JOYSTICK: ON' : '🕹️ JOYSTICK: OFF';
             if (scene.joystickToggleButton) {
                 scene.joystickToggleButton.setText(joystickButtonText);
             }
-            
+
             scene.pauseMenuBg.setVisible(true);
             scene.pauseMenuTitle.setVisible(true);
             if (scene.versionText) scene.versionText.setVisible(true);
@@ -252,7 +252,10 @@ export class UIManager {
             fontSize: '24px', color: '#ffd700', fontStyle: 'bold'
         }).setOrigin(0.5).setDepth(301).setScrollFactor(0);
 
-        const prompt = scene.add.text(centerX, 260, 'ENTER 3 INITIALS:', {
+        const isMobile = scene.isMobile;
+        const promptText = isMobile ? 'TAP TO ENTER INITIALS' : 'ENTER 3 INITIALS:';
+
+        const prompt = scene.add.text(centerX, 260, promptText, {
             fontSize: '16px', color: '#fff'
         }).setOrigin(0.5).setDepth(301).setScrollFactor(0);
 
@@ -280,10 +283,34 @@ export class UIManager {
             clickableText: nameText
         });
 
+        // Mobile: Make everything clickable to focus input
+        if (isMobile && htmlInput) {
+            const focusInput = () => {
+                try {
+                    htmlInput.focus();
+                    htmlInput.click();
+                } catch (e) {
+                    console.error('Error focusing input:', e);
+                }
+            };
+
+            bg.setInteractive({ useHandCursor: true }).on('pointerdown', focusInput);
+            title.setInteractive({ useHandCursor: true }).on('pointerdown', focusInput);
+            prompt.setInteractive({ useHandCursor: true }).on('pointerdown', focusInput);
+
+            // Add a pulsing effect to the prompt to encourage tapping
+            scene.tweens.add({
+                targets: prompt,
+                alpha: 0.5,
+                duration: 800,
+                yoyo: true,
+                repeat: -1
+            });
+        }
+
         // Use InputManager to handle keyboard input for desktop
-        const isMobile = scene.isMobile;
         let keyListener = null;
-        
+
         if (!isMobile) {
             keyListener = scene.inputManager.createTextInputListener({
                 onBackspace: () => {
@@ -322,7 +349,7 @@ export class UIManager {
     confirmScore(scoreManager, name, keyListener, elementsToDestroy, htmlInput = null) {
         const scene = this.scene;
         scoreManager.saveScore(name || 'UNK', scene.totalScore, scene.currentHeight);
-        
+
         // Remove keyboard listener if desktop (using InputManager method)
         if (keyListener && !scene.isMobile) {
             scene.inputManager.removeTextInputListener(keyListener);

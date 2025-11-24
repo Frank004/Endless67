@@ -117,7 +117,7 @@ export class InputManager {
 
             // Update joystick knob position - delegate to UIManager
             if (scene.uiManager) {
-                const knobX = dist > maxDist 
+                const knobX = dist > maxDist
                     ? this.moveAnchorX + Math.cos(Math.atan2(dy, dx)) * maxDist
                     : movePointer.x;
                 const knobY = dist > maxDist
@@ -171,13 +171,13 @@ export class InputManager {
     createMobileTextInput(options = {}) {
         const scene = this.scene;
         const isMobile = scene.isMobile;
-        
+
         if (!isMobile) {
             return null;
         }
 
         const { onInputChange, onEnter, nameTextDisplay, clickableText } = options;
-        
+
         // Create HTML input element
         const htmlInput = document.createElement('input');
         htmlInput.type = 'text';
@@ -188,7 +188,7 @@ export class InputManager {
         htmlInput.style.transform = 'translate(-50%, -50%)';
         htmlInput.style.width = '250px';
         htmlInput.style.height = '50px';
-        htmlInput.style.opacity = '0';
+        htmlInput.style.opacity = '0.01';
         htmlInput.style.zIndex = '10000';
         htmlInput.style.textTransform = 'uppercase';
         htmlInput.style.textAlign = 'center';
@@ -206,15 +206,15 @@ export class InputManager {
             try {
                 // Method 1: Direct focus
                 htmlInput.focus();
-                
+
                 // Method 2: Click then focus (for iOS)
                 htmlInput.click();
-                
+
                 // Method 3: Set selection range if supported
                 if (htmlInput.setSelectionRange) {
                     htmlInput.setSelectionRange(0, 0);
                 }
-                
+
                 // Method 4: Force focus with timeout (for Android)
                 setTimeout(() => {
                     htmlInput.focus();
@@ -227,23 +227,23 @@ export class InputManager {
 
         // Try to focus immediately
         attemptFocus();
-        
+
         // Try again after a short delay (some devices need this)
         setTimeout(attemptFocus, 100);
-        
+
         // Try again after longer delay (for slower devices)
         setTimeout(attemptFocus, 300);
 
         // Listen to input changes
         htmlInput.addEventListener('input', (e) => {
             const value = e.target.value.toUpperCase().substring(0, 3);
-            
+
             // Update Phaser text display if provided
             if (nameTextDisplay) {
                 const display = value.padEnd(3, '_').split('').join(' ');
                 nameTextDisplay.setText(display);
             }
-            
+
             // Call callback if provided
             if (onInputChange) {
                 onInputChange(value);
