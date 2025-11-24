@@ -33,6 +33,9 @@ export class Boot extends Phaser.Scene {
         this.load.audio('destroy_sfx', 'assets/audio/destroy/destroy.wav');
         this.load.audio('celebration_sfx', 'assets/audio/celebration/67.WAV');
 
+        // --- UI ICONS ---
+        this.load.atlas('ui_icons', 'assets/ui/icons.png', 'assets/ui/icons.json');
+
         // Register Lava Pipeline
         if (this.game.renderer.type === Phaser.WEBGL) {
             this.renderer.pipelines.addPostPipeline('LavaPipeline', LavaPipeline);
@@ -103,14 +106,14 @@ export class Boot extends Phaser.Scene {
         // Lava texture: usar ancho del juego dinámicamente, altura suficiente para tileable
         const lavaTextureWidth = this.game.config.width;
         const lavaTextureHeight = 800; // Altura suficiente para tileable
-        g.clear(); 
-        g.fillStyle(0xcc2200, 0.95); 
-        g.fillRect(0, 0, lavaTextureWidth, lavaTextureHeight); 
-        g.fillStyle(0xff6600, 0.8); 
+        g.clear();
+        g.fillStyle(0xcc2200, 0.95);
+        g.fillRect(0, 0, lavaTextureWidth, lavaTextureHeight);
+        g.fillStyle(0xff6600, 0.8);
         for (let i = 0; i < 40; i++) {
             g.fillCircle(
-                Phaser.Math.Between(0, lavaTextureWidth), 
-                Phaser.Math.Between(0, lavaTextureHeight), 
+                Phaser.Math.Between(0, lavaTextureWidth),
+                Phaser.Math.Between(0, lavaTextureHeight),
                 Phaser.Math.Between(5, 15)
             );
         }

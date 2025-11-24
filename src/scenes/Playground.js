@@ -78,10 +78,8 @@ export class Playground extends Game {
     createDevUI() {
         // --- TOGGLE BUTTON (Below pause button, centered) ---
         const gameWidth = this.cameras.main.width;
-        this.toggleBtn = this.add.text(gameWidth - 40, 50, '⚙️', {
-            fontSize: '24px',
-            color: '#ffffff'
-        }).setOrigin(0.5).setScrollFactor(0).setDepth(6000).setInteractive({ useHandCursor: true });
+        this.toggleBtn = this.add.image(gameWidth - 40, 50, 'ui_icons', 'settings')
+            .setOrigin(0.5).setScrollFactor(0).setDepth(6000).setInteractive({ useHandCursor: true });
 
         this.toggleBtn.on('pointerdown', () => {
             this.toggleDevMenu();
@@ -120,52 +118,52 @@ export class Playground extends Game {
         // Categories
         this.categories = [
             {
-                icon: '🎮', label: 'Preset', items: [
-                    { icon: '🎯', label: 'Test Section', callback: () => this.spawnPreset(), type: 'single' }
+                icon: 'gamepad', label: 'Preset', items: [
+                    { icon: 'crosshair', label: 'Test Section', callback: () => this.spawnPreset(), type: 'single' }
                 ]
             },
             {
-                icon: '👾', label: 'Enemies', items: [
-                    { icon: '👾', label: 'Patrol', callback: () => this.spawnEnemy('patrol'), type: 'single' },
-                    { icon: '🔫', label: 'Shooter (2-Shot)', callback: () => this.spawnEnemy('shooter', 2), type: 'single' },
-                    { icon: '�', label: 'Shooter (3-Shot)', callback: () => this.spawnEnemy('shooter', 3), type: 'single' },
-                    { icon: '⚡', label: 'Fast Shooter', callback: () => this.spawnEnemy('shooter-fast'), type: 'single' },
-                    { icon: '🐸', label: 'Jumper', callback: () => this.spawnEnemy('jumper'), type: 'single' }
+                icon: 'alien', label: 'Enemies', items: [
+                    { icon: 'alien', label: 'Patrol', callback: () => this.spawnEnemy('patrol'), type: 'single' },
+                    { icon: 'sword', label: 'Shooter (2-Shot)', callback: () => this.spawnEnemy('shooter', 2), type: 'single' },
+                    { icon: 'crosshair', label: 'Shooter (3-Shot)', callback: () => this.spawnEnemy('shooter', 3), type: 'single' },
+                    { icon: 'flashlight', label: 'Fast Shooter', callback: () => this.spawnEnemy('shooter-fast'), type: 'single' },
+                    { icon: 'arrow-up', label: 'Jumper', callback: () => this.spawnEnemy('jumper'), type: 'single' }
                 ]
             },
             {
-                icon: '📦', label: 'Items', items: [
-                    { icon: '🛡️', label: 'Powerup', callback: () => this.spawnPowerup('shield'), type: 'single' },
-                    { icon: '💰', label: 'Coin', callback: () => this.spawnPowerup('coin'), type: 'single' }
+                icon: 'stack', label: 'Items', items: [
+                    { icon: 'shield', label: 'Powerup', callback: () => this.spawnPowerup('shield'), type: 'single' },
+                    { icon: 'money', label: 'Coin', callback: () => this.spawnPowerup('coin'), type: 'single' }
                 ]
             },
             {
-                icon: '🧱', label: 'Platforms', items: [
-                    { icon: '🧱', label: 'Static', callback: (mode) => this.spawnPlatform('static', mode), type: 'dual' },
-                    { icon: '↔️', label: 'Moving (Slow)', callback: (mode) => this.spawnPlatform('moving-slow', mode), type: 'dual' },
-                    { icon: '⚡', label: 'Moving (Fast)', callback: (mode) => this.spawnPlatform('moving-fast', mode), type: 'dual' },
-                    { icon: '⚡', label: 'Zigzag', callback: (mode) => this.spawnPlatform('zigzag', mode), type: 'dual' }
+                icon: 'masonry', label: 'Platforms', items: [
+                    { icon: 'masonry', label: 'Static', callback: (mode) => this.spawnPlatform('static', mode), type: 'dual' },
+                    { icon: 'arrow-left', label: 'Moving (Slow)', callback: (mode) => this.spawnPlatform('moving-slow', mode), type: 'dual' },
+                    { icon: 'flashlight', label: 'Moving (Fast)', callback: (mode) => this.spawnPlatform('moving-fast', mode), type: 'dual' },
+                    { icon: 'route', label: 'Zigzag', callback: (mode) => this.spawnPlatform('zigzag', mode), type: 'dual' }
                 ]
             },
             {
-                icon: '🌀', label: 'Mazes', items: [
-                    { icon: '�', label: 'Maze 1 (Medium)', callback: (mode) => this.spawnSpecificMaze(0, mode), color: '#ffff00', type: 'dual' },
-                    { icon: '�', label: 'Maze 2 (Medium)', callback: (mode) => this.spawnSpecificMaze(1, mode), color: '#ffff00', type: 'dual' },
-                    { icon: '🟢', label: 'Maze 3 (Easy)', callback: (mode) => this.spawnSpecificMaze(2, mode), color: '#00ff00', type: 'dual' },
-                    { icon: '🟢', label: 'Maze 4 (Easy)', callback: (mode) => this.spawnSpecificMaze(3, mode), color: '#00ff00', type: 'dual' },
-                    { icon: '�', label: 'Maze 5 (Easy)', callback: (mode) => this.spawnSpecificMaze(4, mode), color: '#00ff00', type: 'dual' },
-                    { icon: '�', label: 'Maze 6 (Easy)', callback: (mode) => this.spawnSpecificMaze(5, mode), color: '#00ff00', type: 'dual' },
-                    { icon: '🔴', label: 'Maze 7 (Hard)', callback: (mode) => this.spawnSpecificMaze(6, mode), color: '#ff0000', type: 'dual' }
+                icon: 'tornado', label: 'Mazes', items: [
+                    { icon: 'route', label: 'Maze 1 (Medium)', callback: (mode) => this.spawnSpecificMaze(0, mode), color: '#ffff00', type: 'dual' },
+                    { icon: 'route', label: 'Maze 2 (Medium)', callback: (mode) => this.spawnSpecificMaze(1, mode), color: '#ffff00', type: 'dual' },
+                    { icon: 'check', label: 'Maze 3 (Easy)', callback: (mode) => this.spawnSpecificMaze(2, mode), color: '#00ff00', type: 'dual' },
+                    { icon: 'check', label: 'Maze 4 (Easy)', callback: (mode) => this.spawnSpecificMaze(3, mode), color: '#00ff00', type: 'dual' },
+                    { icon: 'check', label: 'Maze 5 (Easy)', callback: (mode) => this.spawnSpecificMaze(4, mode), color: '#00ff00', type: 'dual' },
+                    { icon: 'check', label: 'Maze 6 (Easy)', callback: (mode) => this.spawnSpecificMaze(5, mode), color: '#00ff00', type: 'dual' },
+                    { icon: 'close', label: 'Maze 7 (Hard)', callback: (mode) => this.spawnSpecificMaze(6, mode), color: '#ff0000', type: 'dual' }
                 ]
             },
             {
-                icon: '🧹', label: 'Clear', items: [
-                    { icon: '🧹', label: 'Clear All', callback: () => this.clearScene(), type: 'single' }
+                icon: 'clean', label: 'Clear', items: [
+                    { icon: 'clean', label: 'Clear All', callback: () => this.clearScene(), type: 'single' }
                 ]
             },
             {
-                icon: '🚪', label: 'Exit', items: [
-                    { icon: '🏠', label: 'Main Menu', callback: () => this.scene.start('MainMenu'), type: 'single' }
+                icon: 'door', label: 'Exit', items: [
+                    { icon: 'home', label: 'Main Menu', callback: () => this.scene.start('MainMenu'), type: 'single' }
                 ]
             }
         ];
@@ -187,7 +185,12 @@ export class Playground extends Game {
                 .setMask(this.scrollMask);
 
             // Header text
-            const headerText = this.add.text(40, yPos, `${cat.icon} ${cat.label} `, {
+            const headerIcon = this.add.image(40, yPos, 'ui_icons', cat.icon)
+                .setOrigin(0, 0.5).setScrollFactor(0).setDepth(5002).setVisible(false)
+                .setScale(0.5) // Scale down 64px icon to 32px
+                .setMask(this.scrollMask);
+
+            const headerText = this.add.text(80, yPos, cat.label, {
                 fontSize: '20px',
                 color: '#ffffff',
                 fontStyle: 'bold'
@@ -196,6 +199,7 @@ export class Playground extends Game {
 
             const catData = {
                 headerBg,
+                headerIcon,
                 headerText,
                 expanded: false,
                 items: cat.items,
@@ -208,7 +212,7 @@ export class Playground extends Game {
                 this.toggleCategory(catData);
             });
 
-            this.devMenuElements.push(headerBg, headerText);
+            this.devMenuElements.push(headerBg, headerIcon, headerText);
             this.categoryData.push(catData);
 
             yPos += 50;
@@ -243,11 +247,13 @@ export class Playground extends Game {
             const newY = cat.baseYPos - this.scrollOffset + 90; // Add 90 to start from correct position
             cat.yPos = newY;
             cat.headerBg.y = newY;
+            cat.headerIcon.y = newY;
             cat.headerText.y = newY;
 
             // Update visibility based on scroll zone (80 to 560 is the visible range for content)
             const headerVisible = newY > 80 && newY < 560;
             cat.headerBg.setVisible(this.isDevMenuOpen && headerVisible);
+            cat.headerIcon.setVisible(this.isDevMenuOpen && headerVisible);
             cat.headerText.setVisible(this.isDevMenuOpen && headerVisible);
 
             if (cat.expanded) {
@@ -257,10 +263,34 @@ export class Playground extends Game {
                     elem.y = itemY;
 
                     // Move to next row after all elements of current item
-                    const itemType = cat.items[Math.floor(i / (cat.items[0].type === 'single' ? 2 : 4))];
-                    if (itemType && itemType.type === 'single' && i % 2 === 1) {
-                        itemY += 45;
-                    } else if (itemType && itemType.type === 'dual' && i % 4 === 3) {
+                    // Single: bg, icon, text (3 elements)
+                    // Dual: bg, icon, text, clean, prep (5 elements)
+
+                    const itemType = cat.items[Math.floor(i / (cat.items[0].type === 'single' ? 3 : 5))];
+                    const elemsPerItem = itemType.type === 'single' ? 3 : 5;
+
+                    if (i % elemsPerItem === elemsPerItem - 1) {
+                        // Last element of the item
+                        // Logic for next row is handled by loop structure usually, but here we need to increment itemY
+                        // ONLY when we switch to the next item.
+                        // Wait, the original code logic was a bit fragile.
+                        // Let's simplify: we update Y for all elements of the current item.
+                    }
+
+                    // Actually, simpler:
+                    // We can't easily map index to itemY without tracking which item we are on.
+                    // But we know the structure.
+                    // Let's just iterate items and their elements in a structured way?
+                    // No, itemElements is flat.
+
+                    // Re-using original logic but adapted:
+                    // Single: 3 elems. Dual: 5 elems.
+                    // But wait, mixed types in same category? No, currently consistent per category.
+
+                    const isSingle = cat.items[0].type === 'single';
+                    const stride = isSingle ? 3 : 5;
+
+                    if (i % stride === stride - 1) {
                         itemY += 45;
                     }
 
@@ -326,7 +356,12 @@ export class Playground extends Game {
                         .setInteractive({ useHandCursor: true })
                         .setMask(this.scrollMask);
 
-                    const itemText = this.add.text(50, itemY, `  ${item.icon} ${item.label} `, {
+                    const itemIcon = this.add.image(50, itemY, 'ui_icons', item.icon)
+                        .setOrigin(0.5).setScrollFactor(0).setDepth(5002)
+                        .setScale(0.4)
+                        .setMask(this.scrollMask);
+
+                    const itemText = this.add.text(80, itemY, item.label, {
                         fontSize: '18px',
                         color: item.color || '#ffffff'
                     }).setOrigin(0, 0.5).setScrollFactor(0).setDepth(5002)
@@ -341,31 +376,37 @@ export class Playground extends Game {
                         this.toggleDevMenu();
                     });
 
-                    catData.itemElements.push(itemBg, itemText);
+                    catData.itemElements.push(itemBg, itemIcon, itemText);
                 } else if (item.type === 'dual') {
                     // Background
                     const itemBg = this.add.rectangle(200, itemY, 340, 40, 0x555555)
                         .setScrollFactor(0).setDepth(5001)
                         .setMask(this.scrollMask);
 
+                    // Icon
+                    const itemIcon = this.add.image(50, itemY, 'ui_icons', item.icon)
+                        .setOrigin(0.5).setScrollFactor(0).setDepth(5002)
+                        .setScale(0.4)
+                        .setMask(this.scrollMask);
+
                     // Label text (left side)
-                    const itemText = this.add.text(50, itemY, `${item.icon} ${item.label} `, {
+                    const itemText = this.add.text(80, itemY, item.label, {
                         fontSize: '16px',
                         color: item.color || '#ffffff'
                     }).setOrigin(0, 0.5).setScrollFactor(0).setDepth(5002)
                         .setMask(this.scrollMask);
 
                     // Clean icon button (inline, same row)
-                    const cleanBtn = this.add.text(310, itemY, '🧼', {
-                        fontSize: '20px'
-                    }).setOrigin(0.5).setScrollFactor(0).setDepth(5002)
+                    const cleanBtn = this.add.image(310, itemY, 'ui_icons', 'clean')
+                        .setOrigin(0.5).setScrollFactor(0).setDepth(5002)
+                        .setScale(0.4)
                         .setInteractive({ useHandCursor: true })
                         .setMask(this.scrollMask);
 
                     // Prep icon button (inline, same row, far right)
-                    const prepBtn = this.add.text(350, itemY, '✨', {
-                        fontSize: '20px'
-                    }).setOrigin(0.5).setScrollFactor(0).setDepth(5002)
+                    const prepBtn = this.add.image(350, itemY, 'ui_icons', 'magic')
+                        .setOrigin(0.5).setScrollFactor(0).setDepth(5002)
+                        .setScale(0.4)
                         .setInteractive({ useHandCursor: true })
                         .setMask(this.scrollMask);
 
@@ -387,7 +428,7 @@ export class Playground extends Game {
                         this.toggleDevMenu();
                     });
 
-                    catData.itemElements.push(itemBg, itemText, cleanBtn, prepBtn);
+                    catData.itemElements.push(itemBg, itemIcon, itemText, cleanBtn, prepBtn);
                 }
 
                 itemY += 45;
