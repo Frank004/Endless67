@@ -11,26 +11,26 @@ export class UIManager {
         const isMobile = scene.isMobile;
 
         // UI - Position away from left wall
-        const scoreX = 40; // Move further right to clear the wall
+        const scoreX = 35; // Align with wall
         const scoreY = isMobile ? 20 : 10;
         const centerX = scene.cameras.main.centerX;
         const gameWidth = scene.cameras.main.width;
 
         // Semi-transparent background for score
-        scene.scoreTextBg = scene.add.rectangle(scoreX, scoreY + 12, 120, 28, 0x000000, 0.5)
+        scene.scoreTextBg = scene.add.rectangle(scoreX, scoreY + 12, 130, 28, 0x000000, 0.5)
             .setOrigin(0, 0.5).setScrollFactor(0).setDepth(99);
 
-        scene.scoreText = scene.add.text(scoreX + 5, scoreY, 'SCORE: 0', {
+        scene.scoreText = scene.add.text(scoreX + 8, scoreY, 'SCORE: 0', {
             fontSize: '20px',
             color: '#ffd700',
             fontStyle: 'bold'
         }).setScrollFactor(0).setDepth(100);
 
         // Semi-transparent background for height
-        scene.heightTextBg = scene.add.rectangle(scoreX, scoreY + 42, 100, 22, 0x000000, 0.5)
+        scene.heightTextBg = scene.add.rectangle(scoreX, scoreY + 42, 110, 22, 0x000000, 0.5)
             .setOrigin(0, 0.5).setScrollFactor(0).setDepth(99);
 
-        scene.heightText = scene.add.text(scoreX + 5, scoreY + 30, 'ALTURA: ' + scene.currentHeight + 'm', {
+        scene.heightText = scene.add.text(scoreX + 8, scoreY + 30, 'ALTURA: ' + scene.currentHeight + 'm', {
             fontSize: '14px',
             color: '#fff'
         }).setScrollFactor(0).setDepth(100);
