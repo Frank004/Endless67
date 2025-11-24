@@ -10,13 +10,31 @@ export class UIManager {
         const scene = this.scene;
         const isMobile = scene.isMobile;
 
-        // UI - Ajustar márgenes para móvil
-        const scoreX = 25; // 5px from left wall
+        // UI - Position away from left wall
+        const scoreX = 40; // Move further right to clear the wall
         const scoreY = isMobile ? 20 : 10;
         const centerX = scene.cameras.main.centerX;
         const gameWidth = scene.cameras.main.width;
-        scene.scoreText = scene.add.text(scoreX, scoreY, 'SCORE: 0', { fontSize: '24px', color: '#ffd700', fontStyle: 'bold' }).setScrollFactor(0).setDepth(100);
-        scene.heightText = scene.add.text(scoreX, scoreY + 30, 'ALTURA: ' + scene.currentHeight + 'm', { fontSize: '14px', color: '#fff' }).setScrollFactor(0).setDepth(100);
+
+        // Semi-transparent background for score
+        scene.scoreTextBg = scene.add.rectangle(scoreX, scoreY + 12, 120, 28, 0x000000, 0.5)
+            .setOrigin(0, 0.5).setScrollFactor(0).setDepth(99);
+
+        scene.scoreText = scene.add.text(scoreX + 5, scoreY, 'SCORE: 0', {
+            fontSize: '20px',
+            color: '#ffd700',
+            fontStyle: 'bold'
+        }).setScrollFactor(0).setDepth(100);
+
+        // Semi-transparent background for height
+        scene.heightTextBg = scene.add.rectangle(scoreX, scoreY + 42, 100, 22, 0x000000, 0.5)
+            .setOrigin(0, 0.5).setScrollFactor(0).setDepth(99);
+
+        scene.heightText = scene.add.text(scoreX + 5, scoreY + 30, 'ALTURA: ' + scene.currentHeight + 'm', {
+            fontSize: '14px',
+            color: '#fff'
+        }).setScrollFactor(0).setDepth(100);
+
         scene.uiText = scene.add.text(centerX, 200, '¡SUBE!', { fontSize: '18px', color: '#00ffff', align: 'center', fontStyle: 'bold' }).setOrigin(0.5).setScrollFactor(0).setDepth(100);
 
         // --- PAUSE BUTTON ---
