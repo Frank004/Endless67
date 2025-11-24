@@ -1,3 +1,5 @@
+import { ScoreManager } from '../ScoreManager.js';
+
 export class PlayerHandler {
     constructor(scene) {
         this.scene = scene;
