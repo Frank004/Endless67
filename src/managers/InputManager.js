@@ -151,10 +151,13 @@ export class InputManager {
         // Persist state in registry
         scene.registry.set('showJoystick', this.joystickVisible);
 
-        if (this.joystickVisible) {
-            scene.joystickToggleButton.setText('🕹️ JOYSTICK: ON');
-        } else {
-            scene.joystickToggleButton.setText('🕹️ JOYSTICK: OFF');
+        // Update button text if it exists (in pause menu or settings)
+        if (scene.joystickToggleText) {
+            scene.joystickToggleText.setText(this.joystickVisible ? 'JOYSTICK: ON' : 'JOYSTICK: OFF');
+        }
+        // For Settings scene
+        if (scene.joystickText) {
+            scene.joystickText.setText(this.joystickVisible ? 'JOYSTICK: ON' : 'JOYSTICK: OFF');
         }
     }
 
