@@ -10,12 +10,14 @@ export class UIManager {
         // UI - Ajustar márgenes para móvil
         const scoreX = isMobile ? 20 : 10;
         const scoreY = isMobile ? 20 : 10;
+        const centerX = scene.cameras.main.centerX;
+        const gameWidth = scene.cameras.main.width;
         scene.scoreText = scene.add.text(scoreX, scoreY, 'SCORE: 0', { fontSize: '24px', color: '#ffd700', fontStyle: 'bold' }).setScrollFactor(0).setDepth(100);
         scene.heightText = scene.add.text(scoreX, scoreY + 30, 'ALTURA: ' + scene.currentHeight + 'm', { fontSize: '14px', color: '#fff' }).setScrollFactor(0).setDepth(100);
-        scene.uiText = scene.add.text(200, 200, '¡SUBE!', { fontSize: '18px', color: '#00ffff', align: 'center', fontStyle: 'bold' }).setOrigin(0.5).setScrollFactor(0).setDepth(100);
+        scene.uiText = scene.add.text(centerX, 200, '¡SUBE!', { fontSize: '18px', color: '#00ffff', align: 'center', fontStyle: 'bold' }).setOrigin(0.5).setScrollFactor(0).setDepth(100);
 
         // --- PAUSE BUTTON ---
-        scene.pauseButton = scene.add.text(370, 10, '⏸', { fontSize: '24px', color: '#ffffff' })
+        scene.pauseButton = scene.add.text(gameWidth - 30, 10, '⏸', { fontSize: '24px', color: '#ffffff' })
             .setScrollFactor(0).setDepth(150).setInteractive({ useHandCursor: true })
             .on('pointerdown', () => this.togglePauseMenu());
 
@@ -23,16 +25,16 @@ export class UIManager {
         scene.pauseMenuBg = scene.add.rectangle(scene.cameras.main.centerX, scene.cameras.main.centerY, scene.cameras.main.width, scene.cameras.main.height, 0x000000, 0.9)
             .setScrollFactor(0).setDepth(200).setVisible(false).setInteractive();
 
-        scene.pauseMenuTitle = scene.add.text(200, 180, 'PAUSA', {
+        scene.pauseMenuTitle = scene.add.text(centerX, 180, 'PAUSA', {
             fontSize: '48px', color: '#ffd700', fontStyle: 'bold'
         }).setOrigin(0.5).setScrollFactor(0).setDepth(201).setVisible(false);
 
-        scene.versionText = scene.add.text(200, 220, 'v0.0.35', {
+        scene.versionText = scene.add.text(centerX, 220, 'v0.0.35', {
             fontSize: '14px', color: '#888888'
         }).setOrigin(0.5).setScrollFactor(0).setDepth(201).setVisible(false);
 
         // Continue Button
-        scene.continueButton = scene.add.text(200, 260, 'CONTINUAR', {
+        scene.continueButton = scene.add.text(centerX, 260, 'CONTINUAR', {
             fontSize: '24px', color: '#00ff00', fontStyle: 'bold',
             backgroundColor: '#333333', padding: { x: 20, y: 10 }
         }).setOrigin(0.5).setScrollFactor(0).setDepth(201).setVisible(false)
@@ -44,7 +46,7 @@ export class UIManager {
         // Sound Toggle Button - Initialize with current state from registry
         const soundEnabled = scene.registry.get('soundEnabled') !== false;
         const soundButtonText = soundEnabled ? '🔊 SONIDO: ON' : '🔇 SONIDO: OFF';
-        scene.soundToggleButton = scene.add.text(200, 330, soundButtonText, {
+        scene.soundToggleButton = scene.add.text(centerX, 330, soundButtonText, {
             fontSize: '24px', color: '#ffffff', fontStyle: 'bold',
             backgroundColor: '#333333', padding: { x: 20, y: 10 }
         }).setOrigin(0.5).setScrollFactor(0).setDepth(201).setVisible(false)
@@ -56,7 +58,7 @@ export class UIManager {
         // Joystick Toggle Button - Initialize with current state from registry
         const showJoystick = scene.registry.get('showJoystick') !== false;
         const joystickButtonText = showJoystick ? '🕹️ JOYSTICK: ON' : '🕹️ JOYSTICK: OFF';
-        scene.joystickToggleButton = scene.add.text(200, 400, joystickButtonText, {
+        scene.joystickToggleButton = scene.add.text(centerX, 400, joystickButtonText, {
             fontSize: '24px', color: '#ffffff', fontStyle: 'bold',
             backgroundColor: '#333333', padding: { x: 20, y: 10 }
         }).setOrigin(0.5).setScrollFactor(0).setDepth(201).setVisible(false)
@@ -66,7 +68,7 @@ export class UIManager {
             .on('pointerout', function () { this.setColor('#ffffff'); });
 
         // Exit Button
-        scene.exitButton = scene.add.text(200, 470, '🚪 SALIR AL MENÚ', {
+        scene.exitButton = scene.add.text(centerX, 470, '🚪 SALIR AL MENÚ', {
             fontSize: '24px', color: '#ff6666', fontStyle: 'bold',
             backgroundColor: '#333333', padding: { x: 20, y: 10 }
         }).setOrigin(0.5).setScrollFactor(0).setDepth(201).setVisible(false)
@@ -90,7 +92,7 @@ export class UIManager {
             scene.add.text(140, controlY, '< HOLD & SLIDE >', { fontSize: '12px', color: '#fff', alpha: 0.4 }).setOrigin(0.5).setScrollFactor(0).setDepth(100);
             scene.add.text(340, controlY, 'JUMP', { fontSize: '12px', color: '#fff', alpha: 0.4 }).setOrigin(0.5).setScrollFactor(0).setDepth(100);
         } else {
-            scene.add.text(200, 560, '← → MOVER | SPACE SALTAR', { fontSize: '12px', color: '#fff', alpha: 0.4 }).setOrigin(0.5).setScrollFactor(0);
+            scene.add.text(centerX, 560, '← → MOVER | SPACE SALTAR', { fontSize: '12px', color: '#fff', alpha: 0.4 }).setOrigin(0.5).setScrollFactor(0);
         }
     }
 

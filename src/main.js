@@ -12,18 +12,30 @@ import { Playground } from './scenes/Playground.js';
 const userAgent = typeof navigator !== 'undefined' ? navigator.userAgent : '';
 const isMobile = /Android|webOS|iPhone|iPad|iPod|BlackBerry|IEMobile|Opera Mini/i.test(userAgent);
 
-// En móvil usar altura completa, en desktop mantener 600px
-const gameHeight = isMobile ? window.innerHeight : 600;
+// Resoluciones estándar:
+// - Desktop: 400x600 (mantiene compatibilidad con diseño actual)
+// - Mobile: 360x640 (estándar común para móviles Android/iOS portrait 9:16)
+const GAME_WIDTH = isMobile ? 360 : 400;
+const GAME_HEIGHT = isMobile ? 640 : 600;
 
 const config = {
     type: Phaser.AUTO,
-    width: 400,
-    height: gameHeight,
+    width: GAME_WIDTH,
+    height: GAME_HEIGHT,
     backgroundColor: '#000',
     parent: 'game-container',
     scale: {
-        mode: isMobile ? Phaser.Scale.RESIZE : Phaser.Scale.FIT,
-        autoCenter: isMobile ? Phaser.Scale.CENTER_HORIZONTALLY : Phaser.Scale.CENTER_BOTH
+        mode: isMobile ? Phaser.Scale.FIT : Phaser.Scale.FIT,
+        autoCenter: Phaser.Scale.CENTER_BOTH,
+        // En móvil, permitir que se escale para llenar la pantalla manteniendo aspect ratio
+        min: {
+            width: isMobile ? 360 : 400,
+            height: isMobile ? 640 : 600
+        },
+        max: {
+            width: isMobile ? 360 : 400,
+            height: isMobile ? 640 : 600
+        }
     },
     input: { activePointers: 3 },
     physics: { default: 'arcade', arcade: { gravity: { y: 0 }, debug: false } },

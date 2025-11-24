@@ -89,20 +89,21 @@ export class PlayerHandler {
         scene.uiText.setVisible(false); // Hide Game Over text temporarily
 
         // Background for input
-        const bg = scene.add.rectangle(200, 300, 320, 240, 0x000000, 0.95).setDepth(300).setScrollFactor(0);
+        const centerX = scene.cameras.main.centerX;
+        const bg = scene.add.rectangle(centerX, 300, 320, 240, 0x000000, 0.95).setDepth(300).setScrollFactor(0);
         bg.setStrokeStyle(2, 0xffd700);
 
-        const title = scene.add.text(200, 220, 'NEW HIGH SCORE!', {
+        const title = scene.add.text(centerX, 220, 'NEW HIGH SCORE!', {
             fontSize: '24px', color: '#ffd700', fontStyle: 'bold'
         }).setOrigin(0.5).setDepth(301).setScrollFactor(0);
 
-        const prompt = scene.add.text(200, 260, 'ENTER 3 INITIALS:', {
+        const prompt = scene.add.text(centerX, 260, 'ENTER 3 INITIALS:', {
             fontSize: '16px', color: '#fff'
         }).setOrigin(0.5).setDepth(301).setScrollFactor(0);
 
         // Name Display
         let name = '';
-        const nameText = scene.add.text(200, 310, '_ _ _', {
+        const nameText = scene.add.text(centerX, 310, '_ _ _', {
             fontSize: '48px', color: '#00ffff', fontStyle: 'bold', letterSpacing: 10
         }).setOrigin(0.5).setDepth(301).setScrollFactor(0);
 
@@ -123,7 +124,7 @@ export class PlayerHandler {
 
         scene.input.keyboard.on('keydown', keyListener);
 
-        const confirmBtn = scene.add.text(200, 380, 'CONFIRM', {
+        const confirmBtn = scene.add.text(centerX, 380, 'CONFIRM', {
             fontSize: '24px', color: '#00ff00', backgroundColor: '#333', padding: { x: 10, y: 5 }
         }).setOrigin(0.5).setDepth(301).setScrollFactor(0).setInteractive({ useHandCursor: true });
 
@@ -149,11 +150,12 @@ export class PlayerHandler {
         scene.uiText.setVisible(true); // Ensure Game Over text is visible
         scene.uiText.setText(`GAME OVER\nScore: ${scene.totalScore}`);
 
+        const centerX = scene.cameras.main.centerX;
         const startY = 350;
         const spacing = 60;
 
         // Restart Button
-        const restartBtn = scene.add.text(200, startY, '🔄 RESTART', {
+        const restartBtn = scene.add.text(centerX, startY, '🔄 RESTART', {
             fontSize: '24px', color: '#00ff00', backgroundColor: '#333', padding: { x: 20, y: 10 }
         }).setOrigin(0.5).setDepth(301).setScrollFactor(0).setInteractive({ useHandCursor: true });
 
@@ -162,7 +164,7 @@ export class PlayerHandler {
         });
 
         // Leaderboard Button
-        const leaderboardBtn = scene.add.text(200, startY + spacing, '🏆 LEADERBOARD', {
+        const leaderboardBtn = scene.add.text(centerX, startY + spacing, '🏆 LEADERBOARD', {
             fontSize: '24px', color: '#00ffff', backgroundColor: '#333', padding: { x: 20, y: 10 }
         }).setOrigin(0.5).setDepth(301).setScrollFactor(0).setInteractive({ useHandCursor: true });
 
@@ -171,7 +173,7 @@ export class PlayerHandler {
         });
 
         // Menu Button
-        const menuBtn = scene.add.text(200, startY + spacing * 2, '🏠 MAIN MENU', {
+        const menuBtn = scene.add.text(centerX, startY + spacing * 2, '🏠 MAIN MENU', {
             fontSize: '24px', color: '#ffffff', backgroundColor: '#333', padding: { x: 20, y: 10 }
         }).setOrigin(0.5).setDepth(301).setScrollFactor(0).setInteractive({ useHandCursor: true });
 

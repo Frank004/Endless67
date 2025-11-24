@@ -100,7 +100,21 @@ export class Boot extends Phaser.Scene {
 
         // Entorno
         g.clear(); g.fillStyle(0x222222, 1); g.fillRect(0, 0, 32, 64); g.generateTexture('wall', 32, 64);
-        g.clear(); g.fillStyle(0xcc2200, 0.95); g.fillRect(0, 0, 400, 800); g.fillStyle(0xff6600, 0.8); for (let i = 0; i < 40; i++) g.fillCircle(Phaser.Math.Between(0, 400), Phaser.Math.Between(0, 800), Phaser.Math.Between(5, 15)); g.generateTexture('lava_texture', 400, 800);
+        // Lava texture: usar ancho del juego dinámicamente, altura suficiente para tileable
+        const lavaTextureWidth = this.game.config.width;
+        const lavaTextureHeight = 800; // Altura suficiente para tileable
+        g.clear(); 
+        g.fillStyle(0xcc2200, 0.95); 
+        g.fillRect(0, 0, lavaTextureWidth, lavaTextureHeight); 
+        g.fillStyle(0xff6600, 0.8); 
+        for (let i = 0; i < 40; i++) {
+            g.fillCircle(
+                Phaser.Math.Between(0, lavaTextureWidth), 
+                Phaser.Math.Between(0, lavaTextureHeight), 
+                Phaser.Math.Between(5, 15)
+            );
+        }
+        g.generateTexture('lava_texture', lavaTextureWidth, lavaTextureHeight);
 
         // UI & FX
         // UI & FX

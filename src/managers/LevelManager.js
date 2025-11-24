@@ -60,7 +60,8 @@ export class LevelManager {
         if (allowMaze && !this.justFinishedMaze && Phaser.Math.Between(0, 100) < config.maze.chance) {
             // Spawn Safety Platform below maze entrance
             // This ensures the player has a safe landing spot before the maze starts
-            this.spawnPlatform(200, y, 200, false); // Centered, wide, static
+            const centerX = scene.cameras.main.centerX;
+            this.spawnPlatform(centerX, y, 200, false); // Centered, wide, static
             this.lastPlatformY = y;
 
             // Select pattern based on difficulty
@@ -103,19 +104,23 @@ export class LevelManager {
         let basePlatformChance = (platformsPerScreen / 4.5) * 100;
 
         let x;
+        const gameWidth = scene.cameras.main.width;
+        const centerX = scene.cameras.main.centerX;
+        const minX = 60;
+        const maxX = gameWidth - 60;
         // Zigzag Pattern Logic from Config
         let zigzagChance = config.platforms.zigzagChance;
         if (this.lastPlatformX !== null && Phaser.Math.Between(0, 100) < zigzagChance) {
             // Force a position far from the last one (zigzag)
-            if (this.lastPlatformX < 200) {
-                x = Phaser.Math.Between(200, 340);
+            if (this.lastPlatformX < centerX) {
+                x = Phaser.Math.Between(centerX, maxX);
             } else {
-                x = Phaser.Math.Between(60, 200);
+                x = Phaser.Math.Between(minX, centerX);
             }
         } else {
             // Normal random placement logic
             if (this.lastPlatformX === null) {
-                x = Phaser.Math.Between(60, 340);
+                x = Phaser.Math.Between(minX, maxX);
             } else {
                 let minX = Math.max(60, this.lastPlatformX - this.maxHorizontalDelta);
                 let maxX = Math.min(340, this.lastPlatformX + this.maxHorizontalDelta);
@@ -231,6 +236,8 @@ export class LevelManager {
 
     spawnMazeRowFromConfig(y, config, allowMoving, allowSpikes, rowIndex = null, pattern = null) {
         const scene = this.scene;
+        const gameWidth = scene.cameras.main.width;
+        const centerX = scene.cameras.main.centerX;
         let type = config.type;
         let w1 = config.width;
         let w2 = config.width2 || 0;
@@ -249,43 +256,43 @@ export class LevelManager {
             let block = scene.mazeWalls.create(0, y, 'maze_block');
             block.setOrigin(0, 0.5).setDisplaySize(w1, 60).refreshBody().setDepth(10);
         } else if (type === 'right') {
-            let block = scene.mazeWalls.create(400, y, 'maze_block');
+            let block = scene.mazeWalls.create(gameWidth, y, 'maze_block');
             block.setOrigin(1, 0.5).setDisplaySize(w1, 60).refreshBody().setDepth(10);
         } else if (type === 'split') {
             let b1 = scene.mazeWalls.create(0, y, 'maze_block');
             b1.setOrigin(0, 0.5).setDisplaySize(w1, 60).refreshBody().setDepth(10);
 
-            let b2 = scene.mazeWalls.create(400, y, 'maze_block');
+            let b2 = scene.mazeWalls.create(gameWidth, y, 'maze_block');
             b2.setOrigin(1, 0.5).setDisplaySize(w2, 60).refreshBody().setDepth(10);
         } else if (type === 'center') {
-            let block = scene.mazeWalls.create(200, y, 'maze_block');
+            let block = scene.mazeWalls.create(centerX, y, 'maze_block');
             block.setOrigin(0.5, 0.5).setDisplaySize(w1, 60).refreshBody().setDepth(10);
         }
 
         // Spawning Items/Enemies
-        let gapX = 200;
+        let gapX = centerX;
         let gapStart = 0;
-        let gapEnd = 400;
+        let gapEnd = gameWidth;
 
         // Define wall segments for enemy spawning
         let wallSegments = [];
 
         if (type === 'left') {
-            gapStart = w1; gapEnd = 400;
+            gapStart = w1; gapEnd = gameWidth;
             wallSegments.push({ min: 0, max: w1 });
         } else if (type === 'right') {
-            gapStart = 0; gapEnd = 400 - w1;
-            wallSegments.push({ min: 400 - w1, max: 400 });
+            gapStart = 0; gapEnd = gameWidth - w1;
+            wallSegments.push({ min: gameWidth - w1, max: gameWidth });
         } else if (type === 'split') {
-            gapStart = w1; gapEnd = 400 - w2;
+            gapStart = w1; gapEnd = gameWidth - w2;
             wallSegments.push({ min: 0, max: w1 });
-            wallSegments.push({ min: 400 - w2, max: 400 });
+            wallSegments.push({ min: gameWidth - w2, max: gameWidth });
         } else if (type === 'center') {
-            const leftGapEnd = 200 - w1 / 2;
-            const rightGapStart = 200 + w1 / 2;
+            const leftGapEnd = centerX - w1 / 2;
+            const rightGapStart = centerX + w1 / 2;
             const useLeftGap = Phaser.Math.Between(0, 1) === 0;
             gapStart = useLeftGap ? 0 : rightGapStart;
-            gapEnd = useLeftGap ? leftGapEnd : 400;
+            gapEnd = useLeftGap ? leftGapEnd : gameWidth;
             wallSegments.push({ min: leftGapEnd, max: rightGapStart });
         }
 

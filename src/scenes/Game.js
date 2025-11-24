@@ -40,7 +40,11 @@ export class Game extends Phaser.Scene {
 
         // --- PHYSICS & CAMERA SETUP ---
         this.input.addPointer(3);
-        this.physics.world.setBounds(14, -1000000, 372, 1000000 + 800); // Width: 386-14=372
+        // Physics bounds: dinámico basado en el ancho del juego
+        // Margen de 14px a cada lado, ancho disponible = gameWidth - 28
+        const gameWidth = this.cameras.main.width;
+        const physicsWidth = gameWidth - 28; // 14px margen a cada lado
+        this.physics.world.setBounds(14, -1000000, physicsWidth, 1000000 + 800);
         this.cameras.main.setBackgroundColor('#050505');
 
         // --- DEVICE DETECTION ---
@@ -68,13 +72,15 @@ export class Game extends Phaser.Scene {
         this.createWalls();
 
         // --- PLAYER ---
-        this.player = new Player(this, 200, 400);
+        // Spawn player en el centro horizontal de la pantalla
+        this.player = new Player(this, this.cameras.main.centerX, 400);
 
         // --- DEBUG SETUP ---
         this.debugManager.applyDebugSettings();
 
         // --- INITIAL LEVEL GENERATION ---
-        this.levelManager.spawnPlatform(200, 450, 140, false);
+        // Spawn plataforma inicial en el centro horizontal
+        this.levelManager.spawnPlatform(this.cameras.main.centerX, 450, 140, false);
         this.levelManager.lastPlatformY = 450;
         for (let i = 0; i < 6; i++) this.levelManager.generateNextRow();
 
@@ -129,7 +135,9 @@ export class Game extends Phaser.Scene {
         this.updateWalls();
 
         // Height Calculation
-        let h = Math.floor((400 - this.player.y) / 10) + this.heightOffset;
+        // Usar altura de referencia dinámica (400 era la altura inicial de referencia)
+        const referenceHeight = 400;
+        let h = Math.floor((referenceHeight - this.player.y) / 10) + this.heightOffset;
         if (h > this.currentHeight) this.currentHeight = h;
     }
 
