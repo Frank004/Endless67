@@ -24,12 +24,12 @@ export class UIManager {
         // Positioned inside right wall (approx 32px from right)
 
         // Circular background for pause button
-        scene.pauseButtonBg = scene.add.circle(gameWidth - 16, 40, 20, 0x000000, 0.5)
+        scene.pauseButtonBg = scene.add.circle(gameWidth - 16, 40, 16, 0x000000, 0.5)
             .setScrollFactor(0).setDepth(149);
 
         scene.pauseButton = scene.add.image(gameWidth - 16, 40, 'ui_icons', 'pause')
             .setScrollFactor(0).setDepth(150).setInteractive({ useHandCursor: true })
-            .setScale(0.5) // Scale down 64px to 32px
+            .setScale(0.375) // Scale down 64px to 24px
             .setTint(0xffffff) // Ensure white/light
             .on('pointerdown', () => this.togglePauseMenu())
             .on('pointerover', () => scene.pauseButtonBg.setFillStyle(0x333333, 0.7))
