@@ -38,27 +38,41 @@ export class AudioManager {
 
     setupAudio() {
         const scene = this.scene;
+
+        // Silently handle audio context issues
         try {
+            // Check if audio context is suspended
+            if (scene.sound && scene.sound.context && scene.sound.context.state === 'suspended') {
+                // Don't try to play audio if context is suspended
+                // It will be resumed on next user interaction via setupAudioContextResume
+                return;
+            }
+
             if (scene.sound && scene.cache.audio.exists('lava_ambient')) {
                 // Stop any existing lava sound to prevent duplicates
                 if (this.lavaSound) {
                     this.lavaSound.stop();
                 }
+
                 this.lavaSound = scene.sound.add('lava_ambient', { loop: true, volume: 0 });
 
-                // Try to play, but catch any errors
-                const playPromise = this.lavaSound.play();
-                if (playPromise && typeof playPromise.catch === 'function') {
-                    playPromise.catch(err => {
-                        console.warn('Could not start lava sound:', err);
-                    });
+                // Try to play silently - don't show errors to user
+                try {
+                    const playPromise = this.lavaSound.play();
+                    if (playPromise && typeof playPromise.catch === 'function') {
+                        playPromise.catch(() => {
+                            // Silently fail - audio will resume on next interaction
+                        });
+                    }
+                } catch (e) {
+                    // Silently fail
                 }
             }
 
             // Ensure audio stops when scene shuts down (e.g. on restart)
             scene.events.once('shutdown', this.stopAudio, this);
         } catch (error) {
-            console.warn('Error starting lava sound:', error);
+            // Silently handle any audio errors - don't show to user
         }
     }
 
@@ -75,20 +89,31 @@ export class AudioManager {
 
     startMusic() {
         const scene = this.scene;
+
         try {
+            // Check if audio context is suspended
+            if (scene.sound && scene.sound.context && scene.sound.context.state === 'suspended') {
+                // Don't try to play if suspended - will resume on interaction
+                return;
+            }
+
             if (scene.sound && scene.cache.audio.exists('bg_music') && !this.bgMusic) {
                 this.bgMusic = scene.sound.add('bg_music', { loop: true, volume: 0.80 });
 
-                // Try to play, but catch any errors
-                const playPromise = this.bgMusic.play();
-                if (playPromise && typeof playPromise.catch === 'function') {
-                    playPromise.catch(err => {
-                        console.warn('Could not start background music:', err);
-                    });
+                // Try to play silently
+                try {
+                    const playPromise = this.bgMusic.play();
+                    if (playPromise && typeof playPromise.catch === 'function') {
+                        playPromise.catch(() => {
+                            // Silently fail - will resume on interaction
+                        });
+                    }
+                } catch (e) {
+                    // Silently fail
                 }
             }
         } catch (error) {
-            console.warn('Error starting background music:', error);
+            // Silently handle errors
         }
     }
 
