@@ -41,7 +41,9 @@ const ICONS_TO_INCLUDE = {
     'menu': 'System/menu-fill.svg', // Hamburger menu if needed
     'jump': 'Arrows/arrow-up-circle-fill.svg', // Jump button
     'joystick-base': 'Device/gamepad-line.svg', // Fallback if needed, but we have custom joystick assets
-    'joystick-knob': 'System/checkbox-blank-circle-fill.svg' // Fallback
+    'joystick-knob': 'System/checkbox-blank-circle-fill.svg', // Fallback
+    'single': 'Media/play-circle-line.svg', // Single spawn
+    'group': 'Design/layout-grid-fill.svg' // Group spawn
 };
 
 const ICON_SIZE = 64; // High res for scaling down
@@ -72,8 +74,28 @@ async function generateAtlas() {
         }
 
         try {
-            // Convert SVG to PNG buffer with sharp
-            const buffer = await sharp(fullPath)
+            // Read SVG content
+            let svgContent = fs.readFileSync(fullPath, 'utf8');
+
+            // Force white color by injecting fill="white" into the svg tag or path
+            // Remix icons usually don't have fill attribute on svg tag, but paths might use currentColor
+            // Simplest way: Add fill="#ffffff" to the <svg> tag which cascades if not overridden
+            // Or replace fill="currentColor" with fill="#ffffff"
+
+            if (svgContent.includes('fill="currentColor"')) {
+                svgContent = svgContent.replace(/fill="currentColor"/g, 'fill="#ffffff"');
+            } else if (!svgContent.includes('fill="')) {
+                // If no fill is specified, it defaults to black. We can force it on the svg tag.
+                svgContent = svgContent.replace('<svg', '<svg fill="#ffffff"');
+            } else {
+                // If there are other fills, try to replace them? 
+                // Let's just try replacing the closing > of svg with fill="#ffffff">
+                // But safer to replace <svg ...> with <svg ... fill="#ffffff">
+                svgContent = svgContent.replace('<svg', '<svg fill="#ffffff"');
+            }
+
+            // Convert SVG buffer to PNG buffer with sharp
+            const buffer = await sharp(Buffer.from(svgContent))
                 .resize(ICON_SIZE, ICON_SIZE)
                 .png()
                 .toBuffer();

@@ -79,7 +79,8 @@ export class Playground extends Game {
         // --- TOGGLE BUTTON (Below pause button, centered) ---
         const gameWidth = this.cameras.main.width;
         this.toggleBtn = this.add.image(gameWidth - 40, 50, 'ui_icons', 'settings')
-            .setOrigin(0.5).setScrollFactor(0).setDepth(6000).setInteractive({ useHandCursor: true });
+            .setOrigin(0.5).setScrollFactor(0).setDepth(6000).setInteractive({ useHandCursor: true })
+            .setScale(0.5); // Scale down 64px to 32px
 
         this.toggleBtn.on('pointerdown', () => {
             this.toggleDevMenu();
@@ -396,22 +397,22 @@ export class Playground extends Game {
                     }).setOrigin(0, 0.5).setScrollFactor(0).setDepth(5002)
                         .setMask(this.scrollMask);
 
-                    // Clean icon button (inline, same row)
-                    const cleanBtn = this.add.image(310, itemY, 'ui_icons', 'clean')
+                    // Clean icon button (inline, same row) -> Single Spawn
+                    const cleanBtn = this.add.image(310, itemY, 'ui_icons', 'single')
                         .setOrigin(0.5).setScrollFactor(0).setDepth(5002)
                         .setScale(0.4)
                         .setInteractive({ useHandCursor: true })
                         .setMask(this.scrollMask);
 
-                    // Prep icon button (inline, same row, far right)
-                    const prepBtn = this.add.image(350, itemY, 'ui_icons', 'magic')
+                    // Prep icon button (inline, same row, far right) -> Group Spawn
+                    const prepBtn = this.add.image(350, itemY, 'ui_icons', 'group')
                         .setOrigin(0.5).setScrollFactor(0).setDepth(5002)
                         .setScale(0.4)
                         .setInteractive({ useHandCursor: true })
                         .setMask(this.scrollMask);
 
                     cleanBtn.on('pointerdown', () => {
-                        item.callback('clean');
+                        item.callback('clean'); // 'clean' mapped to single mode logic if applicable, or just mode 1
                         // Collapse and close
                         catData.itemElements.forEach(elem => elem.destroy());
                         catData.itemElements = [];
@@ -420,7 +421,7 @@ export class Playground extends Game {
                     });
 
                     prepBtn.on('pointerdown', () => {
-                        item.callback('prepopulate');
+                        item.callback('prepopulate'); // 'prepopulate' mapped to group mode logic if applicable, or just mode 2
                         // Collapse and close
                         catData.itemElements.forEach(elem => elem.destroy());
                         catData.itemElements = [];
