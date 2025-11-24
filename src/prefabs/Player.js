@@ -26,6 +26,13 @@ export class Player extends Phaser.Physics.Arcade.Sprite {
             this.currentPlatform = null;
         }
 
+        // Check for wall interaction via World Bounds (blocked)
+        if (this.body.blocked.left) {
+            this.handleWallTouch('left');
+        } else if (this.body.blocked.right) {
+            this.handleWallTouch('right');
+        }
+
         // Movement Logic
         let keyboardMove = 0;
         if (cursors.left.isDown) {
@@ -40,30 +47,24 @@ export class Player extends Phaser.Physics.Arcade.Sprite {
             this.setAccelerationX(keyboardMove * force);
             return null; // Return null for joystick visual update
         } else if (movePointer) {
-            // Touch movement
-            // Calculate diff from anchor
-            // This part needs the anchor from the scene or passed in. 
-            // To keep it simple, let's assume the scene handles the anchor logic and passes the diff or acceleration.
-            // Actually, let's refactor this. The scene handles input, Player just handles physics.
+            // Touch movement logic handled by InputManager/Scene
         } else {
             this.setAccelerationX(0);
-            // Friction handles moving platform velocity automatically
         }
     }
 
     move(direction) {
-        const force = 900; // Reduced from 1200
+        const force = 900;
         this.setAccelerationX(direction * force);
     }
 
     stop() {
         this.setAccelerationX(0);
-        // Friction handles moving platform velocity automatically
     }
 
     jump(boost = 1.0) {
-        // Wall Jump Left
-        if (this.body.touching.left) {
+        // Wall Jump Left (Touching wall on left or blocked by world bound on left)
+        if (this.body.touching.left || this.body.blocked.left) {
             if (this.checkWallStamina('left')) {
                 this.setVelocity(400 * boost, -600 * boost); // Increased Y
                 this.jumps = 1;
@@ -72,8 +73,8 @@ export class Player extends Phaser.Physics.Arcade.Sprite {
             return null;
         }
 
-        // Wall Jump Right
-        if (this.body.touching.right) {
+        // Wall Jump Right (Touching wall on right or blocked by world bound on right)
+        if (this.body.touching.right || this.body.blocked.right) {
             if (this.checkWallStamina('right')) {
                 this.setVelocity(-400 * boost, -600 * boost); // Increased Y
                 this.jumps = 1;
@@ -107,12 +108,31 @@ export class Player extends Phaser.Physics.Arcade.Sprite {
     }
 
     handleWallTouch(wallSide) {
+        // If we are moving up, don't apply wall slide friction yet, let momentum carry us
+        // unless we want to limit upward velocity? No, usually wall slide affects downward movement.
+
         if (this.lastWallTouched === wallSide && this.wallJumpConsecutive >= 5) {
-            if (this.body.velocity.y > 0) this.setVelocityY(400);
+            // Stamina depleted, slide down fast? Or just normal gravity?
+            // If we want to punish, maybe no friction.
+            // But let's keep the existing logic: if stamina depleted, maybe we slip?
+            // The original code applied friction even if stamina depleted?
+            // "if (this.body.velocity.y > 0) this.setVelocityY(400);" -> This limits falling speed (friction)
+
+            // Wait, the original code said:
+            // if (this.lastWallTouched === wallSide && this.wallJumpConsecutive >= 5) {
+            //    if (this.body.velocity.y > 0) this.setVelocityY(400); 
+            //    this.setTint(0x555555);
+            //    return;
+            // }
+            // This means even with depleted stamina, we still slide but maybe faster (400 vs 80)?
+
+            if (this.body.velocity.y > 0) this.setVelocityY(400); // Faster slide (less friction)
             this.setTint(0x555555);
             return;
         }
-        if (this.body.velocity.y > 0) this.setVelocityY(80);
+
+        // Normal Wall Slide Friction
+        if (this.body.velocity.y > 0) this.setVelocityY(80); // Slow slide (high friction)
 
         if (this.lastWallTouched !== wallSide) {
             this.jumps = 0;

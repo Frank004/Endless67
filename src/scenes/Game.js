@@ -195,7 +195,7 @@ export class Game extends Phaser.Scene {
      * Creates the side walls.
      */
     createWalls() {
-        const gameWidth = this.game.config.width;
+        const gameWidth = this.cameras.main.width;
         const wallWidth = 32;
         this.leftWall = this.add.tileSprite(0, 300, wallWidth, 1200, 'wall').setOrigin(0, 0.5).setDepth(60);
         this.rightWall = this.add.tileSprite(gameWidth, 300, wallWidth, 1200, 'wall').setOrigin(1, 0.5).setDepth(60);
@@ -215,7 +215,7 @@ export class Game extends Phaser.Scene {
 
         if (this.rightWall && this.rightWall.active && this.rightWall.body) {
             this.rightWall.y = this.cameras.main.scrollY + 300;
-            const gameWidth = this.game.config.width;
+            const gameWidth = this.cameras.main.width;
             this.rightWall.x = gameWidth;
             this.rightWall.body.updateFromGameObject();
         }
