@@ -78,9 +78,10 @@ export class Playground extends Game {
     createDevUI() {
         // --- TOGGLE BUTTON (Below pause button, centered) ---
         const gameWidth = this.cameras.main.width;
-        this.toggleBtn = this.add.image(gameWidth - 40, 50, 'ui_icons', 'settings')
+        this.toggleBtn = this.add.image(gameWidth - 32, 90, 'ui_icons', 'settings')
             .setOrigin(0.5).setScrollFactor(0).setDepth(6000).setInteractive({ useHandCursor: true })
-            .setScale(0.5); // Scale down 64px to 32px
+            .setScale(0.5) // Scale down 64px to 32px
+            .setTint(0xffffff); // Ensure white
 
         this.toggleBtn.on('pointerdown', () => {
             this.toggleDevMenu();
@@ -148,13 +149,13 @@ export class Playground extends Game {
             },
             {
                 icon: 'tornado', label: 'Mazes', items: [
-                    { icon: 'route', label: 'Maze 1 (Medium)', callback: (mode) => this.spawnSpecificMaze(0, mode), color: '#ffff00', type: 'dual' },
-                    { icon: 'route', label: 'Maze 2 (Medium)', callback: (mode) => this.spawnSpecificMaze(1, mode), color: '#ffff00', type: 'dual' },
-                    { icon: 'check', label: 'Maze 3 (Easy)', callback: (mode) => this.spawnSpecificMaze(2, mode), color: '#00ff00', type: 'dual' },
-                    { icon: 'check', label: 'Maze 4 (Easy)', callback: (mode) => this.spawnSpecificMaze(3, mode), color: '#00ff00', type: 'dual' },
-                    { icon: 'check', label: 'Maze 5 (Easy)', callback: (mode) => this.spawnSpecificMaze(4, mode), color: '#00ff00', type: 'dual' },
-                    { icon: 'check', label: 'Maze 6 (Easy)', callback: (mode) => this.spawnSpecificMaze(5, mode), color: '#00ff00', type: 'dual' },
-                    { icon: 'close', label: 'Maze 7 (Hard)', callback: (mode) => this.spawnSpecificMaze(6, mode), color: '#ff0000', type: 'dual' }
+                    { icon: 'tornado', label: 'Maze 1 (Medium)', callback: (mode) => this.spawnSpecificMaze(0, mode), color: '#ffff00', type: 'dual' },
+                    { icon: 'tornado', label: 'Maze 2 (Medium)', callback: (mode) => this.spawnSpecificMaze(1, mode), color: '#ffff00', type: 'dual' },
+                    { icon: 'tornado', label: 'Maze 3 (Easy)', callback: (mode) => this.spawnSpecificMaze(2, mode), color: '#00ff00', type: 'dual' },
+                    { icon: 'tornado', label: 'Maze 4 (Easy)', callback: (mode) => this.spawnSpecificMaze(3, mode), color: '#00ff00', type: 'dual' },
+                    { icon: 'tornado', label: 'Maze 5 (Easy)', callback: (mode) => this.spawnSpecificMaze(4, mode), color: '#00ff00', type: 'dual' },
+                    { icon: 'tornado', label: 'Maze 6 (Easy)', callback: (mode) => this.spawnSpecificMaze(5, mode), color: '#00ff00', type: 'dual' },
+                    { icon: 'tornado', label: 'Maze 7 (Hard)', callback: (mode) => this.spawnSpecificMaze(6, mode), color: '#ff0000', type: 'dual' }
                 ]
             },
             {

@@ -43,7 +43,8 @@ const ICONS_TO_INCLUDE = {
     'joystick-base': 'Device/gamepad-line.svg', // Fallback if needed, but we have custom joystick assets
     'joystick-knob': 'System/checkbox-blank-circle-fill.svg', // Fallback
     'single': 'Media/play-circle-line.svg', // Single spawn
-    'group': 'Design/layout-grid-fill.svg' // Group spawn
+    'group': 'Design/layout-grid-fill.svg', // Group spawn
+    'door': 'System/logout-box-r-line.svg' // Exit/Logout
 };
 
 const ICON_SIZE = 64; // High res for scaling down

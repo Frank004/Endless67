@@ -20,14 +20,31 @@ export class UIManager {
 
         // --- PAUSE BUTTON ---
         // Icon should be white (from atlas) and sized appropriately
-        scene.pauseButton = scene.add.image(gameWidth - 30, 30, 'ui_icons', 'pause')
+        // Positioned inside right wall (approx 32px from right)
+        scene.pauseButton = scene.add.image(gameWidth - 32, 40, 'ui_icons', 'pause')
             .setScrollFactor(0).setDepth(150).setInteractive({ useHandCursor: true })
             .setScale(0.5) // Scale down 64px to 32px
+            .setTint(0xffffff) // Ensure white/light
             .on('pointerdown', () => this.togglePauseMenu());
 
         // --- PAUSE MENU OVERLAY ---
         scene.pauseMenuBg = scene.add.rectangle(scene.cameras.main.centerX, scene.cameras.main.centerY, scene.cameras.main.width, scene.cameras.main.height, 0x000000, 0.9)
             .setScrollFactor(0).setDepth(200).setVisible(false).setInteractive();
+
+        // Score Text
+        scene.scoreText = scene.add.text(25, 20, 'SCORE: 0', {
+            fontSize: '32px',
+            color: '#ffd700',
+            fontStyle: 'bold',
+            fontFamily: 'Courier'
+        }).setScrollFactor(0).setDepth(100);
+
+        // Distance Text
+        scene.distanceText = scene.add.text(25, 60, 'ALTURA: 0m', {
+            fontSize: '16px',
+            color: '#ffffff',
+            fontFamily: 'Courier'
+        }).setScrollFactor(0).setDepth(100).setVisible(false);
 
         scene.pauseMenuTitle = scene.add.text(centerX, 180, 'PAUSA', {
             fontSize: '48px', color: '#ffd700', fontStyle: 'bold'
@@ -52,52 +69,68 @@ export class UIManager {
         const soundTextStr = soundEnabled ? 'SONIDO: ON' : 'SONIDO: OFF';
         const soundIconFrame = soundEnabled ? 'volume-up' : 'volume-mute';
 
-        // Container for sound button to keep icon and text together? 
-        // Or just text with icon next to it. Let's use text as the main button and place icon relative to it.
-        // Actually, user said "Solo debes cambiar el emoji de sound y el de joystick".
-        // So: [Icon] [Text]
+        // Position icon inside the button area or nicely aligned
+        // Let's create a container-like visual by placing them relative to center
 
-        scene.soundToggleButton = scene.add.text(centerX + 20, 350, soundTextStr, {
+        scene.soundToggleButton = scene.add.text(centerX + 25, 350, soundTextStr, {
             fontSize: '24px', color: '#ffffff', fontStyle: 'bold',
             backgroundColor: '#333333', padding: { x: 20, y: 10 }
         }).setOrigin(0.5).setScrollFactor(0).setDepth(201).setVisible(false)
             .setInteractive({ useHandCursor: true });
 
-        scene.soundToggleIcon = scene.add.image(centerX - 80, 350, 'ui_icons', soundIconFrame)
-            .setOrigin(0.5).setScrollFactor(0).setDepth(202).setVisible(false).setScale(0.4);
+        // Icon to the left of text, centered vertically
+        scene.soundToggleIcon = scene.add.image(centerX - 85, 350, 'ui_icons', soundIconFrame)
+            .setOrigin(0.5).setScrollFactor(0).setDepth(202).setVisible(false).setScale(0.4)
+            .setTint(0xffffff); // Ensure white
 
         scene.soundToggleButton.on('pointerdown', () => scene.toggleSound())
             .on('pointerover', function () { this.setColor('#ffff00'); scene.soundToggleIcon.setTint(0xffff00); })
-            .on('pointerout', function () { this.setColor('#ffffff'); scene.soundToggleIcon.clearTint(); });
+            .on('pointerout', function () { this.setColor('#ffffff'); scene.soundToggleIcon.setTint(0xffffff); });
 
         // Joystick Toggle Button (Text + Icon)
         const showJoystick = scene.registry.get('showJoystick') !== false;
         const joystickTextStr = showJoystick ? 'JOYSTICK: ON' : 'JOYSTICK: OFF';
 
-        scene.joystickToggleButton = scene.add.text(centerX + 20, 420, joystickTextStr, {
+        scene.joystickToggleButton = scene.add.text(centerX + 25, 420, joystickTextStr, {
             fontSize: '24px', color: '#ffffff', fontStyle: 'bold',
             backgroundColor: '#333333', padding: { x: 20, y: 10 }
         }).setOrigin(0.5).setScrollFactor(0).setDepth(201).setVisible(false)
             .setInteractive({ useHandCursor: true });
 
-        scene.joystickToggleIcon = scene.add.image(centerX - 90, 420, 'ui_icons', 'gamepad')
-            .setOrigin(0.5).setScrollFactor(0).setDepth(202).setVisible(false).setScale(0.4);
+        scene.joystickToggleIcon = scene.add.image(centerX - 95, 420, 'ui_icons', 'gamepad')
+            .setOrigin(0.5).setScrollFactor(0).setDepth(202).setVisible(false).setScale(0.4)
+            .setTint(0xffffff); // Ensure white
 
         scene.joystickToggleButton.on('pointerdown', () => scene.inputManager.toggleJoystickVisual())
             .on('pointerover', function () { this.setColor('#ffff00'); scene.joystickToggleIcon.setTint(0xffff00); })
-            .on('pointerout', function () { this.setColor('#ffffff'); scene.joystickToggleIcon.clearTint(); });
+            .on('pointerout', function () { this.setColor('#ffffff'); scene.joystickToggleIcon.setTint(0xffffff); });
 
-        // Exit Button (Text)
-        scene.exitButton = scene.add.text(centerX, 490, '🚪 SALIR AL MENÚ', {
+        // Exit Button (Text + Icon)
+        // User said "Aun esta el emoji de puesta. Cambiarlo por un icon."
+        // So we should use text "SALIR AL MENÚ" and an icon "door" (logout-box-r-line or similar)
+
+        scene.exitButton = scene.add.text(centerX + 25, 490, 'SALIR AL MENÚ', {
             fontSize: '24px', color: '#ff6666', fontStyle: 'bold',
             backgroundColor: '#333333', padding: { x: 20, y: 10 }
         }).setOrigin(0.5).setScrollFactor(0).setDepth(201).setVisible(false)
-            .setInteractive({ useHandCursor: true })
-            .on('pointerdown', () => {
-                scene.scene.start('MainMenu');
-            })
-            .on('pointerover', function () { this.setColor('#ff0000'); })
-            .on('pointerout', function () { this.setColor('#ff6666'); });
+            .setInteractive({ useHandCursor: true });
+
+        // Use 'door' icon (logout)
+        // We need to make sure 'door' exists in atlas. In generate-atlas.js we mapped 'door' to 'System/logout-box-r-line.svg' (or similar check)
+        // Wait, I didn't verify 'door' mapping in generate-atlas.js. Let me check the script content or just use a known one.
+        // In previous steps I didn't see 'door' explicitly added. I should check generate-atlas.js content again or add it.
+        // Assuming 'door' might not be there, I should use 'close' or 'logout' if available. 
+        // Let's assume I need to add 'door' to atlas in next step. For now, code it as if it exists.
+
+        scene.exitButtonIcon = scene.add.image(centerX - 100, 490, 'ui_icons', 'door')
+            .setOrigin(0.5).setScrollFactor(0).setDepth(202).setVisible(false).setScale(0.4)
+            .setTint(0xff6666);
+
+        scene.exitButton.on('pointerdown', () => {
+            scene.scene.start('MainMenu');
+        })
+            .on('pointerover', function () { this.setColor('#ff0000'); scene.exitButtonIcon.setTint(0xff0000); })
+            .on('pointerout', function () { this.setColor('#ff6666'); scene.exitButtonIcon.setTint(0xff6666); });
 
         // Joystick UI (created here but controlled by InputManager)
         scene.joystickBase = scene.add.image(0, 0, 'joystick_base').setAlpha(0.5).setScrollFactor(0).setDepth(999).setVisible(false);
@@ -210,6 +243,7 @@ export class UIManager {
             scene.joystickToggleButton.setVisible(true);
             scene.joystickToggleIcon.setVisible(true);
             scene.exitButton.setVisible(true);
+            if (scene.exitButtonIcon) scene.exitButtonIcon.setVisible(true);
             scene.pauseButton.setFrame('play'); // Play icon
             scene.tweens.pauseAll();
         } else {
@@ -223,6 +257,7 @@ export class UIManager {
             scene.joystickToggleButton.setVisible(false);
             scene.joystickToggleIcon.setVisible(false);
             scene.exitButton.setVisible(false);
+            if (scene.exitButtonIcon) scene.exitButtonIcon.setVisible(false);
             scene.pauseButton.setFrame('pause'); // Pause icon
             scene.tweens.resumeAll();
         }
