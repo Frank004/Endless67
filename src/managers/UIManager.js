@@ -22,11 +22,18 @@ export class UIManager {
         // --- PAUSE BUTTON ---
         // Icon should be white (from atlas) and sized appropriately
         // Positioned inside right wall (approx 32px from right)
-        scene.pauseButton = scene.add.image(gameWidth - 32, 40, 'ui_icons', 'pause')
+
+        // Circular background for pause button
+        scene.pauseButtonBg = scene.add.circle(gameWidth - 16, 40, 20, 0x000000, 0.5)
+            .setScrollFactor(0).setDepth(149);
+
+        scene.pauseButton = scene.add.image(gameWidth - 16, 40, 'ui_icons', 'pause')
             .setScrollFactor(0).setDepth(150).setInteractive({ useHandCursor: true })
             .setScale(0.5) // Scale down 64px to 32px
             .setTint(0xffffff) // Ensure white/light
-            .on('pointerdown', () => this.togglePauseMenu());
+            .on('pointerdown', () => this.togglePauseMenu())
+            .on('pointerover', () => scene.pauseButtonBg.setFillStyle(0x333333, 0.7))
+            .on('pointerout', () => scene.pauseButtonBg.setFillStyle(0x000000, 0.5));
 
         // --- PAUSE MENU OVERLAY ---
         scene.pauseMenuBg = scene.add.rectangle(scene.cameras.main.centerX, scene.cameras.main.centerY, scene.cameras.main.width, scene.cameras.main.height, 0x000000, 0.9)

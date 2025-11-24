@@ -78,13 +78,26 @@ export class Playground extends Game {
     createDevUI() {
         // --- TOGGLE BUTTON (Below pause button, centered) ---
         const gameWidth = this.cameras.main.width;
-        this.toggleBtn = this.add.image(gameWidth - 32, 90, 'ui_icons', 'settings')
+
+        // Circular background for gear button
+        this.toggleBtnBg = this.add.circle(gameWidth - 16, 90, 20, 0x000000, 0.5)
+            .setScrollFactor(0).setDepth(5999);
+
+        this.toggleBtn = this.add.image(gameWidth - 16, 90, 'ui_icons', 'settings')
             .setOrigin(0.5).setScrollFactor(0).setDepth(6000).setInteractive({ useHandCursor: true })
             .setScale(0.5) // Scale down 64px to 32px
             .setTint(0xffffff); // Ensure white
 
         this.toggleBtn.on('pointerdown', () => {
             this.toggleDevMenu();
+        });
+
+        this.toggleBtn.on('pointerover', () => {
+            this.toggleBtnBg.setFillStyle(0x333333, 0.7);
+        });
+
+        this.toggleBtn.on('pointerout', () => {
+            this.toggleBtnBg.setFillStyle(0x000000, 0.5);
         });
 
         // --- MODAL ELEMENTS ---
