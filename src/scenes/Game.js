@@ -146,16 +146,21 @@ export class Game extends Phaser.Scene {
      * Detects device type and adds CSS classes to the body.
      */
     setupDeviceDetection() {
+        const userAgent = navigator.userAgent || navigator.vendor || window.opera;
+        const isTouchDevice = (('ontouchstart' in window) || (navigator.maxTouchPoints > 0) || (navigator.msMaxTouchPoints > 0));
+
         this.isMobile = this.sys.game.device.os.android ||
             this.sys.game.device.os.iOS ||
             this.sys.game.device.os.iPad ||
             this.sys.game.device.os.iPhone ||
-            this.sys.game.device.os.windowsPhone;
+            this.sys.game.device.os.windowsPhone ||
+            /Android|webOS|iPhone|iPad|iPod|BlackBerry|IEMobile|Opera Mini/i.test(userAgent) ||
+            (isTouchDevice && /MacIntel/.test(navigator.platform)); // iPad Pro requesting desktop site
 
-        this.isAndroid = this.sys.game.device.os.android;
-        this.isIOS = this.sys.game.device.os.iOS;
-        this.isIPad = this.sys.game.device.os.iPad;
-        this.isIPhone = this.sys.game.device.os.iPhone;
+        this.isAndroid = this.sys.game.device.os.android || /Android/i.test(userAgent);
+        this.isIOS = this.sys.game.device.os.iOS || /iPhone|iPad|iPod/i.test(userAgent) || (isTouchDevice && /MacIntel/.test(navigator.platform));
+        this.isIPad = this.sys.game.device.os.iPad || /iPad/i.test(userAgent) || (isTouchDevice && /MacIntel/.test(navigator.platform) && !/iPhone/i.test(userAgent));
+        this.isIPhone = this.sys.game.device.os.iPhone || /iPhone/i.test(userAgent);
 
         if (this.isMobile) {
             document.body.classList.add('mobile');
