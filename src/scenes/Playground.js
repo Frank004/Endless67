@@ -66,8 +66,13 @@ export class Playground extends Game {
 
     createSolidFloor() {
         const floorY = 550;
-        const floor = this.platforms.create(200, floorY, 'platform');
-        floor.setDisplaySize(800, 40).refreshBody().setDepth(5);
+        const gameWidth = this.cameras.main.width;
+        const wallWidth = 32;
+        const centerX = this.cameras.main.centerX;
+        // Floor width: full playable area (gameWidth - 2 * wallWidth)
+        const floorWidth = gameWidth - (wallWidth * 2);
+        const floor = this.platforms.create(centerX, floorY, 'platform');
+        floor.setDisplaySize(floorWidth, 40).refreshBody().setDepth(5);
         floor.body.allowGravity = false;
         floor.body.immovable = true;
         floor.setData('isPermanentFloor', true);
@@ -476,7 +481,8 @@ export class Playground extends Game {
         this.mazeWalls.clear(true, true);
 
         // Reset player
-        this.player.setPosition(200, 400);
+        const centerX = this.cameras.main.centerX;
+        this.player.setPosition(centerX, 400);
         this.player.setVelocity(0, 0);
         this.cameras.main.scrollY = 0;
         this.currentHeight = 0;
@@ -485,7 +491,11 @@ export class Playground extends Game {
 
     spawnEnemy(type, shots = 2) {
         const y = this.player.y - 200;
-        const x = Phaser.Math.Between(50, 350);
+        const gameWidth = this.cameras.main.width;
+        const wallWidth = 32;
+        const minX = wallWidth + 28;
+        const maxX = gameWidth - wallWidth - 28;
+        const x = Phaser.Math.Between(minX, maxX);
 
         if (type === 'patrol') {
             const p = this.levelManager.spawnPlatform(x, y + 40, 100, false);
@@ -519,7 +529,11 @@ export class Playground extends Game {
 
     spawnPowerup(type) {
         const y = this.player.y - 200;
-        const x = Phaser.Math.Between(50, 350);
+        const gameWidth = this.cameras.main.width;
+        const wallWidth = 32;
+        const minX = wallWidth + 28;
+        const maxX = gameWidth - wallWidth - 28;
+        const x = Phaser.Math.Between(minX, maxX);
 
         if (type === 'shield') {
             const powerup = this.powerups.create(x, y, 'powerup_ball');
@@ -533,24 +547,33 @@ export class Playground extends Game {
     spawnPlatform(type, mode = 'clean') {
         const startY = this.player.y - 100;
 
+        const centerX = this.cameras.main.centerX;
         if (type === 'static') {
-            this.levelManager.spawnPlatform(200, startY, 140, false);
+            this.levelManager.spawnPlatform(centerX, startY, 140, false);
             if (mode === 'prepopulate') {
-                this.spawnRandomOnPlatform(200, startY);
+                this.spawnRandomOnPlatform(centerX, startY);
             }
         } else if (type === 'moving-slow') {
-            this.levelManager.spawnPlatform(200, startY, 140, true, 80); // Slow speed
+            this.levelManager.spawnPlatform(centerX, startY, 140, true, 80); // Slow speed
             if (mode === 'prepopulate') {
-                this.spawnRandomOnPlatform(200, startY);
+                this.spawnRandomOnPlatform(centerX, startY);
             }
         } else if (type === 'moving-fast') {
-            this.levelManager.spawnPlatform(200, startY, 140, true, 150); // Fast speed
+            this.levelManager.spawnPlatform(centerX, startY, 140, true, 150); // Fast speed
             if (mode === 'prepopulate') {
-                this.spawnRandomOnPlatform(200, startY);
+                this.spawnRandomOnPlatform(centerX, startY);
             }
         } else if (type === 'zigzag') {
+            const gameWidth = this.cameras.main.width;
+            const wallWidth = 32;
+            const centerX = this.cameras.main.centerX;
+            const minX = wallWidth + 28;
+            const maxX = gameWidth - wallWidth - 28;
+            // Zigzag between left and right sides of playable area
+            const leftX = minX + (centerX - minX) * 0.5;
+            const rightX = centerX + (maxX - centerX) * 0.5;
             for (let i = 0; i < 6; i++) {
-                const x = (i % 2 === 0) ? 100 : 300;
+                const x = (i % 2 === 0) ? leftX : rightX;
                 const y = startY - (i * 100);
                 this.levelManager.spawnPlatform(x, y, 100, false);
 
@@ -654,36 +677,44 @@ export class Playground extends Game {
 
         // Create a test section with various elements
         // 1. Zigzag platforms
+        const gameWidth = this.cameras.main.width;
+        const wallWidth = 32;
+        const centerX = this.cameras.main.centerX;
+        const minX = wallWidth + 28;
+        const maxX = gameWidth - wallWidth - 28;
+        const leftX = minX + (centerX - minX) * 0.5;
+        const rightX = centerX + (maxX - centerX) * 0.5;
         for (let i = 0; i < 4; i++) {
-            const x = (i % 2 === 0) ? 100 : 300;
+            const x = (i % 2 === 0) ? leftX : rightX;
             const y = startY - (i * 100);
             this.levelManager.spawnPlatform(x, y, 100, false);
         }
 
         // 2. Moving platform
-        this.levelManager.spawnPlatform(200, startY - 500, 120, true, 100);
+        this.levelManager.spawnPlatform(centerX, startY - 500, 120, true, 100);
 
         // 3. Patrol enemy on platform
         const platformY = startY - 600;
-        this.levelManager.spawnPlatform(200, platformY, 120, false);
-        const patrolEnemy = this.patrolEnemies.get(200, platformY - 40);
-        if (patrolEnemy) patrolEnemy.spawn(200, platformY - 40);
+        this.levelManager.spawnPlatform(centerX, platformY, 120, false);
+        const patrolEnemy = this.patrolEnemies.get(centerX, platformY - 40);
+        if (patrolEnemy) patrolEnemy.spawn(centerX, platformY - 40);
 
         // 4. Shooter enemy
-        const shooterEnemy = this.shooterEnemies.get(100, startY - 700);
+        const shooterX = minX + (centerX - minX) * 0.5;
+        const shooterEnemy = this.shooterEnemies.get(shooterX, startY - 700);
         if (shooterEnemy) {
-            shooterEnemy.spawn(100, startY - 700);
+            shooterEnemy.spawn(shooterX, startY - 700);
             shooterEnemy.startShooting(this.projectiles, 1000);
         }
 
         // 5. Coins
         for (let i = 0; i < 3; i++) {
-            const coin = this.coins.create(200, startY - 200 - (i * 100), 'coin');
+            const coin = this.coins.create(centerX, startY - 200 - (i * 100), 'coin');
             enablePlatformRider(coin, { mode: 'carry', marginX: 2 });
         }
 
         // 6. Shield powerup
-        const powerup = this.powerups.create(200, startY - 800, 'powerup_ball');
+        const powerup = this.powerups.create(centerX, startY - 800, 'powerup_ball');
         enablePlatformRider(powerup, { mode: 'carry', marginX: 2 });
 
         // 7. Easy maze at the top

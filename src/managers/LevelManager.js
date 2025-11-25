@@ -182,7 +182,12 @@ export class LevelManager {
             }
         } else {
             // Gap - maybe spawn a coin or powerup
-            let coinX = (Phaser.Math.Between(0, 1) === 0) ? 60 : 340;
+            // Use dynamic bounds to respect walls
+            const gameWidth = scene.cameras.main.width;
+            const wallWidth = 32;
+            const minX = wallWidth + 28;
+            const maxX = gameWidth - wallWidth - 28;
+            let coinX = Phaser.Math.Between(minX, maxX);
 
             // Powerup Logic from Config
             let powerupChance = config.mechanics.powerups ? config.mechanics.powerupChance : 0;
@@ -240,6 +245,7 @@ export class LevelManager {
     spawnMazeRowFromConfig(y, config, allowMoving, allowSpikes, rowIndex = null, pattern = null) {
         const scene = this.scene;
         const gameWidth = scene.cameras.main.width;
+        const wallWidth = 32;
         const centerX = scene.cameras.main.centerX;
         let type = config.type;
         let w1 = config.width;
@@ -254,7 +260,7 @@ export class LevelManager {
             }
         }
 
-        // Spawn Walls based on type
+        // Spawn Walls based on type (maze walls are created from screen edges, but items must respect side walls)
         if (type === 'left') {
             let block = scene.mazeWalls.create(0, y, 'maze_block');
             block.setOrigin(0, 0.5).setDisplaySize(w1, 60).refreshBody().setDepth(10);
@@ -272,31 +278,34 @@ export class LevelManager {
             block.setOrigin(0.5, 0.5).setDisplaySize(w1, 60).refreshBody().setDepth(10);
         }
 
-        // Spawning Items/Enemies
+        // Spawning Items/Enemies - must respect side walls (wallWidth = 32px on each side)
         let gapX = centerX;
-        let gapStart = 0;
-        let gapEnd = gameWidth;
+        let gapStart = wallWidth; // Start from left wall
+        let gapEnd = gameWidth - wallWidth; // End at right wall
 
         // Define wall segments for enemy spawning
         let wallSegments = [];
 
         if (type === 'left') {
-            gapStart = w1; gapEnd = gameWidth;
-            wallSegments.push({ min: 0, max: w1 });
+            gapStart = Math.max(wallWidth, w1); // Respect left wall
+            gapEnd = gameWidth - wallWidth; // Respect right wall
+            wallSegments.push({ min: wallWidth, max: Math.min(w1, gameWidth - wallWidth) }); // Wall segment within playable area
         } else if (type === 'right') {
-            gapStart = 0; gapEnd = gameWidth - w1;
-            wallSegments.push({ min: gameWidth - w1, max: gameWidth });
+            gapStart = wallWidth; // Respect left wall
+            gapEnd = Math.min(gameWidth - wallWidth, gameWidth - w1); // Respect right wall and maze wall
+            wallSegments.push({ min: Math.max(wallWidth, gameWidth - w1), max: gameWidth - wallWidth }); // Wall segment within playable area
         } else if (type === 'split') {
-            gapStart = w1; gapEnd = gameWidth - w2;
-            wallSegments.push({ min: 0, max: w1 });
-            wallSegments.push({ min: gameWidth - w2, max: gameWidth });
+            gapStart = Math.max(wallWidth, w1); // Respect left wall
+            gapEnd = Math.min(gameWidth - wallWidth, gameWidth - w2); // Respect right wall
+            wallSegments.push({ min: wallWidth, max: Math.min(w1, gameWidth - wallWidth) }); // Left wall segment
+            wallSegments.push({ min: Math.max(wallWidth, gameWidth - w2), max: gameWidth - wallWidth }); // Right wall segment
         } else if (type === 'center') {
             const leftGapEnd = centerX - w1 / 2;
             const rightGapStart = centerX + w1 / 2;
             const useLeftGap = Phaser.Math.Between(0, 1) === 0;
-            gapStart = useLeftGap ? 0 : rightGapStart;
-            gapEnd = useLeftGap ? leftGapEnd : gameWidth;
-            wallSegments.push({ min: leftGapEnd, max: rightGapStart });
+            gapStart = useLeftGap ? wallWidth : Math.max(wallWidth, rightGapStart); // Respect left wall
+            gapEnd = useLeftGap ? Math.min(gameWidth - wallWidth, leftGapEnd) : gameWidth - wallWidth; // Respect right wall
+            wallSegments.push({ min: Math.max(wallWidth, leftGapEnd), max: Math.min(gameWidth - wallWidth, rightGapStart) }); // Center wall segment
         }
 
         if (type !== 'center') {
