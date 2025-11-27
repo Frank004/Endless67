@@ -39,6 +39,57 @@ export class PhaserMock {
         }
     };
 
+    static Events = {
+        EventEmitter: class {
+            constructor() {
+                this.events = {};
+            }
+
+            on(event, fn, context) {
+                if (!this.events[event]) {
+                    this.events[event] = [];
+                }
+                this.events[event].push({ fn, context });
+                return this;
+            }
+
+            once(event, fn, context) {
+                const wrapper = (...args) => {
+                    fn.apply(context, args);
+                    this.off(event, wrapper);
+                };
+                return this.on(event, wrapper, context);
+            }
+
+            off(event, fn) {
+                if (!this.events[event]) return this;
+                if (!fn) {
+                    delete this.events[event];
+                } else {
+                    this.events[event] = this.events[event].filter(listener => listener.fn !== fn);
+                }
+                return this;
+            }
+
+            emit(event, ...args) {
+                if (!this.events[event]) return this;
+                this.events[event].forEach(listener => {
+                    listener.fn.apply(listener.context, args);
+                });
+                return this;
+            }
+
+            removeAllListeners(event) {
+                if (event) {
+                    delete this.events[event];
+                } else {
+                    this.events = {};
+                }
+                return this;
+            }
+        }
+    };
+
     static Physics = {
         Arcade: {
             Sprite: class {
@@ -266,3 +317,5 @@ export class PhaserMock {
 
 global.Phaser = PhaserMock;
 global.PhaserMock = PhaserMock;
+
+export default PhaserMock;

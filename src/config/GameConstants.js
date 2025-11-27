@@ -1,0 +1,176 @@
+/**
+ * GameConstants - Centralized game configuration
+ * 
+ * Todas las constantes del juego en un solo lugar.
+ * Facilita el tuning y evita magic numbers en el código.
+ */
+
+export const GAME_CONFIG = {
+    WIDTH: 800,
+    HEIGHT: 600,
+    TITLE: 'Endless67',
+};
+
+export const PHYSICS = {
+    GRAVITY: 800,
+    DEBUG: false,
+};
+
+export const PLAYER = {
+    SPEED: 200,
+    JUMP_VELOCITY: -400,
+    MAX_HEALTH: 3,
+    INVINCIBILITY_DURATION: 1000, // ms
+    SIZE: {
+        WIDTH: 32,
+        HEIGHT: 32,
+    },
+};
+
+export const PLATFORM = {
+    WIDTH: 100,
+    HEIGHT: 20,
+    SPACING: {
+        MIN_X: 50,
+        MAX_X: 200,
+        MIN_Y: 80,
+        MAX_Y: 120,
+    },
+    INITIAL_Y: 500,
+};
+
+export const ENEMY = {
+    PATROL: {
+        SPEED: 50,
+        DETECTION_RANGE: 200,
+    },
+    SHOOTER: {
+        SHOOT_INTERVAL: 2000, // ms
+        PROJECTILE_SPEED: 200,
+        PROJECTILE_LIFETIME: 3000, // ms
+    },
+    SPIKE: {
+        DAMAGE: 1,
+    },
+    FLYING: {
+        SPEED: 80,
+        AMPLITUDE: 50,
+        FREQUENCY: 0.002,
+    },
+};
+
+export const MAZE = {
+    BLOCK_SIZE: 50,
+    MIN_HEIGHT: 1000, // Altura mínima para que aparezcan mazes
+    DIFFICULTY_TIERS: [
+        { maxHeight: 2000, patterns: ['EASY'] },
+        { maxHeight: 4000, patterns: ['EASY', 'MEDIUM'] },
+        { maxHeight: Infinity, patterns: ['EASY', 'MEDIUM', 'HARD'] },
+    ],
+};
+
+export const LAVA = {
+    RISE_SPEED: 0.5, // pixels per frame
+    INITIAL_Y: 650,
+    DAMAGE: 1,
+    WAVE_AMPLITUDE: 5,
+    WAVE_FREQUENCY: 0.01,
+};
+
+export const SCORE = {
+    HEIGHT_MULTIPLIER: 1, // 1 punto por pixel de altura
+    COIN_VALUE: 10,
+    ENEMY_KILL_VALUE: 50,
+};
+
+export const UI = {
+    COLORS: {
+        PRIMARY: '#00ff00',
+        SECONDARY: '#ffff00',
+        DANGER: '#ff0000',
+        WHITE: '#ffffff',
+        BLACK: '#000000',
+    },
+    FONTS: {
+        MAIN: 'Arial',
+        SIZE: {
+            SMALL: '16px',
+            MEDIUM: '24px',
+            LARGE: '32px',
+            XLARGE: '48px',
+        },
+    },
+    PADDING: 20,
+};
+
+export const AUDIO = {
+    VOLUME: {
+        MUSIC: 0.5,
+        SFX: 0.7,
+    },
+    KEYS: {
+        JUMP: 'jump',
+        HIT: 'hit',
+        COIN: 'coin',
+        GAME_OVER: 'gameOver',
+        BACKGROUND_MUSIC: 'bgMusic',
+    },
+};
+
+export const POOL = {
+    INITIAL_SIZE: {
+        PLATFORMS: 20,
+        ENEMIES: 10,
+        PROJECTILES: 15,
+        COINS: 10,
+    },
+    GROW_SIZE: 5, // Cuántos objetos crear cuando el pool se queda sin objetos
+};
+
+export const DEBUG = {
+    SHOW_FPS: false,
+    SHOW_PHYSICS: false,
+    GOD_MODE: false,
+    SPAWN_RATE_MULTIPLIER: 1,
+};
+
+// Tipos de enemigos
+export const ENEMY_TYPES = {
+    PATROL: 'patrol',
+    SHOOTER: 'shooter',
+    SPIKE: 'spike',
+    FLYING: 'flying',
+};
+
+// Tipos de plataformas
+export const PLATFORM_TYPES = {
+    NORMAL: 'normal',
+    MOVING: 'moving',
+    BREAKABLE: 'breakable',
+    BOUNCY: 'bouncy',
+};
+
+// Dificultad
+export const DIFFICULTY = {
+    EASY: 'easy',
+    MEDIUM: 'medium',
+    HARD: 'hard',
+};
+
+export default {
+    GAME_CONFIG,
+    PHYSICS,
+    PLAYER,
+    PLATFORM,
+    ENEMY,
+    MAZE,
+    LAVA,
+    SCORE,
+    UI,
+    AUDIO,
+    POOL,
+    DEBUG,
+    ENEMY_TYPES,
+    PLATFORM_TYPES,
+    DIFFICULTY,
+};
