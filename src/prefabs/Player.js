@@ -1,8 +1,40 @@
 export class Player extends Phaser.Physics.Arcade.Sprite {
     constructor(scene, x, y) {
-        super(scene, x, y, 'player');
+        // Determinar qué textura usar: PNG o placeholder generado
+        // Si existe 'player_png' y el toggle está activo, usarlo; sino usar 'player'
+        const usePNG = scene.registry.get('usePlayerPNG') === true; // Debe ser explícitamente true
+        const textureKey = (usePNG && scene.textures.exists('player_png')) ? 'player_png' : 'player';
+        
+        // Debug log para verificar qué textura se está usando
+        if (usePNG && scene.textures.exists('player_png')) {
+            console.log('🎨 Player: Usando PNG (player_png)');
+        } else {
+            console.log('🎨 Player: Usando placeholder generado (player)');
+        }
+        
+        super(scene, x, y, textureKey);
         scene.add.existing(this);
         scene.physics.add.existing(this);
+
+        // Player sprite size (actualizado para 32x32px)
+        // El body de física se ajusta con ancho fijo de 18px
+        // Esto permite que el sprite visual sea más grande sin afectar las colisiones
+        if (this.body) {
+            const spriteWidth = this.width || 32; // Ancho del sprite visual
+            const spriteHeight = this.height || 32; // Alto del sprite visual
+            
+            // Ancho del body fijo en 20px
+            const bodyWidth = 20;
+            // Altura del body: mantener proporción o usar altura del sprite menos margen
+            const bodyHeight = Math.max(20, spriteHeight - 4); // Mínimo 20px de altura
+            
+            // Centrar horizontalmente y ajustar verticalmente (pies en la parte inferior)
+            const offsetX = (spriteWidth - bodyWidth) / 2;
+            const offsetY = spriteHeight - bodyHeight; // Offset Y en la parte inferior (pies)
+            
+            this.body.setSize(bodyWidth, bodyHeight);
+            this.body.setOffset(offsetX, offsetY);
+        }
 
         this.setGravityY(1200);
         this.setMaxVelocity(300, 1000);
@@ -90,7 +122,11 @@ export class Player extends Phaser.Physics.Arcade.Sprite {
 
             this.setVelocityY(-600 * boost); // Increased from -550 to reach 140px spacing
             this.jumps++;
-            return { type: type, x: this.x, y: this.y + 12 };
+            // Offset ajustado dinámicamente basado en el tamaño del sprite
+            // Para 32x32px: offset de ~16px (mitad del sprite)
+            // Para 24x24px: offset de ~12px (mitad del sprite)
+            const jumpOffsetY = (this.height || 32) * 0.5;
+            return { type: type, x: this.x, y: this.y + jumpOffsetY };
         }
 
         return null;

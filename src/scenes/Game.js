@@ -72,11 +72,17 @@ export class Game extends Phaser.Scene {
         // --- WALLS ---
         this.createWalls();
 
+        // --- DEBUG SETUP (ANTES DE CREAR PLAYER) ---
+        // Configurar toggle de Player PNG ANTES de crear el player
+        // El toggle se lee desde DebugManager y se guarda en registry para acceso global
+        this.registry.set('usePlayerPNG', this.debugManager.usePlayerPNG);
+
         // --- PLAYER ---
         // Spawn player en el centro horizontal de la pantalla
+        // El Player leerá el toggle del registry para decidir qué textura usar
         this.player = new Player(this, this.cameras.main.centerX, 400);
 
-        // --- DEBUG SETUP ---
+        // --- APLICAR OTROS DEBUG SETTINGS ---
         this.debugManager.applyDebugSettings();
 
         // --- INITIAL LEVEL GENERATION ---
@@ -128,6 +134,7 @@ export class Game extends Phaser.Scene {
         this.uiManager.update();
         this.lavaManager.update(this.player.y, this.currentHeight, false);
         this.audioManager.updateAudio(this.player.y, this.lava.y);
+        this.debugManager.updateHitboxVisual(); // Actualizar hitbox visual si está activo
 
         // Update platformRider for coins and powerups
         this.coins.children.iterate(coin => {

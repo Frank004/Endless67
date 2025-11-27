@@ -36,6 +36,16 @@ export class Boot extends Phaser.Scene {
         // --- UI ICONS ---
         this.load.atlas('ui_icons', 'assets/ui/icons.png', 'assets/ui/icons.json');
 
+        // --- PLAYER SPRITE (PNG Placeholder) ---
+        // Cargar PNG si existe. Si no existe, se usará el placeholder generado.
+        // Toggle: Cambiar usePlayerPNG en DebugManager para activar/desactivar
+        // Ruta esperada: assets/images/player_32x32.png
+        try {
+            this.load.image('player_png', 'assets/images/player_32x32.png');
+        } catch (error) {
+            console.warn('Player PNG no encontrado, se usará placeholder generado:', error);
+        }
+
         // Register Lava Pipeline
         if (this.game.renderer.type === Phaser.WEBGL) {
             this.renderer.pipelines.addPostPipeline('LavaPipeline', LavaPipeline);
@@ -43,16 +53,34 @@ export class Boot extends Phaser.Scene {
     }
 
     create() {
-
         // Generate Textures
         let g = this.make.graphics({ x: 0, y: 0 });
 
-        // Player
+        // Player Sprite - Toggle entre PNG y placeholder generado
+        // Toggle controlado por DebugManager.usePlayerPNG
+        // Para cambiar: modifica usePlayerPNG en src/managers/DebugManager.js
+        const usePlayerPNG = this.registry.get('usePlayerPNG') !== false; // Default: true (usar PNG si existe)
+        
+        // Verificar si el PNG se cargó correctamente
+        const pngLoaded = this.textures.exists('player_png');
+        
+        // Siempre generar placeholder 'player' como fallback
+        const PLAYER_SIZE = 32;
         g.fillStyle(0x00ffff, 1);
-        g.fillRoundedRect(0, 0, 24, 24, 6);
+        g.fillRoundedRect(0, 0, PLAYER_SIZE, PLAYER_SIZE, 8);
         g.lineStyle(2, 0xffffff, 0.8);
-        g.strokeRoundedRect(0, 0, 24, 24, 6);
-        g.generateTexture('player', 24, 24);
+        g.strokeRoundedRect(0, 0, PLAYER_SIZE, PLAYER_SIZE, 8);
+        g.generateTexture('player', PLAYER_SIZE, PLAYER_SIZE);
+        
+        // Log del estado
+        if (usePlayerPNG && pngLoaded) {
+            console.log('✅ Player PNG disponible (32x32px) - Se usará si toggle está activo');
+        } else if (!usePlayerPNG) {
+            console.log('🎨 Usando Player placeholder generado (toggle desactivado)');
+        } else {
+            console.log('⚠️ PNG no encontrado, usando placeholder generado');
+            console.log('   Coloca tu PNG en: assets/images/player_32x32.png');
+        }
 
         // Platform
 

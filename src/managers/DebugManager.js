@@ -5,6 +5,16 @@ export class DebugManager {
         this.debugStartHeight = 0; // Set to > 0 to start at that height
         this.enableTestEnemies = false; // Set to true to spawn test enemies
         this.enableLavaDelay = false; // Give player time to react at start
+        
+        // PLAYER SPRITE TOGGLE
+        // true = usar PNG placeholder (assets/images/player_32x32.png)
+        // false = usar placeholder generado programáticamente
+        this.usePlayerPNG = false; // Cambiar a false para usar placeholder generado
+        
+        // PLAYER HITBOX VISUAL DEBUG
+        // true = mostrar hitbox rosa del player
+        // false = ocultar hitbox
+        this.showPlayerHitbox = false; // Cambiar a false para ocultar hitbox
     }
 
     applyDebugSettings() {
@@ -26,6 +36,81 @@ export class DebugManager {
         // Spawn Test Enemies if enabled
         if (this.enableTestEnemies) {
             this.spawnTestEnemies();
+        }
+        
+        // Setup Player Hitbox Visual Debug
+        if (this.showPlayerHitbox && scene.player) {
+            this.setupPlayerHitboxVisual(scene.player);
+        }
+    }
+    
+    setupPlayerHitboxVisual(player) {
+        const scene = this.scene;
+        
+        // Crear gráfico para el hitbox visual
+        const hitboxGraphics = scene.add.graphics();
+        hitboxGraphics.setDepth(1000); // Por encima del player (depth 20)
+        
+        // Función para actualizar el hitbox visual
+        const updateHitbox = () => {
+            if (!player || !player.active || !player.body) {
+                hitboxGraphics.clear();
+                return;
+            }
+            
+            hitboxGraphics.clear();
+            
+            // Dibujar el hitbox del body de física en color rosa
+            const body = player.body;
+            const x = body.x;
+            const y = body.y;
+            const width = body.width;
+            const height = body.height;
+            
+            // Color rosa/rosa (#FF69B4 o similar)
+            hitboxGraphics.lineStyle(2, 0xFF69B4, 1); // Rosa brillante, 2px de grosor
+            hitboxGraphics.strokeRect(x, y, width, height);
+            
+            // Opcional: relleno semi-transparente para mejor visibilidad
+            hitboxGraphics.fillStyle(0xFF69B4, 0.2); // Rosa con 20% de opacidad
+            hitboxGraphics.fillRect(x, y, width, height);
+            
+            // Dibujar el tamaño del sprite visual también (opcional, en otro color)
+            const spriteX = player.x - (player.width / 2);
+            const spriteY = player.y - (player.height / 2);
+            hitboxGraphics.lineStyle(1, 0x00FFFF, 0.5); // Cian para el sprite visual
+            hitboxGraphics.strokeRect(spriteX, spriteY, player.width, player.height);
+        };
+        
+        // Guardar referencia para actualizar en el update loop
+        this.playerHitboxGraphics = hitboxGraphics;
+        this.updateHitboxCallback = updateHitbox;
+        
+        // Actualizar inmediatamente
+        updateHitbox();
+    }
+    
+    updateHitboxVisual() {
+        if (this.showPlayerHitbox && this.updateHitboxCallback && this.scene.player) {
+            this.updateHitboxCallback();
+        } else if (this.playerHitboxGraphics) {
+            this.playerHitboxGraphics.clear();
+        }
+    }
+    
+    togglePlayerHitbox(show) {
+        this.showPlayerHitbox = show;
+        const scene = this.scene;
+        
+        if (show && scene.player && !this.playerHitboxGraphics) {
+            this.setupPlayerHitboxVisual(scene.player);
+        } else if (!show && this.playerHitboxGraphics) {
+            this.playerHitboxGraphics.destroy();
+            if (this.updateHitboxCallback) {
+                scene.events.off('update', this.updateHitboxCallback);
+            }
+            this.playerHitboxGraphics = null;
+            this.updateHitboxCallback = null;
         }
     }
 

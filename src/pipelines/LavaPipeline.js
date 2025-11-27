@@ -8,15 +8,18 @@ export default class LavaPipeline extends Phaser.Renderer.WebGL.Pipelines.PostFX
                 uniform sampler2D uMainSampler;
                 uniform float uTime;
                 uniform vec2 uResolution;
+                uniform vec2 uGameSize;
                 uniform float uPixelSize;
                 varying vec2 outTexCoord;
                 
                 void main() {
                     vec2 uv = outTexCoord;
                     
-                    // Pixelation procedural: redondear UV a cuadrícula de 16x16 (o configurable)
-                    // uPixelSize controla el tamaño de los "píxeles" (16.0 = 16x16, 8.0 = 8x8, etc.)
-                    vec2 pixelSize = vec2(uPixelSize / uResolution.x, uPixelSize / uResolution.y);
+                    // Pixelation procedural: 32x32px en el espacio del juego (igual que el personaje)
+                    // uPixelSize = 32.0 (tamaño en píxeles del juego)
+                    // uGameSize = tamaño del juego (width, height)
+                    // Calculamos el tamaño de pixel en coordenadas UV basado en el tamaño del juego
+                    vec2 pixelSize = vec2(uPixelSize / uGameSize.x, uPixelSize / uGameSize.y);
                     vec2 pixelatedUV = floor(uv / pixelSize) * pixelSize;
                     
                     // Wave effect: distort X based on Y and Time, and Y based on X and Time
@@ -33,14 +36,18 @@ export default class LavaPipeline extends Phaser.Renderer.WebGL.Pipelines.PostFX
             `
         });
         
-        // Tamaño de pixelación (16x16 para estilo pixel art)
-        this.pixelSize = 8.0;
+        // Tamaño de pixelación: 32x32px en el espacio del juego (igual que el personaje)
+        this.pixelSize = 32.0;
     }
 
     onPreRender() {
         const renderer = this.game.renderer;
+        const gameWidth = this.game.config.width;
+        const gameHeight = this.game.config.height;
+        
         this.set1f('uTime', this.game.loop.time / 1000);
         this.set2f('uResolution', renderer.width, renderer.height);
+        this.set2f('uGameSize', gameWidth, gameHeight); // Tamaño del juego en píxeles
         this.set1f('uPixelSize', this.pixelSize);
     }
     

@@ -22,8 +22,17 @@ export class LavaManager {
         scene.physics.add.existing(this.lava);
         this.lava.body.allowGravity = false;
         this.lava.body.immovable = true;
-        this.lava.body.setSize(lavaPhysicsWidth, 700); // Reduced from 780 to 700
-        this.lava.body.setOffset(waveOffset, 100); // Adjusted offset to match new size
+        
+        // Ajustar el body de física para que coincida exactamente con la parte superior visual de la lava
+        // El body debe ser delgado y estar en la parte superior para detectar colisiones precisas
+        // Considerando que el player tiene un body de ~20px de altura con offset en la parte inferior
+        const lavaBodyHeight = 10; // Body delgado en la parte superior
+        // Offset Y negativo para que el body esté exactamente en la parte superior visual
+        // Esto compensa cualquier diferencia entre la posición visual y el body
+        const lavaBodyOffsetY = -5; // Offset negativo para subir el body y alinearlo con la parte superior visual
+        
+        this.lava.body.setSize(lavaPhysicsWidth, lavaBodyHeight);
+        this.lava.body.setOffset(waveOffset, lavaBodyOffsetY);
         this.lava.setDepth(50);
 
         if (scene.game.renderer.type === Phaser.WEBGL) {
