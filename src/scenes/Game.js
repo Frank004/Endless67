@@ -10,6 +10,12 @@ import { ParticleManager } from '../managers/ParticleManager.js';
 import { LavaManager } from '../managers/LavaManager.js';
 import { DebugManager } from '../managers/DebugManager.js';
 import { updatePlatformRider } from '../utils/platformRider.js';
+import EventBus, { Events } from '../core/EventBus.js';
+import GameState from '../core/GameState.js';
+import PoolManager, { poolRegistry } from '../core/PoolManager.js';
+import { Platform } from '../prefabs/Platform.js';
+import { POOL, WALLS, PHYSICS } from '../config/GameConstants.js';
+import { getDeviceInfo, applyDeviceClasses } from '../utils/DeviceDetection.js';
 
 /**
  * @phasereditor
@@ -41,15 +47,25 @@ export class Game extends Phaser.Scene {
         // --- PHYSICS & CAMERA SETUP ---
         this.input.addPointer(3);
         // Physics bounds: dinámico basado en el ancho del juego
-        // Las paredes tienen 32px de ancho, así que el área jugable es gameWidth - 64 (32px a cada lado)
+        // Usar constantes centralizadas para parámetros de paredes
+        // IMPORTANTE: Los bounds deben coincidir exactamente con las paredes para evitar penetración
+        // Las paredes ocupan desde x=0 hasta x=wallWidth (izquierda) y desde x=gameWidth-wallWidth hasta x=gameWidth (derecha)
+        // El área jugable va desde x=wallWidth hasta x=gameWidth-wallWidth
         const gameWidth = this.cameras.main.width;
-        const wallWidth = 32;
-        const physicsWidth = gameWidth - (wallWidth * 2); // 32px margen a cada lado para las paredes
-        this.physics.world.setBounds(wallWidth, -1000000, physicsWidth, 1000000 + 800);
+        const wallWidth = WALLS.WIDTH;
+        const physicsLeft = wallWidth; // Borde izquierdo del área jugable (donde termina la pared izquierda)
+        const physicsRight = gameWidth - wallWidth; // Borde derecho del área jugable (donde empieza la pared derecha)
+        const physicsWidth = physicsRight - physicsLeft; // Ancho del área jugable
+        this.physics.world.setBounds(
+            physicsLeft,
+            PHYSICS.WORLD_BOUNDS.MIN_Y,
+            physicsWidth,
+            PHYSICS.WORLD_BOUNDS.MAX_Y
+        );
         this.cameras.main.setBackgroundColor('#050505');
 
         // --- DEVICE DETECTION ---
-        this.setupDeviceDetection();
+        this.setupDeviceDetection(); // Usa DeviceDetection centralizado
 
         // --- GAME STATE VARIABLES ---
         this.gameStarted = false;
@@ -97,9 +113,13 @@ export class Game extends Phaser.Scene {
 
         // --- SETUP MANAGERS ---
         this.uiManager.createUI();
+        this.uiManager.setupEventListeners(); // Setup EventBus listeners
         this.inputManager.setupInputs();
         this.collisionManager.setupCollisions();
         this.audioManager.setupAudio();
+
+        // --- SETUP EVENT LISTENERS ---
+        this.setupGameEventListeners();
 
         // --- CAMERA FOLLOW ---
         this.cameras.main.startFollow(this.player, true, 0, 0.1);
@@ -107,7 +127,41 @@ export class Game extends Phaser.Scene {
         // --- CLEANUP ON SCENE SHUTDOWN ---
         this.events.once('shutdown', () => {
             this.audioManager.stopAudio();
+            this.uiManager.destroy(); // Clean up event listeners
+            this.cleanupGameEventListeners();
         });
+    }
+
+    /**
+     * Setup EventBus listeners for game state changes
+     */
+    setupGameEventListeners() {
+        // Handle physics pause/resume when game state changes
+        const pauseListener = () => {
+            this.physics.pause();
+            this.isPaused = true;
+        };
+        EventBus.on(Events.GAME_PAUSED, pauseListener);
+        this._pauseListener = pauseListener;
+
+        const resumeListener = () => {
+            this.physics.resume();
+            this.isPaused = false;
+        };
+        EventBus.on(Events.GAME_RESUMED, resumeListener);
+        this._resumeListener = resumeListener;
+    }
+
+    /**
+     * Clean up game event listeners
+     */
+    cleanupGameEventListeners() {
+        if (this._pauseListener) {
+            EventBus.off(Events.GAME_PAUSED, this._pauseListener);
+        }
+        if (this._resumeListener) {
+            EventBus.off(Events.GAME_RESUMED, this._resumeListener);
+        }
     }
 
     /**
@@ -125,13 +179,13 @@ export class Game extends Phaser.Scene {
         if (this.isPausedEvent || this.isPaused) return;
         if (!this.gameStarted) return;
 
-        // Player Update
-        this.player.update(this.cursors, null, null, this.isMobile);
+        // Player Update - now only handles physics, input is via EventBus
+        this.player.update();
 
         // Manager Updates
         this.inputManager.update();
         this.levelManager.update();
-        this.uiManager.update();
+        // UIManager.update() removed - now uses EventBus listeners
         this.lavaManager.update(this.player.y, this.currentHeight, false);
         this.audioManager.updateAudio(this.player.y, this.lava.y);
         this.debugManager.updateHitboxVisual(); // Actualizar hitbox visual si está activo
@@ -151,38 +205,31 @@ export class Game extends Phaser.Scene {
         // Usar altura de referencia dinámica (400 era la altura inicial de referencia)
         const referenceHeight = 400;
         let h = Math.floor((referenceHeight - this.player.y) / 10) + this.heightOffset;
-        if (h > this.currentHeight) this.currentHeight = h;
+        if (h > this.currentHeight) {
+            this.currentHeight = h;
+            // Update GameState and emit event
+            GameState.updateHeight(this.currentHeight);
+        }
     }
 
     /**
      * Detects device type and adds CSS classes to the body.
+     * Usa el sistema centralizado de detección de dispositivos.
      */
     setupDeviceDetection() {
-        const userAgent = navigator.userAgent || navigator.vendor || window.opera;
-        const isTouchDevice = (('ontouchstart' in window) || (navigator.maxTouchPoints > 0) || (navigator.msMaxTouchPoints > 0));
+        const deviceInfo = getDeviceInfo(this.sys.game);
 
-        this.isMobile = this.sys.game.device.os.android ||
-            this.sys.game.device.os.iOS ||
-            this.sys.game.device.os.iPad ||
-            this.sys.game.device.os.iPhone ||
-            this.sys.game.device.os.windowsPhone ||
-            /Android|webOS|iPhone|iPad|iPod|BlackBerry|IEMobile|Opera Mini/i.test(userAgent) ||
-            (isTouchDevice && /MacIntel/.test(navigator.platform)); // iPad Pro requesting desktop site
+        // Asignar propiedades para compatibilidad
+        this.isMobile = deviceInfo.isMobile;
+        this.isAndroid = deviceInfo.isAndroid;
+        this.isIOS = deviceInfo.isIOS;
+        this.isIPad = deviceInfo.isIPad;
+        this.isIPhone = deviceInfo.isIPhone;
 
-        this.isAndroid = this.sys.game.device.os.android || /Android/i.test(userAgent);
-        this.isIOS = this.sys.game.device.os.iOS || /iPhone|iPad|iPod/i.test(userAgent) || (isTouchDevice && /MacIntel/.test(navigator.platform));
-        this.isIPad = this.sys.game.device.os.iPad || /iPad/i.test(userAgent) || (isTouchDevice && /MacIntel/.test(navigator.platform) && !/iPhone/i.test(userAgent));
-        this.isIPhone = this.sys.game.device.os.iPhone || /iPhone/i.test(userAgent);
+        // Aplicar clases CSS
+        applyDeviceClasses(deviceInfo);
 
-        if (this.isMobile) {
-            document.body.classList.add('mobile');
-            if (this.isAndroid) document.body.classList.add('android');
-            if (this.isIOS) document.body.classList.add('ios');
-
-            console.log(`Device Detection: Mobile=true, Android=${this.isAndroid}, iOS=${this.isIOS}`);
-        } else {
-            console.log('Device Detection: Mobile=false');
-        }
+        console.log(`Device Detection: Mobile=${this.isMobile}, Android=${this.isAndroid}, iOS=${this.isIOS}`);
 
         // Orientation Check
         const checkOrientation = () => {
@@ -204,12 +251,65 @@ export class Game extends Phaser.Scene {
      * Creates physics groups for game objects.
      */
     createGroups() {
+        // Crear PoolManager para plataformas
+        this.platformPool = new PoolManager(
+            this,
+            'platforms',
+            Platform,
+            POOL.INITIAL_SIZE.PLATFORMS || 20,
+            POOL.GROW_SIZE || 5
+        );
+
+        // Registrar en el registry global (para debugging)
+        poolRegistry.register('platforms', this.platformPool);
+
+        // Mantener grupo legacy para compatibilidad temporal (se eliminará después)
         this.platforms = this.physics.add.group({ allowGravity: false, immovable: true });
 
         // Coins and powerups need to be dynamic to use platformRider on moving platforms
         this.coins = this.physics.add.group({ allowGravity: false, immovable: true });
         this.powerups = this.physics.add.group({ allowGravity: false, immovable: true });
 
+        // Crear pools para enemigos
+        this.patrolEnemyPool = new PoolManager(
+            this,
+            'patrolEnemies',
+            PatrolEnemy,
+            POOL.INITIAL_SIZE.ENEMIES || 10,
+            POOL.GROW_SIZE || 5
+        );
+        poolRegistry.register('patrolEnemies', this.patrolEnemyPool);
+
+        this.shooterEnemyPool = new PoolManager(
+            this,
+            'shooterEnemies',
+            ShooterEnemy,
+            POOL.INITIAL_SIZE.ENEMIES || 10,
+            POOL.GROW_SIZE || 5
+        );
+        poolRegistry.register('shooterEnemies', this.shooterEnemyPool);
+
+        this.jumperShooterEnemyPool = new PoolManager(
+            this,
+            'jumperShooterEnemies',
+            JumperShooterEnemy,
+            POOL.INITIAL_SIZE.ENEMIES || 10,
+            POOL.GROW_SIZE || 5
+        );
+        poolRegistry.register('jumperShooterEnemies', this.jumperShooterEnemyPool);
+
+        // Crear pool para proyectiles
+        this.projectilePool = new PoolManager(
+            this,
+            'projectiles',
+            Projectile,
+            POOL.INITIAL_SIZE.PROJECTILES || 15,
+            POOL.GROW_SIZE || 5
+        );
+        poolRegistry.register('projectiles', this.projectilePool);
+
+        // Mantener grupos legacy para compatibilidad (colisiones, etc.)
+        // Los objetos del pool se agregarán a estos grupos cuando se spawnean
         this.patrolEnemies = this.physics.add.group({ classType: PatrolEnemy, allowGravity: false, immovable: true, runChildUpdate: true });
         this.shooterEnemies = this.physics.add.group({ classType: ShooterEnemy, allowGravity: false, immovable: true, runChildUpdate: true });
         this.jumperShooterEnemies = this.physics.add.group({ classType: JumperShooterEnemy, allowGravity: true, immovable: false, runChildUpdate: true });
@@ -224,30 +324,80 @@ export class Game extends Phaser.Scene {
 
     /**
      * Creates the side walls.
+     * IMPORTANTE: Los bodies de las paredes deben estar perfectamente alineados
+     * con los bounds del mundo físico para evitar penetración del jugador.
      */
     createWalls() {
         const gameWidth = this.cameras.main.width;
-        const wallWidth = 32;
-        this.leftWall = this.add.tileSprite(0, 300, wallWidth, 1200, 'wall').setOrigin(0, 0.5).setDepth(60);
-        this.rightWall = this.add.tileSprite(gameWidth, 300, wallWidth, 1200, 'wall').setOrigin(1, 0.5).setDepth(60);
+        const wallWidth = WALLS.WIDTH;
+        const wallHeight = WALLS.HEIGHT;
+        const wallYOffset = WALLS.Y_OFFSET;
+        const wallDepth = WALLS.DEPTH;
+
+        // Crear paredes: leftWall en x=0, rightWall en x=gameWidth
+        // Usar setOrigin(0, 0.5) para leftWall y setOrigin(1, 0.5) para rightWall
+        // para que el sprite visual esté correctamente posicionado
+        this.leftWall = this.add.tileSprite(0, wallYOffset, wallWidth, wallHeight, 'wall')
+            .setOrigin(0, 0.5)
+            .setDepth(wallDepth);
+        this.rightWall = this.add.tileSprite(gameWidth, wallYOffset, wallWidth, wallHeight, 'wall')
+            .setOrigin(1, 0.5)
+            .setDepth(wallDepth);
+
+        // Agregar física a las paredes (static = true para que sean inamovibles)
         this.physics.add.existing(this.leftWall, true);
         this.physics.add.existing(this.rightWall, true);
+
+        // CRÍTICO: Configurar los bodies de las paredes para que coincidan exactamente
+        // con su posición visual y los bounds del mundo físico
+        // IMPORTANTE: Con setOrigin(0, 0.5) y setOrigin(1, 0.5), Phaser ajusta automáticamente
+        // la posición del body, pero debemos asegurarnos de que el tamaño y offset sean correctos
+        if (this.leftWall.body) {
+            // Pared izquierda: body desde x=0 hasta x=wallWidth
+            // Con setOrigin(0, 0.5), el gameObject está en x=0 y el sprite se extiende hasta x=wallWidth
+            // El body debe cubrir exactamente desde x=0 hasta x=wallWidth
+            this.leftWall.body.setSize(wallWidth, wallHeight);
+            // Offset en Y para centrar verticalmente (el origin está en 0.5 verticalmente)
+            this.leftWall.body.setOffset(0, -wallHeight / 2);
+            // Asegurar que el body esté sincronizado con el gameObject
+            this.leftWall.body.updateFromGameObject();
+        }
+        if (this.rightWall.body) {
+            // Pared derecha: body desde x=gameWidth-wallWidth hasta x=gameWidth
+            // Con setOrigin(1, 0.5), el gameObject está en x=gameWidth y el sprite se extiende desde x=gameWidth-wallWidth
+            // El body debe cubrir exactamente desde x=gameWidth-wallWidth hasta x=gameWidth
+            this.rightWall.body.setSize(wallWidth, wallHeight);
+            // Offset en X: -wallWidth para que el body empiece en x=gameWidth-wallWidth
+            // Offset en Y: -wallHeight/2 para centrar verticalmente
+            this.rightWall.body.setOffset(-wallWidth, -wallHeight / 2);
+            // Asegurar que el body esté sincronizado con el gameObject
+            this.rightWall.body.updateFromGameObject();
+        }
     }
 
     /**
      * Updates wall positions to follow the camera.
+     * IMPORTANTE: Mantener los bodies de las paredes correctamente posicionados
+     * para evitar que el jugador penetre las paredes.
      */
     updateWalls() {
+        const wallYOffset = WALLS.Y_OFFSET;
+        const gameWidth = this.cameras.main.width;
+        const wallWidth = WALLS.WIDTH;
+
         if (this.leftWall && this.leftWall.active && this.leftWall.body) {
-            this.leftWall.y = this.cameras.main.scrollY + 300;
+            this.leftWall.y = this.cameras.main.scrollY + wallYOffset;
             this.leftWall.x = 0;
+            // Asegurar que el body mantenga su offset correcto
+            this.leftWall.body.setOffset(0, -WALLS.HEIGHT / 2);
             this.leftWall.body.updateFromGameObject();
         }
 
         if (this.rightWall && this.rightWall.active && this.rightWall.body) {
-            this.rightWall.y = this.cameras.main.scrollY + 300;
-            const gameWidth = this.cameras.main.width;
+            this.rightWall.y = this.cameras.main.scrollY + wallYOffset;
             this.rightWall.x = gameWidth;
+            // Asegurar que el body mantenga su offset correcto
+            this.rightWall.body.setOffset(-wallWidth, -WALLS.HEIGHT / 2);
             this.rightWall.body.updateFromGameObject();
         }
     }
@@ -263,8 +413,11 @@ export class Game extends Phaser.Scene {
 
     /**
      * Toggles sound on/off.
+     * Now uses GameState to manage sound state.
      */
     toggleSound() {
+        GameState.toggleSound();
+        // AudioManager will listen to SOUND_TOGGLED event
         this.audioManager.toggleSound();
     }
 
