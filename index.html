@@ -5,7 +5,7 @@
     <meta charset="UTF-8">
     <meta name="viewport"
         content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover">
-    <title>ENDLESS67 v0.0.35 - Vertical Runner</title>
+    <title>ENDLESS67 v0.0.36 - Vertical Runner</title>
     <link rel="stylesheet" href="css/style.css?b=2">
     <script src="https://cdn.jsdelivr.net/npm/phaser@3.87.0/dist/phaser.min.js"></script>
 </head>
@@ -16,7 +16,7 @@
     <div id="loader">
         <div class="loader-content">
             <div class="loader-title">ENDLESS67</div>
-            <div id="loader-version" class="loader-version">v0.0.35</div>
+            <div id="loader-version" class="loader-version">v0.0.36</div>
             <div class="loader-spinner"></div>
             <div class="loader-text">Cargando<span id="loader-dots">...</span></div>
         </div>
@@ -33,7 +33,7 @@
     </div>
     <script>
         // Versión del juego (se actualiza desde build.json)
-        const GAME_VERSION = window.GAME_VERSION || 'v0.0.35';
+        const GAME_VERSION = window.GAME_VERSION || 'v0.0.36';
 
         window.onerror = function (msg, url, lineNo, columnNo, error) {
             var log = document.getElementById('error-log');
@@ -79,7 +79,29 @@
     </script>
 
     <div id="game-container"></div>
-    <script type="module" src="src/main.js?b=2"></script>
+    <!-- Asegurar que Phaser esté completamente cargado antes de cargar módulos -->
+    <script>
+        // Esperar a que Phaser esté disponible antes de cargar módulos
+        if (typeof Phaser === 'undefined') {
+            window.addEventListener('load', function () {
+                // Phaser debería estar cargado ahora
+                if (typeof Phaser !== 'undefined') {
+                    const script = document.createElement('script');
+                    script.type = 'module';
+                    script.src = 'src/main.js?b=2&t=' + Date.now(); // Cache busting - Updated: 20251129-2013
+                    document.body.appendChild(script);
+                } else {
+                    console.error('Phaser no se cargó correctamente');
+                }
+            });
+        } else {
+            // Phaser ya está disponible, cargar módulos inmediatamente
+            const script = document.createElement('script');
+            script.type = 'module';
+            script.src = 'src/main.js?b=2&t=' + Date.now(); // Cache busting - Updated: 20251129-2013
+            document.body.appendChild(script);
+        }
+    </script>
 </body>
 
 </html>
