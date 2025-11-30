@@ -4,7 +4,7 @@
  * Singleton pattern para un bus de eventos global.
  * Permite que diferentes partes del juego se comuniquen sin acoplamiento directo.
  * 
- * Nota: Phaser se carga desde CDN en index.html, por lo que está disponible como variable global.
+ * // Phaser is available globally via CDN in index.html
  * 
  * Uso:
  *   EventBus.emit('PLAYER_DIED', { score: 100 });
