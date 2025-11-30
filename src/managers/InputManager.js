@@ -1,3 +1,5 @@
+import EventBus, { Events } from '../core/EventBus.js';
+
 export class InputManager {
     constructor(scene) {
         this.scene = scene;
@@ -52,11 +54,16 @@ export class InputManager {
         // --- APLICAR SPEED BOOST ---
         let boost = scene.isInvincible ? 1.25 : 1.0; // 25% Extra Force
 
+        // Emit event for jump request (Player will listen to this)
+        EventBus.emit(Events.PLAYER_JUMP_REQUESTED, { boost });
+
         // Play jump sound - delegate to AudioManager
         if (scene.audioManager) {
             scene.audioManager.playJumpSound();
         }
 
+        // Player now listens to PLAYER_JUMP_REQUESTED event
+        // Keep direct call for backward compatibility during transition
         const result = scene.player.jump(boost);
 
         if (result) {
@@ -96,6 +103,12 @@ export class InputManager {
             if (scene.uiManager) {
                 scene.uiManager.hideJoystick();
             }
+            
+            // Emit event for player movement
+            EventBus.emit(Events.PLAYER_MOVE, { direction: keyboardMove });
+            
+            // TODO: In Phase 4, Player will listen to PLAYER_MOVE event
+            // For now, maintain direct call for compatibility
             scene.player.move(keyboardMove);
         } else if (movePointer) {
             // --- USUARIO MOVIENDO (TÁCTIL) ---
@@ -128,8 +141,20 @@ export class InputManager {
 
             // Move player if threshold passed
             if (Math.abs(dx) > 10) {
-                scene.player.move(dx > 0 ? 1 : -1);
+                const direction = dx > 0 ? 1 : -1;
+                
+                // Emit event for player movement
+                EventBus.emit(Events.PLAYER_MOVE, { direction });
+                
+                // TODO: In Phase 4, Player will listen to PLAYER_MOVE event
+                // For now, maintain direct call for compatibility
+                scene.player.move(direction);
             } else {
+                // Emit event for player stop
+                EventBus.emit(Events.PLAYER_STOP);
+                
+                // TODO: In Phase 4, Player will listen to PLAYER_STOP event
+                // For now, maintain direct call for compatibility
                 scene.player.stop();
             }
         } else {
@@ -138,6 +163,12 @@ export class InputManager {
             if (scene.uiManager) {
                 scene.uiManager.hideJoystick();
             }
+            
+            // Emit event for player stop
+            EventBus.emit(Events.PLAYER_STOP);
+            
+            // TODO: In Phase 4, Player will listen to PLAYER_STOP event
+            // For now, maintain direct call for compatibility
             scene.player.stop();
         }
     }

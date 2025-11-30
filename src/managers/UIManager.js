@@ -1,9 +1,12 @@
 import { ScoreManager } from './ScoreManager.js';
 import { UIHelpers } from '../utils/UIHelpers.js';
+import EventBus, { Events } from '../core/EventBus.js';
+import GameState from '../core/GameState.js';
 
 export class UIManager {
     constructor(scene) {
         this.scene = scene;
+        this.eventListeners = [];
     }
 
     createUI() {
@@ -185,11 +188,59 @@ export class UIManager {
         });
     }
 
-    update() {
-        const scene = this.scene;
-        scene.heightText.setText(`ALTURA: ${scene.currentHeight}m`);
+    /**
+     * Setup EventBus listeners for UI updates
+     * This replaces the update() method that was called from the game loop
+     */
+    setupEventListeners() {
+        // Listen to score updates
+        const scoreListener = (data) => {
+            this.updateScore(data.score);
+        };
+        EventBus.on(Events.SCORE_UPDATED, scoreListener);
+        this.eventListeners.push({ event: Events.SCORE_UPDATED, listener: scoreListener });
+
+        // Listen to height updates
+        const heightListener = (data) => {
+            this.updateHeight(data.height);
+        };
+        EventBus.on(Events.HEIGHT_UPDATED, heightListener);
+        this.eventListeners.push({ event: Events.HEIGHT_UPDATED, listener: heightListener });
+
+        // Listen to pause/resume events
+        const pauseListener = () => {
+            this.showPauseMenu();
+        };
+        EventBus.on(Events.GAME_PAUSED, pauseListener);
+        this.eventListeners.push({ event: Events.GAME_PAUSED, listener: pauseListener });
+
+        const resumeListener = () => {
+            this.hidePauseMenu();
+        };
+        EventBus.on(Events.GAME_RESUMED, resumeListener);
+        this.eventListeners.push({ event: Events.GAME_RESUMED, listener: resumeListener });
+
+        // Listen to game over
+        const gameOverListener = (data) => {
+            this.showGameOver(data);
+        };
+        EventBus.on(Events.GAME_OVER, gameOverListener);
+        this.eventListeners.push({ event: Events.GAME_OVER, listener: gameOverListener });
     }
 
+    /**
+     * Clean up event listeners when UI is destroyed
+     */
+    destroy() {
+        this.eventListeners.forEach(({ event, listener }) => {
+            EventBus.off(event, listener);
+        });
+        this.eventListeners = [];
+    }
+
+    /**
+     * Update score display (called via EventBus)
+     */
     updateScore(score) {
         const scene = this.scene;
         if (scene.scoreText) {
@@ -197,14 +248,33 @@ export class UIManager {
         }
     }
 
-    togglePauseMenu() {
+    /**
+     * Update height display (called via EventBus)
+     */
+    updateHeight(height) {
         const scene = this.scene;
-        scene.isPaused = !scene.isPaused;
+        if (scene.heightText) {
+            scene.heightText.setText(`ALTURA: ${height}m`);
+        }
+    }
 
-        if (scene.isPaused) {
-            scene.physics.pause();
+    /**
+     * Toggle pause menu - now uses GameState instead of directly pausing physics
+     * Physics pause/resume is handled by Game.js or GameState
+     */
+    togglePauseMenu() {
+        // Use GameState to toggle pause (this will emit events)
+        GameState.togglePause();
+    }
+
+    /**
+     * Show pause menu UI (called via EventBus when GAME_PAUSED event is emitted)
+     */
+    showPauseMenu() {
+        const scene = this.scene;
+
             // Update button icons and text to reflect current registry state
-            const soundEnabled = scene.registry.get('soundEnabled') !== false;
+        const soundEnabled = GameState.soundEnabled;
             const soundTextStr = soundEnabled ? 'SONIDO: ON' : 'SONIDO: OFF';
             const soundIcon = soundEnabled ? 'volume-up' : 'volume-mute';
             if (scene.soundToggleText) {
@@ -228,8 +298,13 @@ export class UIManager {
             scene.exitButtonContainer.setVisible(true);
             scene.pauseButton.setFrame('play'); // Play icon
             scene.tweens.pauseAll();
-        } else {
-            scene.physics.resume();
+    }
+
+    /**
+     * Hide pause menu UI (called via EventBus when GAME_RESUMED event is emitted)
+     */
+    hidePauseMenu() {
+        const scene = this.scene;
             scene.pauseMenuBg.setVisible(false);
             scene.pauseMenuTitle.setVisible(false);
             if (scene.versionText) scene.versionText.setVisible(false);
@@ -239,13 +314,27 @@ export class UIManager {
             scene.exitButtonContainer.setVisible(false);
             scene.pauseButton.setFrame('pause'); // Pause icon
             scene.tweens.resumeAll();
+    }
+
+    /**
+     * Show game over UI (called via EventBus when GAME_OVER event is emitted)
+     */
+    showGameOver(data) {
+        const scene = this.scene;
+        // This will be handled by existing game over logic
+        // For now, we keep compatibility with existing code
+        if (scene.uiText) {
+            scene.uiText.setVisible(true);
+            scene.uiText.setText(`GAME OVER\nScore: ${data.score}`);
         }
     }
 
     trigger67Celebration() {
         const scene = this.scene;
         try {
+            // Use a temporary pause flag for this special event
             scene.isPausedEvent = true;
+            // Pause physics temporarily (this is a special case, not regular pause)
             scene.physics.pause();
             scene.cameras.main.flash(500, 255, 255, 255);
 

@@ -7,7 +7,8 @@ import { InputManager } from '../managers/InputManager.js';
 import { UIManager } from '../managers/UIManager.js';
 import { AudioManager } from '../managers/AudioManager.js';
 import { ParticleManager } from '../managers/ParticleManager.js';
-import { LavaManager } from '../managers/LavaManager.js';
+import { RiserManager } from '../managers/RiserManager.js';
+import { RISER_TYPES } from '../config/RiserConfig.js';
 import { DebugManager } from '../managers/DebugManager.js';
 import { updatePlatformRider } from '../utils/platformRider.js';
 import EventBus, { Events } from '../core/EventBus.js';
@@ -41,7 +42,7 @@ export class Game extends Phaser.Scene {
         this.uiManager = new UIManager(this);
         this.audioManager = new AudioManager(this);
         this.particleManager = new ParticleManager(this);
-        this.lavaManager = new LavaManager(this);
+        this.riserManager = new RiserManager(this, RISER_TYPES.ACID);
         this.debugManager = new DebugManager(this);
 
         // --- PHYSICS & CAMERA SETUP ---
@@ -108,7 +109,8 @@ export class Game extends Phaser.Scene {
         for (let i = 0; i < 6; i++) this.levelManager.generateNextRow();
 
         // --- LAVA & PARTICLES ---
-        this.lavaManager.createLava();
+        // --- RISER & PARTICLES ---
+        this.riserManager.createRiser();
         this.particleManager.createParticles();
 
         // --- SETUP MANAGERS ---
@@ -171,7 +173,7 @@ export class Game extends Phaser.Scene {
     update() {
         // Game Over Logic
         if (this.isGameOver) {
-            this.lavaManager.update(this.player.y, this.currentHeight, true);
+            this.riserManager.update(this.player.y, this.currentHeight, true);
             return;
         }
 
@@ -186,8 +188,8 @@ export class Game extends Phaser.Scene {
         this.inputManager.update();
         this.levelManager.update();
         // UIManager.update() removed - now uses EventBus listeners
-        this.lavaManager.update(this.player.y, this.currentHeight, false);
-        this.audioManager.updateAudio(this.player.y, this.lava.y);
+        this.riserManager.update(this.player.y, this.currentHeight, false);
+        this.audioManager.updateAudio(this.player.y, this.riserManager.riser.y);
         this.debugManager.updateHitboxVisual(); // Actualizar hitbox visual si está activo
 
         // Update platformRider for coins and powerups

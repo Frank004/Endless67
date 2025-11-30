@@ -33,21 +33,44 @@ export class PlayerHandler {
         player.handleWallTouch(side);
     }
 
-    touchLava(player, lava) {
+    touchRiser(player, riser) {
         const scene = this.scene;
         if (scene.isGameOver) return;
         if (scene.isInvincible) {
             scene.deactivatePowerup();
             if (scene.powerupTimer) scene.powerupTimer.remove();
             player.setVelocityY(-900);
-            let t = scene.uiText.scene.add.text(player.x, player.y - 50, 'LAVA JUMP!', { fontSize: '18px', color: '#fff', stroke: '#f00', strokeThickness: 4 }).setOrigin(0.5).setDepth(100);
-            scene.tweens.add({ targets: t, y: player.y - 150, alpha: 0, duration: 1000, onComplete: () => t.destroy() });
+
+            // Get riser configuration for display name and color
+            const riserConfig = scene.riserManager.config;
+            const jumpText = `${riserConfig.displayName} JUMP!`;
+            const textColor = riserConfig.color;
+
+            let t = scene.uiText.scene.add.text(
+                player.x,
+                player.y - 50,
+                jumpText,
+                {
+                    fontSize: '18px',
+                    color: '#fff',
+                    stroke: textColor,
+                    strokeThickness: 4
+                }
+            ).setOrigin(0.5).setDepth(100);
+
+            scene.tweens.add({
+                targets: t,
+                y: player.y - 150,
+                alpha: 0,
+                duration: 1000,
+                onComplete: () => t.destroy()
+            });
             return;
         }
 
-        // Play lava drop sound - delegate to AudioManager
+        // Play riser drop sound - delegate to AudioManager
         if (scene.audioManager) {
-            scene.audioManager.playLavaDropSound();
+            scene.audioManager.playLavaDropSound(); // Keep sound name for now or rename later
         }
 
         scene.isGameOver = true;
@@ -60,7 +83,7 @@ export class PlayerHandler {
         });
 
         scene.time.delayedCall(50, () => {
-            scene.lavaManager.triggerRising();
+            scene.riserManager.triggerRising();
         });
 
         scene.physics.pause();

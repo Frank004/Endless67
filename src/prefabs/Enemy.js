@@ -1,18 +1,27 @@
 import { enablePlatformRider, updatePlatformRider } from '../utils/platformRider.js';
+import { PatrolBehavior } from './behaviors/PatrolBehavior.js';
+import { ShootBehavior } from './behaviors/ShootBehavior.js';
+import { JumpBehavior } from './behaviors/JumpBehavior.js';
 
 export class PatrolEnemy extends Phaser.Physics.Arcade.Sprite {
-    constructor(scene, x, y) {
+    constructor(scene, x = 0, y = 0) {
+        // Constructor puede recibir x, y o no (para pooling)
         super(scene, x, y, 'enemy_spike');
         this.setDepth(20);
 
         // Use 'bound' mode: platformRider only provides bounds, we handle movement
         enablePlatformRider(this, { mode: 'bound', marginX: 5 });
 
-        this.patrolSpeed = 60;
-        this.patrolDir = 1; // 1 = right, -1 = left
+        // Strategy Pattern: Usar PatrolBehavior
+        this.patrolBehavior = new PatrolBehavior(this, 60);
     }
 
     spawn(x, y) {
+        // Asegurar que está en el physics world
+        if (!this.body) {
+            this.scene.physics.add.existing(this);
+        }
+        
         this.body.reset(x, y);
         this.body.allowGravity = true;
         this.setGravityY(1200);
@@ -27,62 +36,64 @@ export class PatrolEnemy extends Phaser.Physics.Arcade.Sprite {
         this.scene.tweens.add({ targets: this, scale: 1, duration: 400, ease: 'Back.out' });
     }
 
-    patrol(minX, maxX, speed = 60) {
-        this.minX = minX;
-        this.maxX = maxX;
-        this.patrolSpeed = speed;
-        this.setVelocityX(speed);
+    /**
+     * Método llamado cuando el objeto es devuelto al pool
+     */
+    despawn() {
+        // Detener comportamientos
+        this.stopMoving();
+        
+        // Limpiar estado
+        this.setVelocityX(0);
+        this.setVelocityY(0);
+        this.setScale(1); // Reset scale
+        
+        // Remover del grupo legacy si existe
+        if (this.scene && this.scene.patrolEnemies) {
+            this.scene.patrolEnemies.remove(this);
+        }
+        
+        // Desactivar
+        this.setActive(false);
+        this.setVisible(false);
     }
 
+    /**
+     * Iniciar patrullaje (delegado a PatrolBehavior)
+     */
+    patrol(minX, maxX, speed = 60) {
+        this.patrolBehavior.startPatrol(minX, maxX, speed);
+    }
+
+    /**
+     * Detener movimiento (delegado a PatrolBehavior)
+     */
     stopMoving() {
-        this.setVelocityX(0);
+        this.patrolBehavior.stopPatrol();
     }
 
     preUpdate(time, delta) {
         super.preUpdate(time, delta);
 
-        // 1) Update platform info and bounds (minX/maxX)
-        updatePlatformRider(this);
+        // Strategy Pattern: Delegar actualización a PatrolBehavior
+        this.patrolBehavior.update(time, delta);
 
-        // 2) Patrol logic ONLY if on a platform
-        if (this.body.blocked.down && this.ridingPlatform) {
-            const pBody = this.ridingPlatform.body || { velocity: { x: 0 } };
-            const platformVel = pBody.velocity ? pBody.velocity.x : 0;
-
-            // Calculate velocity: platform velocity + patrol velocity
-            const base = this.patrolSpeed * this.patrolDir;
-            this.setVelocityX(platformVel + base);
-
-            // Respect bounds
-            if (this.x >= this.maxX) {
-                this.x = this.maxX;
-                this.patrolDir = -1;
-                this.setFlipX(true);
-            } else if (this.x <= this.minX) {
-                this.x = this.minX;
-                this.patrolDir = 1;
-                this.setFlipX(false);
-            }
-
-            // Check for wall collisions
-            if (this.body.blocked.left) {
-                this.patrolDir = 1;
-                this.setFlipX(false);
-            } else if (this.body.blocked.right) {
-                this.patrolDir = -1;
-                this.setFlipX(true);
-            }
-        } else {
-            // In air or no platform: STOP running to prevent falling off
-            this.setVelocityX(0);
-        }
-
-        // 3) Cleanup offscreen enemies
+        // Cleanup offscreen enemies
         if (this.y > this.scene.player.y + 900) {
             this.stopMoving();
             this.setActive(false);
             this.setVisible(false);
         }
+    }
+
+    /**
+     * Limpiar comportamiento al destruir
+     */
+    destroy(fromScene) {
+        if (this.patrolBehavior) {
+            this.patrolBehavior.destroy();
+        }
+        super.destroy(fromScene);
     }
 }
 
@@ -91,14 +102,19 @@ export class ShooterEnemy extends Phaser.Physics.Arcade.Sprite {
         super(scene, x, y, 'enemy_shooter');
         this.setDepth(20);
 
-        this.shootEvent = null;
-        this.recoilTween = null;
-
         // Use 'carry' mode: only follow platform, no movement
         enablePlatformRider(this, { mode: 'carry', marginX: 5 });
+
+        // Strategy Pattern: Usar ShootBehavior
+        this.shootBehavior = new ShootBehavior(this);
     }
 
     spawn(x, y) {
+        // Asegurar que está en el physics world
+        if (!this.body) {
+            this.scene.physics.add.existing(this);
+        }
+        
         this.body.reset(x, y);
         this.body.allowGravity = true;
         this.setGravityY(1200);
@@ -112,108 +128,53 @@ export class ShooterEnemy extends Phaser.Physics.Arcade.Sprite {
         this.scene.tweens.add({ targets: this, scale: 1, duration: 400, ease: 'Back.out' });
     }
 
+    /**
+     * Método llamado cuando el objeto es devuelto al pool
+     */
+    despawn() {
+        // Detener disparo
+        this.stopShooting();
+        
+        // Limpiar estado
+        this.setVelocityX(0);
+        this.setVelocityY(0);
+        this.setScale(1); // Reset scale
+        
+        // Remover del grupo legacy si existe
+        if (this.scene && this.scene.shooterEnemies) {
+            this.scene.shooterEnemies.remove(this);
+        }
+        
+        // Desactivar
+        this.setActive(false);
+        this.setVisible(false);
+    }
+
+    /**
+     * Iniciar disparo (delegado a ShootBehavior)
+     */
     startShooting(projectilesGroup, currentHeight = 0) {
-        if (this.shootEvent) this.shootEvent.remove();
-
-        // Difficulty Progression (Issue 6)
-        let minDelay = 1500;
-        let maxDelay = 3000;
-
-        if (currentHeight > 6000) { minDelay = 800; maxDelay = 1500; }
-        else if (currentHeight > 4000) { minDelay = 1000; maxDelay = 2000; }
-
-        let delay = Phaser.Math.Between(minDelay, maxDelay);
-        this.shootEvent = this.scene.time.addEvent({
-            delay: delay,
-            callback: () => {
-                try {
-                    if (!this.active) {
-                        if (this.shootEvent) this.shootEvent.remove();
-                        return;
-                    }
-                    this.shoot(projectilesGroup, currentHeight);
-
-                    // Update delay for next shot
-                    let nextMin = minDelay;
-                    let nextMax = maxDelay;
-                    if (this.scene.currentHeight > 6000) { nextMin = 800; nextMax = 1500; }
-                    else if (this.scene.currentHeight > 4000) { nextMin = 1000; nextMax = 2000; }
-
-                    if (this.shootEvent) this.shootEvent.delay = Phaser.Math.Between(nextMin, nextMax);
-                } catch (e) {
-                    console.warn('Error in shooter callback:', e);
-                }
-            },
-            loop: true
-        });
+        this.shootBehavior.startShooting(projectilesGroup, currentHeight);
     }
 
+    /**
+     * Disparar (delegado a ShootBehavior)
+     * @deprecated Usar startShooting en su lugar
+     */
     shoot(projectilesGroup, currentHeight = 0) {
-        if (!this.scene.player.active || !this.active) return;
-
-        try {
-            let direction = (this.scene.player.x < this.x) ? -1 : 1;
-
-            // Determine shot count based on height (Issue 6)
-            let shotCount = 1;
-            if (currentHeight > 5000) shotCount = 3;
-            else if (currentHeight > 4000) shotCount = 2;
-
-            const fireShot = (offsetY = 0, angleOffset = 0) => {
-                let proj = projectilesGroup.get(this.x + (15 * direction), this.y + offsetY);
-                if (proj) {
-                    // We might need to adjust Projectile.fire to accept angle if we want spread
-                    // For now, just vertical offset or rapid fire
-                    proj.fire(this.x + (15 * direction), this.y + offsetY, direction);
-                }
-            };
-
-            // Fire shots
-            fireShot(0);
-
-            if (shotCount >= 2) {
-                this.scene.time.delayedCall(150, () => {
-                    if (this.active) fireShot(0);
-                });
-            }
-
-            if (shotCount >= 3) {
-                this.scene.time.delayedCall(300, () => {
-                    if (this.active) fireShot(0);
-                });
-            }
-
-            if (this.recoilTween) this.recoilTween.remove();
-            // Use scaleX for recoil effect instead of moving position
-            this.recoilTween = this.scene.tweens.add({
-                targets: this,
-                scaleX: 0.9,
-                duration: 50,
-                yoyo: true,
-                onComplete: () => this.setScale(1)
-            });
-
-        } catch (error) {
-            console.warn('Error shooting projectile:', error);
+        // Mantener compatibilidad, pero delegar a behavior
+        if (!this.shootBehavior.projectilesGroup) {
+            this.shootBehavior.startShooting(projectilesGroup, currentHeight);
+        } else {
+            this.shootBehavior.shoot();
         }
     }
 
+    /**
+     * Detener disparo (delegado a ShootBehavior)
+     */
     stopShooting() {
-        try {
-            if (this.shootEvent) {
-                this.shootEvent.remove();
-                this.shootEvent = null;
-            }
-            if (this.recoilTween) {
-                this.recoilTween.remove();
-                this.recoilTween = null;
-            }
-        } catch (e) {
-            console.warn('Error stopping shooter:', e);
-            // Force nullify to prevent further errors
-            this.shootEvent = null;
-            this.recoilTween = null;
-        }
+        this.shootBehavior.stopShooting();
     }
 
     preUpdate(time, delta) {
@@ -222,28 +183,49 @@ export class ShooterEnemy extends Phaser.Physics.Arcade.Sprite {
         // Update platform rider behavior
         updatePlatformRider(this);
 
-        // Cleanup offscreen
+        // Cleanup offscreen - usar despawn si hay pool
         if (this.y > this.scene.player.y + 900) {
+            if (this.scene.shooterEnemyPool) {
+                this.scene.shooterEnemyPool.despawn(this);
+            } else {
             this.stopShooting();
             this.setActive(false);
             this.setVisible(false);
         }
+        }
+    }
+
+    /**
+     * Limpiar comportamiento al destruir
+     */
+    destroy(fromScene) {
+        if (this.shootBehavior) {
+            this.shootBehavior.destroy();
+        }
+        super.destroy(fromScene);
     }
 }
 
 export class JumperShooterEnemy extends Phaser.Physics.Arcade.Sprite {
-    constructor(scene, x, y) {
+    constructor(scene, x = 0, y = 0) {
+        // Constructor puede recibir x, y o no (para pooling)
         super(scene, x, y, 'enemy_jumper_shooter');
         this.setDepth(20);
 
-        this.jumpEvent = null;
-        this.shootEvent = null;
-
         // Use 'carry' mode: only follow platform, jumping is handled separately
         enablePlatformRider(this, { mode: 'carry', marginX: 5 });
+
+        // Strategy Pattern: Usar múltiples comportamientos
+        this.jumpBehavior = new JumpBehavior(this, -400);
+        this.shootBehavior = new ShootBehavior(this);
     }
 
     spawn(x, y) {
+        // Asegurar que está en el physics world
+        if (!this.body) {
+            this.scene.physics.add.existing(this);
+        }
+        
         this.body.reset(x, y);
         this.body.allowGravity = true; // Needs gravity to jump
         this.setGravityY(1200); // Apply gravity since world gravity is 0
@@ -259,72 +241,68 @@ export class JumperShooterEnemy extends Phaser.Physics.Arcade.Sprite {
         this.scene.tweens.add({ targets: this, scale: 1, duration: 400, ease: 'Back.out' });
     }
 
+    /**
+     * Método llamado cuando el objeto es devuelto al pool
+     */
+    despawn() {
+        // Detener comportamientos
+        this.stopBehavior();
+        
+        // Limpiar estado
+        this.setVelocityX(0);
+        this.setVelocityY(0);
+        this.setScale(1); // Reset scale
+        
+        // Remover del grupo legacy si existe
+        if (this.scene && this.scene.jumperShooterEnemies) {
+            this.scene.jumperShooterEnemies.remove(this);
+        }
+        
+        // Desactivar
+        this.setActive(false);
+        this.setVisible(false);
+    }
+
+    /**
+     * Iniciar comportamientos (salto y disparo)
+     */
     startBehavior(projectilesGroup) {
         this.stopBehavior();
 
-        // Jump Timer
-        this.jumpEvent = this.scene.time.addEvent({
-            delay: Phaser.Math.Between(1000, 2000),
-            callback: () => {
-                try {
-                    if (!this.active) return;
-                    // Debug log
-                    // console.log('Jumper check:', this.body.touching.down, this.body.velocity.y);
-
-                    // Check if touching down OR if velocity is near zero (stuck)
-                    if (this.body && (this.body.touching.down || (Math.abs(this.body.velocity.y) < 10 && this.y < 800))) {
-                        this.setVelocityY(-400); // Smaller jump
-                    }
-                } catch (e) {
-                    console.warn('Error in jumper jump callback:', e);
-                }
-            },
-            loop: true
-        });
-
-        // Shoot Timer
-        this.shootEvent = this.scene.time.addEvent({
-            delay: Phaser.Math.Between(1500, 2500), // More frequent
-            callback: () => {
-                try {
-                    if (!this.active) return;
-                    this.shoot(projectilesGroup);
-                } catch (e) {
-                    console.warn('Error in jumper shoot callback:', e);
-                }
-            },
-            loop: true
-        });
+        // Strategy Pattern: Iniciar ambos comportamientos
+        this.jumpBehavior.startJumping(1000, 2000);
+        this.shootBehavior.startShooting(projectilesGroup, this.scene.currentHeight || 0);
     }
 
+    /**
+     * Disparar (delegado a ShootBehavior)
+     * @deprecated Usar startBehavior en su lugar
+     */
     shoot(projectilesGroup) {
-        if (!this.scene.player.active || !this.active) return;
-
-        try {
-            let direction = (this.scene.player.x < this.x) ? -1 : 1;
-            let proj = projectilesGroup.get(this.x + (15 * direction), this.y);
-
-            if (proj) {
-                proj.fire(this.x + (15 * direction), this.y, direction);
+        // Mantener compatibilidad
+        if (!this.shootBehavior.projectilesGroup) {
+            this.shootBehavior.startShooting(projectilesGroup, this.scene.currentHeight || 0);
+        } else {
+            this.shootBehavior.shoot();
             }
-        } catch (error) {
-            console.warn('Error shooting projectile:', error);
-        }
     }
 
+    /**
+     * Detener todos los comportamientos
+     */
     stopBehavior() {
-        try {
-            if (this.jumpEvent) { this.jumpEvent.remove(); this.jumpEvent = null; }
-            if (this.shootEvent) { this.shootEvent.remove(); this.shootEvent = null; }
-        } catch (e) {
-            console.warn('Error stopping jumper behavior:', e);
-            this.jumpEvent = null;
-            this.shootEvent = null;
-        }
+        this.jumpBehavior.stopJumping();
+        this.shootBehavior.stopShooting();
     }
 
     destroy(fromScene) {
         this.stopBehavior();
+        if (this.jumpBehavior) {
+            this.jumpBehavior.destroy();
+        }
+        if (this.shootBehavior) {
+            this.shootBehavior.destroy();
+        }
         super.destroy(fromScene);
     }
 
@@ -334,11 +312,15 @@ export class JumperShooterEnemy extends Phaser.Physics.Arcade.Sprite {
         // Update platform rider behavior
         updatePlatformRider(this);
 
-        // Cleanup offscreen
+        // Cleanup offscreen - usar despawn si hay pool
         if (this.y > this.scene.player.y + 900) {
+            if (this.scene.jumperShooterEnemyPool) {
+                this.scene.jumperShooterEnemyPool.despawn(this);
+            } else {
             this.stopBehavior();
             this.setActive(false);
             this.setVisible(false);
+            }
         }
     }
 }

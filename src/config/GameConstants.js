@@ -6,14 +6,31 @@
  */
 
 export const GAME_CONFIG = {
-    WIDTH: 800,
-    HEIGHT: 600,
     TITLE: 'Endless67',
+    // Resoluciones por dispositivo (se usan en main.js)
+    RESOLUTIONS: {
+        DESKTOP: { width: 400, height: 600 },
+        MOBILE: { width: 360, height: 640 },
+    },
 };
 
 export const PHYSICS = {
     GRAVITY: 800,
     DEBUG: false,
+    // Bounds del mundo físico (valores grandes para juego infinito)
+    WORLD_BOUNDS: {
+        MIN_Y: -1000000,
+        MAX_Y: 1000000 + 800,
+    },
+};
+
+export const WALLS = {
+    WIDTH: 32, // Ancho de las paredes laterales
+    HEIGHT: 1200, // Altura de las paredes (tileSprite)
+    Y_OFFSET: 300, // Offset vertical para posicionamiento
+    MARGIN: 28, // Margen de seguridad desde las paredes para generación de nivel
+    PLATFORM_MARGIN: 50, // Margen para plataformas móviles
+    DEPTH: 60, // Profundidad de renderizado
 };
 
 export const PLAYER = {
@@ -160,6 +177,7 @@ export const DIFFICULTY = {
 export default {
     GAME_CONFIG,
     PHYSICS,
+    WALLS,
     PLAYER,
     PLATFORM,
     ENEMY,

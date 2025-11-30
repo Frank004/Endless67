@@ -1,10 +1,10 @@
-import Phaser from 'phaser';
-
 /**
  * EventBus - Central event emitter for decoupled communication
  * 
  * Singleton pattern para un bus de eventos global.
  * Permite que diferentes partes del juego se comuniquen sin acoplamiento directo.
+ * 
+ * Nota: Phaser se carga desde CDN en index.html, por lo que está disponible como variable global.
  * 
  * Uso:
  *   EventBus.emit('PLAYER_DIED', { score: 100 });
@@ -26,9 +26,12 @@ export default new EventBus();
 export const Events = {
     // Player Events
     PLAYER_DIED: 'PLAYER_DIED',
-    PLAYER_JUMPED: 'PLAYER_JUMPED',
+    PLAYER_JUMPED: 'PLAYER_JUMPED',      // Emitted by Player after successful jump
+    PLAYER_JUMP_REQUESTED: 'PLAYER_JUMP_REQUESTED',  // Emitted by InputManager when jump is requested
     PLAYER_LANDED: 'PLAYER_LANDED',
     PLAYER_HIT: 'PLAYER_HIT',
+    PLAYER_MOVE: 'PLAYER_MOVE',      // { direction: -1 | 0 | 1 }
+    PLAYER_STOP: 'PLAYER_STOP',      // Player stopped moving
 
     // Score Events
     SCORE_UPDATED: 'SCORE_UPDATED',

@@ -2,6 +2,7 @@ import { PatrolEnemy, ShooterEnemy, JumperShooterEnemy } from '../prefabs/Enemy.
 import { MAZE_PATTERNS, MAZE_PATTERNS_EASY, MAZE_PATTERNS_MEDIUM, MAZE_PATTERNS_HARD, MAZE_PATTERNS_NUMBERED } from '../data/MazePatterns.js';
 import { getLevelConfig, LEVEL_CONFIG } from '../data/LevelConfig.js';
 import { enablePlatformRider } from '../utils/platformRider.js';
+import { WALLS } from '../config/GameConstants.js';
 
 export class LevelManager {
     constructor(scene) {
@@ -60,9 +61,9 @@ export class LevelManager {
         if (allowMaze && !this.justFinishedMaze && Phaser.Math.Between(0, 100) < config.maze.chance) {
             // Spawn Safety Platform below maze entrance
             // This ensures the player has a safe landing spot before the maze starts
-            const centerX = scene.cameras.main.centerX;
-            this.spawnPlatform(centerX, y, 200, false); // Centered, wide, static
-            this.lastPlatformY = y;
+            // La plataforma debe estar en la posición actual (y) y el laberinto comenzará en y - 160
+            // const centerX = scene.cameras.main.centerX;
+            // this.spawnPlatform(centerX, y, 200, false); // Centered, wide, static
 
             // Select pattern based on difficulty
             let patternPool = MAZE_PATTERNS_EASY;
@@ -82,7 +83,22 @@ export class LevelManager {
             this.mazeMirrorX = Phaser.Math.Between(0, 1) === 0;
             this.mazeMirrorY = Phaser.Math.Between(0, 1) === 0;
 
-            this.generateNextRow(); // Recursively call to spawn first row immediately
+            // Calcular la posición de la primera fila del laberinto
+            // Usamos 'y' directamente para que el laberinto comience con el espaciado correcto desde la última plataforma
+            const mazeFirstRowY = y;
+            this.lastPlatformY = mazeFirstRowY; // Actualizar para que generateNextRow calcule correctamente la siguiente fila
+
+            // Generar la primera fila del laberinto directamente (no recursivamente para evitar recalcular y)
+            let mazeConfig = this.currentMazePattern[this.currentMazeRowIndex];
+            if (this.mazeMirrorY) {
+                mazeConfig = this.currentMazePattern[this.currentMazePattern.length - 1 - this.currentMazeRowIndex];
+            }
+            this.spawnMazeRowFromConfig(mazeFirstRowY, mazeConfig, config.maze.allowMovingPlatforms, config.maze.allowEnemies, this.currentMazeRowIndex, this.currentMazePattern);
+
+            this.currentMazeRowIndex++;
+            this.mazeSequenceRemaining--;
+            this.lastPlatformY = mazeFirstRowY; // Actualizar para la siguiente iteración
+
             this.platformsSinceLastMaze = 0; // Reset counter
             return;
         }
@@ -90,6 +106,15 @@ export class LevelManager {
         this.justFinishedMaze = false;
 
         // --- NORMAL PLATFORM GENERATION ---
+        // IMPORTANTE: No generar plataformas estáticas cuando hay un laberinto activo
+        // Esto evita que las plataformas bloqueen el path abierto del laberinto
+        if (this.mazeSequenceRemaining > 0) {
+            // Durante un laberinto activo, solo permitir plataformas móviles si están permitidas
+            // y solo en posiciones que no bloqueen el path del laberinto
+            // Por ahora, simplemente no generamos plataformas durante laberintos
+            return;
+        }
+
         // Use config for platform width and moving chance
         let width = config.platforms.width;
         let isMoving = !config.platforms.staticOnly && Phaser.Math.Between(0, 100) < config.platforms.movingChance;
@@ -105,11 +130,11 @@ export class LevelManager {
 
         let x;
         const gameWidth = scene.cameras.main.width;
-        const wallWidth = 32;
+        const wallWidth = WALLS.WIDTH;
         const centerX = scene.cameras.main.centerX;
-        // Límites de generación: respetar paredes (32px) + margen de seguridad (28px)
-        const minX = wallWidth + 28; // 32px (wall) + 28px margen
-        const maxX = gameWidth - wallWidth - 28; // gameWidth - 32px (wall) - 28px margen
+        // Límites de generación: respetar paredes + margen de seguridad
+        const minX = wallWidth + WALLS.MARGIN;
+        const maxX = gameWidth - wallWidth - WALLS.MARGIN;
         // Zigzag Pattern Logic from Config
         let zigzagChance = config.platforms.zigzagChance;
         if (this.lastPlatformX !== null && Phaser.Math.Between(0, 100) < zigzagChance) {
@@ -119,17 +144,17 @@ export class LevelManager {
             } else {
                 x = Phaser.Math.Between(minX, centerX);
             }
+        } else {
+            // Normal random placement logic
+            if (this.lastPlatformX === null) {
+                x = Phaser.Math.Between(minX, maxX);
             } else {
-                // Normal random placement logic
-                if (this.lastPlatformX === null) {
-                    x = Phaser.Math.Between(minX, maxX);
-                } else {
-                    // Usar límites dinámicos basados en el ancho del juego
-                    const dynamicMinX = Math.max(minX, this.lastPlatformX - this.maxHorizontalDelta);
-                    const dynamicMaxX = Math.min(maxX, this.lastPlatformX + this.maxHorizontalDelta);
-                    x = Phaser.Math.Between(dynamicMinX, dynamicMaxX);
-                }
+                // Usar límites dinámicos basados en el ancho del juego
+                const dynamicMinX = Math.max(minX, this.lastPlatformX - this.maxHorizontalDelta);
+                const dynamicMaxX = Math.min(maxX, this.lastPlatformX + this.maxHorizontalDelta);
+                x = Phaser.Math.Between(dynamicMinX, dynamicMaxX);
             }
+        }
 
         if (Phaser.Math.Between(0, 100) < basePlatformChance) {
             let plat = this.spawnPlatform(x, y, width, isMoving, config.platforms.movingSpeed);
@@ -184,9 +209,9 @@ export class LevelManager {
             // Gap - maybe spawn a coin or powerup
             // Use dynamic bounds to respect walls
             const gameWidth = scene.cameras.main.width;
-            const wallWidth = 32;
-            const minX = wallWidth + 28;
-            const maxX = gameWidth - wallWidth - 28;
+            const wallWidth = WALLS.WIDTH;
+            const minX = wallWidth + WALLS.MARGIN;
+            const maxX = gameWidth - wallWidth - WALLS.MARGIN;
             let coinX = Phaser.Math.Between(minX, maxX);
 
             // Powerup Logic from Config
@@ -224,28 +249,49 @@ export class LevelManager {
 
     spawnPlatform(x, y, width, isMoving, speed = 100) {
         const scene = this.scene;
-        let texture = isMoving ? 'platform_moving' : 'platform';
-        let p = scene.platforms.create(x, y, texture);
-        p.setDisplaySize(width, 18).refreshBody().setDepth(5);
 
-        // Moving Platform Physics
-        if (isMoving) {
-            p.setData('isMoving', true);
-            p.setData('speed', speed); // Store speed for update loop
-            p.setVelocityX(speed);
-            p.setFrictionX(1);
-            p.body.allowGravity = false;
-            p.body.immovable = true;
-            p.body.setBounce(1, 0);
-            p.body.setCollideWorldBounds(true);
+        // Usar PoolManager si está disponible, sino usar método legacy
+        if (scene.platformPool) {
+            // Spawn desde el pool
+            const p = scene.platformPool.spawn(x, y, width, isMoving, speed);
+
+            // Asegurar que está en el physics world (ya debería estar por el constructor)
+            if (!p.body) {
+                scene.physics.add.existing(p);
+            }
+
+            // Agregar al grupo legacy para compatibilidad (colisiones, etc.)
+            // Phaser groups pueden contener objetos que no fueron creados con group.create()
+            if (scene.platforms) {
+                scene.platforms.add(p, true); // true = addToScene = false (ya está en la escena)
+            }
+
+            return p;
+        } else {
+            // Método legacy (fallback)
+            let texture = isMoving ? 'platform_moving' : 'platform';
+            let p = scene.platforms.create(x, y, texture);
+            p.setDisplaySize(width, 18).refreshBody().setDepth(5);
+
+            // Moving Platform Physics
+            if (isMoving) {
+                p.setData('isMoving', true);
+                p.setData('speed', speed);
+                p.setVelocityX(speed);
+                p.setFrictionX(1);
+                p.body.allowGravity = false;
+                p.body.immovable = true;
+                p.body.setBounce(1, 0);
+                p.body.setCollideWorldBounds(true);
+            }
+            return p;
         }
-        return p;
     }
 
     spawnMazeRowFromConfig(y, config, allowMoving, allowSpikes, rowIndex = null, pattern = null) {
         const scene = this.scene;
         const gameWidth = scene.cameras.main.width;
-        const wallWidth = 32;
+        const wallWidth = WALLS.WIDTH;
         const centerX = scene.cameras.main.centerX;
         let type = config.type;
         let w1 = config.width;
@@ -278,7 +324,7 @@ export class LevelManager {
             block.setOrigin(0.5, 0.5).setDisplaySize(w1, 60).refreshBody().setDepth(10);
         }
 
-        // Spawning Items/Enemies - must respect side walls (wallWidth = 32px on each side)
+        // Spawning Items/Enemies - must respect side walls
         let gapX = centerX;
         let gapStart = wallWidth; // Start from left wall
         let gapEnd = gameWidth - wallWidth; // End at right wall
@@ -370,11 +416,20 @@ export class LevelManager {
                     let enemyX = Phaser.Math.Between(safeMin, safeMax);
                     // Spawn higher to avoid spawning inside the wall (Wall height 60, top is y-30)
                     // y - 60 puts it well above to fall safely
-                    let enemy = scene.patrolEnemies.get(enemyX, y - 60);
 
-                    if (enemy && enemy.body) {
-                        enemy.spawn(enemyX, y - 60);
-                        // No manual patrol call needed - PatrolEnemy handles it via platformRider
+                    // Usar PoolManager si está disponible
+                    if (scene.patrolEnemyPool) {
+                        const enemy = scene.patrolEnemyPool.spawn(enemyX, y - 60);
+                        // Agregar al grupo legacy para compatibilidad
+                        if (scene.patrolEnemies) {
+                            scene.patrolEnemies.add(enemy, true);
+                        }
+                    } else {
+                        // Método legacy
+                        let enemy = scene.patrolEnemies.get(enemyX, y - 60);
+                        if (enemy && enemy.body) {
+                            enemy.spawn(enemyX, y - 60);
+                        }
                     }
                 }
             }
@@ -389,9 +444,22 @@ export class LevelManager {
         const scene = this.scene;
         let ex = platform.x;
         let ey = platform.y - 40; // Spawn higher to avoid embedding
-        let enemy = scene.patrolEnemies.get(ex, ey);
-        if (enemy) {
-            enemy.spawn(ex, ey);
+
+        // Usar PoolManager si está disponible
+        if (scene.patrolEnemyPool) {
+            const enemy = scene.patrolEnemyPool.spawn(ex, ey);
+            // Agregar al grupo legacy para compatibilidad
+            if (scene.patrolEnemies) {
+                scene.patrolEnemies.add(enemy, true);
+            }
+            return enemy;
+        } else {
+            // Método legacy
+            let enemy = scene.patrolEnemies.get(ex, ey);
+            if (enemy) {
+                enemy.spawn(ex, ey);
+            }
+            return enemy;
         }
     }
 
@@ -404,10 +472,26 @@ export class LevelManager {
         try {
             let ex = platform.x;
             let ey = platform.y - 20;
-            let shooter = scene.shooterEnemies.get(ex, ey);
-            if (shooter) {
-                shooter.spawn(ex, ey);
-                shooter.startShooting(scene.projectiles, scene.currentHeight);
+
+            // Usar PoolManager si está disponible
+            if (scene.shooterEnemyPool) {
+                const shooter = scene.shooterEnemyPool.spawn(ex, ey);
+                // Agregar al grupo legacy para compatibilidad
+                if (scene.shooterEnemies) {
+                    scene.shooterEnemies.add(shooter, true);
+                }
+                // Iniciar disparo (usar pool de proyectiles si está disponible)
+                const projectilesGroup = scene.projectilePool || scene.projectiles;
+                shooter.startShooting(projectilesGroup, scene.currentHeight);
+                return shooter;
+            } else {
+                // Método legacy
+                let shooter = scene.shooterEnemies.get(ex, ey);
+                if (shooter) {
+                    shooter.spawn(ex, ey);
+                    shooter.startShooting(scene.projectiles, scene.currentHeight);
+                }
+                return shooter;
             }
         } catch (e) {
             console.warn('Error spawning shooter:', e);
@@ -427,10 +511,26 @@ export class LevelManager {
         try {
             let ex = platform.x;
             let ey = platform.y - 50;
-            let jumper = scene.jumperShooterEnemies.get(ex, ey);
-            if (jumper) {
-                jumper.spawn(ex, ey);
-                jumper.startBehavior(scene.projectiles);
+
+            // Usar PoolManager si está disponible
+            if (scene.jumperShooterEnemyPool) {
+                const jumper = scene.jumperShooterEnemyPool.spawn(ex, ey);
+                // Agregar al grupo legacy para compatibilidad
+                if (scene.jumperShooterEnemies) {
+                    scene.jumperShooterEnemies.add(jumper, true);
+                }
+                // Iniciar comportamiento (usar pool de proyectiles si está disponible)
+                const projectilesGroup = scene.projectilePool || scene.projectiles;
+                jumper.startBehavior(projectilesGroup);
+                return jumper;
+            } else {
+                // Método legacy
+                let jumper = scene.jumperShooterEnemies.get(ex, ey);
+                if (jumper) {
+                    jumper.spawn(ex, ey);
+                    jumper.startBehavior(scene.projectiles);
+                }
+                return jumper;
             }
         } catch (e) {
             console.warn('Error spawning jumper shooter:', e);
@@ -445,23 +545,88 @@ export class LevelManager {
 
         // Cleanup objects below the player
         const limitY = scene.player.y + 900;
-        scene.platforms.children.iterate((c) => { if (c && c.y > limitY) c.destroy(); });
+
+        // Cleanup plataformas usando PoolManager (despawn en lugar de destroy)
+        if (scene.platformPool) {
+            const platformsToRemove = scene.platformPool
+                .getActive()
+                .filter(p => p.y > limitY);
+
+            platformsToRemove.forEach(p => {
+                // Remover del grupo legacy
+                if (scene.platforms) {
+                    scene.platforms.remove(p);
+                }
+                // Despawn al pool
+                scene.platformPool.despawn(p);
+            });
+        } else {
+            // Método legacy
+            scene.platforms.children.iterate((c) => { if (c && c.y > limitY) c.destroy(); });
+        }
+
+        // Cleanup enemigos usando PoolManager
+        if (scene.patrolEnemyPool) {
+            const patrolEnemiesToRemove = scene.patrolEnemyPool
+                .getActive()
+                .filter(e => e.y > limitY);
+            patrolEnemiesToRemove.forEach(e => {
+                if (scene.patrolEnemies) scene.patrolEnemies.remove(e);
+                scene.patrolEnemyPool.despawn(e);
+            });
+        }
+
+        if (scene.shooterEnemyPool) {
+            const shooterEnemiesToRemove = scene.shooterEnemyPool
+                .getActive()
+                .filter(e => e.y > limitY);
+            shooterEnemiesToRemove.forEach(e => {
+                if (scene.shooterEnemies) scene.shooterEnemies.remove(e);
+                scene.shooterEnemyPool.despawn(e);
+            });
+        }
+
+        if (scene.jumperShooterEnemyPool) {
+            const jumperEnemiesToRemove = scene.jumperShooterEnemyPool
+                .getActive()
+                .filter(e => e.y > limitY);
+            jumperEnemiesToRemove.forEach(e => {
+                if (scene.jumperShooterEnemies) scene.jumperShooterEnemies.remove(e);
+                scene.jumperShooterEnemyPool.despawn(e);
+            });
+        }
+
+        // Cleanup proyectiles usando PoolManager
+        if (scene.projectilePool) {
+            const projectilesToRemove = scene.projectilePool
+                .getActive()
+                .filter(p => p.y > limitY || p.x < -50 || p.x > scene.cameras.main.width + 50);
+            projectilesToRemove.forEach(p => {
+                if (scene.projectiles) scene.projectiles.remove(p);
+                scene.projectilePool.despawn(p);
+            });
+        }
+
+        // Cleanup otros objetos (aún no tienen pooling)
         scene.coins.children.iterate((c) => { if (c && c.y > limitY) c.destroy(); });
         scene.powerups.children.iterate((c) => { if (c && c.y > limitY) c.destroy(); });
         scene.mazeWalls.children.iterate((c) => { if (c && c.y > limitY) c.destroy(); });
 
-        // Update moving platforms
-        const gameWidth = scene.cameras.main.width;
-        const wallWidth = 32;
-        const minPlatformX = wallWidth + 50; // 32px (wall) + 50px margen
-        const maxPlatformX = gameWidth - wallWidth - 50; // gameWidth - 32px (wall) - 50px margen
-        
-        scene.platforms.children.iterate((plat) => {
-            if (plat.getData('isMoving')) {
-                let speed = plat.getData('speed') || 100; // Use stored speed or default
-                if (plat.x < minPlatformX) plat.setVelocityX(speed);
-                else if (plat.x > maxPlatformX) plat.setVelocityX(-speed);
-            }
-        });
+        // Update moving platforms - ahora se maneja en Platform.preUpdate()
+        // Mantener código legacy para compatibilidad
+        if (scene.platforms) {
+            const gameWidth = scene.cameras.main.width;
+            const wallWidth = WALLS.WIDTH;
+            const minPlatformX = wallWidth + WALLS.PLATFORM_MARGIN;
+            const maxPlatformX = gameWidth - wallWidth - WALLS.PLATFORM_MARGIN;
+
+            scene.platforms.children.iterate((plat) => {
+                if (plat && plat.active && plat.getData('isMoving')) {
+                    let speed = plat.getData('speed') || 100;
+                    if (plat.x < minPlatformX) plat.setVelocityX(speed);
+                    else if (plat.x > maxPlatformX) plat.setVelocityX(-speed);
+                }
+            });
+        }
     }
 }

@@ -13,7 +13,7 @@ export class CollisionManager {
     }
 
     setupCollisions() {
-        const { player, platforms, mazeWalls, leftWall, rightWall, patrolEnemies, shooterEnemies, jumperShooterEnemies, coins, powerups, lava, projectiles } = this.scene;
+        const { player, platforms, mazeWalls, leftWall, rightWall, patrolEnemies, shooterEnemies, jumperShooterEnemies, coins, powerups, riser, projectiles } = this.scene;
 
         // --- PLAYER COLLISIONS ---
         this.scene.physics.add.collider(player, platforms, this.playerHandler.handlePlatformCollision, null, this.playerHandler);
@@ -61,7 +61,7 @@ export class CollisionManager {
         // --- ITEMS & OBJECTS ---
         this.scene.physics.add.overlap(player, coins, this.itemHandler.collectCoin, null, this.itemHandler);
         this.scene.physics.add.overlap(player, powerups, this.itemHandler.collectPowerup, null, this.itemHandler);
-        this.scene.physics.add.overlap(player, lava, this.playerHandler.touchLava, null, this.playerHandler);
+        this.scene.physics.add.overlap(player, riser, this.playerHandler.touchRiser, null, this.playerHandler);
 
         // Coins and powerups use platformRider to stay on moving platforms
         this.scene.physics.add.collider(coins, platforms, this.itemHandler.handleItemPlatformCollision, null, this.itemHandler);
