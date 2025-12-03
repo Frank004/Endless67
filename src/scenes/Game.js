@@ -5,7 +5,7 @@ import { CollisionManager } from '../managers/CollisionManager.js';
 import { LevelManager } from '../managers/LevelManager.js';
 import { InputManager } from '../managers/InputManager.js';
 import { UIManager } from '../managers/UIManager.js';
-import { AudioManager } from '../managers/AudioManager.js';
+import AudioManager from '../managers/AudioManager.js';
 import { ParticleManager } from '../managers/ParticleManager.js';
 import { RiserManager } from '../managers/RiserManager.js';
 import { RISER_TYPES } from '../config/RiserConfig.js';
@@ -40,10 +40,17 @@ export class Game extends Phaser.Scene {
         this.levelManager = new LevelManager(this);
         this.inputManager = new InputManager(this);
         this.uiManager = new UIManager(this);
-        this.audioManager = new AudioManager(this);
+        this.audioManager = AudioManager;
+        this.audioManager.setScene(this);
         this.particleManager = new ParticleManager(this);
         this.riserManager = new RiserManager(this, RISER_TYPES.ACID);
         this.debugManager = new DebugManager(this);
+
+        // --- HANDLERS ---
+        this.playerHandler = new PlayerHandler(this);
+        this.itemHandler = new ItemHandler(this);
+        this.enemyHandler = new EnemyHandler(this);
+        this.projectileHandler = new ProjectileHandler(this);
 
         // --- PHYSICS & CAMERA SETUP ---
         this.input.addPointer(3);
@@ -89,24 +96,31 @@ export class Game extends Phaser.Scene {
         // --- WALLS ---
         this.createWalls();
 
-        // --- DEBUG SETUP (ANTES DE CREAR PLAYER) ---
-        // Configurar toggle de Player PNG ANTES de crear el player
-        // El toggle se lee desde DebugManager y se guarda en registry para acceso global
+        // --- DEBUG SETUP ---
         this.registry.set('usePlayerPNG', this.debugManager.usePlayerPNG);
+        this.debugManager.applyDebugSettings();
 
         // --- PLAYER ---
-        // Spawn player en el centro horizontal de la pantalla
-        // El Player leerá el toggle del registry para decidir qué textura usar
-        this.player = new Player(this, this.cameras.main.centerX, 400);
+        // Spawn player at bottom center
+        this.player = new Player(this, this.cameras.main.centerX, 0);
 
-        // --- APLICAR OTROS DEBUG SETTINGS ---
-        this.debugManager.applyDebugSettings();
+        // --- COLLISIONS ---
+        // Setup collisions AFTER player, groups, and handlers are ready
+        this.setupCollisions();
+
+        // Riser collision (Game Over)
+        this.physics.add.overlap(this.player, this.riserManager.riser, this.playerHandler.handleRiserCollision, null, this.playerHandler);
+
+        // Item collisions
+        this.physics.add.overlap(this.player, this.coins, this.itemHandler.handleCoinCollection, null, this.itemHandler);
+        this.physics.add.overlap(this.player, this.powerups, this.itemHandler.handlePowerupCollection, null, this.itemHandler);
 
         // --- INITIAL LEVEL GENERATION ---
         // Spawn plataforma inicial en el centro horizontal
         this.levelManager.spawnPlatform(this.cameras.main.centerX, 450, 140, false);
         this.levelManager.lastPlatformY = 450;
-        for (let i = 0; i < 6; i++) this.levelManager.generateNextRow();
+        // FIX: Generar más filas iniciales para evitar gaps grandes al inicio
+        for (let i = 0; i < 10; i++) this.levelManager.generateNextRow();
 
         // --- LAVA & PARTICLES ---
         // --- RISER & PARTICLES ---
@@ -117,7 +131,7 @@ export class Game extends Phaser.Scene {
         this.uiManager.createUI();
         this.uiManager.setupEventListeners(); // Setup EventBus listeners
         this.inputManager.setupInputs();
-        this.collisionManager.setupCollisions();
+
         this.audioManager.setupAudio();
 
         // --- SETUP EVENT LISTENERS ---
@@ -265,9 +279,6 @@ export class Game extends Phaser.Scene {
         // Registrar en el registry global (para debugging)
         poolRegistry.register('platforms', this.platformPool);
 
-        // Mantener grupo legacy para compatibilidad temporal (se eliminará después)
-        this.platforms = this.physics.add.group({ allowGravity: false, immovable: true });
-
         // Coins and powerups need to be dynamic to use platformRider on moving platforms
         this.coins = this.physics.add.group({ allowGravity: false, immovable: true });
         this.powerups = this.physics.add.group({ allowGravity: false, immovable: true });
@@ -310,8 +321,7 @@ export class Game extends Phaser.Scene {
         );
         poolRegistry.register('projectiles', this.projectilePool);
 
-        // Mantener grupos legacy para compatibilidad (colisiones, etc.)
-        // Los objetos del pool se agregarán a estos grupos cuando se spawnean
+        // Mantener grupos legacy para compatibilidad con colisiones
         this.patrolEnemies = this.physics.add.group({ classType: PatrolEnemy, allowGravity: false, immovable: true, runChildUpdate: true });
         this.shooterEnemies = this.physics.add.group({ classType: ShooterEnemy, allowGravity: false, immovable: true, runChildUpdate: true });
         this.jumperShooterEnemies = this.physics.add.group({ classType: JumperShooterEnemy, allowGravity: true, immovable: false, runChildUpdate: true });
@@ -322,6 +332,24 @@ export class Game extends Phaser.Scene {
             maxSize: 50
         });
         this.mazeWalls = this.physics.add.staticGroup();
+    }
+
+    setupCollisions() {
+        // Player collisions
+        this.physics.add.collider(this.player, this.platformPool.getActive(), this.playerHandler.handlePlatformCollision, null, this.playerHandler);
+        this.physics.add.collider(this.player, this.walls, this.playerHandler.handleWallCollision, null, this.playerHandler);
+
+        // Enemy collisions
+        this.physics.add.collider(this.patrolEnemies, this.platformPool.getActive());
+        this.physics.add.collider(this.shooterEnemies, this.platformPool.getActive());
+        this.physics.add.collider(this.jumperShooterEnemies, this.platformPool.getActive());
+        this.physics.add.collider(this.patrolEnemies, this.walls, (enemy) => enemy.handleWallCollision());
+        this.physics.add.collider(this.shooterEnemies, this.walls);
+        this.physics.add.collider(this.jumperShooterEnemies, this.walls);
+
+        // Projectile collisions
+        this.physics.add.overlap(this.projectilePool.getActive(), this.walls, this.projectileHandler.handleWallCollision, null, this.projectileHandler);
+        this.physics.add.overlap(this.projectilePool.getActive(), this.player, this.projectileHandler.handlePlayerCollision, null, this.projectileHandler);
     }
 
     /**
