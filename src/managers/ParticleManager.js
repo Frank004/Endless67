@@ -1,6 +1,9 @@
+import EventBus, { Events } from '../core/EventBus.js';
+
 export class ParticleManager {
     constructor(scene) {
         this.scene = scene;
+        this.eventListeners = [];
     }
 
     createParticles() {
@@ -25,6 +28,17 @@ export class ParticleManager {
             emitting: false,
             depth: 20
         });
+
+        // Setup Event Listener for Jump Particles
+        const jumpListener = (data) => {
+            if (data.type === 'wall_jump') {
+                scene.sparkEmitter.emitParticleAt(data.x, data.y, 10);
+            } else {
+                scene.dustEmitter.emitParticleAt(data.x, data.y, 10);
+            }
+        };
+        EventBus.on(Events.PLAYER_JUMPED, jumpListener);
+        this.eventListeners.push({ event: Events.PLAYER_JUMPED, listener: jumpListener });
 
         // Burn Emitter (Lava Death)
         scene.burnEmitter = scene.add.particles(0, 0, 'particle_burn', {
@@ -61,5 +75,12 @@ export class ParticleManager {
             emitting: false,
             depth: 200
         });
+    }
+
+    destroy() {
+        this.eventListeners.forEach(({ event, listener }) => {
+            EventBus.off(event, listener);
+        });
+        this.eventListeners = [];
     }
 }

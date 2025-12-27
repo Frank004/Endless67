@@ -7,6 +7,7 @@ REGLAS GENERALES
 	•	Si la solución que propones es muy compleja para un juego pequeño, explícitamente sugiere una versión más simple.
 	2.	Evita patrones avanzados innecesarios (Clean Architecture extrema, DDD pesado, etc.) para prototipos.
 	3.	Cuando tengas dudas entre algo muy elaborado o algo directo, elige la opción más simple pero escalable.
+	4.	No crees documentación al menos que yo te lo pida.
 
 ⸻
 

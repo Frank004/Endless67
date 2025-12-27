@@ -1,13 +1,29 @@
 export class AudioManager {
-    constructor(scene) {
+    static instance = null;
+
+    constructor() {
+        if (AudioManager.instance) {
+            return AudioManager.instance;
+        }
+        AudioManager.instance = this;
+
+        this.scene = null;
+        this.bgMusic = null;
+        this.lavaSound = null;
+        this.soundEnabled = true;
+    }
+
+    setScene(scene) {
         this.scene = scene;
+
         // Read sound state from registry (default true if not set)
         const soundEnabledFromRegistry = scene.registry.get('soundEnabled');
         this.soundEnabled = soundEnabledFromRegistry !== undefined ? soundEnabledFromRegistry : true;
+
         // Sync Phaser's sound mute state with registry
-        scene.sound.mute = !this.soundEnabled;
-        this.bgMusic = null;
-        this.lavaSound = null;
+        if (scene.sound) {
+            scene.sound.mute = !this.soundEnabled;
+        }
 
         // Resume audio context on user interaction
         this.setupAudioContextResume();
@@ -15,6 +31,7 @@ export class AudioManager {
 
     setupAudioContextResume() {
         const scene = this.scene;
+        if (!scene) return;
 
         // Resume audio context when user interacts with the page
         const resumeAudio = () => {
@@ -38,6 +55,7 @@ export class AudioManager {
 
     setupAudio() {
         const scene = this.scene;
+        if (!scene) return;
 
         // Silently handle audio context issues
         try {
@@ -89,6 +107,7 @@ export class AudioManager {
 
     startMusic() {
         const scene = this.scene;
+        if (!scene) return;
 
         try {
             // Check if audio context is suspended
@@ -119,10 +138,13 @@ export class AudioManager {
 
 
     toggleSound() {
+        if (!this.scene) return;
+
         const currentState = this.scene.registry.get('soundEnabled') !== false;
         const newState = !currentState;
         this.scene.registry.set('soundEnabled', newState);
         this.scene.sound.mute = !newState;
+        this.soundEnabled = newState;
 
         // Update button text and icon if they exist (in pause menu)
         if (this.scene.soundToggleText) {
@@ -141,6 +163,8 @@ export class AudioManager {
 
     updateAudio(playerY, lavaY) {
         const scene = this.scene;
+        if (!scene) return;
+
         let distanceToLava = playerY - lavaY;
 
         // Update Lava Sound
@@ -179,6 +203,7 @@ export class AudioManager {
      */
     playJumpSound() {
         const scene = this.scene;
+        if (!scene) return;
         try {
             if (scene.sound && scene.cache.audio.exists('jump_sfx')) {
                 const randomDetune = Phaser.Math.Between(-300, 300);
@@ -194,6 +219,7 @@ export class AudioManager {
      */
     playCoinSound() {
         const scene = this.scene;
+        if (!scene) return;
         try {
             const soundKeys = ['coin_sfx_1', 'coin_sfx_2', 'coin_sfx_3'];
             const randomKey = Phaser.Utils.Array.GetRandom(soundKeys);
@@ -211,6 +237,7 @@ export class AudioManager {
      */
     playDamageSound() {
         const scene = this.scene;
+        if (!scene) return;
         try {
             const damageKeys = ['damage_sfx_1', 'damage_sfx_2', 'damage_sfx_3', 'damage_sfx_4', 'damage_sfx_5'];
             const randomKey = Phaser.Utils.Array.GetRandom(damageKeys);
@@ -227,6 +254,7 @@ export class AudioManager {
      */
     playDestroySound() {
         const scene = this.scene;
+        if (!scene) return;
         try {
             if (scene.sound && scene.cache.audio.exists('destroy_sfx')) {
                 scene.sound.play('destroy_sfx', { volume: 0.5 });
@@ -241,6 +269,7 @@ export class AudioManager {
      */
     playCelebrationSound() {
         const scene = this.scene;
+        if (!scene) return;
         try {
             if (scene.sound && scene.cache.audio.exists('celebration_sfx')) {
                 scene.sound.play('celebration_sfx', { volume: 0.6 });
@@ -255,6 +284,7 @@ export class AudioManager {
      */
     playLavaDropSound() {
         const scene = this.scene;
+        if (!scene) return;
         try {
             if (scene.sound && scene.cache.audio.exists('lava_drop')) {
                 scene.sound.play('lava_drop', { volume: 0.7 });
@@ -264,3 +294,6 @@ export class AudioManager {
         }
     }
 }
+
+// Export singleton instance
+export default new AudioManager();

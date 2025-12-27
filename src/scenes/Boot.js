@@ -84,18 +84,18 @@ export class Boot extends Phaser.Scene {
             console.log('   Coloca tu PNG en: assets/images/player_32x32.png');
         }
 
-        // Platform
+        // Platform - DIMENSIONES CORRECTAS: 128x32
 
-        // static
+        // static (magenta)
         g.clear(); g.fillStyle(0xff00aa, 1);
-        g.fillRoundedRect(0, 0, 100, 18, 4);
-        g.generateTexture('platform', 100, 18);
-        // moving horizontal
+        g.fillRoundedRect(0, 0, 128, 32, 6);
+        g.generateTexture('platform', 128, 32);
+        // moving horizontal (blue)
         g.clear(); g.fillStyle(0x0088ff, 1);
-        g.fillRoundedRect(0, 0, 100, 18, 4);
+        g.fillRoundedRect(0, 0, 128, 32, 6);
         g.lineStyle(2, 0xffffff, 0.5);
-        g.strokeRoundedRect(0, 0, 100, 18, 4);
-        g.generateTexture('platform_moving', 100, 18);
+        g.strokeRoundedRect(0, 0, 128, 32, 6);
+        g.generateTexture('platform_moving', 128, 32);
 
         // Enemigos
 

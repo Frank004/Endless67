@@ -200,6 +200,26 @@ describe('GameState', () => {
     });
 
     describe('Reset', () => {
+        test('reset should emit height and score updates with zeroed values', () => {
+            const scoreListener = jest.fn();
+            const heightListener = jest.fn();
+            EventBus.on(Events.SCORE_UPDATED, scoreListener);
+            EventBus.on(Events.HEIGHT_UPDATED, heightListener);
+
+            GameState.addScore(25);
+            GameState.updateHeight(180);
+
+            GameState.reset();
+
+            expect(GameState.score).toBe(0);
+            expect(GameState.height).toBe(0);
+            expect(scoreListener).toHaveBeenLastCalledWith({ score: 0 });
+            expect(heightListener).toHaveBeenCalledWith({ height: 180, maxHeight: 180 });
+            expect(heightListener).toHaveBeenLastCalledWith({ height: 0 });
+        });
+    });
+
+    describe('Reset', () => {
         test('should reset all state to initial values', () => {
             GameState.addScore(100);
             GameState.updateHeight(500);

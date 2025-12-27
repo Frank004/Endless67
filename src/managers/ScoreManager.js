@@ -1,5 +1,12 @@
-export class ScoreManager {
+class ScoreManager {
+    static instance = null;
+
     constructor() {
+        if (ScoreManager.instance) {
+            return ScoreManager.instance;
+        }
+        ScoreManager.instance = this;
+
         this.storageKey = 'endless67_scores';
         this.maxScores = 10;
     }
@@ -58,3 +65,5 @@ export class ScoreManager {
         return false;
     }
 }
+
+export default new ScoreManager();

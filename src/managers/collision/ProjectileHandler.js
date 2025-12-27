@@ -1,3 +1,5 @@
+import AudioManager from '../AudioManager.js';
+
 export class ProjectileHandler {
     constructor(scene) {
         this.scene = scene;
@@ -75,10 +77,8 @@ export class ProjectileHandler {
                 projectile.destroy();
             }
 
-            // Play damage sound - delegate to AudioManager
-            if (scene.audioManager) {
-                scene.audioManager.playDamageSound();
-            }
+            // Play damage sound
+            AudioManager.playDamageSound();
 
             let dir = (player.x < projX) ? -1 : 1;
             if (projVelX > 0) dir = 1; else if (projVelX < 0) dir = -1;

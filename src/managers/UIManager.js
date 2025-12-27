@@ -1,4 +1,4 @@
-import { ScoreManager } from './ScoreManager.js';
+import ScoreManager from './ScoreManager.js';
 import { UIHelpers } from '../utils/UIHelpers.js';
 import EventBus, { Events } from '../core/EventBus.js';
 import GameState from '../core/GameState.js';

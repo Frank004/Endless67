@@ -1,4 +1,5 @@
-import { ScoreManager } from '../ScoreManager.js';
+import ScoreManager from '../ScoreManager.js';
+import AudioManager from '../AudioManager.js';
 
 export class PlayerHandler {
     constructor(scene) {
@@ -68,10 +69,8 @@ export class PlayerHandler {
             return;
         }
 
-        // Play riser drop sound - delegate to AudioManager
-        if (scene.audioManager) {
-            scene.audioManager.playLavaDropSound(); // Keep sound name for now or rename later
-        }
+        // Play riser drop sound
+        AudioManager.playLavaDropSound();
 
         scene.isGameOver = true;
         scene.burnEmitter.emitParticleAt(player.x, player.y, 50);
@@ -94,10 +93,9 @@ export class PlayerHandler {
 
         scene.time.delayedCall(1000, () => {
             // Check for high score - only show name input if score qualifies for top 10
-            const scoreManager = new ScoreManager();
-            if (scoreManager.isHighScore(scene.currentHeight, scene.totalScore)) {
+            if (ScoreManager.isHighScore(scene.currentHeight, scene.totalScore)) {
                 // Show Input for Name - this score will enter the leaderboard
-                scene.uiManager.showNameInput(scoreManager);
+                scene.uiManager.showNameInput(ScoreManager);
             } else {
                 // Score doesn't qualify for top 10 - show options directly
                 scene.uiManager.showPostGameOptions();

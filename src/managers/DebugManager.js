@@ -1,3 +1,5 @@
+import DebugRuler from './DebugRuler.js';
+
 export class DebugManager {
     constructor(scene) {
         this.scene = scene;
@@ -15,6 +17,10 @@ export class DebugManager {
         // true = mostrar hitbox rosa del player
         // false = ocultar hitbox
         this.showPlayerHitbox = false; // Cambiar a false para ocultar hitbox
+
+        // Ruler overlay
+        this.rulerEnabled = true;
+        this.ruler = null;
     }
 
     applyDebugSettings() {
@@ -27,10 +33,10 @@ export class DebugManager {
         }
 
         // Apply Lava Delay
-        if (this.enableLavaDelay && scene.lavaManager && scene.lavaManager.lava) {
+        if (this.enableLavaDelay && scene.riserManager && scene.riserManager.riser) {
             // Move lava further down (e.g., 1500px below player instead of 500px)
             // This gives the player a few seconds while the lava catches up
-            scene.lavaManager.lava.y = scene.player.y + 1500;
+            scene.riserManager.riser.y = scene.player.y + 1500;
         }
 
         // Spawn Test Enemies if enabled
@@ -41,6 +47,12 @@ export class DebugManager {
         // Setup Player Hitbox Visual Debug
         if (this.showPlayerHitbox && scene.player) {
             this.setupPlayerHitboxVisual(scene.player);
+        }
+
+        // Setup Ruler
+        if (this.rulerEnabled) {
+            this.ensureRuler();
+            this.ruler.setEnabled(true);
         }
     }
     
@@ -158,5 +170,25 @@ export class DebugManager {
             // Spike Enemy (Highest)
             levelManager.spawnSpike(platforms[2]);
         }
+    }
+
+    ensureRuler() {
+        if (!this.ruler) {
+            this.ruler = new DebugRuler(this.scene);
+        }
+        return this.ruler;
+    }
+
+    updateRuler() {
+        if (!this.rulerEnabled) return;
+        const ruler = this.ensureRuler();
+        ruler.update(this.scene.platforms?.getChildren?.() || [], this.scene.player);
+    }
+
+    toggleRuler(force = null) {
+        this.rulerEnabled = force !== null ? force : !this.rulerEnabled;
+        const ruler = this.ensureRuler();
+        ruler.setEnabled(this.rulerEnabled);
+        console.log(`[DebugRuler] ${this.rulerEnabled ? 'ON' : 'OFF'}`);
     }
 }

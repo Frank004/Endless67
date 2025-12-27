@@ -3,8 +3,11 @@ export const LEVEL_CONFIG = {
         name: "Magma Caverns",
         baseSettings: {
             gravity: 1200,
-            minPlatformsPerScreen: 4.5,
-            maxPlatformsPerScreen: 3.0,
+            // FIX: Valores estaban invertidos
+            // minPlatformsPerScreen = niveles difíciles (menos plataformas)
+            // maxPlatformsPerScreen = niveles fáciles (más plataformas)
+            minPlatformsPerScreen: 3.0,  // Niveles difíciles
+            maxPlatformsPerScreen: 4.5,  // Niveles fáciles (tutorial)
             worldHeightForMaxDifficulty: 4000,
             maxHorizontalDelta: 170
         },

@@ -63,16 +63,8 @@ export class InputManager {
         }
 
         // Player now listens to PLAYER_JUMP_REQUESTED event
-        // Keep direct call for backward compatibility during transition
-        const result = scene.player.jump(boost);
-
-        if (result) {
-            if (result.type === 'wall_jump') {
-                scene.sparkEmitter.emitParticleAt(result.x, result.y, 10);
-            } else {
-                scene.dustEmitter.emitParticleAt(result.x, result.y, 10);
-            }
-        }
+        // Removed direct call to prevent double execution
+        // const result = scene.player.jump(boost); -> Handled by EventBus listener in Player.js
     }
 
     update() {
@@ -103,13 +95,12 @@ export class InputManager {
             if (scene.uiManager) {
                 scene.uiManager.hideJoystick();
             }
-            
+
             // Emit event for player movement
             EventBus.emit(Events.PLAYER_MOVE, { direction: keyboardMove });
-            
-            // TODO: In Phase 4, Player will listen to PLAYER_MOVE event
-            // For now, maintain direct call for compatibility
-            scene.player.move(keyboardMove);
+
+            // Event emitted: PLAYER_MOVE
+            // Player listens to this event in Player.js
         } else if (movePointer) {
             // --- USUARIO MOVIENDO (TÁCTIL) ---
             if (this.moveAnchorX === null) {
@@ -142,20 +133,18 @@ export class InputManager {
             // Move player if threshold passed
             if (Math.abs(dx) > 10) {
                 const direction = dx > 0 ? 1 : -1;
-                
+
                 // Emit event for player movement
                 EventBus.emit(Events.PLAYER_MOVE, { direction });
-                
-                // TODO: In Phase 4, Player will listen to PLAYER_MOVE event
-                // For now, maintain direct call for compatibility
-                scene.player.move(direction);
+
+                // Event emitted: PLAYER_MOVE
+                // Player listens to this event in Player.js
             } else {
                 // Emit event for player stop
                 EventBus.emit(Events.PLAYER_STOP);
-                
-                // TODO: In Phase 4, Player will listen to PLAYER_STOP event
-                // For now, maintain direct call for compatibility
-                scene.player.stop();
+
+                // Event emitted: PLAYER_STOP
+                // Player listens to this event in Player.js
             }
         } else {
             this.moveAnchorX = null;
@@ -163,13 +152,12 @@ export class InputManager {
             if (scene.uiManager) {
                 scene.uiManager.hideJoystick();
             }
-            
+
             // Emit event for player stop
             EventBus.emit(Events.PLAYER_STOP);
-            
-            // TODO: In Phase 4, Player will listen to PLAYER_STOP event
-            // For now, maintain direct call for compatibility
-            scene.player.stop();
+
+            // Event emitted: PLAYER_STOP
+            // Player listens to this event in Player.js
         }
     }
 

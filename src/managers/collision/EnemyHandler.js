@@ -1,4 +1,5 @@
 import { handlePlatformRiderCollision } from '../../utils/platformRider.js';
+import AudioManager from '../AudioManager.js';
 
 export class EnemyHandler {
     constructor(scene) {
@@ -16,17 +17,13 @@ export class EnemyHandler {
             enemy.destroy();
             scene.sparkEmitter.emitParticleAt(enemy.x, enemy.y, 20);
 
-            // Play destroy sound - delegate to AudioManager
-            if (scene.audioManager) {
-                scene.audioManager.playDestroySound();
-            }
+            // Play destroy sound
+            AudioManager.playDestroySound();
             return;
         }
 
-        // Play damage sound - delegate to AudioManager
-        if (scene.audioManager) {
-            scene.audioManager.playDamageSound();
-        }
+        // Play damage sound
+        AudioManager.playDamageSound();
 
         player.setTint(0xff0000);
         scene.cameras.main.shake(100, 0.01);

@@ -78,11 +78,10 @@ export class PoolManager {
         // Obtener objeto del pool
         obj = this.pool.pop();
 
-        // Activar objeto
+        // Activate object first
         obj.setActive(true);
         obj.setVisible(true);
-
-        // Llamar método de inicialización si existe
+        // Call custom spawn logic if defined
         if (obj.spawn && typeof obj.spawn === 'function') {
             obj.spawn(...args);
         }

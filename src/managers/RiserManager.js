@@ -12,6 +12,14 @@ export class RiserManager {
 
         this.currentSpeed = this.config.speedConfig.baseSpeed;
         this.isRising = false;
+        this.enabled = true;
+    }
+
+    setEnabled(enabled) {
+        this.enabled = enabled;
+        if (this.riser) {
+            this.riser.setVisible(enabled);
+        }
     }
 
     createRiser() {
@@ -46,6 +54,15 @@ export class RiserManager {
     }
 
     update(playerY, currentHeight, isGameOver) {
+        if (!this.enabled) {
+            if (this.riser) {
+                const cameraBottom = this.scene.cameras.main.scrollY + this.scene.cameras.main.height;
+                this.riser.y = cameraBottom + 400; // mantener fuera de cámara
+                this.riser.tilePositionY -= 0.2;
+            }
+            return;
+        }
+
         if (isGameOver) {
             this.handleGameOverUpdate();
             return;
@@ -95,6 +112,8 @@ export class RiserManager {
     }
 
     triggerRising() {
+        if (this.enabled) {
         this.isRising = true;
+        }
     }
 }

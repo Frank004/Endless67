@@ -14,9 +14,9 @@ export class Playground extends Game {
         super.create();
 
         // --- DISABLE LAVA RISING ---
-        this.lavaManager.update = () => {
-            this.lavaManager.lava.y = this.cameras.main.scrollY + 1000;
-            this.lavaManager.lava.tilePositionY -= 1;
+        this.riserManager.update = () => {
+            this.riserManager.riser.y = this.cameras.main.scrollY + 1000;
+            this.riserManager.riser.tilePositionY -= 1;
         };
 
         // --- OVERRIDE LEVELMANAGER TO PREVENT AUTO-GENERATION ---

@@ -1,9 +1,8 @@
-import { ScoreManager } from '../managers/ScoreManager.js';
+import ScoreManager from '../managers/ScoreManager.js';
 
 export class Leaderboard extends Phaser.Scene {
     constructor() {
         super('Leaderboard');
-        this.scoreManager = new ScoreManager();
     }
 
     create() {
@@ -31,7 +30,7 @@ export class Leaderboard extends Phaser.Scene {
         this.add.text(isMobile ? 260 : 300, headerY, 'COINS', { fontSize: fontSize, color: '#888' });
 
         // Scores
-        const scores = this.scoreManager.getTopScores();
+        const scores = ScoreManager.getTopScores();
         let y = 160;
 
         if (scores.length === 0) {

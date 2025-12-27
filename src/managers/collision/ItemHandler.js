@@ -1,4 +1,5 @@
 import { handlePlatformRiderCollision, updatePlatformRider } from '../../utils/platformRider.js';
+import AudioManager from '../AudioManager.js';
 
 export class ItemHandler {
     constructor(scene) {
@@ -14,19 +15,17 @@ export class ItemHandler {
         const scene = this.scene;
         coin.destroy();
         scene.totalScore += 1;
-        
+
         // Update score UI - delegate to UIManager
         if (scene.uiManager) {
             scene.uiManager.updateScore(scene.totalScore);
         }
-        
+
         let t = scene.add.text(player.x, player.y - 30, '+1', { fontSize: '18px', fontStyle: 'bold', color: '#ffff00' }).setDepth(101);
         scene.tweens.add({ targets: t, y: player.y - 80, alpha: 0, duration: 600, onComplete: () => t.destroy() });
 
-        // Play coin sound - delegate to AudioManager
-        if (scene.audioManager) {
-            scene.audioManager.playCoinSound();
-        }
+        // Play coin sound
+        AudioManager.playCoinSound();
 
         let strScore = scene.totalScore.toString();
         if (strScore === '67' || strScore.endsWith('67')) {
@@ -42,10 +41,8 @@ export class ItemHandler {
         player.setTint(0xffff00);
         scene.auraEmitter.start();
 
-        // Play celebration sound - delegate to AudioManager
-        if (scene.audioManager) {
-            scene.audioManager.playCelebrationSound();
-        }
+        // Play celebration sound
+        AudioManager.playCelebrationSound();
 
         let t = scene.add.text(scene.cameras.main.centerX, scene.cameras.main.scrollY + 200, 'POWERUP 67', {
             fontSize: '40px', color: '#ffd700', fontStyle: 'bold', stroke: '#000000', strokeThickness: 6

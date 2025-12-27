@@ -24,6 +24,30 @@ export class MainMenu extends Phaser.Scene {
 		const leaderboardBtn = this.createButton(width / 2, 330, 'LEADERBOARD', '#00ffff', () => this.scene.start('Leaderboard'));
 		const settingsBtn = this.createButton(width / 2, 410, 'SETTINGS', '#ffffff', () => this.scene.start('Settings'));
 
+		// Keyboard Navigation Setup
+		this.menuButtons = [startBtn, leaderboardBtn, settingsBtn];
+		this.selectedButtonIndex = 0;
+		this.updateButtonSelection();
+
+		// Keyboard Controls
+		this.input.keyboard.on('keydown-UP', () => {
+			this.selectedButtonIndex = (this.selectedButtonIndex - 1 + this.menuButtons.length) % this.menuButtons.length;
+			this.updateButtonSelection();
+		});
+
+		this.input.keyboard.on('keydown-DOWN', () => {
+			this.selectedButtonIndex = (this.selectedButtonIndex + 1) % this.menuButtons.length;
+			this.updateButtonSelection();
+		});
+
+		this.input.keyboard.on('keydown-SPACE', () => {
+			this.activateSelectedButton();
+		});
+
+		this.input.keyboard.on('keydown-ENTER', () => {
+			this.activateSelectedButton();
+		});
+
 		// Version (visible text)
 		const versionText = this.add.text(width / 2, height - 30, 'v0.0.35', {
 			fontSize: '14px',
@@ -54,6 +78,28 @@ export class MainMenu extends Phaser.Scene {
 		});
 	}
 
+	updateButtonSelection() {
+		// Reset all buttons to default state
+		this.menuButtons.forEach((btn, index) => {
+			if (index === this.selectedButtonIndex) {
+				// Highlight selected button
+				btn.setColor('#ffff00');
+				btn.setScale(1.1);
+			} else {
+				// Reset to original color
+				btn.setColor(btn.getData('originalColor'));
+				btn.setScale(1.0);
+			}
+		});
+	}
+
+	activateSelectedButton() {
+		const selectedButton = this.menuButtons[this.selectedButtonIndex];
+		if (selectedButton && selectedButton.getData('onClick')) {
+			selectedButton.getData('onClick')();
+		}
+	}
+
 	showDevButton(width, height) {
 		const devBtn = this.createButton(width / 2, height - 80, '👾 DEV MODE', '#ff0000', () => this.scene.start('Playground'));
 		this.tweens.add({
@@ -72,6 +118,10 @@ export class MainMenu extends Phaser.Scene {
 			backgroundColor: '#333333',
 			padding: { x: 20, y: 10 }
 		}).setOrigin(0.5).setInteractive({ useHandCursor: true });
+
+		// Store original color and onClick for keyboard navigation
+		btn.setData('originalColor', color);
+		btn.setData('onClick', onClick);
 
 		btn.on('pointerdown', onClick);
 		btn.on('pointerover', () => btn.setColor('#ffff00'));

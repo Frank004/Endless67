@@ -32,39 +32,97 @@ export class Player extends Phaser.Physics.Arcade.Sprite {
             const spriteWidth = this.width || 32; // Ancho del sprite visual
             const spriteHeight = this.height || 32; // Alto del sprite visual
 
-            // Ancho del body: usar el ancho completo del sprite para evitar que se meta visualmente en la pared
-            const bodyWidth = spriteWidth;
-            // Altura del body: mantener proporción o usar altura del sprite menos margen
-            const bodyHeight = Math.max(20, spriteHeight); // Usar altura completa
+            // Ancho del body más cercano al sprite para colisiones precisas
+            const bodyWidth = 24;
+            // Altura del body: mantener proporción y pies definidos
+            const bodyHeight = Math.max(24, spriteHeight - 8); // Mínimo 24px de altura
 
-            // Centrar horizontalmente y ajustar verticalmente
+            // Centrar horizontalmente y ajustar verticalmente (pies en la parte inferior)
+            // El offsetX centra el body más pequeño dentro del sprite más grande
+            // Esto asegura que el centro del body coincida con el centro del sprite
             const offsetX = (spriteWidth - bodyWidth) / 2;
-            const offsetY = (spriteHeight - bodyHeight) / 2;
+            const offsetY = spriteHeight - bodyHeight; // Offset Y en la parte inferior (pies)
 
             this.body.setSize(bodyWidth, bodyHeight);
             this.body.setOffset(offsetX, offsetY);
 
-            // CRÍTICO: Asegurar que el body no pueda penetrar los bounds del mundo
-            // Esto previene que el jugador se meta dentro de las paredes
-            this.body.setCollideWorldBounds(true);
-            // Asegurar que el body respete los bounds incluso con velocidades altas
+            // Las paredes físicas manejarán las colisiones, no los world bounds
             this.body.setBounce(0, 0);
         }
 
         this.setGravityY(1200);
         this.setMaxVelocity(300, 1000);
         this.setDragX(1200);
-        this.setCollideWorldBounds(true); // Use Arcade Physics for bounds
-        this.body.onWorldBounds = true;
+        // IMPORTANTE: NO usar setCollideWorldBounds para permitir que el jugador
+        // toque las paredes físicas y active los walljumps
+        // Las paredes físicas (leftWall, rightWall) manejarán las colisiones
+        this.setCollideWorldBounds(false);
+        this.body.onWorldBounds = false;
         this.setDepth(20);
 
         // State
         this.jumps = 0;
-        this.maxJumps = 3;
+        this.maxJumps = 2; // Player can jump twice (normal + double jump)
         this.lastWallTouched = null;
         this.wallJumpConsecutive = 0;
+        this.maxWallJumps = 3; // Maximum 3 consecutive jumps on same wall
         this.currentPlatform = null;
         this.isInvincible = false;
+        this.lastPlatformVelX = 0;  // Para rastrear la velocidad de la plataforma del frame anterior
+    }
+
+    // ... (omitted setupEventListeners and other methods) ...
+
+    jump(boost = 1.0) {
+        const now = this.scene.time.now;
+
+        // Check cooldown (unless it's a wall jump, which typically feels instant)
+        // But preventing rapid double tap is good even for wall interaction mix
+        // Let's only apply cooldown for air jumps to prevent instant double jump
+
+        // Wall Jump Left (Touching wall via collider)
+        if (this.body.touching.left) {
+            if (this.checkWallStamina('left')) {
+                this.setVelocity(400 * boost, -600 * boost);
+                this.jumps = 0;
+                this.lastJumpTime = now;
+                console.log('🧱 Wall Jump Left');
+                return { type: 'wall_jump', x: this.x - 10, y: this.y };
+            }
+            return null;
+        }
+
+        // Wall Jump Right (Touching wall via collider)
+        if (this.body.touching.right) {
+            if (this.checkWallStamina('right')) {
+                this.setVelocity(-400 * boost, -600 * boost);
+                this.jumps = 0;
+                this.lastJumpTime = now;
+                console.log('🧱 Wall Jump Right');
+                return { type: 'wall_jump', x: this.x + 10, y: this.y };
+            }
+            return null;
+        }
+
+        // Normal / Double Jump
+        if (this.jumps < this.maxJumps) {
+            let type = this.jumps === 0 ? 'jump' : 'double_jump';
+
+            if (this.jumps > 0) {
+                this.doFrontFlip();
+                console.log('🔄 Double Jump');
+            } else {
+                console.log('⬆️ Normal Jump');
+            }
+
+            this.setVelocityY(-600 * boost);
+            this.jumps++;
+
+            const jumpOffsetY = (this.height || 32) * 0.5;
+            return { type: type, x: this.x, y: this.y + jumpOffsetY };
+        }
+
+        return null;
     }
 
     /**
@@ -123,20 +181,90 @@ export class Player extends Phaser.Physics.Arcade.Sprite {
      * This method is kept for backward compatibility but will be removed in future
      */
     update(cursors = null, movePointer = null, splitX = null, isMobile = null) {
-        // World bounds now handled by Arcade Physics
+        // Reset platform reference when not touching ground
         if (!this.body.touching.down) {
             this.currentPlatform = null;
         }
 
-        // Check for wall interaction via World Bounds (blocked)
-        if (this.body.blocked.left) {
-            this.handleWallTouch('left');
-        } else if (this.body.blocked.right) {
-            this.handleWallTouch('right');
+        // Move with moving platform (only if player is NOT moving with input)
+        if (this.currentPlatform && this.currentPlatform.active && this.body.touching.down) {
+            const platform = this.currentPlatform;
+            
+            // Check if platform is moving
+            if (platform.getData('isMoving') && platform.body && platform.body.velocity) {
+                // Get platform's horizontal velocity
+                const platformVelX = platform.body.velocity.x;
+                
+                // Check if player is trying to move (has horizontal acceleration)
+                const isPlayerMoving = Math.abs(this.body.acceleration.x) > 0;
+                
+                // Store the offset from platform center (only on first contact)
+                if (this.platformOffsetX === undefined) {
+                    this.platformOffsetX = this.x - platform.x;
+                }
+                
+                if (!isPlayerMoving) {
+                    // Player is NOT moving with input → move with platform (offset fijo)
+                    // Calculate new player position based on platform movement
+                    let newX = platform.x + this.platformOffsetX;
+                    
+                    // Clamp player position to prevent entering walls
+                    // Player body width is 24px, so half is 12px
+                    const playerHalfWidth = this.body.width / 2;  // 12px
+                    const wallWidth = 32;  // WALLS.WIDTH
+                    const gameWidth = this.scene.cameras.main.width;  // 400px
+                    
+                    // Ensure player doesn't enter left wall (0 to 32px)
+                    const minPlayerX = wallWidth + playerHalfWidth;  // 32 + 12 = 44px
+                    // Ensure player doesn't enter right wall (368 to 400px)
+                    const maxPlayerX = gameWidth - wallWidth - playerHalfWidth;  // 400 - 32 - 12 = 356px
+                    
+                    // Clamp position
+                    newX = Phaser.Math.Clamp(newX, minPlayerX, maxPlayerX);
+                    
+                    // Update player position to move with platform
+                    this.x = newX;
+                    
+                    // Match platform velocity so physics interactions work correctly
+                    this.body.velocity.x = platformVelX;
+                    
+                    // Guardar la velocidad de la plataforma para el siguiente frame
+                    this.lastPlatformVelX = platformVelX;
+                } else {
+                    // Player IS moving with input → allow independent movement
+                    // La física calcula la velocidad del jugador basada en la aceleración
+                    // Pero esta velocidad puede incluir la velocidad de la plataforma del frame anterior
+                    // Necesitamos calcular la velocidad relativa del jugador (sin plataforma)
+                    // y luego sumar la velocidad de la plataforma actual
+                    
+                    // Calcular velocidad relativa: restar la velocidad de la plataforma del frame anterior
+                    const playerRelativeVelX = this.body.velocity.x - this.lastPlatformVelX;
+                    
+                    // La velocidad absoluta = velocidad relativa + velocidad de plataforma actual
+                    // Esto permite que el jugador se mueva en la dirección correcta del input
+                    // mientras la plataforma también se mueve
+                    this.body.velocity.x = playerRelativeVelX + platformVelX;
+                    
+                    // Guardar la velocidad de la plataforma para el siguiente frame
+                    this.lastPlatformVelX = platformVelX;
+                    
+                    // Actualizar offset basado en la posición actual
+                    // Esto asegura que cuando el jugador deje de moverse, esté en la nueva posición relativa
+                    this.platformOffsetX = this.x - platform.x;
+                }
+            } else {
+                // Not on moving platform, clear offset
+                this.platformOffsetX = undefined;
+                this.lastPlatformVelX = 0;
+            }
+        } else {
+            // Not on platform, clear offset
+            this.platformOffsetX = undefined;
+            this.lastPlatformVelX = 0;
         }
 
-        // Movement is now handled via EventBus events
-        // This method only handles physics updates
+        // Wall touches are now handled by colliders in CollisionManager
+        // No need to check body.blocked since we're not using world bounds
     }
 
     move(direction) {
@@ -148,50 +276,14 @@ export class Player extends Phaser.Physics.Arcade.Sprite {
         this.setAccelerationX(0);
     }
 
-    jump(boost = 1.0) {
-        // Wall Jump Left (Touching wall on left or blocked by world bound on left)
-        if (this.body.touching.left || this.body.blocked.left) {
-            if (this.checkWallStamina('left')) {
-                this.setVelocity(400 * boost, -600 * boost); // Increased Y
-                this.jumps = 1;
-                return { type: 'wall_jump', x: this.x - 10, y: this.y };
-            }
-            return null;
-        }
 
-        // Wall Jump Right (Touching wall on right or blocked by world bound on right)
-        if (this.body.touching.right || this.body.blocked.right) {
-            if (this.checkWallStamina('right')) {
-                this.setVelocity(-400 * boost, -600 * boost); // Increased Y
-                this.jumps = 1;
-                return { type: 'wall_jump', x: this.x + 10, y: this.y };
-            }
-            return null;
-        }
-
-        // Normal / Double Jump
-        if (this.jumps < this.maxJumps) {
-            let type = this.jumps === 0 ? 'jump' : 'double_jump';
-            if (this.jumps > 0) this.doFrontFlip();
-
-            this.setVelocityY(-600 * boost); // Increased from -550 to reach 140px spacing
-            this.jumps++;
-            // Offset ajustado dinámicamente basado en el tamaño del sprite
-            // Para 32x32px: offset de ~16px (mitad del sprite)
-            // Para 24x24px: offset de ~12px (mitad del sprite)
-            const jumpOffsetY = (this.height || 32) * 0.5;
-            return { type: type, x: this.x, y: this.y + jumpOffsetY };
-        }
-
-        return null;
-    }
 
     checkWallStamina(side) {
         if (this.lastWallTouched !== side) {
             this.wallJumpConsecutive = 0;
             this.clearTint();
         }
-        if (this.wallJumpConsecutive >= 3) return false;
+        if (this.wallJumpConsecutive >= this.maxWallJumps) return false;
         this.lastWallTouched = side;
         this.wallJumpConsecutive++;
         return true;
@@ -201,7 +293,7 @@ export class Player extends Phaser.Physics.Arcade.Sprite {
         // If we are moving up, don't apply wall slide friction yet, let momentum carry us
         // unless we want to limit upward velocity? No, usually wall slide affects downward movement.
 
-        if (this.lastWallTouched === wallSide && this.wallJumpConsecutive >= 3) {
+        if (this.lastWallTouched === wallSide && this.wallJumpConsecutive >= this.maxWallJumps) {
             // Stamina depleted, slide down fast? Or just normal gravity?
             // If we want to punish, maybe no friction.
             // But let's keep the existing logic: if stamina depleted, maybe we slip?
