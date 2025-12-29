@@ -186,6 +186,11 @@ export class Player extends Phaser.Physics.Arcade.Sprite {
             this.currentPlatform = null;
         }
 
+        // Mantener overlay de powerup alineado al jugador si está visible
+        if (this.powerupOverlay && this.powerupOverlay.visible) {
+            this.powerupOverlay.updatePosition();
+        }
+
         // Move with moving platform (only if player is NOT moving with input)
         if (this.currentPlatform && this.currentPlatform.active && this.body.touching.down) {
             const platform = this.currentPlatform;

@@ -49,7 +49,7 @@ export const SLOT_CONFIG = {
             spawnChances: {
                 coins: 0.4,
                 powerups: 0.15,
-                enemies: 0.0  // Deshabilitado por ahora
+                enemies: 0.3  // 30% chance de enemigo por plataforma estática
             },
             
             // Debug

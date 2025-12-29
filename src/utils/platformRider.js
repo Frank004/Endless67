@@ -49,7 +49,11 @@ export function handlePlatformRiderCollision(rider, platform) {
     if (!rider.body || !platform.body) return;
     if (!rider.isPlatformRider) return;
 
-    if (rider.body.touching.down && platform.body.touching.up) {
+    // Arcade a veces no marca touching.up en bodies inamovibles; usar blocked.down como señal principal
+    const touchingDown = rider.body.touching.down || rider.body.blocked.down;
+    const platformSupporting = (platform.body.touching && platform.body.touching.up) || (platform.body.blocked && platform.body.blocked.up);
+
+    if (touchingDown || platformSupporting) {
         const halfWidth = rider.body.width / 2;
         const margin = rider.riderMarginX;
 
@@ -87,7 +91,11 @@ export function updatePlatformRider(rider) {
     const body = rider.body;
 
     // If on a platform
-    if (rider.ridingPlatform && rider.ridingPlatform.body && body.blocked.down) {
+    if (
+        rider.ridingPlatform &&
+        rider.ridingPlatform.body &&
+        (body.blocked.down || body.touching.down)
+    ) {
         const pBody = rider.ridingPlatform.body;
         const halfWidth = body.width / 2;
         const margin = rider.riderMarginX;

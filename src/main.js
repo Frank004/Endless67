@@ -19,6 +19,12 @@ const config = {
     width: GAME_WIDTH,
     height: GAME_HEIGHT,
     backgroundColor: '#000',
+    pixelArt: true,
+    roundPixels: true,
+    render: {
+        pixelArt: true,
+        antialias: false,
+    },
     parent: 'game-container',
     scale: {
         mode: isMobile ? Phaser.Scale.FIT : Phaser.Scale.FIT,

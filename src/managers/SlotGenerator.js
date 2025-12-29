@@ -269,6 +269,46 @@ export class SlotGenerator {
             const platType = isMoving ? '🔵 MÓVIL' : '🟣 ESTÁTICA';
             console.log(`    ▓ Plat ${i + 1}: x=${patternPlatform.x}, y=${currentY}, ${platType}, edges=[${leftEdge}, ${rightEdge}] ${isInBounds ? '✅' : '❌'}`);
             
+            // ─────────────────────────────────────────────────────────────
+            // SPAWN ENEMIGOS: Solo en plataformas ESTÁTICAS
+            // ─────────────────────────────────────────────────────────────
+            if (!isMoving && platform && platform.active) {
+                const enemyChance = config.spawnChances.enemies || 0;
+                if (enemyChance > 0 && Math.random() < enemyChance) {
+                    // Spawn PatrolEnemy en la plataforma estática
+                    // Usar delayedCall para asegurar que el enemigo se spawnee después de la plataforma
+                    this.scene.time.delayedCall(200, () => {
+                        const enemy = this.scene.levelManager.spawnPatrol(platform);
+                        if (enemy && enemy.active) {
+                            // Configurar patrullaje del enemigo en los límites de la plataforma
+                            const platformHalfWidth = SLOT_CONFIG.platformWidth / 2;  // 64px (128/2)
+                            const enemyHalfWidth = 16;  // Mitad del enemigo (32/2)
+                            const margin = 4;  // Margen adicional pequeño para evitar que se pegue al borde
+                            const minX = platform.x - platformHalfWidth + enemyHalfWidth + margin;  // Borde izquierdo + mitad enemigo + margen
+                            const maxX = platform.x + platformHalfWidth - enemyHalfWidth - margin;  // Borde derecho - mitad enemigo - margen
+                            const patrolSpeed = 60;  // Velocidad de patrullaje
+                            
+                            // Validar que los límites sean válidos
+                            if (minX >= maxX) {
+                                console.error(`  ❌ ERROR: Límites inválidos para patrullaje: minX=${minX.toFixed(0)}, maxX=${maxX.toFixed(0)}, platform.x=${platform.x.toFixed(0)}`);
+                                return;
+                            }
+                            
+                            // Iniciar patrullaje después de un delay para que la colisión ocurra
+                            this.scene.time.delayedCall(300, () => {
+                                if (enemy && enemy.active && enemy.body) {
+                                    enemy.setPatrolBounds(minX, maxX, patrolSpeed);
+                                    enemy.patrol(minX, maxX, patrolSpeed);
+                                    console.log(`    👾 PatrolEnemy en plat ${i + 1}: platform.x=${platform.x.toFixed(0)}, enemy.x=${enemy.x.toFixed(0)}, bounds=[${minX.toFixed(0)}, ${maxX.toFixed(0)}], speed=${patrolSpeed}`);
+                                } else {
+                                    console.error(`  ❌ ERROR: Enemigo no activo o sin body al iniciar patrullaje`);
+                                }
+                            });
+                        }
+                    });
+                }
+            }
+            
             // Siguiente Y (siempre 160px arriba)
             currentY -= gap;
         }
@@ -276,7 +316,7 @@ export class SlotGenerator {
         // ─────────────────────────────────────────────────────────────
         // PASO 2: Generar ITEMS (Coins + Powerups con sistema de swap)
         // ─────────────────────────────────────────────────────────────
-        const ITEM_SIZE = 32;           // Tamaño del sprite (32x32px)
+        const ITEM_SIZE = 32;           // Tamaño base del sprite (32x32px)
         const ITEM_HALF = ITEM_SIZE / 2; // 16px
         const ITEM_DISTANCE = 128;       // Radio de distancia mínima entre items
         
@@ -337,13 +377,17 @@ export class SlotGenerator {
             return distanceOk && cooldownOk && chanceOk;
         };
         
-        // Función para spawnar un POWERUP (usa powerup_ball existente)
+        // Función para spawnar un POWERUP (usa PoolManager con prefab Powerup)
         const spawnPowerup = (x, y) => {
-            const powerup = this.scene.powerups.create(x, y, 'powerup_ball');
-            if (powerup) {
-                powerup.setDisplaySize(ITEM_SIZE, ITEM_SIZE);
-                powerup.setDepth(10);
-                // powerup_ball ya tiene su textura de basketball, no necesita tint
+            // Usar PoolManager para obtener powerup del pool
+            const powerup = this.scene.powerupPool.spawn(x, y);
+            
+            if (powerup && powerup.active) {
+                // Agregar al grupo de física para colisiones
+                if (this.scene.powerups) {
+                    this.scene.powerups.add(powerup, true);
+                }
+                
                 allGeneratedItems.push({ x, y, type: 'powerup' });
                 
                 // Actualizar tracking
@@ -357,11 +401,17 @@ export class SlotGenerator {
         };
         
         // Función para spawnar un COIN
+        // SlotGenerator solo spawnea, el prefab Coin maneja su propia lógica
         const spawnCoin = (x, y) => {
-            const coin = this.scene.coins.create(x, y, 'coin');
-            if (coin) {
-                coin.setDisplaySize(ITEM_SIZE, ITEM_SIZE);
-                coin.setDepth(10);
+            // Usar PoolManager para obtener coin del pool
+            const coin = this.scene.coinPool.spawn(x, y);
+            
+            if (coin && coin.active) {
+                // Agregar al grupo de física para colisiones
+                if (this.scene.coins) {
+                    this.scene.coins.add(coin, true);
+                }
+                
                 allGeneratedItems.push({ x, y, type: 'coin' });
                 return true;
             }
@@ -543,4 +593,3 @@ export class SlotGenerator {
         // this.colorIndex = 0;  // Comentado: colores debug desactivados
     }
 }
-

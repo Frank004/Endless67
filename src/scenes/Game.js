@@ -1,6 +1,8 @@
 import { Player } from '../prefabs/Player.js';
 import { PatrolEnemy, ShooterEnemy, JumperShooterEnemy } from '../prefabs/Enemy.js';
 import { Projectile } from '../prefabs/Projectile.js';
+import { Coin } from '../prefabs/Coin.js';
+import { Powerup } from '../prefabs/Powerup.js';
 import { CollisionManager } from '../managers/CollisionManager.js';
 import { LevelManager } from '../managers/LevelManager.js';
 import { SlotGenerator } from '../managers/SlotGenerator.js';
@@ -17,6 +19,7 @@ import PoolManager, { poolRegistry } from '../core/PoolManager.js';
 import { Platform } from '../prefabs/Platform.js';
 import { POOL, WALLS, PHYSICS } from '../config/GameConstants.js';
 import { getDeviceInfo, applyDeviceClasses } from '../utils/DeviceDetection.js';
+import { PowerupOverlay } from '../prefabs/PowerupOverlay.js';
 
 /**
  * @phasereditor
@@ -54,6 +57,8 @@ export class Game extends Phaser.Scene {
         this.physics.world.setBounds(0, 0, this.cameras.main.width, PHYSICS.WORLD_BOUNDS.MAX_Y);
 
         this.cameras.main.setBackgroundColor('#050505');
+        this.cameras.main.setRoundPixels(true);
+        this.cameras.main.setZoom(1); // Zoom entero para pixel-perfect
 
         // --- DEVICE DETECTION ---
         this.setupDeviceDetection(); // Usa DeviceDetection centralizado
@@ -88,6 +93,10 @@ export class Game extends Phaser.Scene {
         // Spawn player en el centro horizontal de la pantalla
         // El Player leerá el toggle del registry para decidir qué textura usar
         this.player = new Player(this, this.cameras.main.centerX, 400);
+        // Overlay visual para powerup 67
+        this.powerupOverlay = new PowerupOverlay(this, this.player);
+        // Guardar referencia en el player para que pueda actualizar su posición
+        this.player.powerupOverlay = this.powerupOverlay;
 
         // --- APLICAR OTROS DEBUG SETTINGS ---
         this.debugManager.applyDebugSettings();
@@ -96,10 +105,29 @@ export class Game extends Phaser.Scene {
         // Generar plataforma inicial para que el jugador empiece
         const START_WIDTH = 128;
         const START_PLATFORM_Y = 450;
-        this.levelManager.spawnPlatform(this.cameras.main.centerX, START_PLATFORM_Y, START_WIDTH, false);
-        
+        // Plataforma inicial estática (jugador empieza aquí)
+        this.startPlatform = this.levelManager.spawnPlatform(this.cameras.main.centerX, START_PLATFORM_Y, START_WIDTH, false);
+
+        // ─────────────────────────────────────────────────────────────
+        // CREAR ANIMACIONES (ANTES de generar slots para que los objetos tengan animación desde el inicio)
+        // ─────────────────────────────────────────────────────────────
+        this.createCoinAnimation();
+        this.createBasketballAnimation();
+
         // ✅ Inicializar generador de slots (crea los primeros 3 batches arriba de la plataforma de inicio)
+        // IMPORTANTE: Esto debe ir DESPUÉS de crear animaciones para que los objetos spawneados tengan animación
         this.slotGenerator.init(START_PLATFORM_Y);
+
+        // Limpieza de plataformas iniciales para evitar duplicados con la plataforma móvil de prueba
+        if (this.platformPool) {
+            this.platformPool.getActive().forEach(p => {
+                if (p === this.startPlatform || p === this.movingTestPlatform) return;
+                if (p.y <= START_PLATFORM_Y - 1) {
+                    if (this.platforms) this.platforms.remove(p);
+                    this.platformPool.despawn(p);
+                }
+            });
+        }
 
         // --- LAVA & PARTICLES ---
         this.riserManager.createRiser();
@@ -127,6 +155,179 @@ export class Game extends Phaser.Scene {
             if (this.particleManager) this.particleManager.destroy();
             this.cleanupGameEventListeners();
         });
+    }
+
+    /**
+     * Crear animación del coin usando el sprite sheet
+     */
+    createCoinAnimation() {
+        console.log('🎬 Iniciando creación de animación del coin...');
+        
+        // Verificar que el sprite sheet esté cargado
+        if (!this.textures.exists('coins')) {
+            console.error('❌ ERROR: Sprite sheet "coins" no encontrado');
+            console.log('   Texturas disponibles:', Object.keys(this.textures.list));
+            return;
+        }
+
+        console.log('✅ Sprite sheet "coins" encontrado');
+
+        // Obtener el atlas y listar frames disponibles
+        try {
+            const texture = this.textures.get('coins');
+            const availableFrames = texture.getFrameNames();
+            console.log(`   Frames disponibles en atlas (${availableFrames.length}):`, availableFrames);
+            
+            // Verificar que los frames esperados existan
+            const expectedFrames = ['coin-01.png', 'coin-02.png', 'coin-03.png', 'coin-04.png', 'coin-05.png', 'coin-06.png', 'coin-07.png', 'coin-08.png'];
+            const missingFrames = expectedFrames.filter(f => !availableFrames.includes(f));
+            if (missingFrames.length > 0) {
+                console.warn(`   ⚠️ Frames faltantes: ${missingFrames.join(', ')}`);
+            }
+        } catch (e) {
+            console.error('   Error al obtener frames:', e);
+        }
+
+        // Generar nombres de frames para la animación
+        // Formato: coin-01.png, coin-02.png, ..., coin-08.png
+        let frameNames;
+        try {
+            frameNames = this.anims.generateFrameNames('coins', {
+                start: 1,
+                end: 8,
+                zeroPad: 2,  // 01, 02, 03, etc.
+                prefix: 'coin-',
+                suffix: '.png'
+            });
+            console.log(`   Frames generados: ${frameNames.length}`);
+        } catch (e) {
+            console.error('❌ ERROR al generar frames:', e);
+            return;
+        }
+
+        // Verificar que se generaron frames
+        if (!frameNames || frameNames.length === 0) {
+            console.error('❌ ERROR: No se pudieron generar frames para la animación del coin');
+            return;
+        }
+
+        // Mostrar detalles de los frames generados
+        console.log('   Detalles de frames generados:');
+        frameNames.forEach((frame, index) => {
+            console.log(`     Frame ${index + 1}: key=${frame.textureKey || 'N/A'}, frame=${frame.frame || frame.textureFrame || 'N/A'}`);
+        });
+
+        // Crear la animación según el tutorial
+        try {
+            this.anims.create({
+                key: 'coin_spin',
+                frames: frameNames,
+                frameRate: 12, // 12 FPS para animación suave
+                repeat: -1 // Loop infinito
+            });
+            console.log(`✅ Animación 'coin_spin' creada exitosamente`);
+        } catch (e) {
+            console.error('❌ ERROR al crear animación:', e);
+            return;
+        }
+        
+        // Verificar que la animación se creó correctamente
+        if (this.anims.exists('coin_spin')) {
+            const anim = this.anims.get('coin_spin');
+            console.log(`✅ Animación verificada: ${anim.key}, ${anim.frames.length} frames, ${anim.frameRate} FPS`);
+        } else {
+            console.error('❌ ERROR: La animación no se creó correctamente');
+        }
+    }
+
+    /**
+     * Crear animación del basketball usando el sprite sheet
+     */
+    createBasketballAnimation() {
+        console.log('🎬 Iniciando creación de animación del basketball...');
+        
+        // Verificar que el sprite sheet esté cargado
+        if (!this.textures.exists('basketball')) {
+            console.warn('⚠️ Sprite sheet "basketball" no encontrado, usando fallback');
+            console.log('   Texturas disponibles:', Object.keys(this.textures.list));
+            return; // No crear animación si no existe el sprite sheet
+        }
+
+        console.log('✅ Sprite sheet "basketball" encontrado');
+
+        // Obtener el atlas y listar frames disponibles
+        let texture;
+        let availableFrames = [];
+        try {
+            texture = this.textures.get('basketball');
+            availableFrames = texture.getFrameNames();
+            console.log(`   Frames disponibles en atlas (${availableFrames.length}):`, availableFrames);
+        } catch (e) {
+            console.error('   Error al obtener texture:', e);
+            return;
+        }
+
+        // Generar nombres de frames para la animación
+        // Formato: basketball 1.png, basketball 2.png, basketball 3.png
+        // Los nombres tienen espacios, así que necesitamos crear los frames manualmente
+        let frameNames = [];
+        try {
+            // Los frames se llaman "basketball 1.png", "basketball 2.png", "basketball 3.png"
+            const frameOrder = ['basketball 1.png', 'basketball 2.png', 'basketball 3.png'];
+            
+            for (const frameName of frameOrder) {
+                if (texture && texture.has(frameName)) {
+                    // Para multiatlas, usar el formato: { key: 'textureKey', frame: 'frameName' }
+                    frameNames.push({ key: 'basketball', frame: frameName });
+                } else {
+                    console.warn(`   ⚠️ Frame faltante: ${frameName}`);
+                }
+            }
+            
+            if (frameNames.length === 0) {
+                console.error('❌ ERROR: No se encontraron frames válidos para basketball');
+                console.log('   Frames disponibles:', availableFrames);
+                return;
+            }
+            
+            console.log(`   Frames generados: ${frameNames.length}`, frameNames.map(f => f.frame));
+        } catch (e) {
+            console.error('❌ ERROR al generar frames:', e);
+            console.error('   Stack:', e.stack);
+            return;
+        }
+
+        // Crear la animación
+        try {
+            if (!this.anims) {
+                console.error('❌ ERROR: this.anims no está disponible');
+                return;
+            }
+            
+            this.anims.create({
+                key: 'basketball_spin',
+                frames: frameNames,
+                frameRate: 8, // 8 FPS para animación suave
+                repeat: -1 // Loop infinito
+            });
+            console.log(`✅ Animación 'basketball_spin' creada exitosamente`);
+        } catch (e) {
+            console.error('❌ ERROR al crear animación:', e);
+            console.error('   Detalles del error:', e.message);
+            if (e.stack) {
+                console.error('   Stack:', e.stack);
+            }
+            // No retornar aquí, solo loguear el error para que el juego continúe
+            return;
+        }
+        
+        // Verificar que la animación se creó correctamente
+        if (this.anims.exists('basketball_spin')) {
+            const anim = this.anims.get('basketball_spin');
+            console.log(`✅ Animación verificada: ${anim.key}, ${anim.frames.length} frames, ${anim.frameRate} FPS`);
+        } else {
+            console.warn('⚠️ La animación no se creó correctamente, pero el juego continuará');
+        }
     }
 
     /**
@@ -166,9 +367,17 @@ export class Game extends Phaser.Scene {
      * Delegates updates to managers and handles game state transitions.
      */
     update() {
+        // Verificar que los objetos principales existan antes de actualizar
+        // Esto previene errores cuando se sale al menú y la escena se está destruyendo
+        if (!this.player || !this.player.active || !this.player.scene) {
+            return;
+        }
+
         // Game Over Logic
         if (this.isGameOver) {
-            this.riserManager.update(this.player.y, this.currentHeight, true);
+            if (this.riserManager) {
+                this.riserManager.update(this.player.y, this.currentHeight, true);
+            }
             return;
         }
 
@@ -177,28 +386,49 @@ export class Game extends Phaser.Scene {
         if (!this.gameStarted) return;
 
         // Player Update - now only handles physics, input is via EventBus
-        this.player.update();
+        if (this.player && this.player.update) {
+            this.player.update();
+        }
         // Wall clamping now handled by physical wall colliders
 
-        // Manager Updates
-        this.inputManager.update();
+        // Manager Updates - verificar que existan antes de llamarlos
+        if (this.inputManager) {
+            this.inputManager.update();
+        }
         
         // ✅ Actualizar generador de slots (genera nuevos batches según necesidad)
-        this.slotGenerator.update();
+        if (this.slotGenerator) {
+            this.slotGenerator.update();
+        }
         
         // UIManager.update() removed - now uses EventBus listeners
-        this.riserManager.update(this.player.y, this.currentHeight, false);
-        this.audioManager.updateAudio(this.player.y, this.riserManager.riser?.y ?? this.player.y);
-        this.debugManager.updateHitboxVisual(); // Actualizar hitbox visual si está activo
-        this.debugManager.updateRuler(); // Ruler overlay para distancias
+        if (this.riserManager) {
+            this.riserManager.update(this.player.y, this.currentHeight, false);
+        }
+        if (this.audioManager) {
+            this.audioManager.updateAudio(this.player.y, this.riserManager?.riser?.y ?? this.player.y);
+        }
+        if (this.debugManager) {
+            this.debugManager.updateHitboxVisual(); // Actualizar hitbox visual si está activo
+            this.debugManager.updateRuler(); // Ruler overlay para distancias
+        }
 
         // Update platformRider for coins and powerups
-        this.coins.children.iterate(coin => {
-            if (coin && coin.active) updatePlatformRider(coin);
-        });
-        this.powerups.children.iterate(powerup => {
-            if (powerup && powerup.active) updatePlatformRider(powerup);
-        });
+        // Verificar que los grupos existan antes de iterar
+        if (this.coins && this.coins.children) {
+            this.coins.children.iterate(coin => {
+                if (coin && coin.active && coin.body) {
+                    updatePlatformRider(coin);
+                }
+            });
+        }
+        if (this.powerups && this.powerups.children) {
+            this.powerups.children.iterate(powerup => {
+                if (powerup && powerup.active && powerup.body) {
+                    updatePlatformRider(powerup);
+                }
+            });
+        }
 
         // Wall Movement (Keep walls fixed relative to camera)
         this.updateWalls();
@@ -270,9 +500,30 @@ export class Game extends Phaser.Scene {
         // PoolManager objects are added here for arcade physics calculations
         this.platforms = this.physics.add.group({ allowGravity: false, immovable: true });
 
-        // Coins and powerups need to be dynamic to use platformRider on moving platforms
-        this.coins = this.physics.add.group({ allowGravity: false, immovable: true });
-        this.powerups = this.physics.add.group({ allowGravity: false, immovable: true });
+        // Crear PoolManager para coins
+        this.coinPool = new PoolManager(
+            this,
+            'coins',
+            Coin,
+            POOL.INITIAL_SIZE.COINS || 20,
+            POOL.GROW_SIZE || 5
+        );
+        poolRegistry.register('coins', this.coinPool);
+
+        // Crear PoolManager para powerups
+        this.powerupPool = new PoolManager(
+            this,
+            'powerups',
+            Powerup,
+            10, // Tamaño inicial del pool
+            POOL.GROW_SIZE || 3
+        );
+        poolRegistry.register('powerups', this.powerupPool);
+
+        // Physics Groups for Collision Manager
+        // PoolManager objects are added here for arcade physics calculations
+        this.coins = this.physics.add.group({ allowGravity: false, immovable: true, runChildUpdate: true, classType: Coin });
+        this.powerups = this.physics.add.group({ allowGravity: false, immovable: true, runChildUpdate: true, classType: Powerup });
 
         // Crear pools para enemigos
         this.patrolEnemyPool = new PoolManager(
@@ -313,7 +564,7 @@ export class Game extends Phaser.Scene {
         poolRegistry.register('projectiles', this.projectilePool);
 
         // Physics Groups for Collision Manager
-        this.patrolEnemies = this.physics.add.group({ classType: PatrolEnemy, allowGravity: false, immovable: true, runChildUpdate: true });
+        this.patrolEnemies = this.physics.add.group({ classType: PatrolEnemy, allowGravity: true, immovable: false, runChildUpdate: true });
         this.shooterEnemies = this.physics.add.group({ classType: ShooterEnemy, allowGravity: false, immovable: true, runChildUpdate: true });
         this.jumperShooterEnemies = this.physics.add.group({ classType: JumperShooterEnemy, allowGravity: true, immovable: false, runChildUpdate: true });
         this.projectiles = this.physics.add.group({
@@ -447,6 +698,10 @@ export class Game extends Phaser.Scene {
         this.auraEmitter.stop();
         this.player.setTint(0xaaaaaa);
         this.time.delayedCall(200, () => this.player.clearTint());
+
+        if (this.powerupOverlay) {
+            this.powerupOverlay.stop();
+        }
     }
 
     /**

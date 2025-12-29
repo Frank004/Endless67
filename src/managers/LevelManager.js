@@ -569,13 +569,65 @@ export class LevelManager {
     spawnPatrol(platform) {
         const scene = this.scene;
         if (platform && platform.active === false) return;
+        
+        // Posición X: centro de la plataforma
         const ex = platform?.x ?? scene.cameras.main.centerX;
-        const ey = (platform?.y ?? scene.cameras.main.scrollY) - 40;
+        
+        // Posición Y: directamente sobre la plataforma
+        // platform.y es el CENTRO de la plataforma (32px altura)
+        // Top de la plataforma = platform.y - 16
+        // El enemigo (32px altura) debe tener su bottom tocando el top de la plataforma
+        // Si el enemigo tiene centro en y, su bottom está en y + 16
+        // Queremos: enemy.y + 16 = platform.y - 16
+        // Por lo tanto: enemy.y = platform.y - 32
+        // PERO: para asegurar que esté tocando, lo ponemos ligeramente más abajo
+        const platformTop = platform.y - 16;  // Top de la plataforma
+        const enemyHalfHeight = 16;  // Mitad de altura del enemigo (32/2)
+        const ey = platformTop - enemyHalfHeight + 1;  // Centro del enemigo (1px más abajo para asegurar contacto)
+        
+        // Verificar que la posición sea válida
+        if (!isFinite(ey) || isNaN(ey)) {
+            console.error(`  ❌ ERROR: Posición Y inválida para enemigo: ${ey}`);
+            return null;
+        }
+        
+        console.log(`  🎯 SpawnPatrol: platform.y=${platform.y.toFixed(0)}, platformTop=${platformTop.toFixed(0)}, enemy.y=${ey.toFixed(0)}, enemy.bottom=${(ey + enemyHalfHeight).toFixed(0)}`);
 
         const enemy = scene.patrolEnemyPool.spawn(ex, ey);
-        if (scene.patrolEnemies) {
-            scene.patrolEnemies.add(enemy, true);
+        if (enemy) {
+            // Configurar límites de patrulla
+            const platformHalfWidth = 64; // 128/2
+            const enemyHalfWidth = 16;
+            const margin = 4;
+            const minX = ex - platformHalfWidth + enemyHalfWidth + margin;
+            const maxX = ex + platformHalfWidth - enemyHalfWidth - margin;
+            enemy.setPatrolBounds(minX, maxX, 60);
+
+            // Verificar que el enemigo tenga body antes de agregarlo
+            if (!enemy.body) {
+                console.error(`  ❌ ERROR: Enemy no tiene body después del spawn`);
+                return null;
+            }
+            
+            // Agregar al grupo de física
+            if (scene.patrolEnemies) {
+                scene.patrolEnemies.add(enemy, true);
+                console.log(`  ✅ Enemy agregado al grupo patrolEnemies, total: ${scene.patrolEnemies.getLength()}, enemy.body.allowGravity=${enemy.body.allowGravity}, enemy.body.immovable=${enemy.body.immovable}`);
+            } else {
+                console.error(`  ❌ ERROR: scene.patrolEnemies no existe`);
+            }
+            
+            // Verificar que el enemigo esté en el mundo de física
+            if (!enemy.scene || !enemy.scene.physics) {
+                console.error(`  ❌ ERROR: Enemy no está en un scene con physics`);
+            }
+
+            // Iniciar patrulla si ya está activo
+            enemy.patrolBehavior.startPatrol(minX, maxX, 60);
+        } else {
+            console.error(`  ❌ ERROR: Enemy es null después del spawn`);
         }
+        
         return enemy;
     }
 
@@ -851,4 +903,3 @@ export class LevelManager {
         });
     }
 }
-

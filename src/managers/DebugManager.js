@@ -18,13 +18,103 @@ export class DebugManager {
         // false = ocultar hitbox
         this.showPlayerHitbox = false; // Cambiar a false para ocultar hitbox
 
+        // HITBOX VISUAL PARA ITEMS
+        this.showItemHitbox = false; // Coins/Powerups
+
+        // LOGS VERBOSE
+        this.showPatrolLogs = false;
+        this.showSlotLogs = false;
+        
+        // COIN HITBOX VISUAL DEBUG
+        // true = mostrar hitbox amarillo de los coins
+        // false = ocultar hitbox
+        this.showCoinHitbox = true; // Cambiar a true para mostrar hitbox de coins
+
         // Ruler overlay
         this.rulerEnabled = true;
         this.ruler = null;
+        
+        // Setup keyboard shortcuts
+        this.setupKeyboardShortcuts();
+    }
+    
+    /**
+     * Setup keyboard shortcuts for debug toggles
+     */
+    setupKeyboardShortcuts() {
+        const scene = this.scene;
+        
+        // Shift + H: Toggle coin hitbox visibility
+        scene.input.keyboard.on('keydown', (event) => {
+            if (event.shiftKey && event.key.toLowerCase() === 'h') {
+                event.preventDefault();
+                this.toggleCoinHitbox();
+            }
+            
+            // Shift + D: Toggle debug mode (ruler, lines, coordinates)
+            if (event.shiftKey && event.key.toLowerCase() === 'd') {
+                event.preventDefault();
+                this.toggleDebugMode();
+            }
+        });
+    }
+    
+    /**
+     * Toggle coin hitbox visibility
+     */
+    toggleCoinHitbox() {
+        this.showCoinHitbox = !this.showCoinHitbox;
+        this.scene.registry.set('showCoinHitbox', this.showCoinHitbox);
+        
+        // Update all active coins
+        if (this.scene.coins && this.scene.coins.children) {
+            this.scene.coins.children.entries.forEach(coin => {
+                if (coin && coin.active) {
+                    coin.showHitbox = this.showCoinHitbox;
+                    
+                    if (this.showCoinHitbox) {
+                        // Create hitbox if it doesn't exist
+                        if (!coin.hitboxGraphics) {
+                            coin.createHitboxVisual();
+                        }
+                    } else {
+                        // Destroy hitbox if it exists
+                        if (coin.hitboxGraphics) {
+                            coin.hitboxGraphics.destroy();
+                            coin.hitboxGraphics = null;
+                        }
+                    }
+                }
+            });
+        }
+        
+        console.log(`🎯 Coin hitbox: ${this.showCoinHitbox ? 'ON' : 'OFF'}`);
+    }
+    
+    /**
+     * Toggle debug mode (ruler, lines, coordinates)
+     */
+    toggleDebugMode() {
+        this.rulerEnabled = !this.rulerEnabled;
+        
+        if (this.ruler) {
+            this.ruler.setEnabled(this.rulerEnabled);
+        } else if (this.rulerEnabled) {
+            this.ensureRuler();
+            this.ruler.setEnabled(true);
+        }
+        
+        console.log(`🔧 Debug mode: ${this.rulerEnabled ? 'ON' : 'OFF'}`);
     }
 
     applyDebugSettings() {
         const scene = this.scene;
+
+        // Flags globales de debug en registry para acceso ligero
+        scene.registry.set('showCoinHitbox', this.showItemHitbox);
+        scene.registry.set('showItemHitbox', this.showItemHitbox);
+        scene.registry.set('showPatrolLogs', this.showPatrolLogs);
+        scene.registry.set('showSlotLogs', this.showSlotLogs);
 
         // Apply Height Offset
         if (this.debugStartHeight > 0) {

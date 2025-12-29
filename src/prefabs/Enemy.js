@@ -14,6 +14,11 @@ export class PatrolEnemy extends Phaser.Physics.Arcade.Sprite {
 
         // Strategy Pattern: Usar PatrolBehavior
         this.patrolBehavior = new PatrolBehavior(this, 60);
+        this.patrolConfig = null; // Bounds pendientes para arrancar patrulla
+    }
+
+    setPatrolBounds(minX, maxX, speed = 60) {
+        this.patrolConfig = { minX, maxX, speed };
     }
 
     spawn(x, y) {
@@ -22,18 +27,38 @@ export class PatrolEnemy extends Phaser.Physics.Arcade.Sprite {
             this.scene.physics.add.existing(this);
         }
         
+        // Establecer posición PRIMERO
+        this.setPosition(x, y);
+        
+        // Establecer tamaño visual a 32x32px (sin escalado)
+        this.setDisplaySize(32, 32);
+        this.setScale(1);  // Asegurar que el scale sea 1
+        
+        // Configurar body de física (32x32px)
+        if (this.body) {
+            this.body.setSize(32, 32);
+            this.body.setOffset(0, 0);  // Sin offset, el body coincide con el sprite
+        }
+        
+        // Configurar física
         this.body.reset(x, y);
         this.body.allowGravity = true;
         this.setGravityY(1200);
         this.body.immovable = false;
+        this.body.updateFromGameObject();  // Sincronizar body con posición del sprite
+        
         this.setActive(true);
         this.setVisible(true);
         this.setDepth(20);
         this.setVelocityX(0);
+        this.setVelocityY(0);  // Sin velocidad Y inicial
 
-        // Pop-in effect
-        this.setScale(0);
-        this.scene.tweens.add({ targets: this, scale: 1, duration: 400, ease: 'Back.out' });
+        // Debug: Verificar tamaño visual
+        console.log(`  📏 Enemy spawn: displayWidth=${this.displayWidth}, displayHeight=${this.displayHeight}, scaleX=${this.scaleX}, scaleY=${this.scaleY}, body.width=${this.body.width}, body.height=${this.body.height}`);
+
+        // Pop-in effect (comentado temporalmente para debug)
+        // this.setScale(0);
+        // this.scene.tweens.add({ targets: this, scale: 1, duration: 400, ease: 'Back.out' });
     }
 
     /**
@@ -75,8 +100,32 @@ export class PatrolEnemy extends Phaser.Physics.Arcade.Sprite {
     preUpdate(time, delta) {
         super.preUpdate(time, delta);
 
+        // Debug: verificar que preUpdate se esté llamando
+        if (this._preUpdateCounter === undefined) {
+            this._preUpdateCounter = 0;
+            console.log(`  ✅ PatrolEnemy.preUpdate: Llamado por primera vez, active=${this.active}, visible=${this.visible}`);
+        }
+        this._preUpdateCounter++;
+        if (this._preUpdateCounter % 180 === 0) {  // Cada 3 segundos aprox
+            console.log(`  🔄 PatrolEnemy.preUpdate: Frame ${this._preUpdateCounter}, active=${this.active}, body=${!!this.body}, patrolBehavior=${!!this.patrolBehavior}`);
+        }
+
         // Strategy Pattern: Delegar actualización a PatrolBehavior
-        this.patrolBehavior.update(time, delta);
+        if (this.patrolBehavior) {
+            this.patrolBehavior.update(time, delta);
+        } else {
+            console.error(`  ❌ PatrolEnemy.preUpdate: patrolBehavior es null`);
+        }
+
+        // Auto-arrancar patrulla si hay bounds pendientes y ya tocó suelo/plataforma
+        if (
+            this.patrolConfig &&
+            !this.patrolBehavior.isPatrolling &&
+            (this.body.blocked?.down || this.body.touching?.down || this.ridingPlatform)
+        ) {
+            const { minX, maxX, speed } = this.patrolConfig;
+            this.patrolBehavior.startPatrol(minX, maxX, speed);
+        }
 
         // Cleanup offscreen enemies
         if (this.y > this.scene.player.y + 900) {

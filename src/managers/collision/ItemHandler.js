@@ -38,22 +38,23 @@ export class ItemHandler {
         powerup.destroy();
         scene.isPausedEvent = true;
         scene.physics.pause();
-        player.setTint(0xffff00);
-        scene.auraEmitter.start();
+        // Asegurar que el jugador se vea (sin animación de reemplazo)
+        player.setVisible(true);
 
         // Play celebration sound
         AudioManager.playCelebrationSound();
 
         let t = scene.add.text(scene.cameras.main.centerX, scene.cameras.main.scrollY + 200, 'POWERUP 67', {
-            fontSize: '40px', color: '#ffd700', fontStyle: 'bold', stroke: '#000000', strokeThickness: 6
+            fontSize: '32px', color: '#ffd700', fontStyle: 'bold', stroke: '#000000', strokeThickness: 4
         }).setOrigin(0.5).setDepth(200);
 
         scene.cameras.main.shake(500, 0.005);
-        scene.time.delayedCall(2000, () => {
+        scene.time.delayedCall(1200, () => {
             t.destroy();
             scene.physics.resume();
             scene.isPausedEvent = false;
             scene.activateInvincibility();
+            if (scene.auraEmitter) scene.auraEmitter.start(); // Aura durante el poder activo
         });
     }
 }

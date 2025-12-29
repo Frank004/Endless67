@@ -37,6 +37,16 @@ export class Boot extends Phaser.Scene {
         // --- UI ICONS ---
         this.load.atlas('ui_icons', 'assets/ui/icons.png', 'assets/ui/icons.json');
 
+        // --- COIN SPRITE SHEET ---
+        // Cargar sprite sheet del coin usando multiatlas (formato TexturePacker)
+        this.load.multiatlas('coins', 'assets/spritesheets/coins.json', 'assets/spritesheets');
+        
+        // --- BASKETBALL SPRITE SHEET (POWERUP) ---
+        // Cargar sprite sheet del basketball usando multiatlas (formato TexturePacker)
+        this.load.multiatlas('basketball', 'assets/spritesheets/basketball.json', 'assets/spritesheets');
+        // Overlay del powerup 67 (animación especial)
+        this.load.multiatlas('basketball_powerup', 'assets/spritesheets/basketball_powerup.json', 'assets/spritesheets');
+
         // --- PLAYER SPRITE (PNG Placeholder) ---
         // Cargar PNG si existe. Si no existe, se usará el placeholder generado.
         // Toggle: Cambiar usePlayerPNG en DebugManager para activar/desactivar
@@ -103,13 +113,13 @@ export class Boot extends Phaser.Scene {
         g.clear();
         g.fillStyle(0xff0000, 1);
         g.beginPath();
-        g.moveTo(10, 0);
-        g.lineTo(20, 20);
-        g.lineTo(0, 20);
+        g.moveTo(16, 0);
+        g.lineTo(32, 32);
+        g.lineTo(0, 32);
         g.closePath();
         g.fill();
-        g.strokeRoundedRect(24, 24, 24, 6);
-        g.generateTexture('enemy_spike', 24, 24);
+        g.strokeRoundedRect(32, 32, 32, 8);
+        g.generateTexture('enemy_spike', 32, 32);
 
         // Enemy Shooter
         g.clear();
@@ -372,7 +382,8 @@ export class Boot extends Phaser.Scene {
         g.clear(); g.fillStyle(0xffffff, 1); g.fillRect(0, 0, 6, 6); g.generateTexture('particle_dust', 6, 6);
         g.clear(); g.fillStyle(0xffff00, 1); g.fillCircle(3, 3, 3); g.generateTexture('particle_spark', 6, 6);
         g.clear(); g.fillStyle(0xff4400, 1); g.fillCircle(4, 4, 4); g.generateTexture('particle_burn', 8, 8);
-        g.clear(); g.fillStyle(0xffd700, 1); g.fillCircle(10, 10, 8); g.generateTexture('coin', 20, 20);
+        // Coin sprite sheet ya cargado desde assets/spritesheets/coins.json
+        // No generar textura placeholder, usar el sprite sheet directamente
 
         // Power Up & Confetti
         g.clear(); g.fillStyle(0xff6600, 1); g.fillCircle(15, 15, 15); g.lineStyle(2, 0x000000, 1); g.strokeCircle(15, 15, 15); g.beginPath(); g.moveTo(15, 0); g.lineTo(15, 30); g.strokePath(); g.beginPath(); g.moveTo(0, 15); g.lineTo(30, 15); g.strokePath(); g.generateTexture('powerup_ball', 30, 30);
