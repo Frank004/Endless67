@@ -43,9 +43,8 @@ export class PatrolBehavior {
     stopPatrol() {
         this.isPatrolling = false;
         // Guardar errores al destruir la escena: enemy puede estar ya destruido
-        if (this.enemy && this.enemy.setVelocityX) {
-            this.enemy.setVelocityX(0);
-        }
+        if (!this.enemy || !this.enemy.body || !this.enemy.setVelocityX) return;
+        this.enemy.setVelocityX(0);
     }
 
     /**

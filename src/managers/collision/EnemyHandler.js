@@ -14,7 +14,21 @@ export class EnemyHandler {
     hitEnemy(player, enemy) {
         const scene = this.scene;
         if (scene.isInvincible) {
-            enemy.destroy();
+            // Prefer devolver al pool para no reciclar objetos destruidos
+            const pools = [
+                scene.patrolEnemyPool,
+                scene.shooterEnemyPool,
+                scene.jumperShooterEnemyPool,
+            ];
+            const pooled = pools.find(pool => pool && pool.active?.includes(enemy));
+            if (pooled) {
+                pooled.despawn(enemy);
+            } else if (enemy.despawn) {
+                enemy.despawn();
+            } else {
+                enemy.destroy();
+            }
+
             scene.sparkEmitter.emitParticleAt(enemy.x, enemy.y, 20);
 
             // Play destroy sound

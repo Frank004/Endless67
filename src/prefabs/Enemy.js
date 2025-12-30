@@ -22,6 +22,10 @@ export class PatrolEnemy extends Phaser.Physics.Arcade.Sprite {
     }
 
     spawn(x, y) {
+        if (!this.scene || !this.scene.physics) {
+            console.error('❌ PatrolEnemy.spawn: scene o physics indefinido');
+            return;
+        }
         // Asegurar que está en el physics world
         if (!this.body) {
             this.scene.physics.add.existing(this);
@@ -69,8 +73,10 @@ export class PatrolEnemy extends Phaser.Physics.Arcade.Sprite {
         this.stopMoving();
         
         // Limpiar estado
-        this.setVelocityX(0);
-        this.setVelocityY(0);
+        if (this.body) {
+            this.setVelocityX(0);
+            this.setVelocityY(0);
+        }
         this.setScale(1); // Reset scale
         
         // Remover del grupo legacy si existe
@@ -100,14 +106,17 @@ export class PatrolEnemy extends Phaser.Physics.Arcade.Sprite {
     preUpdate(time, delta) {
         super.preUpdate(time, delta);
 
-        // Debug: verificar que preUpdate se esté llamando
-        if (this._preUpdateCounter === undefined) {
-            this._preUpdateCounter = 0;
-            console.log(`  ✅ PatrolEnemy.preUpdate: Llamado por primera vez, active=${this.active}, visible=${this.visible}`);
-        }
-        this._preUpdateCounter++;
-        if (this._preUpdateCounter % 180 === 0) {  // Cada 3 segundos aprox
-            console.log(`  🔄 PatrolEnemy.preUpdate: Frame ${this._preUpdateCounter}, active=${this.active}, body=${!!this.body}, patrolBehavior=${!!this.patrolBehavior}`);
+        // Debug: verificar que preUpdate se esté llamando solo si debug activo
+        const debugPatrol = this.scene?.registry?.get('showPatrolLogs');
+        if (debugPatrol) {
+            if (this._preUpdateCounter === undefined) {
+                this._preUpdateCounter = 0;
+                console.log(`  ✅ PatrolEnemy.preUpdate: Llamado por primera vez, active=${this.active}, visible=${this.visible}`);
+            }
+            this._preUpdateCounter++;
+            if (this._preUpdateCounter % 180 === 0) {  // Cada 3 segundos aprox
+                console.log(`  🔄 PatrolEnemy.preUpdate: Frame ${this._preUpdateCounter}, active=${this.active}, body=${!!this.body}, patrolBehavior=${!!this.patrolBehavior}`);
+            }
         }
 
         // Strategy Pattern: Delegar actualización a PatrolBehavior
@@ -185,8 +194,10 @@ export class ShooterEnemy extends Phaser.Physics.Arcade.Sprite {
         this.stopShooting();
         
         // Limpiar estado
-        this.setVelocityX(0);
-        this.setVelocityY(0);
+        if (this.body) {
+            this.setVelocityX(0);
+            this.setVelocityY(0);
+        }
         this.setScale(1); // Reset scale
         
         // Remover del grupo legacy si existe
@@ -298,8 +309,10 @@ export class JumperShooterEnemy extends Phaser.Physics.Arcade.Sprite {
         this.stopBehavior();
         
         // Limpiar estado
-        this.setVelocityX(0);
-        this.setVelocityY(0);
+        if (this.body) {
+            this.setVelocityX(0);
+            this.setVelocityY(0);
+        }
         this.setScale(1); // Reset scale
         
         // Remover del grupo legacy si existe

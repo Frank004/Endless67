@@ -95,10 +95,11 @@ export const SLOT_CONFIG = {
     // REGLAS DE GENERACIÓN
     // ─────────────────────────────────────────────────────────────
     rules: {
-        tutorialSlots: 3,              // Primeros 3 slots son PLATFORM_BATCH
+        tutorialSlots: 3,              // Generar 3 slots iniciales para dar densidad de arranque
         maxConsecutiveSameType: 2,     // No más de 2 del mismo tipo seguidos
         spawnBuffer: 1200,             // Genera nuevo slot cuando jugador está a 1200px del último
-        cleanupDistance: 900           // Limpia slots a más de 900px debajo de cámara
+        cleanupDistance: 900,          // Limpia slots a más de 900px debajo de cámara
+        startPlatformY: 560            // Ubicación de la plataforma inicial (más abajo para acercar el primer slot)
     }
 };
 
@@ -136,4 +137,3 @@ export function calculateMaxPlatforms(slotHeight = SLOT_CONFIG.slotHeight, minGa
     // 640 / 160 = 4 plataformas
     return Math.floor(slotHeight / minGap);
 }
-

@@ -13,7 +13,20 @@ export class ItemHandler {
 
     collectCoin(player, coin) {
         const scene = this.scene;
-        coin.destroy();
+        if (!coin || !coin.active) return;
+
+        // Deshabilitar colisión de inmediato para evitar múltiples triggers en el mismo coin
+        if (coin.body) {
+            coin.body.setEnable(false);
+        }
+        coin.setActive(false);
+        coin.setVisible(false);
+
+        if (scene.coinPool) {
+            scene.coinPool.despawn(coin);
+        } else {
+            coin.destroy();
+        }
         scene.totalScore += 1;
 
         // Update score UI - delegate to UIManager
@@ -35,7 +48,20 @@ export class ItemHandler {
 
     collectPowerup(player, powerup) {
         const scene = this.scene;
-        powerup.destroy();
+        if (!powerup || !powerup.active) return;
+
+        // Deshabilitar colisión de inmediato para evitar múltiples triggers
+        if (powerup.body) {
+            powerup.body.setEnable(false);
+        }
+        powerup.setActive(false);
+        powerup.setVisible(false);
+
+        if (scene.powerupPool) {
+            scene.powerupPool.despawn(powerup);
+        } else {
+            powerup.destroy();
+        }
         scene.isPausedEvent = true;
         scene.physics.pause();
         // Asegurar que el jugador se vea (sin animación de reemplazo)

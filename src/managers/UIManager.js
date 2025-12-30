@@ -263,8 +263,15 @@ export class UIManager {
      * Physics pause/resume is handled by Game.js or GameState
      */
     togglePauseMenu() {
-        // Use GameState to toggle pause (this will emit events)
-        GameState.togglePause();
+        // Refrescar estado actual
+        const currentlyPaused = GameState.isPaused;
+        if (currentlyPaused) {
+            GameState.resume();     // Emitirá GAME_RESUMED
+            this.hidePauseMenu();   // Fallback directo
+        } else {
+            GameState.pause();      // Emitirá GAME_PAUSED
+            this.showPauseMenu();   // Fallback directo
+        }
     }
 
     /**

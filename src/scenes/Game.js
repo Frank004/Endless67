@@ -17,7 +17,8 @@ import EventBus, { Events } from '../core/EventBus.js';
 import GameState from '../core/GameState.js';
 import PoolManager, { poolRegistry } from '../core/PoolManager.js';
 import { Platform } from '../prefabs/Platform.js';
-import { POOL, WALLS, PHYSICS } from '../config/GameConstants.js';
+import { POOL, WALLS, PHYSICS, PLATFORM } from '../config/GameConstants.js';
+import { SLOT_CONFIG } from '../config/SlotConfig.js';
 import { getDeviceInfo, applyDeviceClasses } from '../utils/DeviceDetection.js';
 import { PowerupOverlay } from '../prefabs/PowerupOverlay.js';
 
@@ -92,7 +93,10 @@ export class Game extends Phaser.Scene {
         // --- PLAYER ---
         // Spawn player en el centro horizontal de la pantalla
         // El Player leerá el toggle del registry para decidir qué textura usar
-        this.player = new Player(this, this.cameras.main.centerX, 400);
+        // Spawnear alineado con la plataforma inicial para caer sobre ella
+        const startPlatformY = SLOT_CONFIG.rules.startPlatformY || PLATFORM?.INITIAL_Y || 450;
+        const startPlatformHeight = PLATFORM?.HEIGHT || 32;
+        this.player = new Player(this, this.cameras.main.centerX, startPlatformY - startPlatformHeight - 5);
         // Overlay visual para powerup 67
         this.powerupOverlay = new PowerupOverlay(this, this.player);
         // Guardar referencia en el player para que pueda actualizar su posición
@@ -104,7 +108,7 @@ export class Game extends Phaser.Scene {
         // --- INITIAL LEVEL GENERATION ---
         // Generar plataforma inicial para que el jugador empiece
         const START_WIDTH = 128;
-        const START_PLATFORM_Y = 450;
+        const START_PLATFORM_Y = startPlatformY;
         // Plataforma inicial estática (jugador empieza aquí)
         this.startPlatform = this.levelManager.spawnPlatform(this.cameras.main.centerX, START_PLATFORM_Y, START_WIDTH, false);
 
@@ -118,16 +122,7 @@ export class Game extends Phaser.Scene {
         // IMPORTANTE: Esto debe ir DESPUÉS de crear animaciones para que los objetos spawneados tengan animación
         this.slotGenerator.init(START_PLATFORM_Y);
 
-        // Limpieza de plataformas iniciales para evitar duplicados con la plataforma móvil de prueba
-        if (this.platformPool) {
-            this.platformPool.getActive().forEach(p => {
-                if (p === this.startPlatform || p === this.movingTestPlatform) return;
-                if (p.y <= START_PLATFORM_Y - 1) {
-                    if (this.platforms) this.platforms.remove(p);
-                    this.platformPool.despawn(p);
-                }
-            });
-        }
+        // (Eliminado cleanup de plataformas iniciales que removía el primer slot)
 
         // --- LAVA & PARTICLES ---
         this.riserManager.createRiser();
@@ -154,6 +149,14 @@ export class Game extends Phaser.Scene {
             this.uiManager.destroy(); // Clean up event listeners
             if (this.particleManager) this.particleManager.destroy();
             this.cleanupGameEventListeners();
+            // Remove global listeners to avoid leaks when scene restarts
+            if (this._orientationHandlers?.checkOrientation) {
+                window.removeEventListener('resize', this._orientationHandlers.checkOrientation);
+                window.removeEventListener('orientationchange', this._orientationHandlers.checkOrientation);
+            }
+            if (this._orientationHandlers?.visibilityHandler) {
+                document.removeEventListener('visibilitychange', this._orientationHandlers.visibilityHandler);
+            }
         });
     }
 
@@ -161,6 +164,12 @@ export class Game extends Phaser.Scene {
      * Crear animación del coin usando el sprite sheet
      */
     createCoinAnimation() {
+        // Evitar recrear si ya existe
+        if (this.anims.exists('coin_spin')) {
+            console.log('ℹ️ Animación coin_spin ya existe, se omite recreación');
+            return;
+        }
+
         console.log('🎬 Iniciando creación de animación del coin...');
         
         // Verificar que el sprite sheet esté cargado
@@ -244,6 +253,11 @@ export class Game extends Phaser.Scene {
      * Crear animación del basketball usando el sprite sheet
      */
     createBasketballAnimation() {
+        if (this.anims.exists('basketball_spin')) {
+            console.log('ℹ️ Animación basketball_spin ya existe, se omite recreación');
+            return;
+        }
+
         console.log('🎬 Iniciando creación de animación del basketball...');
         
         // Verificar que el sprite sheet esté cargado
@@ -475,8 +489,18 @@ export class Game extends Phaser.Scene {
             }
         };
 
+        // Guardar refs para remover en shutdown
+        this._orientationHandlers = this._orientationHandlers || {};
+        this._orientationHandlers.checkOrientation = checkOrientation;
+        this._orientationHandlers.visibilityHandler = () => {
+            if (!document.hidden && this.audioManager?.scene?.sound?.context) {
+                this.audioManager.scene.sound.context.resume().catch(() => {});
+            }
+        };
+
         window.addEventListener('resize', checkOrientation);
         window.addEventListener('orientationchange', checkOrientation);
+        document.addEventListener('visibilitychange', this._orientationHandlers.visibilityHandler);
         checkOrientation(); // Initial check
     }
 

@@ -715,16 +715,33 @@ export class LevelManager {
         // Cleanup coins
         scene.coins.children.each(coin => {
             if (coin.active && coin.y > limitY) {
-                coin.destroy();
+                if (scene.coinPool) scene.coinPool.despawn(coin);
+                else coin.destroy();
             }
         });
         
         // Cleanup powerups
         scene.powerups.children.each(powerup => {
             if (powerup.active && powerup.y > limitY) {
-                powerup.destroy();
+                if (scene.powerupPool) scene.powerupPool.despawn(powerup);
+                else powerup.destroy();
             }
         });
+
+        // Opcional: podar pools para reducir memoria tras un cleanup grande
+        const trimInactive = (pool, keep = 5) => {
+            if (pool?.trim) {
+                pool.trim(keep);
+            }
+        };
+        // Mantener algunos objetos disponibles pero sin ser agresivos para evitar vaciar el pool en runs largos
+        trimInactive(scene.platformPool, 30);
+        trimInactive(scene.patrolEnemyPool, 20);
+        trimInactive(scene.shooterEnemyPool, 15);
+        trimInactive(scene.jumperShooterEnemyPool, 15);
+        trimInactive(scene.coinPool, 40);
+        trimInactive(scene.powerupPool, 20);
+        trimInactive(scene.projectilePool, 40);
     }
 
     /**
@@ -874,7 +891,9 @@ export class LevelManager {
 
         // Check walls overflow
         if (x - halfWidth < minX || x + halfWidth > maxX) {
-            console.warn('LevelManager: platform spawned outside wall bounds', { x, width, minX, maxX });
+            if (this.scene?.registry?.get('showSlotLogs')) {
+                console.warn('LevelManager: platform spawned outside wall bounds', { x, width, minX, maxX });
+            }
         }
 
         // Check overlap with coins/powerups (should ride platforms, not be inside)

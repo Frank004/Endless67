@@ -44,13 +44,7 @@ export class AudioManager {
 
         // Listen for user interactions
         scene.input.on('pointerdown', resumeAudio, this);
-
-        // Also try to resume when the page becomes visible again
-        document.addEventListener('visibilitychange', () => {
-            if (!document.hidden) {
-                resumeAudio();
-            }
-        });
+        // Nota: el listener de visibilitychange ahora se maneja en Game y se limpia en shutdown
     }
 
     setupAudio() {

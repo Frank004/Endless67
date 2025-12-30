@@ -27,6 +27,7 @@ export class Powerup extends Phaser.Physics.Arcade.Sprite {
         if (this.body) {
             this.body.allowGravity = false;
             this.body.immovable = true;
+            this.body.setEnable(true);
         }
         
         // Configuración inicial
@@ -43,9 +44,16 @@ export class Powerup extends Phaser.Physics.Arcade.Sprite {
      * @param {number} y - Posición Y
      */
     spawn(x, y) {
+        if (!this.scene || !this.scene.physics) {
+            console.error('❌ Powerup.spawn: scene o physics indefinido');
+            return;
+        }
         // Asegurar que está en el physics world
         if (!this.body) {
             this.scene.physics.add.existing(this);
+        }
+        if (this.body) {
+            this.body.setEnable(true);
         }
 
         // Establecer posición PRIMERO
@@ -131,6 +139,11 @@ export class Powerup extends Phaser.Physics.Arcade.Sprite {
         // Detener animación
         if (this.anims) {
             this.anims.stop();
+        }
+
+        // Deshabilitar body para evitar overlaps múltiples
+        if (this.body) {
+            this.body.setEnable(false);
         }
         
         // Resetear scale

@@ -48,16 +48,16 @@ export class SlotGenerator {
      * Inicializa el generador y crea el primer batch
      * @param {number} startPlatformY - Y de la plataforma de inicio (default: 450)
      */
-    init(startPlatformY = 450) {
+    init(startPlatformY = SLOT_CONFIG.rules.startPlatformY || 450) {
         console.log('🎮 SlotGenerator: Inicializando...');
         
-        // Calcular Y inicial del primer batch (arriba de la plataforma de inicio)
+        // Calcular Y inicial del primer batch: 160px por encima de la plataforma inicial
         this.startY = startPlatformY - SLOT_CONFIG.minVerticalGap;  // 450 - 160 = 290
         console.log(`  📍 Plataforma inicio: Y=${startPlatformY}, Primer batch: Y=${this.startY}`);
         
-        // Generar 3 slots iniciales (tutorial)
+        // Generar slots iniciales (tutorial)
         for (let i = 0; i < SLOT_CONFIG.rules.tutorialSlots; i++) {
-            this.generateNextSlot();
+            this.generateNextSlot({ tutorialIndex: i });
         }
         
         console.log(`✅ SlotGenerator: ${this.slots.length} slots iniciales generados`);
@@ -66,7 +66,7 @@ export class SlotGenerator {
     /**
      * Genera el siguiente slot basado en reglas
      */
-    generateNextSlot() {
+    generateNextSlot(options = {}) {
         // Calcular Y del slot usando startY como referencia
         // Slot 0: startY (290)
         // Slot 1: startY - 640 = -350
@@ -95,19 +95,23 @@ export class SlotGenerator {
         
         let result = null;
         
+        // Opciones para tutorial: patrones fijos y sin transform
+        const forcePattern = options.forcePattern || null;
+        const disableTransform = options.disableTransform || false;
+
         switch (slotType) {
             case 'PLATFORM_BATCH':
-                result = this.generatePlatformBatch(slotYStart, slotType);
+                result = this.generatePlatformBatch(slotYStart, slotType, { forcePattern, disableTransform });
                 break;
             case 'SAFE_ZONE':
-                result = this.generatePlatformBatch(slotYStart, slotType);
+                result = this.generatePlatformBatch(slotYStart, slotType, { forcePattern, disableTransform });
                 break;
             case 'MAZE':
                 result = this.generateMaze(slotYStart);
                 break;
             default:
                 console.warn(`⚠️ Tipo de slot desconocido: ${slotType}, usando PLATFORM_BATCH`);
-                result = this.generatePlatformBatch(slotYStart, 'PLATFORM_BATCH');
+                result = this.generatePlatformBatch(slotYStart, 'PLATFORM_BATCH', { forcePattern, disableTransform });
         }
         
         // Registrar slot
@@ -158,26 +162,37 @@ export class SlotGenerator {
      * @param {string} slotType - Tipo de slot (PLATFORM_BATCH o SAFE_ZONE)
      * @returns {Object} Información del batch generado
      */
-    generatePlatformBatch(slotYStart, slotType) {
+    generatePlatformBatch(slotYStart, slotType, options = {}) {
         const config = SLOT_CONFIG.types[slotType];
-        const platformCount = 4;  // Siempre 4 plataformas (640 / 160 = 4)
+        const platformCount = 4;  // 640 / 160 = 4 plataformas por slot
         
-        // 1) Seleccionar patrón aleatorio
-        const basePattern = getRandomPattern();
+        // 1) Seleccionar patrón
+        let basePattern;
+        basePattern = options.forcePattern
+            ? PLATFORM_PATTERNS.find(p => p.name === options.forcePattern) || getRandomPattern()
+            : getRandomPattern();
         
-        // 2) Aplicar transformación aleatoria
-        const { platforms, transform } = this.transformer.randomTransform(
-            basePattern.platforms,
-            config.transformWeights
-        );
+        // 2) Aplicar transformación (omitida en tutorial para evitar merges)
+        let platforms;
+        let transform = 'none';
+        if (options.disableTransform) {
+            platforms = basePattern.platforms;
+        } else {
+            const transformed = this.transformer.randomTransform(
+                basePattern.platforms,
+                config.transformWeights
+            );
+            platforms = transformed.platforms;
+            transform = transformed.transform;
+        }
         
         // 3) Ajustar plataformas a límites
         const clampedPlatforms = this.transformer.clampToBounds(platforms);
         
         // 4) Sistema de SWAP para plataformas móviles
         // Porcentaje de chance de tener plataformas móviles por slot
-        const MOVING_PLATFORM_CHANCE = 0.35;  // 35% de chance por slot
-        const MOVING_PLATFORM_SPEED = 100;     // Velocidad de movimiento
+        const MOVING_PLATFORM_CHANCE = 0.35;  // Chance por slot
+        const MOVING_PLATFORM_SPEED = 100;    // Velocidad de movimiento
         
         // Determinar cuántas plataformas móviles tendrá este slot (0, 1 o 2)
         let numMovingPlatforms = 0;
@@ -415,6 +430,9 @@ export class SlotGenerator {
                 allGeneratedItems.push({ x, y, type: 'coin' });
                 return true;
             }
+            if (!coin) {
+                console.warn('SlotGenerator: no se pudo spawnar coin (pool vacío o maxSize alcanzado)');
+            }
             return false;
         };
         
@@ -569,11 +587,13 @@ export class SlotGenerator {
         const slotsToRemove = this.slots.filter(slot => slot.yStart > limitY);
         
         if (slotsToRemove.length > 0) {
-            console.log(`🧹 Limpiando ${slotsToRemove.length} slots viejos (limitY: ${limitY})`);
-            
-            slotsToRemove.forEach(slot => {
-                console.log(`  🗑️ SLOT ${slot.index} (${slot.type})`);
-            });
+            const verbose = this.scene?.registry?.get('showSlotLogs');
+            if (verbose) {
+                console.log(`🧹 Limpiando ${slotsToRemove.length} slots viejos (limitY: ${limitY})`);
+                slotsToRemove.forEach(slot => {
+                    console.log(`  🗑️ SLOT ${slot.index} (${slot.type})`);
+                });
+            }
             
             // Remover del array
             this.slots = this.slots.filter(slot => slot.yStart <= limitY);

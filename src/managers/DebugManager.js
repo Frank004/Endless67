@@ -18,24 +18,68 @@ export class DebugManager {
         // false = ocultar hitbox
         this.showPlayerHitbox = false; // Cambiar a false para ocultar hitbox
 
-        // HITBOX VISUAL PARA ITEMS
-        this.showItemHitbox = false; // Coins/Powerups
+        // HITBOX VISUAL PARA ITEMS (coins/powerups)
+        this.showItemHitbox = false;
 
         // LOGS VERBOSE
         this.showPatrolLogs = false;
         this.showSlotLogs = false;
-        
-        // COIN HITBOX VISUAL DEBUG
-        // true = mostrar hitbox amarillo de los coins
-        // false = ocultar hitbox
-        this.showCoinHitbox = true; // Cambiar a true para mostrar hitbox de coins
 
         // Ruler overlay
         this.rulerEnabled = true;
         this.ruler = null;
+
+        // Overlay de errores
+        this.errorOverlay = null;
+        this._errorsInitialized = false;
         
         // Setup keyboard shortcuts
         this.setupKeyboardShortcuts();
+    }
+
+    setupGlobalErrorHandlers() {
+        if (this._errorsInitialized) return;
+        this._errorsInitialized = true;
+
+        const scene = this.scene;
+        const showError = (msg, src, line, col, stack) => {
+            const text = [
+                '⚠️ ERROR',
+                msg || '',
+                src ? `${src}:${line ?? ''}:${col ?? ''}` : '',
+                stack || ''
+            ].filter(Boolean).join('\n');
+
+            if (!this.errorOverlay) {
+                this.errorOverlay = scene.add.text(
+                    scene.cameras.main.centerX,
+                    scene.cameras.main.centerY,
+                    '',
+                    {
+                        fontSize: '14px',
+                        color: '#ff5555',
+                        backgroundColor: 'rgba(0,0,0,0.7)',
+                        padding: { x: 8, y: 8 },
+                        wordWrap: { width: scene.cameras.main.width - 40 }
+                    }
+                ).setOrigin(0.5).setScrollFactor(0).setDepth(9999);
+            }
+            this.errorOverlay.setText(text);
+            this.errorOverlay.setVisible(true);
+        };
+
+        window.onerror = (msg, src, line, col, err) => {
+            console.error('ONERROR', { msg, src, line, col, stack: err?.stack });
+            showError(msg, src, line, col, err?.stack);
+        };
+
+        window.onunhandledrejection = (event) => {
+            const err = event.reason;
+            const msg = err?.message || 'Unhandled rejection';
+            const stack = err?.stack || '';
+            console.error('UNHANDLED REJECTION', err);
+            showError(msg, '', '', '', stack);
+        };
     }
     
     /**
@@ -144,6 +188,12 @@ export class DebugManager {
             this.ensureRuler();
             this.ruler.setEnabled(true);
         }
+
+        // Setup global error handling
+        this.setupGlobalErrorHandlers();
+
+        // Setup global error handling
+        this.setupGlobalErrorHandlers();
     }
     
     setupPlayerHitboxVisual(player) {
