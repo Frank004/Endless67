@@ -512,8 +512,11 @@ export class SlotGenerator {
         }
         
         // Calcular altura real del contenido (mínima Y relativa)
-        const minOffset = Math.min(...clampedPlatforms.map(p => p.y));
-        const contentHeight = Math.abs(minOffset) + SLOT_CONFIG.platformHeight;
+        let contentHeight = SLOT_CONFIG.slotHeight;
+        if (spawnedPlatforms.length > 0) {
+            const lowestY = Math.min(...spawnedPlatforms.map(p => p.y));
+            contentHeight = (slotYStart - lowestY) + SLOT_CONFIG.platformHeight;
+        }
 
         return {
             patternName: basePattern.name,

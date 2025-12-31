@@ -1,4 +1,5 @@
 import EventBus, { Events } from '../core/EventBus.js';
+import { PlayerController } from '../player/PlayerController.js';
 
 export class Player extends Phaser.Physics.Arcade.Sprite {
     constructor(scene, x, y) {
@@ -17,6 +18,10 @@ export class Player extends Phaser.Physics.Arcade.Sprite {
         super(scene, x, y, textureKey);
         scene.add.existing(this);
         scene.physics.add.existing(this);
+        // Exponer EventBus en scene para que el contexto pueda emitir sin acoplarse
+        if (!scene.eventBus) {
+            scene.eventBus = EventBus;
+        }
 
         // Event listeners storage for cleanup (must be initialized before setupEventListeners)
         this.eventListeners = [];
@@ -60,6 +65,9 @@ export class Player extends Phaser.Physics.Arcade.Sprite {
         this.body.onWorldBounds = false;
         this.setDepth(20);
 
+        // FSM/Animation controller (no intrusivo, solo lecturas/anim)
+        this.controller = new PlayerController(this);
+
         // State
         this.jumps = 0;
         this.maxJumps = 2; // Player can jump twice (normal + double jump)
@@ -69,6 +77,16 @@ export class Player extends Phaser.Physics.Arcade.Sprite {
         this.currentPlatform = null;
         this.isInvincible = false;
         this.lastPlatformVelX = 0;  // Para rastrear la velocidad de la plataforma del frame anterior
+
+        // Ajustes de fuerza base
+        this.baseJumpForce = 580;
+        this.baseWallJumpForceX = 400;
+        this.baseWallJumpForceY = 600;
+        this.baseMoveForce = 900;
+    }
+
+    getPowerupJumpMultiplier() {
+        return this.scene?.isInvincible ? 1.2 : 1.0;
     }
 
     // ... (omitted setupEventListeners and other methods) ...
@@ -83,7 +101,8 @@ export class Player extends Phaser.Physics.Arcade.Sprite {
         // Wall Jump Left (Touching wall via collider)
         if (this.body.touching.left) {
             if (this.checkWallStamina('left')) {
-                this.setVelocity(400 * boost, -600 * boost);
+                const mult = this.getPowerupJumpMultiplier();
+                this.setVelocity(this.baseWallJumpForceX * boost * mult, -this.baseWallJumpForceY * boost * mult);
                 this.jumps = 0;
                 this.lastJumpTime = now;
                 console.log('🧱 Wall Jump Left');
@@ -95,7 +114,8 @@ export class Player extends Phaser.Physics.Arcade.Sprite {
         // Wall Jump Right (Touching wall via collider)
         if (this.body.touching.right) {
             if (this.checkWallStamina('right')) {
-                this.setVelocity(-400 * boost, -600 * boost);
+                const mult = this.getPowerupJumpMultiplier();
+                this.setVelocity(-this.baseWallJumpForceX * boost * mult, -this.baseWallJumpForceY * boost * mult);
                 this.jumps = 0;
                 this.lastJumpTime = now;
                 console.log('🧱 Wall Jump Right');
@@ -115,7 +135,8 @@ export class Player extends Phaser.Physics.Arcade.Sprite {
                 console.log('⬆️ Normal Jump');
             }
 
-            this.setVelocityY(-600 * boost);
+            const mult = this.getPowerupJumpMultiplier();
+            this.setVelocityY(-this.baseJumpForce * boost * mult);
             this.jumps++;
 
             const jumpOffsetY = (this.height || 32) * 0.5;
@@ -132,14 +153,25 @@ export class Player extends Phaser.Physics.Arcade.Sprite {
     setupEventListeners() {
         // Listen to movement events
         const moveListener = (data) => {
-            this.move(data.direction);
+            if (this.controller) {
+                this.controller.context.intent.moveX = data.direction;
+                // aplicar movimiento con la física actual
+                this.move(data.direction);
+            } else {
+                this.move(data.direction);
+            }
         };
         EventBus.on(Events.PLAYER_MOVE, moveListener);
         this.eventListeners.push({ event: Events.PLAYER_MOVE, listener: moveListener });
 
         // Listen to stop events
         const stopListener = () => {
-            this.stop();
+            if (this.controller) {
+                this.controller.context.intent.moveX = 0;
+                this.stop();
+            } else {
+                this.stop();
+            }
         };
         EventBus.on(Events.PLAYER_STOP, stopListener);
         this.eventListeners.push({ event: Events.PLAYER_STOP, listener: stopListener });
@@ -147,15 +179,18 @@ export class Player extends Phaser.Physics.Arcade.Sprite {
         // Listen to jump request events (from InputManager)
         const jumpListener = (data) => {
             const boost = data.boost || 1.0;
-            const result = this.jump(boost);
-
-            // Emit event after successful jump (for particle effects, etc.)
-            if (result) {
-                EventBus.emit(Events.PLAYER_JUMPED, {
-                    type: result.type,
-                    x: result.x,
-                    y: result.y
-                });
+            // Delegar edge trigger al controller/FSM
+            if (this.controller) {
+                this.controller.context.intent.jumpJustPressed = true;
+            } else {
+                const result = this.jump(boost);
+                if (result) {
+                    EventBus.emit(Events.PLAYER_JUMPED, {
+                        type: result.type,
+                        x: result.x,
+                        y: result.y
+                    });
+                }
             }
         };
         EventBus.on(Events.PLAYER_JUMP_REQUESTED, jumpListener);
@@ -189,6 +224,11 @@ export class Player extends Phaser.Physics.Arcade.Sprite {
         // Mantener overlay de powerup alineado al jugador si está visible
         if (this.powerupOverlay && this.powerupOverlay.visible) {
             this.powerupOverlay.updatePosition();
+        }
+
+        // FSM placeholder: actualizar sensores y animación sin alterar físicas
+        if (this.controller) {
+            this.controller.update();
         }
 
         // Move with moving platform (only if player is NOT moving with input)
@@ -273,7 +313,8 @@ export class Player extends Phaser.Physics.Arcade.Sprite {
     }
 
     move(direction) {
-        const force = 900;
+        const speedMult = this.scene?.isInvincible ? 1.15 : 1.0;
+        const force = this.baseMoveForce * speedMult;
         this.setAccelerationX(direction * force);
     }
 
