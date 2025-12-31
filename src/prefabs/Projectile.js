@@ -19,11 +19,19 @@ export class Projectile extends Phaser.Physics.Arcade.Sprite {
      * @param {number} direction - Dirección (-1 izquierda, 1 derecha)
      */
     spawn(x, y, direction) {
+        if (!this.body) {
+            this.scene.physics.add.existing(this);
+        }
         if (!this.body) return; // Safety check
+
         this.body.reset(x, y);
+        this.body.setAllowGravity(false);
+        this.body.setImmovable(false);
+        this.body.setEnable(true);
         this.setActive(true);
         this.setVisible(true);
         this.setVelocityX(300 * direction);
+        this.setVelocityY(0);
         this.setDepth(21);
         this.setData('processed', false);
     }

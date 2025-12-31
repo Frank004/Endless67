@@ -3,6 +3,11 @@ import { PatrolBehavior } from './behaviors/PatrolBehavior.js';
 import { ShootBehavior } from './behaviors/ShootBehavior.js';
 import { JumpBehavior } from './behaviors/JumpBehavior.js';
 
+export const ENEMY_SIZE = 32;
+export const ENEMY_GRAVITY = 1200;
+export const PATROL_SPEED_DEFAULT = 60;
+export const SHOOTER_SIZE = 32;
+
 export class PatrolEnemy extends Phaser.Physics.Arcade.Sprite {
     constructor(scene, x = 0, y = 0) {
         // Constructor puede recibir x, y o no (para pooling)
@@ -13,7 +18,7 @@ export class PatrolEnemy extends Phaser.Physics.Arcade.Sprite {
         enablePlatformRider(this, { mode: 'bound', marginX: 5 });
 
         // Strategy Pattern: Usar PatrolBehavior
-        this.patrolBehavior = new PatrolBehavior(this, 60);
+        this.patrolBehavior = new PatrolBehavior(this, PATROL_SPEED_DEFAULT);
         this.patrolConfig = null; // Bounds pendientes para arrancar patrulla
     }
 
@@ -34,20 +39,20 @@ export class PatrolEnemy extends Phaser.Physics.Arcade.Sprite {
         // Establecer posición PRIMERO
         this.setPosition(x, y);
         
-        // Establecer tamaño visual a 32x32px (sin escalado)
-        this.setDisplaySize(32, 32);
+        // Establecer tamaño visual fijo (sin escalado)
+        this.setDisplaySize(ENEMY_SIZE, ENEMY_SIZE);
         this.setScale(1);  // Asegurar que el scale sea 1
         
-        // Configurar body de física (32x32px)
+        // Configurar body de física
         if (this.body) {
-            this.body.setSize(32, 32);
+            this.body.setSize(ENEMY_SIZE, ENEMY_SIZE);
             this.body.setOffset(0, 0);  // Sin offset, el body coincide con el sprite
         }
         
         // Configurar física
         this.body.reset(x, y);
         this.body.allowGravity = true;
-        this.setGravityY(1200);
+        this.setGravityY(ENEMY_GRAVITY);
         this.body.immovable = false;
         this.body.updateFromGameObject();  // Sincronizar body con posición del sprite
         
@@ -172,18 +177,23 @@ export class ShooterEnemy extends Phaser.Physics.Arcade.Sprite {
         if (!this.body) {
             this.scene.physics.add.existing(this);
         }
-        
+
         this.body.reset(x, y);
-        this.body.allowGravity = true;
-        this.setGravityY(1200);
-        this.body.immovable = false;
+        this.setDisplaySize(SHOOTER_SIZE, SHOOTER_SIZE);
+        this.setScale(1);
+        if (this.body) {
+            this.body.setSize(SHOOTER_SIZE, SHOOTER_SIZE);
+            this.body.setOffset(0, 0);
+        }
+        this.body.allowGravity = false;
+        this.setGravityY(0);
+        this.body.immovable = true;
         this.setActive(true);
         this.setVisible(true);
         this.setDepth(20);
 
-        // 6. Tweens for Dynamic Enemies: Pop-in effect
-        this.setScale(0);
-        this.scene.tweens.add({ targets: this, scale: 1, duration: 400, ease: 'Back.out' });
+        // Reset timers/behavior
+        this.stopShooting();
     }
 
     /**
@@ -215,19 +225,6 @@ export class ShooterEnemy extends Phaser.Physics.Arcade.Sprite {
      */
     startShooting(projectilesGroup, currentHeight = 0) {
         this.shootBehavior.startShooting(projectilesGroup, currentHeight);
-    }
-
-    /**
-     * Disparar (delegado a ShootBehavior)
-     * @deprecated Usar startShooting en su lugar
-     */
-    shoot(projectilesGroup, currentHeight = 0) {
-        // Mantener compatibilidad, pero delegar a behavior
-        if (!this.shootBehavior.projectilesGroup) {
-            this.shootBehavior.startShooting(projectilesGroup, currentHeight);
-        } else {
-            this.shootBehavior.shoot();
-        }
     }
 
     /**

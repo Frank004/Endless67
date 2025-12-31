@@ -9,6 +9,9 @@
  * - Encapsulation: Maneja su propia animación y visual
  */
 
+export const POWERUP_BASE_SIZE = 32;  // Canvas original del sprite
+export const POWERUP_HITBOX_SIZE = 20;
+
 export class Powerup extends Phaser.Physics.Arcade.Sprite {
     constructor(scene) {
         // Determinar qué textura usar: sprite sheet o fallback
@@ -63,7 +66,7 @@ export class Powerup extends Phaser.Physics.Arcade.Sprite {
         // Los frames están trimmed (recortados) en el sprite sheet
         // sourceSize es 32x32px según basketball.json (igual que el player)
         // frame trimmed es ~17x17px o ~21x17px (el sprite real recortado)
-        const SOURCE_SIZE = 32; // Tamaño original del canvas (sourceSize en JSON)
+        const SOURCE_SIZE = POWERUP_BASE_SIZE; // Tamaño original del canvas (sourceSize en JSON)
         
         // Configurar origen al centro (0.5, 0.5) para que el sprite se centre correctamente
         this.setOrigin(0.5, 0.5);
@@ -75,8 +78,8 @@ export class Powerup extends Phaser.Physics.Arcade.Sprite {
         
         // Calcular el scale para que el sprite visual sea ~32px
         // Usamos un scale uniforme basado en el promedio para mantener proporciones
-        const VISUAL_SIZE = 32; // Tamaño visual deseado del powerup
-        const HITBOX_SIZE = 20; // Tamaño del hitbox (igual que coin)
+        const VISUAL_SIZE = POWERUP_BASE_SIZE; // Tamaño visual deseado del powerup
+        const HITBOX_SIZE = POWERUP_HITBOX_SIZE; // Tamaño del hitbox (igual que coin)
         const avgTrimmedSize = (trimmedWidth + trimmedHeight) / 2;
         const scale = VISUAL_SIZE / avgTrimmedSize; // Escalar para que el promedio sea ~32px
         
@@ -113,6 +116,8 @@ export class Powerup extends Phaser.Physics.Arcade.Sprite {
             
             this.body.allowGravity = false;
             this.body.immovable = true;
+            this.body.checkCollision.none = false;
+            this.body.isSensor = true;
             this.body.updateFromGameObject();
         }
         

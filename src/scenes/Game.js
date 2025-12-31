@@ -16,11 +16,12 @@ import { updatePlatformRider } from '../utils/platformRider.js';
 import EventBus, { Events } from '../core/EventBus.js';
 import GameState from '../core/GameState.js';
 import PoolManager, { poolRegistry } from '../core/PoolManager.js';
-import { Platform } from '../prefabs/Platform.js';
-import { POOL, WALLS, PHYSICS, PLATFORM } from '../config/GameConstants.js';
+import { Platform, PLATFORM_WIDTH, PLATFORM_HEIGHT } from '../prefabs/Platform.js';
+import { POOL, WALLS, PHYSICS } from '../config/GameConstants.js';
 import { SLOT_CONFIG } from '../config/SlotConfig.js';
 import { getDeviceInfo, applyDeviceClasses } from '../utils/DeviceDetection.js';
 import { PowerupOverlay } from '../prefabs/PowerupOverlay.js';
+import { registerCoinAnimation, registerBasketballAnimation } from '../utils/animations.js';
 
 /**
  * @phasereditor
@@ -94,8 +95,8 @@ export class Game extends Phaser.Scene {
         // Spawn player en el centro horizontal de la pantalla
         // El Player leerá el toggle del registry para decidir qué textura usar
         // Spawnear alineado con la plataforma inicial para caer sobre ella
-        const startPlatformY = SLOT_CONFIG.rules.startPlatformY || PLATFORM?.INITIAL_Y || 450;
-        const startPlatformHeight = PLATFORM?.HEIGHT || 32;
+        const startPlatformY = SLOT_CONFIG.rules.startPlatformY || 450;
+        const startPlatformHeight = PLATFORM_HEIGHT;
         this.player = new Player(this, this.cameras.main.centerX, startPlatformY - startPlatformHeight - 5);
         // Overlay visual para powerup 67
         this.powerupOverlay = new PowerupOverlay(this, this.player);
@@ -107,7 +108,7 @@ export class Game extends Phaser.Scene {
 
         // --- INITIAL LEVEL GENERATION ---
         // Generar plataforma inicial para que el jugador empiece
-        const START_WIDTH = 128;
+        const START_WIDTH = PLATFORM_WIDTH;
         const START_PLATFORM_Y = startPlatformY;
         // Plataforma inicial estática (jugador empieza aquí)
         this.startPlatform = this.levelManager.spawnPlatform(this.cameras.main.centerX, START_PLATFORM_Y, START_WIDTH, false);
@@ -115,8 +116,8 @@ export class Game extends Phaser.Scene {
         // ─────────────────────────────────────────────────────────────
         // CREAR ANIMACIONES (ANTES de generar slots para que los objetos tengan animación desde el inicio)
         // ─────────────────────────────────────────────────────────────
-        this.createCoinAnimation();
-        this.createBasketballAnimation();
+        registerCoinAnimation(this);
+        registerBasketballAnimation(this);
 
         // ✅ Inicializar generador de slots (crea los primeros 3 batches arriba de la plataforma de inicio)
         // IMPORTANTE: Esto debe ir DESPUÉS de crear animaciones para que los objetos spawneados tengan animación
@@ -158,190 +159,6 @@ export class Game extends Phaser.Scene {
                 document.removeEventListener('visibilitychange', this._orientationHandlers.visibilityHandler);
             }
         });
-    }
-
-    /**
-     * Crear animación del coin usando el sprite sheet
-     */
-    createCoinAnimation() {
-        // Evitar recrear si ya existe
-        if (this.anims.exists('coin_spin')) {
-            console.log('ℹ️ Animación coin_spin ya existe, se omite recreación');
-            return;
-        }
-
-        console.log('🎬 Iniciando creación de animación del coin...');
-        
-        // Verificar que el sprite sheet esté cargado
-        if (!this.textures.exists('coins')) {
-            console.error('❌ ERROR: Sprite sheet "coins" no encontrado');
-            console.log('   Texturas disponibles:', Object.keys(this.textures.list));
-            return;
-        }
-
-        console.log('✅ Sprite sheet "coins" encontrado');
-
-        // Obtener el atlas y listar frames disponibles
-        try {
-            const texture = this.textures.get('coins');
-            const availableFrames = texture.getFrameNames();
-            console.log(`   Frames disponibles en atlas (${availableFrames.length}):`, availableFrames);
-            
-            // Verificar que los frames esperados existan
-            const expectedFrames = ['coin-01.png', 'coin-02.png', 'coin-03.png', 'coin-04.png', 'coin-05.png', 'coin-06.png', 'coin-07.png', 'coin-08.png'];
-            const missingFrames = expectedFrames.filter(f => !availableFrames.includes(f));
-            if (missingFrames.length > 0) {
-                console.warn(`   ⚠️ Frames faltantes: ${missingFrames.join(', ')}`);
-            }
-        } catch (e) {
-            console.error('   Error al obtener frames:', e);
-        }
-
-        // Generar nombres de frames para la animación
-        // Formato: coin-01.png, coin-02.png, ..., coin-08.png
-        let frameNames;
-        try {
-            frameNames = this.anims.generateFrameNames('coins', {
-                start: 1,
-                end: 8,
-                zeroPad: 2,  // 01, 02, 03, etc.
-                prefix: 'coin-',
-                suffix: '.png'
-            });
-            console.log(`   Frames generados: ${frameNames.length}`);
-        } catch (e) {
-            console.error('❌ ERROR al generar frames:', e);
-            return;
-        }
-
-        // Verificar que se generaron frames
-        if (!frameNames || frameNames.length === 0) {
-            console.error('❌ ERROR: No se pudieron generar frames para la animación del coin');
-            return;
-        }
-
-        // Mostrar detalles de los frames generados
-        console.log('   Detalles de frames generados:');
-        frameNames.forEach((frame, index) => {
-            console.log(`     Frame ${index + 1}: key=${frame.textureKey || 'N/A'}, frame=${frame.frame || frame.textureFrame || 'N/A'}`);
-        });
-
-        // Crear la animación según el tutorial
-        try {
-            this.anims.create({
-                key: 'coin_spin',
-                frames: frameNames,
-                frameRate: 12, // 12 FPS para animación suave
-                repeat: -1 // Loop infinito
-            });
-            console.log(`✅ Animación 'coin_spin' creada exitosamente`);
-        } catch (e) {
-            console.error('❌ ERROR al crear animación:', e);
-            return;
-        }
-        
-        // Verificar que la animación se creó correctamente
-        if (this.anims.exists('coin_spin')) {
-            const anim = this.anims.get('coin_spin');
-            console.log(`✅ Animación verificada: ${anim.key}, ${anim.frames.length} frames, ${anim.frameRate} FPS`);
-        } else {
-            console.error('❌ ERROR: La animación no se creó correctamente');
-        }
-    }
-
-    /**
-     * Crear animación del basketball usando el sprite sheet
-     */
-    createBasketballAnimation() {
-        if (this.anims.exists('basketball_spin')) {
-            console.log('ℹ️ Animación basketball_spin ya existe, se omite recreación');
-            return;
-        }
-
-        console.log('🎬 Iniciando creación de animación del basketball...');
-        
-        // Verificar que el sprite sheet esté cargado
-        if (!this.textures.exists('basketball')) {
-            console.warn('⚠️ Sprite sheet "basketball" no encontrado, usando fallback');
-            console.log('   Texturas disponibles:', Object.keys(this.textures.list));
-            return; // No crear animación si no existe el sprite sheet
-        }
-
-        console.log('✅ Sprite sheet "basketball" encontrado');
-
-        // Obtener el atlas y listar frames disponibles
-        let texture;
-        let availableFrames = [];
-        try {
-            texture = this.textures.get('basketball');
-            availableFrames = texture.getFrameNames();
-            console.log(`   Frames disponibles en atlas (${availableFrames.length}):`, availableFrames);
-        } catch (e) {
-            console.error('   Error al obtener texture:', e);
-            return;
-        }
-
-        // Generar nombres de frames para la animación
-        // Formato: basketball 1.png, basketball 2.png, basketball 3.png
-        // Los nombres tienen espacios, así que necesitamos crear los frames manualmente
-        let frameNames = [];
-        try {
-            // Los frames se llaman "basketball 1.png", "basketball 2.png", "basketball 3.png"
-            const frameOrder = ['basketball 1.png', 'basketball 2.png', 'basketball 3.png'];
-            
-            for (const frameName of frameOrder) {
-                if (texture && texture.has(frameName)) {
-                    // Para multiatlas, usar el formato: { key: 'textureKey', frame: 'frameName' }
-                    frameNames.push({ key: 'basketball', frame: frameName });
-                } else {
-                    console.warn(`   ⚠️ Frame faltante: ${frameName}`);
-                }
-            }
-            
-            if (frameNames.length === 0) {
-                console.error('❌ ERROR: No se encontraron frames válidos para basketball');
-                console.log('   Frames disponibles:', availableFrames);
-                return;
-            }
-            
-            console.log(`   Frames generados: ${frameNames.length}`, frameNames.map(f => f.frame));
-        } catch (e) {
-            console.error('❌ ERROR al generar frames:', e);
-            console.error('   Stack:', e.stack);
-            return;
-        }
-
-        // Crear la animación
-        try {
-            if (!this.anims) {
-                console.error('❌ ERROR: this.anims no está disponible');
-                return;
-            }
-            
-            this.anims.create({
-                key: 'basketball_spin',
-                frames: frameNames,
-                frameRate: 8, // 8 FPS para animación suave
-                repeat: -1 // Loop infinito
-            });
-            console.log(`✅ Animación 'basketball_spin' creada exitosamente`);
-        } catch (e) {
-            console.error('❌ ERROR al crear animación:', e);
-            console.error('   Detalles del error:', e.message);
-            if (e.stack) {
-                console.error('   Stack:', e.stack);
-            }
-            // No retornar aquí, solo loguear el error para que el juego continúe
-            return;
-        }
-        
-        // Verificar que la animación se creó correctamente
-        if (this.anims.exists('basketball_spin')) {
-            const anim = this.anims.get('basketball_spin');
-            console.log(`✅ Animación verificada: ${anim.key}, ${anim.frames.length} frames, ${anim.frameRate} FPS`);
-        } else {
-            console.warn('⚠️ La animación no se creó correctamente, pero el juego continuará');
-        }
     }
 
     /**
@@ -521,7 +338,6 @@ export class Game extends Phaser.Scene {
         poolRegistry.register('platforms', this.platformPool);
 
         // Physics Groups for Collision Manager
-        // PoolManager objects are added here for arcade physics calculations
         this.platforms = this.physics.add.group({ allowGravity: false, immovable: true });
 
         // Crear PoolManager para coins
@@ -545,7 +361,6 @@ export class Game extends Phaser.Scene {
         poolRegistry.register('powerups', this.powerupPool);
 
         // Physics Groups for Collision Manager
-        // PoolManager objects are added here for arcade physics calculations
         this.coins = this.physics.add.group({ allowGravity: false, immovable: true, runChildUpdate: true, classType: Coin });
         this.powerups = this.physics.add.group({ allowGravity: false, immovable: true, runChildUpdate: true, classType: Powerup });
 

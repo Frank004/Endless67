@@ -18,7 +18,11 @@
 
 import { SLOT_CONFIG, getPlatformBounds } from '../config/SlotConfig.js';
 import { PLATFORM_PATTERNS, getRandomPattern } from '../data/PlatformPatterns.js';
+import { MAZE_PATTERNS_EASY, MAZE_PATTERNS_MEDIUM, MAZE_PATTERNS, MAZE_ROW_HEIGHT } from '../data/MazePatterns.js';
 import { PatternTransformer } from '../utils/PatternTransformer.js';
+import { COIN_BASE_SIZE } from '../prefabs/Coin.js';
+import { POWERUP_BASE_SIZE } from '../prefabs/Powerup.js';
+import { ENEMY_SIZE, PATROL_SPEED_DEFAULT } from '../prefabs/Enemy.js';
 
 export class SlotGenerator {
     constructor(scene) {
@@ -28,12 +32,12 @@ export class SlotGenerator {
         // Estado
         this.currentSlotIndex = 0;
         this.slots = [];  // Historial de slots generados
+        this.consecutiveMazes = 0;
+        this.mazeCooldown = 0; // Slots obligatorios sin maze tras generar uno
         // this.colorIndex = 0;  // Comentado: colores debug desactivados
         
         // Offset inicial: primera plataforma del batch empieza arriba de la plataforma de inicio
-        // Plataforma de inicio está en Y=450, gap mínimo es 160px
-        // Entonces primera plataforma del batch: 450 - 160 = 290
-        this.startY = 290;  // Y inicial del primer batch
+        this.startY = 290;  // Y inicial del primer batch (se recalcula en init)
         
         // Config
         this.slotHeight = SLOT_CONFIG.slotHeight;
@@ -52,7 +56,7 @@ export class SlotGenerator {
         console.log('🎮 SlotGenerator: Inicializando...');
         
         // Calcular Y inicial del primer batch: 160px por encima de la plataforma inicial
-        this.startY = startPlatformY - SLOT_CONFIG.minVerticalGap;  // 450 - 160 = 290
+        this.startY = startPlatformY - SLOT_CONFIG.minVerticalGap;
         console.log(`  📍 Plataforma inicio: Y=${startPlatformY}, Primer batch: Y=${this.startY}`);
         
         // Generar slots iniciales (tutorial)
@@ -67,44 +71,29 @@ export class SlotGenerator {
      * Genera el siguiente slot basado en reglas
      */
     generateNextSlot(options = {}) {
-        // Calcular Y del slot usando startY como referencia
-        // Slot 0: startY (290)
-        // Slot 1: startY - 640 = -350
-        // Slot 2: startY - 1280 = -990
-        
-        // Verificar que no haya un slot ya generado en esta posición
-        const expectedSlotYStart = this.startY - (this.currentSlotIndex * this.slotHeight);
-        const expectedSlotYEnd = expectedSlotYStart - this.slotHeight;
-        
-        // Verificar si ya existe un slot en esta posición (prevenir duplicados)
-        const existingSlot = this.slots.find(slot => 
-            Math.abs(slot.yStart - expectedSlotYStart) < 10  // Tolerancia de 10px
-        );
-        
-        if (existingSlot) {
-            console.warn(`⚠️ Slot ya existe en Y=${expectedSlotYStart}, saltando generación`);
-            this.currentSlotIndex++;
-            return;
+        // Calcular Y del slot usando el final del anterior menos el gap mínimo
+        let slotYStart;
+        if (this.slots.length === 0) {
+            slotYStart = this.startY;
+        } else {
+            const lastSlot = this.slots[this.slots.length - 1];
+            slotYStart = lastSlot.yEnd - SLOT_CONFIG.minVerticalGap;
         }
-        
-        const slotYStart = expectedSlotYStart;
-        const slotYEnd = expectedSlotYEnd;
+
         const slotType = this.determineSlotType();
-        
-        console.log(`📦 SLOT ${this.currentSlotIndex}: ${slotType} [Y: ${slotYStart} a ${slotYEnd}]`);
-        
         let result = null;
-        
+
         // Opciones para tutorial: patrones fijos y sin transform
         const forcePattern = options.forcePattern || null;
         const disableTransform = options.disableTransform || false;
+        const tutorialIndex = options.tutorialIndex;
 
         switch (slotType) {
             case 'PLATFORM_BATCH':
-                result = this.generatePlatformBatch(slotYStart, slotType, { forcePattern, disableTransform });
+                result = this.generatePlatformBatch(slotYStart, slotType, { forcePattern, disableTransform, tutorialIndex });
                 break;
             case 'SAFE_ZONE':
-                result = this.generatePlatformBatch(slotYStart, slotType, { forcePattern, disableTransform });
+                result = this.generatePlatformBatch(slotYStart, slotType, { forcePattern, disableTransform, tutorialIndex });
                 break;
             case 'MAZE':
                 result = this.generateMaze(slotYStart);
@@ -113,6 +102,12 @@ export class SlotGenerator {
                 console.warn(`⚠️ Tipo de slot desconocido: ${slotType}, usando PLATFORM_BATCH`);
                 result = this.generatePlatformBatch(slotYStart, 'PLATFORM_BATCH', { forcePattern, disableTransform });
         }
+
+        const contentHeight = result?.contentHeight || SLOT_CONFIG.slotHeight;
+        const slotHeight = contentHeight;
+        const slotYEnd = slotYStart - slotHeight;
+        
+        console.log(`📦 SLOT ${this.currentSlotIndex}: ${slotType} [Y: ${slotYStart} a ${slotYEnd}] (contentHeight=${contentHeight})`);
         
         // Registrar slot
         this.slots.push({
@@ -120,9 +115,11 @@ export class SlotGenerator {
             type: slotType,
             yStart: slotYStart,
             yEnd: slotYEnd,
+            height: slotHeight,
+            contentHeight,
             ...result
         });
-        
+
         this.currentSlotIndex++;
     }
 
@@ -131,29 +128,18 @@ export class SlotGenerator {
      * @returns {string} Tipo de slot
      */
     determineSlotType() {
-        // REGLA 1: Primeros 3 slots siempre PLATFORM_BATCH (tutorial)
+        // Slots iniciales tutorial: todos plataformas
         if (this.currentSlotIndex < SLOT_CONFIG.rules.tutorialSlots) {
+            // Forzar maze en el segundo slot si hay tutorial (para pruebas)
+            if (this.currentSlotIndex === 1) return 'MAZE';
             return 'PLATFORM_BATCH';
         }
-        
-        // REGLA 2: No más de N slots consecutivos del mismo tipo
-        const lastSlots = this.slots.slice(-SLOT_CONFIG.rules.maxConsecutiveSameType);
-        if (lastSlots.length >= SLOT_CONFIG.rules.maxConsecutiveSameType) {
-            const allSame = lastSlots.every(s => s.type === lastSlots[0].type);
-            if (allSame) {
-                // Forzar un tipo diferente
-                const availableTypes = ['PLATFORM_BATCH', 'SAFE_ZONE'];  // MAZE deshabilitado
-                return availableTypes.find(t => t !== lastSlots[0].type) || 'PLATFORM_BATCH';
-            }
-        }
-        
-        // REGLA 3: Distribución general (por ahora solo PLATFORM_BATCH y SAFE_ZONE)
-        const rand = Math.random();
-        if (rand < 0.7) {
-            return 'PLATFORM_BATCH';
-        } else {
-            return 'SAFE_ZONE';
-        }
+
+        // Distribución aleatoria: 50% plataforma, 20% safe, 30% maze
+        const r = Math.random();
+        if (r < 0.5) return 'PLATFORM_BATCH';
+        if (r < 0.7) return 'SAFE_ZONE';
+        return 'MAZE';
     }
 
     /**
@@ -165,17 +151,21 @@ export class SlotGenerator {
     generatePlatformBatch(slotYStart, slotType, options = {}) {
         const config = SLOT_CONFIG.types[slotType];
         const platformCount = 4;  // 640 / 160 = 4 plataformas por slot
+        const isTutorial = options.tutorialIndex !== undefined;
         
         // 1) Seleccionar patrón
         let basePattern;
-        basePattern = options.forcePattern
-            ? PLATFORM_PATTERNS.find(p => p.name === options.forcePattern) || getRandomPattern()
+        const fallbackPattern = isTutorial
+            ? PLATFORM_PATTERNS.find(p => p.name === 'column_alternating') || getRandomPattern()
             : getRandomPattern();
+        basePattern = options.forcePattern
+            ? PLATFORM_PATTERNS.find(p => p.name === options.forcePattern) || fallbackPattern
+            : fallbackPattern;
         
         // 2) Aplicar transformación (omitida en tutorial para evitar merges)
         let platforms;
         let transform = 'none';
-        if (options.disableTransform) {
+        if (options.disableTransform || isTutorial) {
             platforms = basePattern.platforms;
         } else {
             const transformed = this.transformer.randomTransform(
@@ -187,11 +177,16 @@ export class SlotGenerator {
         }
         
         // 3) Ajustar plataformas a límites
-        const clampedPlatforms = this.transformer.clampToBounds(platforms);
+        let clampedPlatforms = this.transformer.clampToBounds(platforms);
+        // If tutorial, drop any platform that would end on the wall (keep inside bounds)
+        if (isTutorial) {
+            const bounds = getPlatformBounds();
+            clampedPlatforms = clampedPlatforms.filter(p => p.x >= bounds.minX && p.x <= bounds.maxX);
+        }
         
         // 4) Sistema de SWAP para plataformas móviles
         // Porcentaje de chance de tener plataformas móviles por slot
-        const MOVING_PLATFORM_CHANCE = 0.35;  // Chance por slot
+        const MOVING_PLATFORM_CHANCE = isTutorial ? 0 : 0.35;  // Sin móviles en tutorial
         const MOVING_PLATFORM_SPEED = 100;    // Velocidad de movimiento
         
         // Determinar cuántas plataformas móviles tendrá este slot (0, 1 o 2)
@@ -288,38 +283,34 @@ export class SlotGenerator {
             // SPAWN ENEMIGOS: Solo en plataformas ESTÁTICAS
             // ─────────────────────────────────────────────────────────────
             if (!isMoving && platform && platform.active) {
-                const enemyChance = config.spawnChances.enemies || 0;
-                if (enemyChance > 0 && Math.random() < enemyChance) {
-                    // Spawn PatrolEnemy en la plataforma estática
-                    // Usar delayedCall para asegurar que el enemigo se spawnee después de la plataforma
+                const enemyChancePatrol = config.spawnChances.patrol || 0;
+                const enemyChanceShooter = config.spawnChances.shooter || 0;
+                const rand = Math.random();
+                // Prefer patrol if both fire; evaluate independently
+                if (enemyChancePatrol > 0 && rand < enemyChancePatrol) {
                     this.scene.time.delayedCall(200, () => {
                         const enemy = this.scene.levelManager.spawnPatrol(platform);
                         if (enemy && enemy.active) {
-                            // Configurar patrullaje del enemigo en los límites de la plataforma
-                            const platformHalfWidth = SLOT_CONFIG.platformWidth / 2;  // 64px (128/2)
-                            const enemyHalfWidth = 16;  // Mitad del enemigo (32/2)
-                            const margin = 4;  // Margen adicional pequeño para evitar que se pegue al borde
-                            const minX = platform.x - platformHalfWidth + enemyHalfWidth + margin;  // Borde izquierdo + mitad enemigo + margen
-                            const maxX = platform.x + platformHalfWidth - enemyHalfWidth - margin;  // Borde derecho - mitad enemigo - margen
-                            const patrolSpeed = 60;  // Velocidad de patrullaje
+                            const platformHalfWidth = SLOT_CONFIG.platformWidth / 2;
+                            const enemyHalfWidth = ENEMY_SIZE / 2;
+                            const margin = 4;
+                            const minX = platform.x - platformHalfWidth + enemyHalfWidth + margin;
+                            const maxX = platform.x + platformHalfWidth - enemyHalfWidth - margin;
+                            const patrolSpeed = PATROL_SPEED_DEFAULT;
                             
-                            // Validar que los límites sean válidos
-                            if (minX >= maxX) {
-                                console.error(`  ❌ ERROR: Límites inválidos para patrullaje: minX=${minX.toFixed(0)}, maxX=${maxX.toFixed(0)}, platform.x=${platform.x.toFixed(0)}`);
-                                return;
-                            }
+                            if (minX >= maxX) return;
                             
-                            // Iniciar patrullaje después de un delay para que la colisión ocurra
                             this.scene.time.delayedCall(300, () => {
                                 if (enemy && enemy.active && enemy.body) {
                                     enemy.setPatrolBounds(minX, maxX, patrolSpeed);
                                     enemy.patrol(minX, maxX, patrolSpeed);
-                                    console.log(`    👾 PatrolEnemy en plat ${i + 1}: platform.x=${platform.x.toFixed(0)}, enemy.x=${enemy.x.toFixed(0)}, bounds=[${minX.toFixed(0)}, ${maxX.toFixed(0)}], speed=${patrolSpeed}`);
-                                } else {
-                                    console.error(`  ❌ ERROR: Enemigo no activo o sin body al iniciar patrullaje`);
                                 }
                             });
                         }
+                    });
+                } else if (enemyChanceShooter > 0 && rand < enemyChancePatrol + enemyChanceShooter) {
+                    this.scene.time.delayedCall(200, () => {
+                        this.scene.levelManager.spawnShooter(platform);
                     });
                 }
             }
@@ -331,14 +322,15 @@ export class SlotGenerator {
         // ─────────────────────────────────────────────────────────────
         // PASO 2: Generar ITEMS (Coins + Powerups con sistema de swap)
         // ─────────────────────────────────────────────────────────────
-        const ITEM_SIZE = 32;           // Tamaño base del sprite (32x32px)
+        const ITEM_SIZE = Math.max(COIN_BASE_SIZE, POWERUP_BASE_SIZE);           // Tamaño base del sprite (32x32px)
         const ITEM_HALF = ITEM_SIZE / 2; // 16px
         const ITEM_DISTANCE = 128;       // Radio de distancia mínima entre items
         
         // Config de POWERUP
-        const POWERUP_MIN_DISTANCE = 3000;  // 300m en unidades Y
-        const POWERUP_COOLDOWN = 15000;     // 15 segundos
-        const POWERUP_CHANCE = 0.08;        // 8% de chance cuando aplica
+        const isDev = this.scene.registry?.get('isDevMode');
+        const POWERUP_MIN_DISTANCE = isDev ? 0 : 3000;  // 300m en unidades Y
+        const POWERUP_COOLDOWN = isDev ? 0 : 15000;     // 15 segundos
+        const POWERUP_CHANCE = isDev ? 0.5 : 0.08;      // boost en dev
         
         // Lista de TODOS los items generados (coins + powerups)
         const allGeneratedItems = [];
@@ -519,11 +511,16 @@ export class SlotGenerator {
             console.log(logMsg);
         }
         
+        // Calcular altura real del contenido (mínima Y relativa)
+        const minOffset = Math.min(...clampedPlatforms.map(p => p.y));
+        const contentHeight = Math.abs(minOffset) + SLOT_CONFIG.platformHeight;
+
         return {
             patternName: basePattern.name,
             transform,
             platformCount,
-            movingPlatforms: numMovingPlatforms
+            movingPlatforms: numMovingPlatforms,
+            contentHeight
         };
     }
 
@@ -532,21 +529,89 @@ export class SlotGenerator {
      * @param {number} slotYStart - Y inicial del slot
      * @returns {Object} Información del maze generado
      */
-    generateMaze(slotYStart) {
+    generateMaze(slotYStart, slotHeightOverride = null) {
         const config = SLOT_CONFIG.types.MAZE;
-        const slotYEnd = slotYStart - config.height;
-        
-        console.log(`  🌀 MAZE deshabilitado (Y: ${slotYStart} a ${slotYEnd})`);
-        
-        // TODO: Implementar cuando mazes estén listos
-        // for (let row = 0; row < config.rowCount; row++) {
-        //     const rowY = slotYStart - (row * config.rowHeight);
-        //     this.scene.levelManager.spawnMazeRow(rowY);
-        // }
-        
+        const rowCount = config.rowCount || 5;
+        const rowHeight = config.rowHeight || MAZE_ROW_HEIGHT;
+        const rowGap = config.rowGap || 100;
+        const slotHeight = slotHeightOverride || (rowCount * rowHeight + (rowCount - 1) * rowGap);
+        const slotYEnd = slotYStart - slotHeight;
+
+        const patternPool = [...MAZE_PATTERNS_EASY, ...MAZE_PATTERNS_MEDIUM];
+        let pattern = patternPool[Math.floor(Math.random() * patternPool.length)] || MAZE_PATTERNS[0];
+        const mazeColors = [0xff7777, 0x77ff77, 0x7777ff, 0xffcc66, 0x66ccff];
+        const color = mazeColors[this.currentSlotIndex % mazeColors.length];
+
+        console.log(`  🌀 Generando MAZE [${rowCount} filas] (Y: ${slotYStart} a ${slotYEnd})`);
+
+        // Aplicar transformaciones simples a la secuencia de filas
+        const tWeights = config.transformWeights || { none: 1 };
+        const r = Math.random();
+        const mirrorX = r < (tWeights.mirrorX || 0);
+        const mirrorY = !mirrorX && r < ((tWeights.mirrorX || 0) + (tWeights.mirrorY || 0)); // prioridad mirrorX
+
+        let rowsToUse = pattern;
+        if (mirrorY) {
+            rowsToUse = [...pattern].reverse();
+        }
+
+        // Retirar walls existentes solo dentro del rango de este maze para evitar solapes puntuales
+        if (this.scene.mazeWalls) {
+            const slotYEnd = slotYStart - slotHeight;
+            this.scene.mazeWalls.children.each(wall => {
+                if (wall.active && wall.y <= slotYStart + 1 && wall.y >= slotYEnd - 1) {
+                    wall.destroy();
+                }
+            });
+        }
+
+        // Presupuesto de enemigos por maze (con chance global por maze)
+        const mazeSpawnConfig = SLOT_CONFIG?.types?.MAZE?.spawnChances || {};
+        const enemyCountCfg = mazeSpawnConfig.enemyCount || { min: 1, max: 2 };
+        const enemyChance = (mazeSpawnConfig.enemies ?? 0) / 100;
+        const spawnEnemiesThisMaze = Math.random() < enemyChance;
+        const enemyBudget = {
+            target: spawnEnemiesThisMaze ? Phaser.Math.Between(enemyCountCfg.min ?? 1, enemyCountCfg.max ?? 1) : 0,
+            spawned: 0
+        };
+
+        // Presupuesto de coins extra por maze (además de los de fila)
+        const coinBudget = {
+            bonus: 2,
+            used: 0
+        };
+
+        for (let row = 0; row < rowCount; row++) {
+            const rowY = slotYStart - (row * (rowHeight + rowGap));
+            let rowConfig = rowsToUse[row % rowsToUse.length];
+            if (mirrorX) {
+                rowConfig = { ...rowConfig };
+                if (rowConfig.type === 'left') rowConfig.type = 'right';
+                else if (rowConfig.type === 'right') rowConfig.type = 'left';
+                else if (rowConfig.type === 'split') {
+                    const w1 = rowConfig.width;
+                    rowConfig.width = rowConfig.width2;
+                    rowConfig.width2 = w1;
+                }
+            }
+            this.scene.levelManager.spawnMazeRowFromConfig(
+                rowY,
+                rowConfig,
+                false, // allowMoving
+                true,  // allowSpikes / enemies en maze
+                row,
+                rowsToUse,
+                color,
+                enemyBudget,
+                coinBudget
+            );
+        }
+
         return {
-            rowCount: config.rowCount,
-            disabled: true
+            rowCount,
+            patternName: `MAZE_${MAZE_PATTERNS.indexOf(pattern) + 1 || 1}`,
+            patternLength: pattern.length,
+            contentHeight: slotHeight
         };
     }
 
@@ -562,16 +627,21 @@ export class SlotGenerator {
         const playerY = this.scene.player.y;
         const cameraTop = this.scene.cameras.main.scrollY;
         
-        // Generar nuevo slot si el jugador está cerca del último
-        const lastSlot = this.slots[this.slots.length - 1];
-        if (lastSlot) {
-            const spawnThreshold = lastSlot.yEnd + this.spawnBuffer;
-            
-            if (playerY < spawnThreshold) {
-                this.isGenerating = true;
-                this.generateNextSlot();
-                this.isGenerating = false;
+        // Generar tantos slots como sean necesarios para mantener el buffer
+        try {
+            this.isGenerating = true;
+            let lastSlot = this.slots[this.slots.length - 1];
+            while (lastSlot) {
+                const spawnThreshold = lastSlot.yEnd + this.spawnBuffer;
+                if (playerY < spawnThreshold) {
+                    this.generateNextSlot();
+                    lastSlot = this.slots[this.slots.length - 1];
+                } else {
+                    break;
+                }
             }
+        } finally {
+            this.isGenerating = false;
         }
         
         // Cleanup slots viejos

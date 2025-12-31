@@ -3,6 +3,10 @@ import { MAZE_PATTERNS, MAZE_PATTERNS_EASY, MAZE_PATTERNS_MEDIUM, MAZE_PATTERNS_
 import { LEVEL_CONFIG } from '../data/LevelConfig.js';
 import { enablePlatformRider } from '../utils/platformRider.js';
 import { WALLS } from '../config/GameConstants.js';
+import { SLOT_CONFIG } from '../config/SlotConfig.js';
+import { MAZE_ROW_HEIGHT } from '../data/MazePatterns.js';
+import { ENEMY_SIZE, PATROL_SPEED_DEFAULT } from '../prefabs/Enemy.js';
+import { PLATFORM_WIDTH } from '../prefabs/Platform.js';
 
 /**
  * LevelManager - LEGACY
@@ -41,12 +45,12 @@ export class LevelManager {
         this.activePlatforms = []; // Array of {x, y, width, height}
 
         // Platform generation constants
-        this.MIN_PLATFORM_WIDTH = 128;
-        this.ALLOWED_WIDTHS = [128, 160];
+        this.MIN_PLATFORM_WIDTH = PLATFORM_WIDTH;
+        this.ALLOWED_WIDTHS = [PLATFORM_WIDTH];
         this.MIN_VERTICAL_SPACING = 160; // Distancia vertical mínima entre plataformas
         this.MAX_VERTICAL_SPACING = 320; // Distancia vertical máxima entre plataformas
         this.SAME_LINE_EPS = 32; // Evitar plataformas en el mismo nivel
-        this.PLATFORM_HEIGHT = 32;
+        this.PLATFORM_HEIGHT = SLOT_CONFIG.platformHeight || 32;
         this.SAFE_ZONE_BUFFER = 200; // Extra space before/after maze
         
         // Horizontal movement constraints
@@ -60,6 +64,21 @@ export class LevelManager {
         this.lastPlatformX = startX;
         this.lastPlatformY = startY;
         this.registerPlatform(startX, startY, startWidth);
+    }
+
+    /**
+     * Limpia bloques de maze en un rango Y para evitar solapamientos cuando se genera un nuevo maze.
+     * @param {number} yTop - Y superior del rango (valor mayor)
+     * @param {number} yBottom - Y inferior del rango (valor menor)
+     */
+    clearMazeWallsInRange(yTop, yBottom) {
+        if (!this.scene.mazeWalls) return;
+        this.scene.mazeWalls.children.iterate((wall) => {
+            if (!wall) return;
+            if (wall.y <= yTop && wall.y >= yBottom) {
+                wall.destroy();
+            }
+        });
     }
 
     /**
@@ -422,7 +441,7 @@ export class LevelManager {
         return p;
     }
 
-    spawnMazeRowFromConfig(y, config, allowMoving, allowSpikes, rowIndex = null, pattern = null) {
+    spawnMazeRowFromConfig(y, config, allowMoving, allowSpikes, rowIndex = null, pattern = null, tintColor = null, enemyBudget = null, coinBudget = null) {
         console.log('🧩 spawnMazeRowFromConfig:', { y, type: config.type, rowIndex });
         const scene = this.scene;
         const gameWidth = scene.cameras.main.width;
@@ -441,22 +460,29 @@ export class LevelManager {
             }
         }
 
+        const rowHeight = SLOT_CONFIG?.types?.MAZE?.rowHeight || MAZE_ROW_HEIGHT;
+
         // Spawn Walls based on type (maze walls are created from screen edges, but items must respect side walls)
         if (type === 'left') {
             let block = scene.mazeWalls.create(0, y, 'maze_block');
-            block.setOrigin(0, 0.5).setDisplaySize(w1, 60).refreshBody().setDepth(10);
+            block.setOrigin(0, 0.5).setDisplaySize(w1, rowHeight).refreshBody().setDepth(10);
+            if (tintColor) block.setTint(tintColor);
         } else if (type === 'right') {
             let block = scene.mazeWalls.create(gameWidth, y, 'maze_block');
-            block.setOrigin(1, 0.5).setDisplaySize(w1, 60).refreshBody().setDepth(10);
+            block.setOrigin(1, 0.5).setDisplaySize(w1, rowHeight).refreshBody().setDepth(10);
+            if (tintColor) block.setTint(tintColor);
         } else if (type === 'split') {
             let b1 = scene.mazeWalls.create(0, y, 'maze_block');
-            b1.setOrigin(0, 0.5).setDisplaySize(w1, 60).refreshBody().setDepth(10);
+            b1.setOrigin(0, 0.5).setDisplaySize(w1, rowHeight).refreshBody().setDepth(10);
+            if (tintColor) b1.setTint(tintColor);
 
             let b2 = scene.mazeWalls.create(gameWidth, y, 'maze_block');
-            b2.setOrigin(1, 0.5).setDisplaySize(w2, 60).refreshBody().setDepth(10);
+            b2.setOrigin(1, 0.5).setDisplaySize(w2, rowHeight).refreshBody().setDepth(10);
+            if (tintColor) b2.setTint(tintColor);
         } else if (type === 'center') {
             let block = scene.mazeWalls.create(centerX, y, 'maze_block');
-            block.setOrigin(0.5, 0.5).setDisplaySize(w1, 60).refreshBody().setDepth(10);
+            block.setOrigin(0.5, 0.5).setDisplaySize(w1, rowHeight).refreshBody().setDepth(10);
+            if (tintColor) block.setTint(tintColor);
         }
 
         // Spawning Items/Enemies - must respect side walls
@@ -499,13 +525,19 @@ export class LevelManager {
         const gapMargin = Math.min(20, gapWidth * 0.25);
         gapX = Phaser.Math.Clamp(gapX, gapStart + gapMargin, gapEnd - gapMargin);
 
-        // Get Config for current height usando DifficultyManager
-        const levelConfig = this.difficultyManager.getConfig(scene.currentHeight);
+        // Get Config for current height usando DifficultyManager (fallback seguro)
+        const levelConfig = this.difficultyManager
+            ? this.difficultyManager.getConfig(scene.currentHeight)
+            : (LEVEL_CONFIG.world1?.progression?.[0] || {
+                mechanics: { powerups: false, powerupChance: 0 },
+                maze: { enemyChance: SLOT_CONFIG?.types?.MAZE?.spawnChances?.enemies ?? 0, enemyCount: { min: 0, max: 2 } }
+            });
 
         // Powerup Logic from Config
+        const isDev = scene.registry?.get('isDevMode');
         let powerupChance = levelConfig.mechanics.powerups ? levelConfig.mechanics.powerupChance : 0;
-        const timeCooldown = 15000;
-        const heightCooldown = 500;
+        const timeCooldown = isDev ? 0 : 15000;
+        const heightCooldown = isDev ? 0 : 500;
         const now = scene.time.now;
 
         if (scene.currentHeight - scene.lastPowerupSpawnHeight < heightCooldown || now - scene.lastPowerupTime < timeCooldown) {
@@ -518,10 +550,25 @@ export class LevelManager {
             scene.lastPowerupSpawnHeight = scene.currentHeight;
             scene.lastPowerupTime = now;
         } else {
-            // 1. Dynamic Coin Spawning in Mazes: 80% chance
-            if (Phaser.Math.Between(0, 100) < 80) {
-                const coin = scene.coins.create(gapX, y - 50, 'coin');
-                enablePlatformRider(coin, { mode: 'carry', marginX: 2 });
+            // Coins en maze con probabilidad definida en SLOT_CONFIG + bono de maze
+            const mazeCoinChance = SLOT_CONFIG?.types?.MAZE?.spawnChances?.coins ?? 0;
+            const bonusAvailable = coinBudget && (coinBudget.used < (coinBudget.bonus ?? 0));
+            const isDev = scene.registry?.get('isDevMode');
+            const chance = isDev ? 1 : mazeCoinChance; // en dev siempre spawnea coin
+            if (Phaser.Math.FloatBetween(0, 1) < chance || bonusAvailable) {
+                let coin = null;
+                if (scene.coinPool) {
+                    coin = scene.coinPool.spawn(gapX, y - 50);
+                    if (coin && scene.coins) scene.coins.add(coin, true);
+                } else if (scene.coins) {
+                    coin = scene.coins.create(gapX, y - 50, 'coin');
+                }
+                if (coin) {
+                    enablePlatformRider(coin, { mode: 'carry', marginX: 2 });
+                    if (bonusAvailable) {
+                        coinBudget.used += 1;
+                    }
+                }
             }
         }
 
@@ -531,17 +578,31 @@ export class LevelManager {
         }
 
         // Enemy Spawning (Patrol Enemies only in maze)
-        let enemySpawnChance = levelConfig.maze.enemyChance;
-        let maxEnemies = Phaser.Math.Between(levelConfig.maze.enemyCount.min, levelConfig.maze.enemyCount.max);
-        maxEnemies = Math.min(wallSegments.length, maxEnemies);
+        const mazeSpawnConfig = SLOT_CONFIG?.types?.MAZE?.spawnChances || {};
+        const enemyChanceCfg = levelConfig.maze?.enemyChance;
+        const enemyCountCfg = levelConfig.maze?.enemyCount ?? mazeSpawnConfig.enemyCount ?? { min: 1, max: 1 };
+        const enemyTypes = mazeSpawnConfig.enemyTypes || { patrol: 1 };
+
+        let enemySpawnChance = (enemyChanceCfg !== undefined) ? enemyChanceCfg : (mazeSpawnConfig.enemies ?? 0);
+        let maxEnemiesRow = Phaser.Math.Between(enemyCountCfg.min ?? 1, enemyCountCfg.max ?? 1);
+        maxEnemiesRow = Math.min(wallSegments.length, maxEnemiesRow);
+        if (enemySpawnChance > 0 && maxEnemiesRow < 1) {
+            maxEnemiesRow = 1; // asegurar al menos 1 enemigo cuando la chance es > 0
+        }
 
         // SKIP first row (rowIndex === 0) to prevent immediate danger/falling issues
         // Delay enemy spawn to ensure maze walls are fully initialized
-        if (rowIndex > 0 && enemySpawnChance > 0 && Phaser.Math.Between(0, 100) < enemySpawnChance && scene.patrolEnemies.countActive() < maxEnemies) {
+        // Row 0 también puede spawnear enemigo; ya tenemos gap central, mantener margen de seguridad en bounds
+        // Respeto de presupuesto global por maze
+        const mazeBudget = enemyBudget || { target: maxEnemiesRow, spawned: 0 };
+
+        if (rowIndex >= 0 && enemySpawnChance > 0 && mazeBudget.spawned < mazeBudget.target && scene.patrolEnemies.countActive() < maxEnemiesRow) {
             Phaser.Utils.Array.Shuffle(wallSegments);
 
             scene.time.delayedCall(100, () => {
-                for (let i = 0; i < maxEnemies; i++) {
+                const remaining = mazeBudget.target - mazeBudget.spawned;
+                const enemiesToSpawn = Math.min(remaining, wallSegments.length);
+                for (let i = 0; i < enemiesToSpawn; i++) {
                     let segment = wallSegments[i];
 
                     if (!segment || !segment.min || !segment.max) continue;
@@ -551,14 +612,39 @@ export class LevelManager {
 
                     if (safeMax > safeMin + 20) {
                         let enemyX = Phaser.Math.Between(safeMin, safeMax);
-                        // Spawn higher to avoid spawning inside the wall (Wall height 60, top is y-30)
-                        // y - 60 puts it well above to fall safely
+
+                        // Colocar enemigo sobre el bloque del maze (usa altura del bloque)
+                        const rowHeight = SLOT_CONFIG?.types?.MAZE?.rowHeight || MAZE_ROW_HEIGHT || 60;
+                        const enemyHalfHeight = ENEMY_SIZE / 2;
+                        const platformTop = y - rowHeight / 2;
+                        const enemyY = platformTop - enemyHalfHeight;
 
                         // Usar PoolManager
-                        const enemy = scene.patrolEnemyPool.spawn(enemyX, y - 60);
-                        // Agregar al grupo legacy para compatibilidad
-                        if (scene.patrolEnemies) {
-                            scene.patrolEnemies.add(enemy, true);
+                        // Seleccionar tipo de enemigo
+                        const rType = Math.random();
+                        const usePatrol = rType < (enemyTypes.patrol ?? 1);
+                        if (usePatrol) {
+                            const enemy = scene.patrolEnemyPool.spawn(enemyX, enemyY);
+                            if (scene.patrolEnemies) scene.patrolEnemies.add(enemy, true);
+                            if (enemy && enemy.active && enemy.setPatrolBounds) {
+                                const margin = 6;
+                                const minBound = safeMin + margin;
+                                const maxBound = safeMax - margin;
+                                if (minBound < maxBound) {
+                                    enemy.setPatrolBounds(minBound, maxBound, PATROL_SPEED_DEFAULT);
+                                    enemy.patrol(minBound, maxBound, PATROL_SPEED_DEFAULT);
+                                }
+                            }
+                        } else {
+                            const shooter = scene.shooterEnemyPool.spawn(enemyX, enemyY);
+                            if (scene.shooterEnemies) scene.shooterEnemies.add(shooter, true);
+                            const projectilesGroup = scene.projectilePool || scene.projectiles;
+                            if (shooter?.startShooting) shooter.startShooting(projectilesGroup, scene.currentHeight);
+                        }
+
+                        mazeBudget.spawned += 1;
+                        if (mazeBudget.spawned >= mazeBudget.target) {
+                            break;
                         }
                     }
                 }
@@ -574,14 +660,9 @@ export class LevelManager {
         const ex = platform?.x ?? scene.cameras.main.centerX;
         
         // Posición Y: directamente sobre la plataforma
-        // platform.y es el CENTRO de la plataforma (32px altura)
-        // Top de la plataforma = platform.y - 16
-        // El enemigo (32px altura) debe tener su bottom tocando el top de la plataforma
-        // Si el enemigo tiene centro en y, su bottom está en y + 16
-        // Queremos: enemy.y + 16 = platform.y - 16
-        // Por lo tanto: enemy.y = platform.y - 32
-        // PERO: para asegurar que esté tocando, lo ponemos ligeramente más abajo
-        const platformTop = platform.y - 16;  // Top de la plataforma
+        // platform.y es el CENTRO de la plataforma (altura configurable)
+        const platformHalfHeight = (SLOT_CONFIG.platformHeight || 32) / 2;
+        const platformTop = platform.y - platformHalfHeight;  // Top de la plataforma
         const enemyHalfHeight = 16;  // Mitad de altura del enemigo (32/2)
         const ey = platformTop - enemyHalfHeight + 1;  // Centro del enemigo (1px más abajo para asegurar contacto)
         
@@ -635,14 +716,19 @@ export class LevelManager {
         const scene = this.scene;
         try {
             const ex = platform?.x ?? scene.cameras.main.centerX;
-            const ey = (platform?.y ?? scene.cameras.main.scrollY) - 20;
+            const platY = platform?.y ?? scene.cameras.main.scrollY;
+            const platHalfH = (SLOT_CONFIG.platformHeight || 32) / 2;
+            const enemyHalfH = 16; // shooter size 32
+            const ey = platY - platHalfH - enemyHalfH + 1;
 
             const shooter = scene.shooterEnemyPool.spawn(ex, ey);
             if (scene.shooterEnemies) {
                 scene.shooterEnemies.add(shooter, true);
             }
             const projectilesGroup = scene.projectilePool || scene.projectiles;
-            shooter.startShooting(projectilesGroup, scene.currentHeight);
+            if (shooter?.startShooting) {
+                shooter.startShooting(projectilesGroup, scene.currentHeight);
+            }
             return shooter;
         } catch (e) {
             console.warn('Error spawning shooter:', e);
@@ -719,6 +805,15 @@ export class LevelManager {
                 else coin.destroy();
             }
         });
+        
+        // Cleanup maze walls (son estáticos, se destruyen cuando quedan muy abajo)
+        if (scene.mazeWalls) {
+            scene.mazeWalls.children.each(wall => {
+                if (wall.active && wall.y > limitY) {
+                    wall.destroy();
+                }
+            });
+        }
         
         // Cleanup powerups
         scene.powerups.children.each(powerup => {
@@ -865,8 +960,7 @@ export class LevelManager {
         scene.powerups.children.iterate((c) => { if (c && c.y > limitY) c.destroy(); });
         scene.mazeWalls.children.iterate((c) => { if (c && c.y > limitY) c.destroy(); });
 
-        // Update moving platforms - ahora se maneja en Platform.preUpdate()
-        // Mantener código legacy para compatibilidad
+        // Update moving platforms (legacy safety)
         if (scene.platforms) {
             const gameWidth = scene.cameras.main.width;
             const wallWidth = WALLS.WIDTH;

@@ -9,6 +9,10 @@
  * - Encapsulation: Maneja su propia animación y visual
  */
 
+export const COIN_BASE_SIZE = 32;   // Canvas original del sprite
+export const COIN_VISUAL_SIZE = 24; // Tamaño visual deseado en pantalla
+export const COIN_HITBOX_SIZE = 10; // Tamaño del hitbox físico
+
 export class Coin extends Phaser.Physics.Arcade.Sprite {
     constructor(scene) {
         // Determinar qué textura usar: sprite sheet o fallback
@@ -65,7 +69,7 @@ export class Coin extends Phaser.Physics.Arcade.Sprite {
         // frame trimmed es ~9x10px (el sprite real recortado)
         // IMPORTANTE: El coin debe verse a su tamaño natural escalado
         // El body debe coincidir con el tamaño visual real del sprite, no con el displaySize completo
-        const SOURCE_SIZE = 32; // Tamaño original del canvas (sourceSize en JSON)
+        const SOURCE_SIZE = COIN_BASE_SIZE; // Tamaño original del canvas (sourceSize en JSON)
         
         // Configurar origen al centro (0.5, 0.5) para que el sprite se centre correctamente
         this.setOrigin(0.5, 0.5);
@@ -77,8 +81,8 @@ export class Coin extends Phaser.Physics.Arcade.Sprite {
         
         // Calcular el scale para que el sprite visual sea ~28px
         // Usamos un scale uniforme basado en el promedio para mantener proporciones
-        const VISUAL_SIZE = 24; // Tamaño visual deseado del coin (~28px)
-        const HITBOX_SIZE = 10; // Tamaño del hitbox (24x24px - 25% reducido de 32px)
+        const VISUAL_SIZE = COIN_VISUAL_SIZE; // Tamaño visual deseado del coin (~28px)
+        const HITBOX_SIZE = COIN_HITBOX_SIZE; // Tamaño del hitbox (24x24px - 25% reducido de 32px)
         const avgTrimmedSize = (trimmedWidth + trimmedHeight) / 2;
         const scale = VISUAL_SIZE / avgTrimmedSize; // Escalar para que el promedio sea ~28px
         
@@ -101,14 +105,6 @@ export class Coin extends Phaser.Physics.Arcade.Sprite {
             this.body.setSize(HITBOX_SIZE, HITBOX_SIZE);
             
             // El offset debe centrar el hitbox de 24x24px en el sprite visual (~28px)
-            // IMPORTANTE: Con origen (0.5, 0.5):
-            // - El sprite visual está centrado en (x, y)
-            // - this.width/height = tamaño del frame trimmed ANTES del scale (~9x10px)
-            // - this.displayWidth/displayHeight = tamaño visual DESPUÉS del scale (~28px)
-            // - El body se posiciona desde la esquina superior izquierda del frame trimmed
-            // - Para centrar un hitbox de 32x32px en un sprite visual de ~28px:
-            //   Necesitamos calcular el offset desde el frame trimmed hasta el centro del hitbox
-            //   offset = (frame trimmed size - hitbox size) / 2
             const trimmedWidth = this.width;
             const trimmedHeight = this.height;
             const offsetX = (trimmedWidth - HITBOX_SIZE) / 2;
@@ -117,6 +113,9 @@ export class Coin extends Phaser.Physics.Arcade.Sprite {
             
             this.body.allowGravity = false;
             this.body.immovable = true;
+            // Solo overlap: usar sensor para evitar resolución de colisión, pero permitir detección
+            this.body.checkCollision.none = false;
+            this.body.isSensor = true;
             this.body.updateFromGameObject();
             
             // Debug: mostrar hitbox visual

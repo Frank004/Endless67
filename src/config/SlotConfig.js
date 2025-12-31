@@ -1,3 +1,6 @@
+import { PLATFORM_WIDTH, PLATFORM_HEIGHT } from '../prefabs/Platform.js';
+import { MAZE_ROW_HEIGHT, MAZE_ROW_GAP, MAZE_ROW_COUNT } from '../data/MazePatterns.js';
+
 /**
  * SlotConfig.js
  * 
@@ -23,8 +26,8 @@ export const SLOT_CONFIG = {
     // ─────────────────────────────────────────────────────────────
     // PLATAFORMAS
     // ─────────────────────────────────────────────────────────────
-    platformWidth: 128,      // Ancho ÚNICO para todas las plataformas
-    platformHeight: 32,      // Altura estándar
+    platformWidth: PLATFORM_WIDTH,      // Ancho ÚNICO para todas las plataformas
+    platformHeight: PLATFORM_HEIGHT,    // Altura estándar (1 tile de 32px)
     minVerticalGap: 160,     // Distancia mínima entre plataformas (NO NEGOCIABLE)
     maxVerticalGap: 192,     // Distancia máxima entre plataformas
     
@@ -49,7 +52,8 @@ export const SLOT_CONFIG = {
             spawnChances: {
                 coins: 0.4,
                 powerups: 0.15,
-                enemies: 0.3  // 30% chance de enemigo por plataforma estática
+                patrol: 0.2,   // Chance de patrullero por plataforma estática
+                shooter: 0.1   // Chance de shooter por plataforma estática
             },
             
             // Debug
@@ -58,14 +62,20 @@ export const SLOT_CONFIG = {
         
         MAZE: {
             name: 'MAZE',
-            height: 640,
-            rowHeight: 32,
-            rowCount: 20,  // 640 / 32 = 20 filas
-            
+            rowHeight: MAZE_ROW_HEIGHT,     // Altura de cada bloque de muro (2 tiles de 32px)
+            rowGap: MAZE_ROW_GAP,           // Separación vertical entre filas
+            rowCount: MAZE_ROW_COUNT,       // Número de filas del maze (alto dinámico)
+            transformWeights: {
+                none: 0.6,
+                mirrorX: 0.3,   // Espejo horizontal (izq-der)
+                mirrorY: 0.1    // Espejo vertical (invierte orden de filas)
+            },
             spawnChances: {
-                coins: 0.0,      // Deshabilitado por ahora
-                powerups: 0.0,   // Deshabilitado por ahora
-                enemies: 0.0     // Deshabilitado por ahora
+                coins: 0.5,
+                powerups: 0.0,
+                enemies: 20,                // 20% chance global de que este maze tenga enemigos
+                enemyCount: { min: 1, max: 2 },
+                enemyTypes: { patrol: 0.5, shooter: 0.5 }
             }
         },
         
@@ -95,9 +105,9 @@ export const SLOT_CONFIG = {
     // REGLAS DE GENERACIÓN
     // ─────────────────────────────────────────────────────────────
     rules: {
-        tutorialSlots: 3,              // Generar 3 slots iniciales para dar densidad de arranque
+        tutorialSlots: 1,              // Solo el primer slot es tutorial (plataformas)
         maxConsecutiveSameType: 2,     // No más de 2 del mismo tipo seguidos
-        spawnBuffer: 1200,             // Genera nuevo slot cuando jugador está a 1200px del último
+        spawnBuffer: 800,              // Genera nuevo slot cuando jugador está a 800px del último
         cleanupDistance: 900,          // Limpia slots a más de 900px debajo de cámara
         startPlatformY: 560            // Ubicación de la plataforma inicial (más abajo para acercar el primer slot)
     }

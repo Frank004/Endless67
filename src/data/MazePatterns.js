@@ -2,6 +2,11 @@
 // Todos los mazes empiezan y terminan con gap central de 120px para consistencia
 // Gap estándar: 120px central (entrada/salida)
 
+// Dimensiones base para mazes
+export const MAZE_ROW_HEIGHT = 64; // altura de cada bloque
+export const MAZE_ROW_GAP = 100;   // separación vertical entre filas
+export const MAZE_ROW_COUNT = 6;   // filas por maze por defecto
+
 // MAZE 1: Zig-Zag Simple (Izquierda-Derecha)
 // Basado en Panel 1 de la imagen
 export const MAZE_1 = [
@@ -99,4 +104,3 @@ export const MAZE_PATTERNS = MAZE_PATTERNS_NUMBERED;
 export const MAZE_PATTERNS_EASY = [MAZE_3, MAZE_4, MAZE_5, MAZE_6];
 export const MAZE_PATTERNS_MEDIUM = [MAZE_1, MAZE_2];
 export const MAZE_PATTERNS_HARD = [MAZE_7];
-
