@@ -13,11 +13,21 @@
 import { SLOT_CONFIG, getPlatformBounds } from '../config/SlotConfig.js';
 
 export class PatternTransformer {
-    constructor() {
-        this.gameWidth = SLOT_CONFIG.gameWidth;
+    constructor(gameWidth = null) {
+        // Usar gameWidth dinámico si se proporciona, sino usar el valor por defecto
+        this.gameWidth = gameWidth || SLOT_CONFIG.gameWidth;
         this.wallWidth = SLOT_CONFIG.wallWidth;
-        this.centerX = SLOT_CONFIG.centerX;
+        this.centerX = this.gameWidth / 2;
         this.platformWidth = SLOT_CONFIG.platformWidth;
+    }
+    
+    /**
+     * Actualiza el gameWidth dinámicamente (útil cuando cambia el tamaño del juego)
+     * @param {number} gameWidth - Nuevo ancho del juego
+     */
+    setGameWidth(gameWidth) {
+        this.gameWidth = gameWidth;
+        this.centerX = gameWidth / 2;
     }
 
     /**
@@ -137,7 +147,7 @@ export class PatternTransformer {
      * @returns {boolean} true si todas están dentro de límites
      */
     validate(platforms) {
-        const bounds = getPlatformBounds();
+        const bounds = getPlatformBounds(this.gameWidth);
         
         return platforms.every(plat => {
             const isValid = plat.x >= bounds.minX && plat.x <= bounds.maxX;
@@ -154,7 +164,7 @@ export class PatternTransformer {
      * @returns {Array} Plataformas ajustadas
      */
     clampToBounds(platforms) {
-        const bounds = getPlatformBounds();
+        const bounds = getPlatformBounds(this.gameWidth);
         
         return platforms.map(plat => {
             const clampedX = Math.max(bounds.minX, Math.min(bounds.maxX, plat.x));

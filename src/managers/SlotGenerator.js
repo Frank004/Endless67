@@ -27,7 +27,9 @@ import { ENEMY_SIZE, PATROL_SPEED_DEFAULT } from '../prefabs/Enemy.js';
 export class SlotGenerator {
     constructor(scene) {
         this.scene = scene;
-        this.transformer = new PatternTransformer();
+        // Obtener gameWidth dinámico desde la escena
+        const gameWidth = scene.cameras.main.width;
+        this.transformer = new PatternTransformer(gameWidth);
         
         // Estado
         this.currentSlotIndex = 0;
@@ -186,9 +188,11 @@ export class SlotGenerator {
         
         // 3) Ajustar plataformas a límites
         let clampedPlatforms = this.transformer.clampToBounds(platforms);
+        // Obtener gameWidth dinámico desde la escena
+        const gameWidth = this.scene.cameras.main.width;
         // If tutorial, drop any platform that would end on the wall (keep inside bounds)
         if (isTutorial) {
-            const bounds = getPlatformBounds();
+            const bounds = getPlatformBounds(gameWidth);
             clampedPlatforms = clampedPlatforms.filter(p => p.x >= bounds.minX && p.x <= bounds.maxX);
         }
         
@@ -216,15 +220,16 @@ export class SlotGenerator {
         
         // Calcular límites para verificación (alineados con LevelManager)
         const halfWidth = SLOT_CONFIG.platformWidth / 2; // 64
-        const bounds = getPlatformBounds();
+        const bounds = getPlatformBounds(gameWidth);
         const minX = bounds.minX;
         const maxX = bounds.maxX;
+        const centerX = bounds.centerX;
         // Revisar bounds usando centros válidos
         const playableLeft = minX;
         const playableRight = maxX;
         
         console.log(`  🎨 Patrón: ${basePattern.name} | Transform: ${transform}`);
-        console.log(`  📏 gameWidth=${SLOT_CONFIG.gameWidth}, Límites X: ${minX} - ${maxX}`);
+        console.log(`  📏 gameWidth=${gameWidth}, Límites X: ${minX} - ${maxX}`);
         if (numMovingPlatforms > 0) {
             console.log(`  🔵 Plataformas móviles: ${numMovingPlatforms}`);
         }
@@ -248,7 +253,7 @@ export class SlotGenerator {
             let spawnX = patternPlatform?.x;
             // Fallback si viene NaN/undefined
             if (!isFinite(spawnX)) {
-                spawnX = SLOT_CONFIG.centerX;
+                spawnX = centerX;
             }
 
             // Clamp duro a límites jugables antes de spawnear
@@ -351,7 +356,8 @@ export class SlotGenerator {
 
         // Fallback duro: si no se generó ninguna plataforma (por clamps extremos), crear un set seguro al centro
         if (spawnedPlatforms.length === 0) {
-            const centerSafe = Phaser.Math.Clamp(getPlatformBounds().centerX, minX, maxX);
+            const gameWidth = this.scene.cameras.main.width;
+            const centerSafe = Phaser.Math.Clamp(getPlatformBounds(gameWidth).centerX, minX, maxX);
             let fbY = slotYStart;
             const fbCount = platformCount;
             for (let i = 0; i < fbCount; i++) {

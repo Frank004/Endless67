@@ -476,8 +476,13 @@ export class LevelManager {
         const wallWidth = WALLS.WIDTH;
         const centerX = scene.cameras.main.centerX;
         let type = config.type;
-        let w1 = config.width;
-        let w2 = config.width2 || 0;
+        
+        // Escalar dimensiones del maze proporcionalmente al ancho del juego
+        // Los mazes están diseñados para 400px, escalar para mobile (360px) u otros anchos
+        const BASE_GAME_WIDTH = 400;
+        const scaleRatio = gameWidth / BASE_GAME_WIDTH;
+        let w1 = (config.width || 0) * scaleRatio;
+        let w2 = (config.width2 || 0) * scaleRatio;
 
         // Handle Horizontal Mirroring
         if (this.mazeMirrorX) {

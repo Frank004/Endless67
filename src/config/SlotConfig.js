@@ -123,18 +123,21 @@ export const SLOT_CONFIG = {
  * - minX = 32 + 64 = 96
  * - maxX = 368 - 64 = 304
  * 
+ * @param {number} gameWidth - Ancho del juego (opcional, usa SLOT_CONFIG.gameWidth si no se proporciona)
  * @returns {Object} { minX, maxX, centerX }
  */
-export function getPlatformBounds() {
+export function getPlatformBounds(gameWidth = null) {
+    const actualGameWidth = gameWidth || SLOT_CONFIG.gameWidth;
     const halfWidth = SLOT_CONFIG.platformWidth / 2;  // 64
     // Usar el mismo margen que LevelManager para evitar desalineación
     const minX = SLOT_CONFIG.wallWidth + WALLS.MARGIN + halfWidth; // 32 + 28 + 64 = 124
-    const maxX = SLOT_CONFIG.gameWidth - SLOT_CONFIG.wallWidth - WALLS.MARGIN - halfWidth; // 400 - 32 - 28 - 64 = 276
+    const maxX = actualGameWidth - SLOT_CONFIG.wallWidth - WALLS.MARGIN - halfWidth;
+    const centerX = actualGameWidth / 2;
     
     return {
         minX,
         maxX,
-        centerX: SLOT_CONFIG.centerX      // 200
+        centerX
     };
 }
 
