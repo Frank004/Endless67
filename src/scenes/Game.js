@@ -506,6 +506,16 @@ export class Game extends Phaser.Scene {
         this.gameStarted = true;
         this.uiText.setVisible(false);
         this.audioManager.startMusic();
+
+        // Reset FSM/context state to evitar arrastrar buffers/flags entre reinicios
+        if (this.player?.controller?.resetState) {
+            this.player.controller.resetState();
+        }
+        // Limpiar movimiento residual
+        if (this.player?.body) {
+            this.player.setVelocity(0, 0);
+            this.player.setAcceleration(0, 0);
+        }
     }
 
     /**

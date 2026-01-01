@@ -65,20 +65,15 @@ export class Player extends Phaser.Physics.Arcade.Sprite {
         this.body.onWorldBounds = false;
         this.setDepth(20);
 
-        // FSM/Animation controller (no intrusivo, solo lecturas/anim)
+        // FSM/Animation controller (control único de orquestación)
         this.controller = new PlayerController(this);
 
-        // State
-        this.jumps = 0;
-        this.maxJumps = 2; // Player can jump twice (normal + double jump)
-        this.lastWallTouched = null;
-        this.wallJumpConsecutive = 0;
-        this.maxWallJumps = 3; // Maximum 3 consecutive jumps on same wall
+        // Estado visual/auxiliar
         this.currentPlatform = null;
         this.isInvincible = false;
         this.lastPlatformVelX = 0;  // Para rastrear la velocidad de la plataforma del frame anterior
 
-        // Ajustes de fuerza base
+        // Ajustes base de fuerzas (usadas vía context wrappers)
         this.baseJumpForce = 580;
         this.baseWallJumpForceX = 400;
         this.baseWallJumpForceY = 600;
@@ -87,63 +82,6 @@ export class Player extends Phaser.Physics.Arcade.Sprite {
 
     getPowerupJumpMultiplier() {
         return this.scene?.isInvincible ? 1.2 : 1.0;
-    }
-
-    // ... (omitted setupEventListeners and other methods) ...
-
-    jump(boost = 1.0) {
-        const now = this.scene.time.now;
-
-        // Check cooldown (unless it's a wall jump, which typically feels instant)
-        // But preventing rapid double tap is good even for wall interaction mix
-        // Let's only apply cooldown for air jumps to prevent instant double jump
-
-        // Wall Jump Left (Touching wall via collider)
-        if (this.body.touching.left) {
-            if (this.checkWallStamina('left')) {
-                const mult = this.getPowerupJumpMultiplier();
-                this.setVelocity(this.baseWallJumpForceX * boost * mult, -this.baseWallJumpForceY * boost * mult);
-                this.jumps = 0;
-                this.lastJumpTime = now;
-                console.log('🧱 Wall Jump Left');
-                return { type: 'wall_jump', x: this.x - 10, y: this.y };
-            }
-            return null;
-        }
-
-        // Wall Jump Right (Touching wall via collider)
-        if (this.body.touching.right) {
-            if (this.checkWallStamina('right')) {
-                const mult = this.getPowerupJumpMultiplier();
-                this.setVelocity(-this.baseWallJumpForceX * boost * mult, -this.baseWallJumpForceY * boost * mult);
-                this.jumps = 0;
-                this.lastJumpTime = now;
-                console.log('🧱 Wall Jump Right');
-                return { type: 'wall_jump', x: this.x + 10, y: this.y };
-            }
-            return null;
-        }
-
-        // Normal / Double Jump
-        if (this.jumps < this.maxJumps) {
-            let type = this.jumps === 0 ? 'jump' : 'double_jump';
-
-            if (this.jumps > 0) {
-                this.doFrontFlip();
-                console.log('🔄 Double Jump');
-            } else {
-                console.log('⬆️ Normal Jump');
-            }
-
-            const mult = this.getPowerupJumpMultiplier();
-            this.setVelocityY(-this.baseJumpForce * boost * mult);
-            this.jumps++;
-
-            const jumpOffsetY = (this.height || 32) * 0.5;
-            return { type: type, x: this.x, y: this.y + jumpOffsetY };
-        }
-
-        return null;
     }
 
     /**
@@ -155,10 +93,6 @@ export class Player extends Phaser.Physics.Arcade.Sprite {
         const moveListener = (data) => {
             if (this.controller) {
                 this.controller.context.intent.moveX = data.direction;
-                // aplicar movimiento con la física actual
-                this.move(data.direction);
-            } else {
-                this.move(data.direction);
             }
         };
         EventBus.on(Events.PLAYER_MOVE, moveListener);
@@ -168,29 +102,15 @@ export class Player extends Phaser.Physics.Arcade.Sprite {
         const stopListener = () => {
             if (this.controller) {
                 this.controller.context.intent.moveX = 0;
-                this.stop();
-            } else {
-                this.stop();
             }
         };
         EventBus.on(Events.PLAYER_STOP, stopListener);
         this.eventListeners.push({ event: Events.PLAYER_STOP, listener: stopListener });
 
         // Listen to jump request events (from InputManager)
-        const jumpListener = (data) => {
-            const boost = data.boost || 1.0;
-            // Delegar edge trigger al controller/FSM
+        const jumpListener = () => {
             if (this.controller) {
                 this.controller.context.intent.jumpJustPressed = true;
-            } else {
-                const result = this.jump(boost);
-                if (result) {
-                    EventBus.emit(Events.PLAYER_JUMPED, {
-                        type: result.type,
-                        x: result.x,
-                        y: result.y
-                    });
-                }
             }
         };
         EventBus.on(Events.PLAYER_JUMP_REQUESTED, jumpListener);
@@ -241,7 +161,7 @@ export class Player extends Phaser.Physics.Arcade.Sprite {
                 const platformVelX = platform.body.velocity.x;
                 
                 // Check if player is trying to move (has horizontal acceleration)
-                const isPlayerMoving = Math.abs(this.body.acceleration.x) > 0;
+                const isPlayerMoving = Math.abs(this.body.acceleration.x) > 0 || (this.controller && Math.abs(this.controller.context.intent.moveX) > 0);
                 
                 // Store the offset from platform center (only on first contact)
                 if (this.platformOffsetX === undefined) {
@@ -308,10 +228,10 @@ export class Player extends Phaser.Physics.Arcade.Sprite {
             this.lastPlatformVelX = 0;
         }
 
-        // Wall touches are now handled by colliders in CollisionManager
-        // No need to check body.blocked since we're not using world bounds
+        // Wall touches are handled by colliders; no need to check world bounds
     }
 
+    // Helpers de física para el FSM/context
     move(direction) {
         const speedMult = this.scene?.isInvincible ? 1.15 : 1.0;
         const force = this.baseMoveForce * speedMult;
@@ -322,73 +242,21 @@ export class Player extends Phaser.Physics.Arcade.Sprite {
         this.setAccelerationX(0);
     }
 
-
-
-    checkWallStamina(side) {
-        if (this.lastWallTouched !== side) {
-            this.wallJumpConsecutive = 0;
-            this.clearTint();
-        }
-        if (this.wallJumpConsecutive >= this.maxWallJumps) return false;
-        this.lastWallTouched = side;
-        this.wallJumpConsecutive++;
-        return true;
+    jumpPhysics(vx, vy) {
+        this.setVelocity(vx, vy);
     }
 
-    handleWallTouch(wallSide) {
-        // If we are moving up, don't apply wall slide friction yet, let momentum carry us
-        // unless we want to limit upward velocity? No, usually wall slide affects downward movement.
-
-        if (this.lastWallTouched === wallSide && this.wallJumpConsecutive >= this.maxWallJumps) {
-            // Stamina depleted, slide down fast? Or just normal gravity?
-            // If we want to punish, maybe no friction.
-            // But let's keep the existing logic: if stamina depleted, maybe we slip?
-            // The original code applied friction even if stamina depleted?
-            // "if (this.body.velocity.y > 0) this.setVelocityY(400);" -> This limits falling speed (friction)
-
-            // Wait, the original code said:
-            // if (this.lastWallTouched === wallSide && this.wallJumpConsecutive >= 5) {
-            //    if (this.body.velocity.y > 0) this.setVelocityY(400); 
-            //    this.setTint(0x555555);
-            //    return;
-            // }
-            // This means even with depleted stamina, we still slide but maybe faster (400 vs 80)?
-
-            if (this.body.velocity.y > 0) this.setVelocityY(400); // Faster slide (less friction)
-            this.setTint(0x555555);
-            return;
-        }
-
-        // Normal Wall Slide Friction
-        if (this.body.velocity.y > 0) this.setVelocityY(80); // Slow slide (high friction)
-
-        if (this.lastWallTouched !== wallSide) {
-            this.jumps = 0;
-            this.clearTint();
-            this.scene.tweens.killTweensOf(this);
-            this.angle = 0;
-        }
+    setCurrentPlatform(platform) {
+        this.currentPlatform = platform || null;
     }
 
-    doFrontFlip() {
-        this.scene.tweens.killTweensOf(this);
-        this.angle = 0;
-        this.scene.tweens.add({
-            targets: this,
-            angle: 360,
-            duration: 400,
-            ease: 'Cubic.easeOut'
-        });
+    // Hooks para estados de daño/muerte (delegan en el controller/FSM)
+    enterHitState(duration = 500) {
+        this.controller?.enterHit(duration);
     }
 
-    handleLand(floor) {
-        if (this.body.touching.down) {
-            this.jumps = 0;
-            this.lastWallTouched = null;
-            this.wallJumpConsecutive = 0;
-            this.clearTint();
-            this.angle = 0;
-            this.currentPlatform = floor;
-        }
+    enterDeathState() {
+        this.controller?.enterDeath();
     }
+
 }

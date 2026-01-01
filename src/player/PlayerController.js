@@ -15,6 +15,28 @@ export class PlayerController {
         this.enabled = true;
     }
 
+    resetState() {
+        this.context?.resetState();
+        this.anim?.reset?.();
+        this.fsm.state = 'GROUND';
+    }
+
+    enterHit(duration = 500) {
+        this.context.flags.hit = true;
+        this.context.flags.inputLocked = true;
+        this.context.hitTimer = duration;
+        // Detener movimiento
+        this.sprite.setVelocity(0, 0);
+        this.sprite.setAcceleration(0, 0);
+    }
+
+    enterDeath() {
+        this.context.flags.dead = true;
+        this.context.flags.inputLocked = true;
+        this.sprite.setVelocity(0, 0);
+        this.sprite.setAcceleration(0, 0);
+    }
+
     /**
      * Actualiza sensores e intenta deducir intent del body (placeholder).
      * Integra con FSM sin modificar la lógica de movimiento existente.
@@ -28,7 +50,25 @@ export class PlayerController {
         // Intent: viene del input (moveX) ya seteado por events
         this.context.setIntent(this.context.intent.moveX, this.context.intent.jumpJustPressed);
         this.context.setAirStyleFromInput();
+
+        // Aplicar movimiento horizontal simple según intent (sin lógica duplicada en eventos)
+        this.applyHorizontalMovement();
+
         this.fsm.update();
         // Reset edge trigger se maneja vía buffer al consumirlo
+    }
+
+    applyHorizontalMovement() {
+        if (!this.sprite || !this.sprite.body) return;
+        if (this.context.flags.inputLocked) {
+            this.sprite.stop();
+            return;
+        }
+        const dir = this.context.intent.moveX || 0;
+        if (Math.abs(dir) > 0.05) {
+            this.sprite.move(dir);
+        } else {
+            this.sprite.stop();
+        }
     }
 }

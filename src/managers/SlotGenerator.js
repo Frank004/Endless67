@@ -81,6 +81,8 @@ export class SlotGenerator {
         }
 
         const slotType = this.determineSlotType();
+        const typeConfig = SLOT_CONFIG.types?.[slotType] || {};
+        const baseSlotHeight = typeConfig.height || this.slotHeight;
         let result = null;
 
         // Opciones para tutorial: patrones fijos y sin transform
@@ -103,11 +105,16 @@ export class SlotGenerator {
                 result = this.generatePlatformBatch(slotYStart, 'PLATFORM_BATCH', { forcePattern, disableTransform });
         }
 
-        const contentHeight = result?.contentHeight || SLOT_CONFIG.slotHeight;
+        const contentHeight = result?.contentHeight || baseSlotHeight;
+        // Usar la altura real del contenido para ubicar el siguiente slot.
+        // (Para MAZE ya viene calculada; plataformas devuelven su altura efectiva ~512px).
         const slotHeight = contentHeight;
         const slotYEnd = slotYStart - slotHeight;
         
-        console.log(`📦 SLOT ${this.currentSlotIndex}: ${slotType} [Y: ${slotYStart} a ${slotYEnd}] (contentHeight=${contentHeight})`);
+        const verbose = this.scene?.registry?.get('showSlotLogs');
+        if (verbose) {
+            console.log(`📦 SLOT ${this.currentSlotIndex}: ${slotType} [Y: ${slotYStart} a ${slotYEnd}] (contentHeight=${contentHeight})`);
+        }
         
         // Registrar slot
         this.slots.push({
@@ -117,6 +124,7 @@ export class SlotGenerator {
             yEnd: slotYEnd,
             height: slotHeight,
             contentHeight,
+            slotHeight,
             ...result
         });
 
@@ -152,7 +160,7 @@ export class SlotGenerator {
         const config = SLOT_CONFIG.types[slotType];
         const platformCount = 4;  // 640 / 160 = 4 plataformas por slot
         const isTutorial = options.tutorialIndex !== undefined;
-        
+
         // 1) Seleccionar patrón
         let basePattern;
         const fallbackPattern = isTutorial
@@ -206,13 +214,14 @@ export class SlotGenerator {
             }
         }
         
-        // Calcular límites para verificación
-        // gameWidth=400, wallWidth=32, platformWidth=128, halfWidth=64
+        // Calcular límites para verificación (alineados con LevelManager)
         const halfWidth = SLOT_CONFIG.platformWidth / 2; // 64
-        const playableLeft = SLOT_CONFIG.wallWidth;  // 32
-        const playableRight = SLOT_CONFIG.gameWidth - SLOT_CONFIG.wallWidth;  // 368
-        const minX = playableLeft + halfWidth;   // 32 + 64 = 96
-        const maxX = playableRight - halfWidth;  // 368 - 64 = 304
+        const bounds = getPlatformBounds();
+        const minX = bounds.minX;
+        const maxX = bounds.maxX;
+        // Revisar bounds usando centros válidos
+        const playableLeft = minX;
+        const playableRight = maxX;
         
         console.log(`  🎨 Patrón: ${basePattern.name} | Transform: ${transform}`);
         console.log(`  📏 gameWidth=${SLOT_CONFIG.gameWidth}, Límites X: ${minX} - ${maxX}`);
@@ -226,6 +235,7 @@ export class SlotGenerator {
         const gap = SLOT_CONFIG.minVerticalGap;  // Siempre 160px
         let currentY = slotYStart;
         const spawnedPlatforms = [];  // Guardar posiciones para evitar colisiones con coins
+        const verbose = this.scene?.registry?.get('showSlotLogs');
         
         // Verificar que el slotYStart sea válido (no negativo infinito o NaN)
         if (!isFinite(slotYStart) || isNaN(slotYStart)) {
@@ -235,14 +245,26 @@ export class SlotGenerator {
         
         for (let i = 0; i < platformCount; i++) {
             const patternPlatform = clampedPlatforms[i % clampedPlatforms.length];
+            let spawnX = patternPlatform?.x;
+            // Fallback si viene NaN/undefined
+            if (!isFinite(spawnX)) {
+                spawnX = SLOT_CONFIG.centerX;
+            }
+
+            // Clamp duro a límites jugables antes de spawnear
+            const clampedX = Phaser.Math.Clamp(spawnX, minX, maxX);
+            const wasClamped = clampedX !== spawnX;
+            spawnX = clampedX;
             
             // Verificar límites ANTES de spawn
-            const leftEdge = patternPlatform.x - halfWidth;
-            const rightEdge = patternPlatform.x + halfWidth;
-            const isInBounds = leftEdge >= playableLeft && rightEdge <= playableRight;
+            const leftEdge = spawnX - halfWidth;
+            const rightEdge = spawnX + halfWidth;
+            const isInBounds = spawnX >= playableLeft && spawnX <= playableRight;
             
             if (!isInBounds) {
                 console.error(`  ❌ FUERA DE LÍMITES: x=${patternPlatform.x}, leftEdge=${leftEdge}, rightEdge=${rightEdge}`);
+            } else if (wasClamped && this.scene?.registry?.get('showSlotLogs')) {
+                console.warn(`  ⚙️ Clamp X plataforma: ${patternPlatform.x} → ${spawnX}`);
             }
             
             // Verificar que currentY sea válido
@@ -255,13 +277,19 @@ export class SlotGenerator {
             const isMoving = movingPlatformIndices.has(i);
             
             // Spawn platform (estática o móvil según swap)
-            const platform = this.scene.levelManager.spawnPlatform(
-                patternPlatform.x,
+            let platform = this.scene.levelManager.spawnPlatform(
+                spawnX,
                 currentY,
                 SLOT_CONFIG.platformWidth,
                 isMoving,  // isMoving = true si está en movingPlatformIndices
                 MOVING_PLATFORM_SPEED
             );
+            // Fallback: si el pool está vacío o falla, crear una estática de emergencia
+            if (!platform) {
+                platform = this.scene.physics.add.staticSprite(spawnX, currentY, 'platform');
+                platform.setDisplaySize(SLOT_CONFIG.platformWidth, SLOT_CONFIG.platformHeight).refreshBody();
+                this.scene.platforms?.add(platform, true);
+            }
             
             // Color debug comentado
             // if (platform) {
@@ -270,14 +298,16 @@ export class SlotGenerator {
             
             // Guardar posición de la plataforma
             spawnedPlatforms.push({
-                x: patternPlatform.x,
+                x: spawnX,
                 y: currentY,
                 width: SLOT_CONFIG.platformWidth,
                 height: SLOT_CONFIG.platformHeight
             });
             
             const platType = isMoving ? '🔵 MÓVIL' : '🟣 ESTÁTICA';
-            console.log(`    ▓ Plat ${i + 1}: x=${patternPlatform.x}, y=${currentY}, ${platType}, edges=[${leftEdge}, ${rightEdge}] ${isInBounds ? '✅' : '❌'}`);
+            if (verbose) {
+                console.log(`    ▓ Plat ${i + 1}: x=${spawnX}, y=${currentY}, ${platType}, edges=[${leftEdge}, ${rightEdge}] ${isInBounds ? '✅' : '❌'}`);
+            }
             
             // ─────────────────────────────────────────────────────────────
             // SPAWN ENEMIGOS: Solo en plataformas ESTÁTICAS
@@ -317,6 +347,40 @@ export class SlotGenerator {
             
             // Siguiente Y (siempre 160px arriba)
             currentY -= gap;
+        }
+
+        // Fallback duro: si no se generó ninguna plataforma (por clamps extremos), crear un set seguro al centro
+        if (spawnedPlatforms.length === 0) {
+            const centerSafe = Phaser.Math.Clamp(getPlatformBounds().centerX, minX, maxX);
+            let fbY = slotYStart;
+            const fbCount = platformCount;
+            for (let i = 0; i < fbCount; i++) {
+                let platform = this.scene.levelManager.spawnPlatform(
+                    centerSafe,
+                    fbY,
+                    SLOT_CONFIG.platformWidth,
+                    false,
+                    0
+                );
+                // Si el pool falla, crear sprite estático de emergencia
+                if (!platform) {
+                    platform = this.scene.physics.add.staticSprite(centerSafe, fbY, 'platform');
+                    platform.setDisplaySize(SLOT_CONFIG.platformWidth, SLOT_CONFIG.platformHeight).refreshBody();
+                    this.scene.platforms?.add(platform, true);
+                }
+                if (platform && platform.active) {
+                    spawnedPlatforms.push({
+                        x: centerSafe,
+                        y: fbY,
+                        width: SLOT_CONFIG.platformWidth,
+                        height: SLOT_CONFIG.platformHeight
+                    });
+                    if (verbose) {
+                        console.warn(`  ⚠️ Fallback plataforma segura añadida en slot (x=${centerSafe}, y=${fbY})`);
+                    }
+                }
+                fbY -= gap;
+            }
         }
         
         // ─────────────────────────────────────────────────────────────
@@ -518,12 +582,24 @@ export class SlotGenerator {
             contentHeight = (slotYStart - lowestY) + SLOT_CONFIG.platformHeight;
         }
 
+        // Clamp de seguridad para evitar gaps/solapes por alturas anómalas
+        const minSafe = SLOT_CONFIG.slotHeight * 0.7;  // 448
+        const maxSafe = SLOT_CONFIG.slotHeight * 1.1;  // 704
+        let clampedContentHeight = contentHeight;
+        if (contentHeight < minSafe || contentHeight > maxSafe) {
+            clampedContentHeight = Phaser.Math.Clamp(contentHeight, minSafe, maxSafe);
+            const verbose = this.scene?.registry?.get('showSlotLogs');
+            if (verbose) {
+                console.warn(`⚠️ SlotGenerator: contentHeight fuera de rango (${contentHeight.toFixed(2)}). Clamp a ${clampedContentHeight.toFixed(2)}. slotYStart=${slotYStart}`);
+            }
+        }
+
         return {
             patternName: basePattern.name,
             transform,
             platformCount,
             movingPlatforms: numMovingPlatforms,
-            contentHeight
+            contentHeight: clampedContentHeight
         };
     }
 

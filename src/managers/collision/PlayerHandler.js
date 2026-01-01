@@ -8,7 +8,25 @@ export class PlayerHandler {
 
     handlePlatformCollision(player, platform) {
         if (player.body.touching.down && platform.body.touching.up) {
-            player.handleLand(platform);
+            // FSM/Context maneja el aterrizaje; sólo actualizamos plataforma y reseteos básicos
+            if (player.setCurrentPlatform) {
+                player.setCurrentPlatform(platform);
+            }
+            const ctx = player.controller?.context;
+            if (ctx) {
+                ctx.coyoteTimer = ctx.COYOTE_TIME;
+                ctx.resetForLand();
+                ctx.wallTouchSide = null;
+                ctx.wallTouchCount = 0;
+            }
+            // Alinear posición si el cuerpo quedó dentro del top de la plataforma (seguridad)
+            const bodyBottom = player.body.y + player.body.height;
+            const platformTop = platform.body.y;
+            if (bodyBottom > platformTop) {
+                const diff = bodyBottom - platformTop;
+                player.y -= diff;
+                if (player.body) player.body.updateFromGameObject();
+            }
         }
 
         // Fix: If moving platform hits player horizontally, reverse platform to avoid crushing player
@@ -27,11 +45,30 @@ export class PlayerHandler {
     }
 
     handleLand(player, floor) {
-        player.handleLand(floor);
+        // Solo considerar aterrizaje cuando el jugador toca con los pies y el piso con su lado superior
+        if (!player.body?.touching?.down || !floor?.body?.touching?.up) {
+            return;
+        }
+        if (player.setCurrentPlatform) {
+            player.setCurrentPlatform(floor);
+        }
+        const ctx = player.controller?.context;
+        if (ctx) {
+            ctx.coyoteTimer = ctx.COYOTE_TIME;
+            ctx.resetForLand();
+            ctx.wallTouchSide = null;
+            ctx.wallTouchCount = 0;
+        }
     }
 
     handleWallTouch(player, wall, side) {
-        player.handleWallTouch(side);
+        const ctx = player.controller?.context;
+        if (ctx) {
+            ctx.wallTouchSide = side;
+            ctx.wallTouchCount = Math.min(ctx.wallTouchCount + 1, ctx.maxWallTouches);
+            ctx.prevTouchWall = true;
+            ctx.prevTouchWallSide = side;
+        }
     }
 
     touchRiser(player, riser) {
@@ -69,6 +106,8 @@ export class PlayerHandler {
             return;
         }
 
+        // No invencible: entrar a estado de muerte en FSM y luego ejecutar flujo de game over
+        player.enterDeathState?.();
         // Play riser drop sound
         AudioManager.playLavaDropSound();
 

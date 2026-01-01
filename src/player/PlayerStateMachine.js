@@ -18,10 +18,32 @@ export class PlayerStateMachine {
         const { sensors, flags, intent } = this.ctx;
         const jumpBuffered = this.ctx.hasJumpBuffered();
 
+        // Prioridades altas: DEAD / HIT
+        if (flags.dead) {
+            this.transition('DEAD');
+            this.anim?.play(this.anim?.resolve('DEAD'));
+            this.anim?.setFacing(intent.moveX);
+            return;
+        }
+        if (flags.hit) {
+            this.transition('HIT');
+            this.anim?.play(this.anim?.resolve('HIT'));
+            this.anim?.setFacing(intent.moveX);
+            // Cuando termine hitTimer, salir al estado correcto según sensores
+            if (this.ctx.hitTimer <= 0) {
+                flags.hit = false;
+                // recalcular destino
+                if (sensors.onFloor) this.transition('GROUND');
+                else if (sensors.touchWall) this.transition('WALL_SLIDE');
+                else this.transition(sensors.vy < 0 ? 'AIR_RISE' : 'AIR_FALL');
+            }
+            return;
+        }
+
         // Prioridades: powerup/hit/goal quedarían aquí si se usan flags
         // GROUND
         if (sensors.onFloor) {
-            if ((jumpBuffered || intent.jumpJustPressed) && !flags.inputLocked) {
+            if ((jumpBuffered || intent.jumpJustPressed) && !flags.inputLocked && this.ctx.canAcceptJump()) {
                 this.ctx.consumeJumpBuffer();
                 this.ctx.setAirStyleFromInput();
                 // Si no hay input lateral, forzar estilo UP

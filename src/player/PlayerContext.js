@@ -11,7 +11,9 @@ export class PlayerContext {
         this.flags = {
             inputLocked: false,
             canDoubleJump: true,
-            airStyle: 'UP'
+            airStyle: 'UP',
+            dead: false,
+            hit: false
         };
         this.sensors = {
             onFloor: false,
@@ -25,19 +27,55 @@ export class PlayerContext {
         };
         this.prevOnFloor = false;
         this.prevVy = 0;
+        this.prevTouchWall = false;
+        this.prevTouchWallSide = null;
         this.jumpBufferTimer = 0;   // ms
         this.coyoteTimer = 0;       // ms
+        this.hitTimer = 0;          // ms
         this.COYOTE_TIME = 120;
         this.JUMP_BUFFER = 150;
         this.wallTouchSide = null;
         this.wallTouchCount = 0;
         this.maxWallTouches = 3;
+        this.wallJumpSide = null;
+        this.wallJumpCount = 0;
+        this.maxWallJumps = 3;
+    }
+
+    resetState() {
+        // Intent
+        this.intent.moveX = 0;
+        this.intent.jumpJustPressed = false;
+        // Flags
+        this.flags.inputLocked = false;
+        this.flags.canDoubleJump = true;
+        this.flags.airStyle = 'UP';
+        this.flags.dead = false;
+        this.flags.hit = false;
+        // Sensors prev
+        this.prevOnFloor = false;
+        this.prevVy = 0;
+        this.prevTouchWall = false;
+        this.prevTouchWallSide = null;
+        // Timers
+        this.jumpBufferTimer = 0;
+        this.coyoteTimer = 0;
+        this.hitTimer = 0;
+        // Wall counters
+        this.wallTouchSide = null;
+        this.wallTouchCount = 0;
+        this.wallJumpSide = null;
+        this.wallJumpCount = 0;
+        this.setFatigueVisual(false);
     }
 
     tick(delta = 16) {
         // Timers de buffer/coyote
         this.jumpBufferTimer = Math.max(0, this.jumpBufferTimer - delta);
         this.coyoteTimer = Math.max(0, this.coyoteTimer - delta);
+        if (this.hitTimer > 0) {
+            this.hitTimer = Math.max(0, this.hitTimer - delta);
+        }
     }
 
     updateSensors() {
@@ -55,15 +93,27 @@ export class PlayerContext {
             this.coyoteTimer = this.COYOTE_TIME;
             this.wallTouchSide = null;
             this.wallTouchCount = 0;
+            this.wallJumpSide = null;
+            this.wallJumpCount = 0;
+            this.setFatigueVisual(false);
         }
         if (this.sensors.touchWallLeft || this.sensors.touchWallRight) {
             const side = this.sensors.touchWallLeft ? 'left' : 'right';
-            if (this.wallTouchSide !== side) {
+            if (!this.prevTouchWall || this.prevTouchWallSide !== side) {
                 this.wallTouchSide = side;
                 this.wallTouchCount = 1;
-            } else {
-                this.wallTouchCount += 1;
+                // Reset fatiga de wall-jump al cambiar de pared
+                if (this.wallJumpSide !== side) {
+                    this.wallJumpSide = side;
+                    this.wallJumpCount = 0;
+                    this.setFatigueVisual(false);
+                }
             }
+            this.prevTouchWall = true;
+            this.prevTouchWallSide = side;
+        } else {
+            this.prevTouchWall = false;
+            this.prevTouchWallSide = null;
         }
         this.prevOnFloor = this.sensors.onFloor;
         this.prevVy = this.sensors.vy;
@@ -92,26 +142,27 @@ export class PlayerContext {
 
     // ──────────────── ACCIONES (wrappers a físicas actuales) ────────────────
     doJump() {
-        if (!this.sprite?.jump) return;
+        if (!this.sprite?.body) return null;
         const style = this.flags.airStyle;
+        const mult = this.sprite.getPowerupJumpMultiplier?.() ?? 1.0;
         const boost = style === 'SIDE' ? 1.1 : 1.0;
-        const res = this.sprite.jump(boost);
-        if (res) {
-            // Primer salto: double jump disponible
-            this.flags.canDoubleJump = true;
-        }
-        return res;
+        const vy = -this.sprite.baseJumpForce * boost * mult;
+        this.sprite.jumpPhysics(0, vy);
+        this.flags.canDoubleJump = true;
+        const jumpOffsetY = (this.sprite.height || 32) * 0.5;
+        return { type: 'jump', x: this.sprite.x, y: this.sprite.y + jumpOffsetY };
     }
 
     doDoubleJump() {
-        if (!this.sprite?.jump) return;
+        if (!this.sprite?.body) return null;
         const style = this.flags.airStyle;
+        const mult = this.sprite.getPowerupJumpMultiplier?.() ?? 1.0;
         const boost = style === 'SIDE' ? 1.05 : 1.0;
-        const res = this.sprite.jump(boost);
-        if (res) {
-            this.useDoubleJump();
-        }
-        return res;
+        const vy = -this.sprite.baseJumpForce * boost * mult;
+        this.sprite.jumpPhysics(0, vy);
+        this.useDoubleJump();
+        const jumpOffsetY = (this.sprite.height || 32) * 0.5;
+        return { type: 'double_jump', x: this.sprite.x, y: this.sprite.y + jumpOffsetY };
     }
 
     consumeJumpBuffered() {
@@ -144,7 +195,7 @@ export class PlayerContext {
     }
 
     canAcceptJump() {
-        const wallOk = this.sensors.touchWall && this.wallTouchCount < this.maxWallTouches;
+        const wallOk = this.sensors.touchWall && this.wallJumpCount < this.maxWallJumps;
         return this.sensors.onFloor || wallOk || this.hasCoyote() || this.flags.canDoubleJump;
     }
 
@@ -161,14 +212,33 @@ export class PlayerContext {
     }
 
     doWallJump() {
-        if (!this.sprite?.jump) return;
-        // Forzar estilo WALL para anim y potenciar ligeramente
+        if (!this.sprite?.body) return null;
         this.flags.airStyle = 'WALL';
-        const res = this.sprite.jump(1.0);
-        if (res) {
-            this.flags.airStyle = 'WALL';
-            this.flags.canDoubleJump = true; // permitir doble salto tras walljump
+        const mult = this.sprite.getPowerupJumpMultiplier?.() ?? 1.0;
+        const dir = this.sensors.touchWallLeft ? 1 : this.sensors.touchWallRight ? -1 : 0;
+        const side = dir === 1 ? 'left' : dir === -1 ? 'right' : null;
+        if (side) {
+            if (this.wallJumpSide !== side) {
+                this.wallJumpSide = side;
+                this.wallJumpCount = 0;
+            }
+            if (this.wallJumpCount >= this.maxWallJumps) {
+                this.setFatigueVisual(true);
+                return null;
+            }
+            this.wallJumpCount += 1;
         }
-        return res;
+        const vx = dir * this.sprite.baseWallJumpForceX * mult;
+        const vy = -this.sprite.baseWallJumpForceY * mult;
+        this.sprite.jumpPhysics(vx, vy);
+        this.flags.canDoubleJump = true;
+        const jumpOffsetY = (this.sprite.height || 32) * 0.5;
+        return { type: 'wall_jump', x: this.sprite.x + dir * 10, y: this.sprite.y + jumpOffsetY };
+    }
+
+    setFatigueVisual(active) {
+        if (!this.sprite?.setTint) return;
+        if (active) this.sprite.setTint(0x555555);
+        else this.sprite.clearTint();
     }
 }

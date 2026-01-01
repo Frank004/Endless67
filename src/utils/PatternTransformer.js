@@ -158,11 +158,6 @@ export class PatternTransformer {
         
         return platforms.map(plat => {
             const clampedX = Math.max(bounds.minX, Math.min(bounds.maxX, plat.x));
-            
-            if (clampedX !== plat.x) {
-                console.warn(`⚙️ Ajustando X: ${plat.x} → ${clampedX}`);
-            }
-            
             return {
                 x: clampedX,
                 y: plat.y

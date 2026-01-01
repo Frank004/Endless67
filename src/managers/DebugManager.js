@@ -25,8 +25,8 @@ export class DebugManager {
         this.showPatrolLogs = false;
         this.showSlotLogs = false;
 
-        // Ruler overlay
-        this.rulerEnabled = true;
+        // Ruler overlay (líneas verdes): OFF por defecto
+        this.rulerEnabled = false;
         this.ruler = null;
 
         // Overlay de errores
@@ -183,14 +183,13 @@ export class DebugManager {
             this.setupPlayerHitboxVisual(scene.player);
         }
 
-        // Setup Ruler
+        // Setup Ruler (lineas verdes de altura). Respetar toggle; no forzar.
         if (this.rulerEnabled) {
             this.ensureRuler();
             this.ruler.setEnabled(true);
+        } else if (this.ruler) {
+            this.ruler.setEnabled(false);
         }
-
-        // Setup global error handling
-        this.setupGlobalErrorHandlers();
 
         // Setup global error handling
         this.setupGlobalErrorHandlers();

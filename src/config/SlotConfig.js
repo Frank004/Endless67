@@ -1,5 +1,6 @@
 import { PLATFORM_WIDTH, PLATFORM_HEIGHT } from '../prefabs/Platform.js';
 import { MAZE_ROW_HEIGHT, MAZE_ROW_GAP, MAZE_ROW_COUNT } from '../data/MazePatterns.js';
+import { WALLS } from './GameConstants.js';
 
 /**
  * SlotConfig.js
@@ -126,12 +127,13 @@ export const SLOT_CONFIG = {
  */
 export function getPlatformBounds() {
     const halfWidth = SLOT_CONFIG.platformWidth / 2;  // 64
-    const playableLeft = SLOT_CONFIG.wallWidth;  // 32
-    const playableRight = SLOT_CONFIG.gameWidth - SLOT_CONFIG.wallWidth;  // 368
+    // Usar el mismo margen que LevelManager para evitar desalineación
+    const minX = SLOT_CONFIG.wallWidth + WALLS.MARGIN + halfWidth; // 32 + 28 + 64 = 124
+    const maxX = SLOT_CONFIG.gameWidth - SLOT_CONFIG.wallWidth - WALLS.MARGIN - halfWidth; // 400 - 32 - 28 - 64 = 276
     
     return {
-        minX: playableLeft + halfWidth,   // 32 + 64 = 96
-        maxX: playableRight - halfWidth,  // 368 - 64 = 304
+        minX,
+        maxX,
         centerX: SLOT_CONFIG.centerX      // 200
     };
 }

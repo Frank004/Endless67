@@ -423,6 +423,17 @@ export class LevelManager {
     spawnPlatform(x, y, width, isMoving, speed = 100) {
         const scene = this.scene;
 
+        // Clamp center X to safe bounds to avoid spawning outside walls
+        const halfWidth = width / 2;
+        const minCenter = WALLS.WIDTH + WALLS.MARGIN + halfWidth;
+        const maxCenter = scene.cameras.main.width - WALLS.WIDTH - WALLS.MARGIN - halfWidth;
+        let clampedX = Phaser.Math.Clamp(x, minCenter, maxCenter);
+        const verbose = this.scene?.registry?.get('showSlotLogs');
+        if (clampedX !== x && verbose) {
+            console.warn(`LevelManager: clamping platform center ${x} -> ${clampedX}`);
+        }
+        x = clampedX;
+
         // Spawn desde el pool
         const p = scene.platformPool.spawn(x, y, width, isMoving, speed);
 
@@ -438,6 +449,23 @@ export class LevelManager {
         }
 
         this.logPlatformPlacement(p.x, p.y, width, isMoving);
+
+        // Seguridad extra: si por alguna razón quedó fuera de los límites, reubicar al centro seguro
+        const leftEdge = p.x - halfWidth;
+        const rightEdge = p.x + halfWidth;
+        const minEdge = WALLS.WIDTH;
+        const maxEdge = scene.cameras.main.width - WALLS.WIDTH;
+        if (leftEdge < minEdge || rightEdge > maxEdge) {
+            const safeX = Phaser.Math.Clamp(p.x, minCenter, maxCenter);
+            p.x = safeX;
+            if (p.body) {
+                p.body.updateFromGameObject();
+                p.body.setVelocityX(isMoving ? p.body.velocity.x : 0);
+            }
+            if (verbose) {
+                console.warn(`LevelManager: repositioned platform to safe center ${safeX} (was ${x})`);
+            }
+        }
         return p;
     }
 
