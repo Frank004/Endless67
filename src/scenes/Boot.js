@@ -49,6 +49,7 @@ export class Boot extends Phaser.Scene {
 
         // --- WALLS SPRITESHEET (LEFT/RIGHT) ---
         this.load.multiatlas('walls', 'assets/spritesheets/walls.json', 'assets/spritesheets');
+        this.load.multiatlas('floor', 'assets/spritesheets/floor.json', 'assets/spritesheets');
 
         // --- PLAYER SPRITE (PNG Placeholder) ---
         // Cargar PNG si existe. Si no existe, se usará el placeholder generado.

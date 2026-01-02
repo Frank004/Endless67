@@ -7,6 +7,7 @@ import { SLOT_CONFIG } from '../config/SlotConfig.js';
 import { MAZE_ROW_HEIGHT } from '../data/MazePatterns.js';
 import { ENEMY_SIZE, PATROL_SPEED_DEFAULT } from '../prefabs/Enemy.js';
 import { PLATFORM_WIDTH } from '../prefabs/Platform.js';
+import { getPlayableBounds } from '../utils/playableBounds.js';
 
 /**
  * LevelManager - LEGACY
@@ -35,6 +36,7 @@ export class LevelManager {
         this.mazeMirrorY = false;
         this.justFinishedMaze = false;
         this.platformsSinceLastMaze = 0;
+        this.mazeVisuals = [];
 
         // Zone tracking (maze zones vs platform zones)
         this.currentZoneType = 'platform'; // 'platform' or 'maze'
@@ -217,6 +219,19 @@ export class LevelManager {
         if (beforeCount !== afterCount) {
             console.log(`🧹 Limpieza: ${beforeCount - afterCount} plataformas removidas, quedan ${afterCount} activas`);
         }
+        return;
+    }
+
+    createMazeFloorVisual(x, y, width, height, originX = 0, side = 'center') {
+        const scene = this.scene;
+        if (!scene?.add?.tileSprite) return null;
+        const centerFrames = ['floor-center-01.png', 'floor-center-02.png', 'floor-center-03.png', 'floor-center-04.png'];
+        const frame = centerFrames[Math.floor(Math.random() * centerFrames.length)];
+        // Solo centro tileado por ahora (sin esquinas) para evitar arte incorrecto
+        const visualCenter = scene.add.tileSprite(x, y, width, height, 'floor', frame);
+        visualCenter.setOrigin(originX, 0.5);
+        visualCenter.setDepth(12);
+        return [visualCenter];
     }
 
     /**
@@ -382,7 +397,9 @@ export class LevelManager {
                         );
 
                         if (shouldSpawnPowerup) {
-                            const powerup = scene.powerups.create(x, targetY - 50, 'powerup_ball');
+                            const itemMargin = WALLS.WIDTH + WALLS.MARGIN + 16;
+                            const safeX = Phaser.Math.Clamp(x, itemMargin, scene.cameras.main.width - itemMargin);
+                            const powerup = scene.powerups.create(safeX, targetY - 50, 'powerup_ball');
                             enablePlatformRider(powerup, { mode: 'carry', marginX: 2 });
                             scene.lastPowerupSpawnHeight = scene.currentHeight;
                             scene.lastPowerupTime = now;
@@ -472,19 +489,27 @@ export class LevelManager {
     spawnMazeRowFromConfig(y, config, allowMoving, allowSpikes, rowIndex = null, pattern = null, tintColor = null, enemyBudget = null, coinBudget = null) {
         console.log('🧩 spawnMazeRowFromConfig:', { y, type: config.type, rowIndex });
         const scene = this.scene;
-        const gameWidth = scene.cameras.main.width;
+        const bounds = getPlayableBounds(scene, MAZE_ROW_HEIGHT);
+        const gameWidth = bounds.width;
+        const TILE = 32;
         const wallWidth = WALLS.WIDTH;
-        const centerX = scene.cameras.main.centerX;
+        // Mazes deben tocar la pared interior (sin adelantar) pero respetando ancho real
+        const leftPlayable = wallWidth;
+        const rightPlayable = gameWidth - wallWidth;
+        const playableWidth = Math.max(TILE, rightPlayable - leftPlayable);
+        const centerX = (leftPlayable + rightPlayable) / 2;
         let type = config.type;
         
         // Escalar dimensiones del maze proporcionalmente al ancho del juego
         // Los mazes están diseñados para el ancho base (desktop), escalar para mobile u otros anchos
         const BASE_GAME_WIDTH = GAME_CONFIG.RESOLUTIONS.DESKTOP.width;
         const scaleRatio = gameWidth / BASE_GAME_WIDTH;
-        const maxPlayableWidth = Math.max(32, gameWidth - 2 * wallWidth);
-        let w1 = Phaser.Math.Clamp((config.width || 0) * scaleRatio, 32, maxPlayableWidth);
-        let w2 = Phaser.Math.Clamp((config.width2 || 0) * scaleRatio, 32, maxPlayableWidth);
-        const MIN_GAP = 96; // asegurar salida de 96px
+        const maxPlayableWidth = Math.max(TILE, playableWidth);
+        // Redondear anchos al múltiplo de tile
+        const snap = (v) => Math.max(TILE, Math.floor(v / TILE) * TILE);
+        let w1 = snap(Phaser.Math.Clamp((config.width || 0) * scaleRatio, TILE, maxPlayableWidth));
+        let w2 = snap(Phaser.Math.Clamp((config.width2 || 0) * scaleRatio, TILE, maxPlayableWidth));
+        const MIN_GAP = 96; // asegurar salida de 96px (3 tiles)
 
         // Handle Horizontal Mirroring
         if (this.mazeMirrorX) {
@@ -497,60 +522,64 @@ export class LevelManager {
 
         const rowHeight = SLOT_CONFIG?.types?.MAZE?.rowHeight || MAZE_ROW_HEIGHT;
 
-        const blocksDecor = [];
         // Spawn Walls based on type (maze walls are created from screen edges, but items must respect side walls)
-        const leftX = wallWidth; // respetar pared izquierda (32px)
-        const rightX = gameWidth - wallWidth; // respetar pared derecha
+        const leftX = leftPlayable; // respetar pared izquierda dentro del worldView
+        const rightX = rightPlayable; // respetar pared derecha
 
         // Ajustar anchos efectivos para compensar el corrimiento hacia dentro (margen de pared)
         let w1Eff = w1;
         let w2Eff = w2;
-        const playableWidth = gameWidth - 2 * wallWidth;
         if (type === 'left' || type === 'right') {
-            const maxWidthSide = Math.max(32, playableWidth - MIN_GAP);
-            w1Eff = Math.max(32, Math.min(w1 - wallWidth, maxWidthSide));
+            const maxWidthSide = snap(Math.max(TILE, playableWidth - MIN_GAP));
+            w1Eff = snap(Math.min(w1Eff, maxWidthSide));
         } else if (type === 'split') {
-            w1Eff = Math.max(32, w1 - wallWidth);
-            w2Eff = Math.max(32, w2 - wallWidth);
-            const maxTotal = Math.max(64, playableWidth - MIN_GAP);
+            w1Eff = snap(w1Eff);
+            w2Eff = snap(w2Eff);
+            const maxTotal = snap(Math.max(TILE * 2, playableWidth - MIN_GAP));
             const total = w1Eff + w2Eff;
             if (total > maxTotal) {
                 const scale = maxTotal / total;
-                w1Eff = Math.max(32, Math.floor(w1Eff * scale));
-                w2Eff = Math.max(32, Math.floor(w2Eff * scale));
+                w1Eff = snap(Math.floor(w1Eff * scale));
+                w2Eff = snap(Math.floor(w2Eff * scale));
             }
         }
         if (type === 'center') {
-            const maxCenter = Math.max(32, playableWidth - MIN_GAP);
-            w1 = Math.min(w1, maxCenter);
+            const maxCenter = snap(Math.max(TILE, playableWidth - MIN_GAP));
+            w1 = snap(Math.min(w1, maxCenter));
         }
 
         if (type === 'left') {
+            const maxWidth = snap(Math.max(TILE, playableWidth - MIN_GAP));
+            w1Eff = Math.min(w1Eff, maxWidth);
             let block = scene.mazeWalls.create(leftX, y, 'maze_block');
-            block.setOrigin(0, 0.5).setDisplaySize(w1Eff, rowHeight).refreshBody().setDepth(10);
-            blocksDecor.push({ block, width: w1Eff, height: rowHeight });
+            block.setOrigin(0, 0.5).setDisplaySize(w1Eff, rowHeight).refreshBody().setDepth(10).setVisible(false);
+            block.visual = this.createMazeFloorVisual(leftX, y, w1Eff, rowHeight, 0, 'left');
         } else if (type === 'right') {
+            const maxWidth = snap(Math.max(TILE, playableWidth - MIN_GAP));
+            w1Eff = Math.min(w1Eff, maxWidth);
             let block = scene.mazeWalls.create(rightX, y, 'maze_block');
-            block.setOrigin(1, 0.5).setDisplaySize(w1Eff, rowHeight).refreshBody().setDepth(10);
-            blocksDecor.push({ block, width: w1Eff, height: rowHeight });
+            block.setOrigin(1, 0.5).setDisplaySize(w1Eff, rowHeight).refreshBody().setDepth(10).setVisible(false);
+            block.visual = this.createMazeFloorVisual(rightX, y, w1Eff, rowHeight, 1, 'right');
         } else if (type === 'split') {
+            const maxTotal = snap(Math.max(TILE * 2, playableWidth - MIN_GAP));
+            const total = w1Eff + w2Eff;
+            if (total > maxTotal) {
+                const scale = maxTotal / total;
+                w1Eff = snap(Math.floor(w1Eff * scale));
+                w2Eff = snap(Math.floor(w2Eff * scale));
+            }
             let b1 = scene.mazeWalls.create(leftX, y, 'maze_block');
-            b1.setOrigin(0, 0.5).setDisplaySize(w1Eff, rowHeight).refreshBody().setDepth(10);
+            b1.setOrigin(0, 0.5).setDisplaySize(w1Eff, rowHeight).refreshBody().setDepth(10).setVisible(false);
+            b1.visual = this.createMazeFloorVisual(leftX, y, w1Eff, rowHeight, 0, 'left');
             let b2 = scene.mazeWalls.create(rightX, y, 'maze_block');
-            b2.setOrigin(1, 0.5).setDisplaySize(w2Eff, rowHeight).refreshBody().setDepth(10);
-            blocksDecor.push({ block: b1, width: w1Eff, height: rowHeight });
-            blocksDecor.push({ block: b2, width: w2Eff, height: rowHeight });
+            b2.setOrigin(1, 0.5).setDisplaySize(w2Eff, rowHeight).refreshBody().setDepth(10).setVisible(false);
+            b2.visual = this.createMazeFloorVisual(rightX, y, w2Eff, rowHeight, 1, 'right');
         } else if (type === 'center') {
+            const maxCenter = snap(Math.max(TILE, playableWidth - MIN_GAP));
+            w1 = snap(Math.min(w1, maxCenter));
             let block = scene.mazeWalls.create(centerX, y, 'maze_block');
-            block.setOrigin(0.5, 0.5).setDisplaySize(w1, rowHeight).refreshBody().setDepth(10);
-            blocksDecor.push({ block, width: w1, height: rowHeight });
-        }
-
-        // Decorado visual
-        if (scene.mazeDecorator) {
-            blocksDecor.forEach(b => {
-                scene.mazeDecorator.decorateBlock(b.block, b.width, b.height);
-            });
+            block.setOrigin(0.5, 0.5).setDisplaySize(w1, rowHeight).refreshBody().setDepth(10).setVisible(false);
+            block.visual = this.createMazeFloorVisual(centerX, y, w1, rowHeight, 0.5, 'center');
         }
 
         // Spawning Items/Enemies - must respect side walls
@@ -613,7 +642,9 @@ export class LevelManager {
         }
 
         if (Phaser.Math.Between(0, 100) < powerupChance) {
-            const powerup = scene.powerups.create(gapX, y - 50, 'powerup_ball');
+            const itemMargin = WALLS.WIDTH + WALLS.MARGIN + 16;
+            const safeX = Phaser.Math.Clamp(gapX, itemMargin, gameWidth - itemMargin);
+            const powerup = scene.powerups.create(safeX, y - 50, 'powerup_ball');
             enablePlatformRider(powerup, { mode: 'carry', marginX: 2 });
             scene.lastPowerupSpawnHeight = scene.currentHeight;
             scene.lastPowerupTime = now;
@@ -625,11 +656,13 @@ export class LevelManager {
             const chance = isDev ? 1 : mazeCoinChance; // en dev siempre spawnea coin
             if (Phaser.Math.FloatBetween(0, 1) < chance || bonusAvailable) {
                 let coin = null;
+                const itemMargin = WALLS.WIDTH + WALLS.MARGIN + 16;
+                const safeX = Phaser.Math.Clamp(gapX, itemMargin, gameWidth - itemMargin);
                 if (scene.coinPool) {
-                    coin = scene.coinPool.spawn(gapX, y - 50);
+                    coin = scene.coinPool.spawn(safeX, y - 50);
                     if (coin && scene.coins) scene.coins.add(coin, true);
                 } else if (scene.coins) {
-                    coin = scene.coins.create(gapX, y - 50, 'coin');
+                    coin = scene.coins.create(safeX, y - 50, 'coin');
                 }
                 if (coin) {
                     enablePlatformRider(coin, { mode: 'carry', marginX: 2 });
@@ -878,10 +911,19 @@ export class LevelManager {
         if (scene.mazeWalls) {
             scene.mazeWalls.children.each(wall => {
                 if (wall.active && wall.y > limitY) {
+                    if (wall.visual) {
+                        if (Array.isArray(wall.visual)) {
+                            wall.visual.forEach(v => v?.destroy());
+                        } else {
+                            wall.visual.destroy();
+                        }
+                        wall.visual = null;
+                    }
                     wall.destroy();
                 }
             });
         }
+        // Limpia decoradores huérfanos (placeholders sin colisión)
         
         // Cleanup powerups
         scene.powerups.children.each(powerup => {
@@ -1026,7 +1068,16 @@ export class LevelManager {
         // Cleanup otros objetos (aún no tienen pooling)
         scene.coins.children.iterate((c) => { if (c && c.y > limitY) c.destroy(); });
         scene.powerups.children.iterate((c) => { if (c && c.y > limitY) c.destroy(); });
-        scene.mazeWalls.children.iterate((c) => { if (c && c.y > limitY) c.destroy(); });
+        scene.mazeWalls.children.iterate((c) => {
+            if (c && c.y > limitY) {
+                if (c.visual) {
+                    if (Array.isArray(c.visual)) c.visual.forEach(v => v?.destroy());
+                    else c.visual.destroy();
+                    c.visual = null;
+                }
+                c.destroy();
+            }
+        });
 
         // Update moving platforms (legacy safety)
         if (scene.platforms) {

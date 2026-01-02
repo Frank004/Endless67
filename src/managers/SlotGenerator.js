@@ -17,6 +17,7 @@
  */
 
 import { SLOT_CONFIG, getPlatformBounds, getItemBounds } from '../config/SlotConfig.js';
+import { getPlayableBounds } from '../utils/playableBounds.js';
 import { PLATFORM_PATTERNS, getRandomPattern } from '../data/PlatformPatterns.js';
 import { MAZE_PATTERNS_EASY, MAZE_PATTERNS_MEDIUM, MAZE_PATTERNS, MAZE_ROW_HEIGHT } from '../data/MazePatterns.js';
 import { PatternTransformer } from '../utils/PatternTransformer.js';
@@ -222,12 +223,18 @@ export class SlotGenerator {
         
         // 3) Ajustar plataformas a límites
         let clampedPlatforms = this.transformer.clampToBounds(platforms);
-        // Obtener gameWidth dinámico desde la escena
-        const gameWidth = this.scene.cameras.main.width;
+        const boundsPlatform = getPlayableBounds(this.scene, SLOT_CONFIG.platformWidth);
+        const gameWidth = boundsPlatform.width;
+        if (!clampedPlatforms || clampedPlatforms.length === 0) {
+            console.warn('⚠️ Patrón vacío tras clamp; usando patrón original');
+            clampedPlatforms = platforms;
+        }
         // If tutorial, drop any platform that would end on the wall (keep inside bounds)
         if (isTutorial) {
-            const bounds = getPlatformBounds(gameWidth);
-            clampedPlatforms = clampedPlatforms.filter(p => p.x >= bounds.minX && p.x <= bounds.maxX);
+            clampedPlatforms = clampedPlatforms.filter(p => p.x >= boundsPlatform.minX && p.x <= boundsPlatform.maxX);
+            if (clampedPlatforms.length === 0) {
+                clampedPlatforms = platforms;
+            }
         }
         
         // 4) Sistema de SWAP para plataformas móviles
@@ -254,13 +261,9 @@ export class SlotGenerator {
         
         // Calcular límites para verificación (alineados con LevelManager)
         const halfWidth = SLOT_CONFIG.platformWidth / 2; // 64
-        const bounds = getPlatformBounds(gameWidth);
-        const minX = bounds.minX;
-        const maxX = bounds.maxX;
-        const centerX = bounds.centerX;
-        // Revisar bounds usando centros válidos
-        const playableLeft = minX;
-        const playableRight = maxX;
+        const minX = boundsPlatform.minX;
+        const maxX = boundsPlatform.maxX;
+        const centerX = boundsPlatform.centerX;
         
         console.log(`  🎨 Patrón: ${basePattern.name} | Transform: ${transform}`);
         console.log(`  📏 gameWidth=${gameWidth}, Límites X: ${minX} - ${maxX}`);
@@ -289,6 +292,10 @@ export class SlotGenerator {
         
         for (let i = 0; i < platformCount; i++) {
             const patternPlatform = clampedPlatforms[i % clampedPlatforms.length];
+            if (!patternPlatform) {
+                console.error('❌ Plataforma inválida en patrón/clamp', clampedPlatforms);
+                continue;
+            }
             let spawnX = patternPlatform?.x;
             // Fallback si viene NaN/undefined
             if (!isFinite(spawnX)) {
@@ -303,7 +310,7 @@ export class SlotGenerator {
             // Verificar límites ANTES de spawn
             const leftEdge = spawnX - halfWidth;
             const rightEdge = spawnX + halfWidth;
-            const isInBounds = spawnX >= playableLeft && spawnX <= playableRight;
+            const isInBounds = spawnX >= minX && spawnX <= maxX;
             
             if (!isInBounds) {
                 console.error(`  ❌ FUERA DE LÍMITES: x=${patternPlatform.x}, leftEdge=${leftEdge}, rightEdge=${rightEdge}`);
@@ -317,7 +324,7 @@ export class SlotGenerator {
                 break;
             }
             
-            // SWAP: Determinar si esta plataforma será móvil o estática
+        // SWAP: Determinar si esta plataforma será móvil o estática
             const isMoving = movingPlatformIndices.has(i);
             
             // Spawn platform (estática o móvil según swap)
@@ -447,9 +454,7 @@ export class SlotGenerator {
         const ITEM_SIZE = Math.max(COIN_BASE_SIZE, POWERUP_BASE_SIZE);           // Tamaño base del sprite (32x32px)
         const ITEM_HALF = ITEM_SIZE / 2; // 16px
         const ITEM_DISTANCE = 128;       // Radio de distancia mínima entre items
-        const itemBounds = getItemBounds(this.scene.cameras.main.width, ITEM_SIZE);
-        const minItemX = itemBounds.minX;
-        const maxItemX = itemBounds.maxX;
+        const { minX: minItemX, maxX: maxItemX } = getPlayableBounds(this.scene, ITEM_SIZE);
         
         // Config de POWERUP
         const isDev = this.scene.registry?.get('isDevMode');

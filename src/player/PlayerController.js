@@ -23,11 +23,9 @@ export class PlayerController {
 
     enterHit(duration = 500) {
         this.context.flags.hit = true;
-        this.context.flags.inputLocked = true;
+        // Permitir movimiento para que el jugador pueda recuperarse mientras dura el daño
+        this.context.flags.inputLocked = false;
         this.context.hitTimer = duration;
-        // Detener movimiento
-        this.sprite.setVelocity(0, 0);
-        this.sprite.setAcceleration(0, 0);
     }
 
     enterDeath() {

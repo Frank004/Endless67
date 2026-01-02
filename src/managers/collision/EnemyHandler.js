@@ -13,6 +13,12 @@ export class EnemyHandler {
 
     hitEnemy(player, enemy) {
         const scene = this.scene;
+        const controller = player?.controller;
+        const ctx = controller?.context;
+        // Pequeño cooldown para evitar múltiples golpes encadenados
+        if (ctx?.hitTimer > 0 || ctx?.flags?.hit) {
+            return;
+        }
         if (scene.isInvincible) {
             // Prefer devolver al pool para no reciclar objetos destruidos
             const pools = [
@@ -42,7 +48,12 @@ export class EnemyHandler {
         player.setTint(0xff0000);
         scene.cameras.main.shake(100, 0.01);
         scene.time.delayedCall(200, () => player.clearTint());
-        const kickX = Phaser.Math.Between(-300, 300);
-        player.setVelocity(kickX, 300);
+        const playerVX = player.body?.velocity?.x || 0;
+        const dir = playerVX >= 0 ? -1 : 1;
+        const knockbackX = dir * Phaser.Math.Between(520, 620);
+        const knockbackY = 520;
+        player.setVelocity(knockbackX, knockbackY);
+        // Activar breve estado de golpe
+        controller?.enterHit?.(300);
     }
 }

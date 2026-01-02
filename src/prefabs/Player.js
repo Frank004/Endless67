@@ -37,8 +37,8 @@ export class Player extends Phaser.Physics.Arcade.Sprite {
             const spriteWidth = this.width || 32; // Ancho del sprite visual
             const spriteHeight = this.height || 32; // Alto del sprite visual
 
-            // Ancho del body más cercano al sprite para colisiones precisas
-            const bodyWidth = 24;
+            // Ancho del body ajustado para que el sprite no se vea dentro de la pared
+            const bodyWidth = 28;
             // Altura del body: mantener proporción y pies definidos
             const bodyHeight = Math.max(24, spriteHeight - 8); // Mínimo 24px de altura
 
@@ -179,7 +179,7 @@ export class Player extends Phaser.Physics.Arcade.Sprite {
                     
                     // Clamp player position to prevent entering walls
                     // Player body width is 24px, so half is 12px
-                    const playerHalfWidth = this.body.width / 2;  // 12px
+                    const playerHalfWidth = (this.width || 32) / 2;  // usar sprite completo para evitar que se meta en la pared
                     const wallWidth = 32;  // WALLS.WIDTH
                     const gameWidth = this.scene.cameras.main.width;  // 400px
                     

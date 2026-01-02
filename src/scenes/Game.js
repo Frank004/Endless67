@@ -13,7 +13,6 @@ import { ParticleManager } from '../managers/ParticleManager.js';
 import { RiserManager } from '../managers/RiserManager.js';
 import { DebugManager } from '../managers/DebugManager.js';
 import { WallDecorator } from '../managers/WallDecorator.js';
-import { MazeDecorator } from '../managers/MazeDecorator.js';
 import { updatePlatformRider } from '../utils/platformRider.js';
 import EventBus, { Events } from '../core/EventBus.js';
 import GameState from '../core/GameState.js';
@@ -54,7 +53,6 @@ export class Game extends Phaser.Scene {
         this.riserManager = new RiserManager(this);
         this.debugManager = new DebugManager(this);
         this.wallDecorator = new WallDecorator(this);
-        this.mazeDecorator = new MazeDecorator(this);
 
         // --- PHYSICS & CAMERA SETUP ---
         this.input.addPointer(3);

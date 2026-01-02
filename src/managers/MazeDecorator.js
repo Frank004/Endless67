@@ -9,8 +9,8 @@ export class MazeDecorator {
         this.tileSize = 32;
         this.buffer = 0;
         this.pool = [];
-        // Usamos siempre tiles de debug (placeholder) para visualizar cobertura del maze
-        this.debugTiles = true;
+        // Modo debug opcional (placeholder) para visualizar cobertura del maze
+        this.debugTiles = !!scene?.registry?.get('showMazeDebugTiles');
         this.debugTextureKey = 'maze_debug_tile';
         // Frames
         this.plainFrames = [
@@ -32,20 +32,27 @@ export class MazeDecorator {
     }
 
     getTile(frame) {
-        if (this.debugTiles) {
+        const useDebug = this.debugTiles;
+        const textureKey = useDebug ? this.debugTextureKey : 'walls';
+
+        if (useDebug) {
             this.ensureDebugTexture();
-            frame = this.debugTextureKey;
-        } else if (!this.scene.textures.exists('walls')) {
+        } else if (!this.scene.textures.exists(textureKey)) {
             return null;
         }
         let tile = this.pool.find(t => !t.active);
         if (!tile) {
-            tile = this.scene.add.image(0, 0, this.debugTiles ? frame : 'walls', frame);
+            // Para debug texture, no pasar frame (es una textura simple, no un atlas)
+            tile = this.scene.add.image(0, 0, textureKey);
             tile.setOrigin(0.5, 0.5);
             tile.setDepth(11); // encima del bloque del maze (depth 10)
             this.pool.push(tile);
         }
-        tile.setTexture(this.debugTiles ? frame : 'walls', frame);
+        // Para debug texture, no pasar frame (es una textura simple, no un atlas)
+        tile.setTexture(textureKey);
+        if (!useDebug) {
+            tile.setFrame(frame);
+        }
         tile.setActive(true);
         tile.setVisible(true);
         return tile;
@@ -61,6 +68,8 @@ export class MazeDecorator {
     }
 
     decorateBlock(block, width, height) {
+        // Si el decorado visual está deshabilitado, salir inmediatamente
+        if (!this.debugTiles) return;
         if (!block || !block.active) return;
         const ts = this.tileSize;
         // Usamos displayWidth/displayHeight y origin del bloque para alinear el skin exactamente al sprite.
@@ -86,8 +95,11 @@ export class MazeDecorator {
                 else if (isTop && this.topFrames && this.topFrames.length > 0) frame = this.pickRandom(this.topFrames);
                 else if (isBottom && this.bottomFrame) frame = this.bottomFrame;
 
-                const tile = this.getTile(frame);
-                if (tile) tile.setPosition(startX + c * ts, startY + r * ts);
+        const tile = this.getTile(frame);
+        if (tile) {
+            tile.setPosition(startX + c * ts, startY + r * ts);
+            tile.ownerBlock = block;
+        }
             }
         }
     }
@@ -108,5 +120,23 @@ export class MazeDecorator {
         g.strokeRect(0.5, 0.5, this.tileSize - 1, this.tileSize - 1);
         g.generateTexture(this.debugTextureKey, this.tileSize, this.tileSize);
         g.destroy();
+    }
+
+    /**
+     * Limpia tiles que ya no tienen bloque asociado o que quedaron fuera de pantalla.
+     * Esto evita placeholders visibles sin colisión cuando los muros se destruyen.
+     * @param {number} limitY - Y por debajo del cual se limpian los tiles
+     */
+    cleanup(limitY = Infinity) {
+        this.pool.forEach(tile => {
+            const block = tile.ownerBlock;
+            const orphan = !block || block.destroyed || !block.active || !block.body;
+            const outOfView = tile.y > limitY;
+            if (orphan || outOfView) {
+                tile.setActive(false);
+                tile.setVisible(false);
+                tile.ownerBlock = null;
+            }
+        });
     }
 }
