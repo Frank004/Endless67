@@ -142,6 +142,21 @@ export function getPlatformBounds(gameWidth = null) {
 }
 
 /**
+ * Límites seguros para ítems (coins/powerups) considerando paredes y tamaño del ítem.
+ * @param {number} gameWidth
+ * @param {number} itemSize - ancho del ítem (px)
+ * @returns {{minX:number,maxX:number,centerX:number}}
+ */
+export function getItemBounds(gameWidth = null, itemSize = 32) {
+    const actualGameWidth = gameWidth || SLOT_CONFIG.gameWidth;
+    const half = itemSize / 2;
+    const minX = SLOT_CONFIG.wallWidth + WALLS.MARGIN + half;
+    const maxX = actualGameWidth - SLOT_CONFIG.wallWidth - WALLS.MARGIN - half;
+    const centerX = actualGameWidth / 2;
+    return { minX, maxX, centerX };
+}
+
+/**
  * Calcula el número de plataformas que caben en un slot respetando gaps mínimos
  * @param {number} slotHeight - Altura del slot
  * @param {number} minGap - Gap mínimo entre plataformas

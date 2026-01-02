@@ -16,7 +16,7 @@
  * - Cleanup de slots antiguos
  */
 
-import { SLOT_CONFIG, getPlatformBounds } from '../config/SlotConfig.js';
+import { SLOT_CONFIG, getPlatformBounds, getItemBounds } from '../config/SlotConfig.js';
 import { PLATFORM_PATTERNS, getRandomPattern } from '../data/PlatformPatterns.js';
 import { MAZE_PATTERNS_EASY, MAZE_PATTERNS_MEDIUM, MAZE_PATTERNS, MAZE_ROW_HEIGHT } from '../data/MazePatterns.js';
 import { PatternTransformer } from '../utils/PatternTransformer.js';
@@ -441,6 +441,9 @@ export class SlotGenerator {
         const ITEM_SIZE = Math.max(COIN_BASE_SIZE, POWERUP_BASE_SIZE);           // Tamaño base del sprite (32x32px)
         const ITEM_HALF = ITEM_SIZE / 2; // 16px
         const ITEM_DISTANCE = 128;       // Radio de distancia mínima entre items
+        const itemBounds = getItemBounds(this.scene.cameras.main.width, ITEM_SIZE);
+        const minItemX = itemBounds.minX;
+        const maxItemX = itemBounds.maxX;
         
         // Config de POWERUP
         const isDev = this.scene.registry?.get('isDevMode');
@@ -557,7 +560,7 @@ export class SlotGenerator {
             if (Math.random() < 0.4) {  // 40% de chance de item
                 const platformTop = plat.y - (SLOT_CONFIG.platformHeight / 2);
                 const itemY = platformTop - ITEM_HALF - 4;
-                const itemX = plat.x;
+                const itemX = Phaser.Math.Clamp(plat.x, minItemX, maxItemX);
                 
                 // Verificar distancia con otros items
                 if (!tooCloseToOtherItems(itemX, itemY)) {
@@ -581,8 +584,8 @@ export class SlotGenerator {
         
         // Crear grid de posiciones posibles para coins en el aire
         const airCoinPositions = [];
-        const leftWallX = playableLeft + 40;   // 32 + 40 = 72
-        const rightWallX = playableRight - 40; // 368 - 40 = 328
+        const leftWallX = minItemX;
+        const rightWallX = maxItemX;
         
         // Generar posiciones Y cada 128px dentro del slot
         const slotTop = slotYStart - this.slotHeight + 60;
