@@ -57,11 +57,6 @@ export class InputManager {
         // Emit event for jump request (Player will listen to this)
         EventBus.emit(Events.PLAYER_JUMP_REQUESTED, { boost });
 
-        // Play jump sound - delegate to AudioManager
-        if (scene.audioManager) {
-            scene.audioManager.playJumpSound();
-        }
-
         // Player now listens to PLAYER_JUMP_REQUESTED event
         // Removed direct call to prevent double execution
         // const result = scene.player.jump(boost); -> Handled by EventBus listener in Player.js

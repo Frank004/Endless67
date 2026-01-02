@@ -34,6 +34,7 @@ export class PlayerContext {
         this.hitTimer = 0;          // ms
         this.COYOTE_TIME = 120;
         this.JUMP_BUFFER = 150;
+        this.jumpsUsed = 0;         // saltos usados desde el último toque de piso/parede
         this.wallTouchSide = null;
         this.wallTouchCount = 0;
         this.maxWallTouches = 3;
@@ -61,6 +62,7 @@ export class PlayerContext {
         this.jumpBufferTimer = 0;
         this.coyoteTimer = 0;
         this.hitTimer = 0;
+        this.jumpsUsed = 0;
         // Wall counters
         this.wallTouchSide = null;
         this.wallTouchCount = 0;
@@ -91,6 +93,7 @@ export class PlayerContext {
         this.sensors.startedFalling = this.prevVy < 0 && this.sensors.vy > 0;
         if (this.sensors.onFloor) {
             this.coyoteTimer = this.COYOTE_TIME;
+            this.jumpsUsed = 0;
             this.wallTouchSide = null;
             this.wallTouchCount = 0;
             this.wallJumpSide = null;
@@ -129,10 +132,12 @@ export class PlayerContext {
 
     resetForLand() {
         this.flags.canDoubleJump = true;
+        this.jumpsUsed = 0;
     }
 
     useDoubleJump() {
         this.flags.canDoubleJump = false;
+        this.jumpsUsed = 2;
     }
 
     setAirStyleFromInput() {
@@ -148,6 +153,7 @@ export class PlayerContext {
         const boost = style === 'SIDE' ? 1.1 : 1.0;
         const vy = -this.sprite.baseJumpForce * boost * mult;
         this.sprite.jumpPhysics(0, vy);
+        this.jumpsUsed = Math.max(this.jumpsUsed, 1);
         this.flags.canDoubleJump = true;
         const jumpOffsetY = (this.sprite.height || 32) * 0.5;
         return { type: 'jump', x: this.sprite.x, y: this.sprite.y + jumpOffsetY };
@@ -196,7 +202,14 @@ export class PlayerContext {
 
     canAcceptJump() {
         const wallOk = this.sensors.touchWall && this.wallJumpCount < this.maxWallJumps;
-        return this.sensors.onFloor || wallOk || this.hasCoyote() || this.flags.canDoubleJump;
+        // Bloquear nuevos buffers si no hay saltos disponibles (ya se usó el doble salto)
+        const airborneFirstJumpAvailable = !this.sensors.onFloor && !this.sensors.touchWall && this.jumpsUsed < 1;
+        const canJump = this.sensors.onFloor || wallOk || this.hasCoyote() || (airborneFirstJumpAvailable) || (this.flags.canDoubleJump && this.jumpsUsed === 1);
+        if (!canJump) {
+            this.jumpBufferTimer = 0;
+            this.intent.jumpJustPressed = false;
+        }
+        return canJump;
     }
 
     emitJumpEvent(result) {

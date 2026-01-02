@@ -2,7 +2,7 @@ import { PatrolEnemy, ShooterEnemy, JumperShooterEnemy } from '../prefabs/Enemy.
 import { MAZE_PATTERNS, MAZE_PATTERNS_EASY, MAZE_PATTERNS_MEDIUM, MAZE_PATTERNS_HARD, MAZE_PATTERNS_NUMBERED } from '../data/MazePatterns.js';
 import { LEVEL_CONFIG } from '../data/LevelConfig.js';
 import { enablePlatformRider } from '../utils/platformRider.js';
-import { WALLS } from '../config/GameConstants.js';
+import { WALLS, GAME_CONFIG } from '../config/GameConstants.js';
 import { SLOT_CONFIG } from '../config/SlotConfig.js';
 import { MAZE_ROW_HEIGHT } from '../data/MazePatterns.js';
 import { ENEMY_SIZE, PATROL_SPEED_DEFAULT } from '../prefabs/Enemy.js';
@@ -478,11 +478,13 @@ export class LevelManager {
         let type = config.type;
         
         // Escalar dimensiones del maze proporcionalmente al ancho del juego
-        // Los mazes están diseñados para 400px, escalar para mobile (360px) u otros anchos
-        const BASE_GAME_WIDTH = 400;
+        // Los mazes están diseñados para el ancho base (desktop), escalar para mobile u otros anchos
+        const BASE_GAME_WIDTH = GAME_CONFIG.RESOLUTIONS.DESKTOP.width;
         const scaleRatio = gameWidth / BASE_GAME_WIDTH;
-        let w1 = (config.width || 0) * scaleRatio;
-        let w2 = (config.width2 || 0) * scaleRatio;
+        const maxPlayableWidth = Math.max(32, gameWidth - 2 * wallWidth);
+        let w1 = Phaser.Math.Clamp((config.width || 0) * scaleRatio, 32, maxPlayableWidth);
+        let w2 = Phaser.Math.Clamp((config.width2 || 0) * scaleRatio, 32, maxPlayableWidth);
+        const MIN_GAP = 96; // asegurar salida de 96px
 
         // Handle Horizontal Mirroring
         if (this.mazeMirrorX) {
@@ -495,27 +497,60 @@ export class LevelManager {
 
         const rowHeight = SLOT_CONFIG?.types?.MAZE?.rowHeight || MAZE_ROW_HEIGHT;
 
+        const blocksDecor = [];
         // Spawn Walls based on type (maze walls are created from screen edges, but items must respect side walls)
-        if (type === 'left') {
-            let block = scene.mazeWalls.create(0, y, 'maze_block');
-            block.setOrigin(0, 0.5).setDisplaySize(w1, rowHeight).refreshBody().setDepth(10);
-            if (tintColor) block.setTint(tintColor);
-        } else if (type === 'right') {
-            let block = scene.mazeWalls.create(gameWidth, y, 'maze_block');
-            block.setOrigin(1, 0.5).setDisplaySize(w1, rowHeight).refreshBody().setDepth(10);
-            if (tintColor) block.setTint(tintColor);
-        } else if (type === 'split') {
-            let b1 = scene.mazeWalls.create(0, y, 'maze_block');
-            b1.setOrigin(0, 0.5).setDisplaySize(w1, rowHeight).refreshBody().setDepth(10);
-            if (tintColor) b1.setTint(tintColor);
+        const leftX = wallWidth; // respetar pared izquierda (32px)
+        const rightX = gameWidth - wallWidth; // respetar pared derecha
 
-            let b2 = scene.mazeWalls.create(gameWidth, y, 'maze_block');
-            b2.setOrigin(1, 0.5).setDisplaySize(w2, rowHeight).refreshBody().setDepth(10);
-            if (tintColor) b2.setTint(tintColor);
+        // Ajustar anchos efectivos para compensar el corrimiento hacia dentro (margen de pared)
+        let w1Eff = w1;
+        let w2Eff = w2;
+        const playableWidth = gameWidth - 2 * wallWidth;
+        if (type === 'left' || type === 'right') {
+            const maxWidthSide = Math.max(32, playableWidth - MIN_GAP);
+            w1Eff = Math.max(32, Math.min(w1 - wallWidth, maxWidthSide));
+        } else if (type === 'split') {
+            w1Eff = Math.max(32, w1 - wallWidth);
+            w2Eff = Math.max(32, w2 - wallWidth);
+            const maxTotal = Math.max(64, playableWidth - MIN_GAP);
+            const total = w1Eff + w2Eff;
+            if (total > maxTotal) {
+                const scale = maxTotal / total;
+                w1Eff = Math.max(32, Math.floor(w1Eff * scale));
+                w2Eff = Math.max(32, Math.floor(w2Eff * scale));
+            }
+        }
+        if (type === 'center') {
+            const maxCenter = Math.max(32, playableWidth - MIN_GAP);
+            w1 = Math.min(w1, maxCenter);
+        }
+
+        if (type === 'left') {
+            let block = scene.mazeWalls.create(leftX, y, 'maze_block');
+            block.setOrigin(0, 0.5).setDisplaySize(w1Eff, rowHeight).refreshBody().setDepth(10);
+            blocksDecor.push({ block, width: w1Eff, height: rowHeight });
+        } else if (type === 'right') {
+            let block = scene.mazeWalls.create(rightX, y, 'maze_block');
+            block.setOrigin(1, 0.5).setDisplaySize(w1Eff, rowHeight).refreshBody().setDepth(10);
+            blocksDecor.push({ block, width: w1Eff, height: rowHeight });
+        } else if (type === 'split') {
+            let b1 = scene.mazeWalls.create(leftX, y, 'maze_block');
+            b1.setOrigin(0, 0.5).setDisplaySize(w1Eff, rowHeight).refreshBody().setDepth(10);
+            let b2 = scene.mazeWalls.create(rightX, y, 'maze_block');
+            b2.setOrigin(1, 0.5).setDisplaySize(w2Eff, rowHeight).refreshBody().setDepth(10);
+            blocksDecor.push({ block: b1, width: w1Eff, height: rowHeight });
+            blocksDecor.push({ block: b2, width: w2Eff, height: rowHeight });
         } else if (type === 'center') {
             let block = scene.mazeWalls.create(centerX, y, 'maze_block');
             block.setOrigin(0.5, 0.5).setDisplaySize(w1, rowHeight).refreshBody().setDepth(10);
-            if (tintColor) block.setTint(tintColor);
+            blocksDecor.push({ block, width: w1, height: rowHeight });
+        }
+
+        // Decorado visual
+        if (scene.mazeDecorator) {
+            blocksDecor.forEach(b => {
+                scene.mazeDecorator.decorateBlock(b.block, b.width, b.height);
+            });
         }
 
         // Spawning Items/Enemies - must respect side walls
@@ -529,16 +564,16 @@ export class LevelManager {
         if (type === 'left') {
             gapStart = Math.max(wallWidth, w1); // Respect left wall
             gapEnd = gameWidth - wallWidth; // Respect right wall
-            wallSegments.push({ min: wallWidth, max: Math.min(w1, gameWidth - wallWidth) }); // Wall segment within playable area
+            wallSegments.push({ min: wallWidth, max: Math.min(w1Eff, gameWidth - wallWidth) }); // Wall segment within playable area
         } else if (type === 'right') {
             gapStart = wallWidth; // Respect left wall
-            gapEnd = Math.min(gameWidth - wallWidth, gameWidth - w1); // Respect right wall and maze wall
-            wallSegments.push({ min: Math.max(wallWidth, gameWidth - w1), max: gameWidth - wallWidth }); // Wall segment within playable area
+            gapEnd = Math.min(gameWidth - wallWidth, gameWidth - w1Eff); // Respect right wall and maze wall
+            wallSegments.push({ min: Math.max(wallWidth, gameWidth - w1Eff), max: gameWidth - wallWidth }); // Wall segment within playable area
         } else if (type === 'split') {
-            gapStart = Math.max(wallWidth, w1); // Respect left wall
-            gapEnd = Math.min(gameWidth - wallWidth, gameWidth - w2); // Respect right wall
-            wallSegments.push({ min: wallWidth, max: Math.min(w1, gameWidth - wallWidth) }); // Left wall segment
-            wallSegments.push({ min: Math.max(wallWidth, gameWidth - w2), max: gameWidth - wallWidth }); // Right wall segment
+            gapStart = Math.max(wallWidth, w1Eff); // Respect left wall
+            gapEnd = Math.min(gameWidth - wallWidth, gameWidth - w2Eff); // Respect right wall
+            wallSegments.push({ min: wallWidth, max: Math.min(w1Eff, gameWidth - wallWidth) }); // Left wall segment
+            wallSegments.push({ min: Math.max(wallWidth, gameWidth - w2Eff), max: gameWidth - wallWidth }); // Right wall segment
         } else if (type === 'center') {
             const leftGapEnd = centerX - w1 / 2;
             const rightGapStart = centerX + w1 / 2;
@@ -640,8 +675,8 @@ export class LevelManager {
 
                     if (!segment || !segment.min || !segment.max) continue;
 
-                    let safeMin = segment.min + 20;
-                    let safeMax = segment.max - 20;
+                    let safeMin = segment.min + 10;
+                    let safeMax = segment.max - 10;
 
                     if (safeMax > safeMin + 20) {
                         let enemyX = Phaser.Math.Between(safeMin, safeMax);
@@ -660,7 +695,7 @@ export class LevelManager {
                             const enemy = scene.patrolEnemyPool.spawn(enemyX, enemyY);
                             if (scene.patrolEnemies) scene.patrolEnemies.add(enemy, true);
                             if (enemy && enemy.active && enemy.setPatrolBounds) {
-                                const margin = 6;
+                                const margin = 4;
                                 const minBound = safeMin + margin;
                                 const maxBound = safeMax - margin;
                                 if (minBound < maxBound) {

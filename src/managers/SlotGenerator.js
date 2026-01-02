@@ -65,6 +65,10 @@ export class SlotGenerator {
         for (let i = 0; i < SLOT_CONFIG.rules.tutorialSlots; i++) {
             this.generateNextSlot({ tutorialIndex: i });
         }
+        // Garantizar al menos 3 slots iniciales para evitar huecos de arranque
+        while (this.slots.length < 3) {
+            this.generateNextSlot();
+        }
         
         console.log(`✅ SlotGenerator: ${this.slots.length} slots iniciales generados`);
     }
@@ -79,7 +83,18 @@ export class SlotGenerator {
             slotYStart = this.startY;
         } else {
             const lastSlot = this.slots[this.slots.length - 1];
-            slotYStart = lastSlot.yEnd - SLOT_CONFIG.minVerticalGap;
+            // Asegurar que usamos la altura estándar del slot para el cálculo
+            const lastSlotHeight = lastSlot.height || lastSlot.contentHeight || SLOT_CONFIG.slotHeight;
+            const lastSlotYEnd = lastSlot.yEnd || (lastSlot.yStart - lastSlotHeight);
+            slotYStart = lastSlotYEnd - SLOT_CONFIG.minVerticalGap;
+            
+            // Validación: asegurar que slotYStart sea válido
+            if (!isFinite(slotYStart) || isNaN(slotYStart)) {
+                console.error(`❌ ERROR: slotYStart inválido calculado. lastSlot:`, lastSlot);
+                // Fallback: usar altura estándar
+                const fallbackYEnd = lastSlot.yStart - SLOT_CONFIG.slotHeight;
+                slotYStart = fallbackYEnd - SLOT_CONFIG.minVerticalGap;
+            }
         }
 
         const slotType = this.determineSlotType();
@@ -119,7 +134,7 @@ export class SlotGenerator {
         }
         
         // Registrar slot
-        this.slots.push({
+        const slotData = {
             index: this.currentSlotIndex,
             type: slotType,
             yStart: slotYStart,
@@ -128,7 +143,20 @@ export class SlotGenerator {
             contentHeight,
             slotHeight,
             ...result
-        });
+        };
+        
+        this.slots.push(slotData);
+        
+        // Log del slot registrado para debugging
+        if (verbose || this.slots.length <= 2) {
+            console.log(`✅ Slot ${this.currentSlotIndex} registrado:`, {
+                type: slotType,
+                yStart: slotYStart.toFixed(2),
+                yEnd: slotYEnd.toFixed(2),
+                height: slotHeight.toFixed(2),
+                contentHeight: contentHeight.toFixed(2)
+            });
+        }
 
         this.currentSlotIndex++;
     }
@@ -245,7 +273,12 @@ export class SlotGenerator {
         // Verificar que el slotYStart sea válido (no negativo infinito o NaN)
         if (!isFinite(slotYStart) || isNaN(slotYStart)) {
             console.error(`❌ ERROR: slotYStart inválido: ${slotYStart}`);
-            return { patternName: 'ERROR', transform: 'none', platformCount: 0, movingPlatforms: 0 };
+            return { patternName: 'ERROR', transform: 'none', platformCount: 0, movingPlatforms: 0, contentHeight: SLOT_CONFIG.slotHeight };
+        }
+        
+        // Log inicial del slot para debugging
+        if (verbose) {
+            console.log(`  📍 Slot Y: ${slotYStart.toFixed(2)}, Gap: ${gap}px, Platformas: ${platformCount}`);
         }
         
         for (let i = 0; i < platformCount; i++) {
@@ -351,7 +384,20 @@ export class SlotGenerator {
             }
             
             // Siguiente Y (siempre 160px arriba)
+            const previousY = currentY;
             currentY -= gap;
+            
+            // Validar que el cálculo de Y sea correcto
+            if (!isFinite(currentY) || isNaN(currentY)) {
+                console.error(`  ❌ ERROR: currentY inválido después de plataforma ${i + 1}. previousY=${previousY}, gap=${gap}`);
+                break;
+            }
+            
+            // Validar que el gap sea correcto
+            const actualGap = previousY - currentY;
+            if (Math.abs(actualGap - gap) > 1) {
+                console.warn(`  ⚠️ Gap inesperado en plataforma ${i + 1}. Esperado: ${gap}, Actual: ${actualGap.toFixed(2)}`);
+            }
         }
 
         // Fallback duro: si no se generó ninguna plataforma (por clamps extremos), crear un set seguro al centro
@@ -581,23 +627,27 @@ export class SlotGenerator {
             console.log(logMsg);
         }
         
-        // Calcular altura real del contenido (mínima Y relativa)
-        let contentHeight = SLOT_CONFIG.slotHeight;
-        if (spawnedPlatforms.length > 0) {
-            const lowestY = Math.min(...spawnedPlatforms.map(p => p.y));
-            contentHeight = (slotYStart - lowestY) + SLOT_CONFIG.platformHeight;
-        }
+        // Calcular altura real del contenido (basado en plataformas reales)
+        let contentHeight = SLOT_CONFIG.slotHeight; // fallback
 
-        // Clamp de seguridad para evitar gaps/solapes por alturas anómalas
-        const minSafe = SLOT_CONFIG.slotHeight * 0.7;  // 448
-        const maxSafe = SLOT_CONFIG.slotHeight * 1.1;  // 704
-        let clampedContentHeight = contentHeight;
-        if (contentHeight < minSafe || contentHeight > maxSafe) {
-            clampedContentHeight = Phaser.Math.Clamp(contentHeight, minSafe, maxSafe);
+        // Verificar que las plataformas estén en las posiciones correctas
+        if (spawnedPlatforms.length > 0) {
+            const highestY = Math.min(...spawnedPlatforms.map(p => p.y)); // Y más pequeño = más arriba
+            const lowestY = Math.max(...spawnedPlatforms.map(p => p.y)); // Y más grande = más abajo
+            
+            // Calcular altura real usada por las plataformas
+            const actualHeight = (slotYStart - highestY) + SLOT_CONFIG.platformHeight;
+            
+            // Validar que las plataformas estén dentro del slot esperado
+            const expectedHeight = (platformCount - 1) * gap + SLOT_CONFIG.platformHeight;
+            const heightDiff = Math.abs(actualHeight - expectedHeight);
+            
             const verbose = this.scene?.registry?.get('showSlotLogs');
-            if (verbose) {
-                console.warn(`⚠️ SlotGenerator: contentHeight fuera de rango (${contentHeight.toFixed(2)}). Clamp a ${clampedContentHeight.toFixed(2)}. slotYStart=${slotYStart}`);
+            if (heightDiff > 10 && verbose) {
+                console.warn(`⚠️ SlotGenerator: Altura de plataformas inesperada. Esperada: ${expectedHeight}, Actual: ${actualHeight.toFixed(2)}, Diff: ${heightDiff.toFixed(2)}`);
             }
+            // Usar la altura real (o la esperada si algo falló) para encadenar slots sin gaps extra
+            contentHeight = isFinite(actualHeight) ? actualHeight : expectedHeight;
         }
 
         return {
@@ -605,7 +655,7 @@ export class SlotGenerator {
             transform,
             platformCount,
             movingPlatforms: numMovingPlatforms,
-            contentHeight: clampedContentHeight
+            contentHeight: contentHeight
         };
     }
 
@@ -716,15 +766,55 @@ export class SlotGenerator {
         try {
             this.isGenerating = true;
             let lastSlot = this.slots[this.slots.length - 1];
+            
+            // Si no hay slots, generar el primero
+            if (!lastSlot) {
+                console.warn('⚠️ SlotGenerator: No hay slots, generando primero...');
+                this.generateNextSlot();
+                lastSlot = this.slots[this.slots.length - 1];
+            }
+            
+            // Debug: mostrar estado actual (solo para primeros slots)
+            if (this.slots.length <= 2) {
+                const playerHeight = Math.floor((400 - playerY) / 10);
+                // Log verbose only when registry flag is true
+                const verbose = this.scene.registry.get('showSlotLogs');
+                if (verbose) {
+                    console.log(`📊 SlotGenerator update: slots=${this.slots.length}, playerY=${playerY.toFixed(2)}, playerHeight=${playerHeight}m, lastSlot.yEnd=${lastSlot ? lastSlot.yEnd.toFixed(2) : 'N/A'}`);
+                }
+            }
+            
             while (lastSlot) {
-                const spawnThreshold = lastSlot.yEnd + this.spawnBuffer;
+                // Calcular threshold: cuando el jugador está a spawnBuffer px del final del slot
+                // En Phaser, Y aumenta hacia abajo, así que:
+                // - playerY negativo = más arriba
+                // - lastSlot.yEnd es negativo (más arriba que yStart)
+                // - spawnThreshold debe estar más abajo (más positivo) que yEnd para generar antes
+                // - Cuando el jugador sube (playerY disminuye), eventualmente llegará al threshold
+                // - Generamos cuando playerY está cerca de yEnd (dentro del buffer)
+                const spawnThreshold = lastSlot.yEnd + this.spawnBuffer; // Más abajo que yEnd
+                
+                // Si el jugador está más arriba (Y más negativo/más pequeño) que el threshold, generar nuevo slot
+                // Esto significa que el jugador se acercó lo suficiente al final del slot
+                // playerY < spawnThreshold significa que el jugador está más arriba que el threshold
                 if (playerY < spawnThreshold) {
+                    const verbose = this.scene?.registry?.get('showSlotLogs');
+                    if (verbose) {
+                        console.log(`🎯 Generando slot: playerY=${playerY.toFixed(2)}, lastSlot.yEnd=${lastSlot.yEnd.toFixed(2)}, threshold=${spawnThreshold.toFixed(2)}`);
+                    }
                     this.generateNextSlot();
                     lastSlot = this.slots[this.slots.length - 1];
                 } else {
+                    // Debug: mostrar por qué no se genera
+                    const verbose = this.scene?.registry?.get('showSlotLogs');
+                    if (verbose && this.slots.length === 1) {
+                        console.log(`⏸️ No generando slot: playerY=${playerY.toFixed(2)}, lastSlot.yEnd=${lastSlot.yEnd.toFixed(2)}, threshold=${spawnThreshold.toFixed(2)}, diff=${(spawnThreshold - playerY).toFixed(2)}`);
+                    }
                     break;
                 }
             }
+        } catch (error) {
+            console.error('❌ Error en SlotGenerator.update():', error);
         } finally {
             this.isGenerating = false;
         }

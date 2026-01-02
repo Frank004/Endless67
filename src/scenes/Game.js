@@ -12,6 +12,8 @@ import { AudioManager } from '../managers/AudioManager.js';
 import { ParticleManager } from '../managers/ParticleManager.js';
 import { RiserManager } from '../managers/RiserManager.js';
 import { DebugManager } from '../managers/DebugManager.js';
+import { WallDecorator } from '../managers/WallDecorator.js';
+import { MazeDecorator } from '../managers/MazeDecorator.js';
 import { updatePlatformRider } from '../utils/platformRider.js';
 import EventBus, { Events } from '../core/EventBus.js';
 import GameState from '../core/GameState.js';
@@ -51,6 +53,8 @@ export class Game extends Phaser.Scene {
         this.particleManager = new ParticleManager(this);
         this.riserManager = new RiserManager(this);
         this.debugManager = new DebugManager(this);
+        this.wallDecorator = new WallDecorator(this);
+        this.mazeDecorator = new MazeDecorator(this);
 
         // --- PHYSICS & CAMERA SETUP ---
         this.input.addPointer(3);
@@ -85,6 +89,7 @@ export class Game extends Phaser.Scene {
 
         // --- WALLS ---
         this.createWalls();
+        this.updateWalls(); // forzar primer render visual de paredes
 
         // --- DEBUG SETUP (ANTES DE CREAR PLAYER) ---
         // Configurar toggle de Player PNG ANTES de crear el player
@@ -427,15 +432,28 @@ export class Game extends Phaser.Scene {
         const wallYOffset = WALLS.Y_OFFSET;
         const wallDepth = WALLS.DEPTH;
 
+        // Texture segura para los tileSprites (evita el checkerboard cuando no hay textura 'wall')
+        if (!this.textures.exists('wall_placeholder')) {
+            const g = this.make.graphics({ x: 0, y: 0 });
+            g.fillStyle(0xffffff, 0);
+            g.fillRect(0, 0, 2, 2);
+            g.generateTexture('wall_placeholder', 2, 2);
+            g.destroy();
+        }
+
         // Crear paredes: leftWall en x=0, rightWall en x=gameWidth
         // Usar setOrigin(0, 0.5) para leftWall y setOrigin(1, 0.5) para rightWall
         // para que el sprite visual esté correctamente posicionado
-        this.leftWall = this.add.tileSprite(0, wallYOffset, wallWidth, wallHeight, 'wall')
+        this.leftWall = this.add.tileSprite(0, wallYOffset, wallWidth, wallHeight, 'wall_placeholder')
             .setOrigin(0, 0.5)
-            .setDepth(wallDepth);
-        this.rightWall = this.add.tileSprite(gameWidth, wallYOffset, wallWidth, wallHeight, 'wall')
+            .setDepth(wallDepth)
+            .setVisible(false)
+            .setAlpha(0); // ocultamos placeholder visual
+        this.rightWall = this.add.tileSprite(gameWidth, wallYOffset, wallWidth, wallHeight, 'wall_placeholder')
             .setOrigin(1, 0.5)
-            .setDepth(wallDepth);
+            .setDepth(wallDepth)
+            .setVisible(false)
+            .setAlpha(0);
 
         // Agregar física a las paredes (static = true para que sean inamovibles)
         this.physics.add.existing(this.leftWall, true);
@@ -485,6 +503,7 @@ export class Game extends Phaser.Scene {
         if (this.leftWall && this.leftWall.active && this.leftWall.body) {
             this.leftWall.y = this.cameras.main.scrollY + wallYOffset;
             this.leftWall.x = 0;
+            this.leftWall.setVisible(false).setAlpha(0);
             // Asegurar que el body mantenga su offset correcto
             this.leftWall.body.setOffset(0, -WALLS.HEIGHT / 2);
             this.leftWall.body.updateFromGameObject();
@@ -493,9 +512,15 @@ export class Game extends Phaser.Scene {
         if (this.rightWall && this.rightWall.active && this.rightWall.body) {
             this.rightWall.y = this.cameras.main.scrollY + wallYOffset;
             this.rightWall.x = gameWidth;
+            this.rightWall.setVisible(false).setAlpha(0);
             // Asegurar que el body mantenga su offset correcto
             this.rightWall.body.setOffset(-wallWidth, -WALLS.HEIGHT / 2);
             this.rightWall.body.updateFromGameObject();
+        }
+
+        // Decorado visual de paredes
+        if (this.wallDecorator) {
+            this.wallDecorator.update(this.cameras.main.scrollY);
         }
     }
 

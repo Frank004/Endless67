@@ -47,6 +47,9 @@ export class Boot extends Phaser.Scene {
         // Overlay del powerup 67 (animación especial)
         this.load.multiatlas('basketball_powerup', 'assets/spritesheets/basketball_powerup.json', 'assets/spritesheets');
 
+        // --- WALLS SPRITESHEET (LEFT/RIGHT) ---
+        this.load.multiatlas('walls', 'assets/spritesheets/walls.json', 'assets/spritesheets');
+
         // --- PLAYER SPRITE (PNG Placeholder) ---
         // Cargar PNG si existe. Si no existe, se usará el placeholder generado.
         // Toggle: Cambiar usePlayerPNG en DebugManager para activar/desactivar
@@ -140,9 +143,6 @@ export class Boot extends Phaser.Scene {
         g.clear(); g.fillStyle(0x222222, 1); g.fillRect(0, 0, 100, 60);
         g.beginPath(); g.lineStyle(4, 0x444444, 1); g.moveTo(0, 0); g.lineTo(100, 0); g.moveTo(0, 60); g.lineTo(100, 60); g.strokePath();
         g.generateTexture('maze_block', 100, 60);
-
-        // Entorno
-        g.clear(); g.fillStyle(0x222222, 1); g.fillRect(0, 0, 32, 64); g.generateTexture('wall', 32, 64);
 
         // Riser textures: usar ancho del juego dinámicamente, altura suficiente para tileable
         const riserTextureWidth = this.game.config.width;

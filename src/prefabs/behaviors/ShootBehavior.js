@@ -6,33 +6,24 @@ export class ShootBehavior {
         this.enemy = enemy;
         this.timer = null;
         this.projectilesGroup = null;
-        this.minDelay = Math.floor(1200 * 0.85); // +15% velocidad
-        this.maxDelay = Math.floor(2200 * 0.85);
-        this.shotCount = 1; // configurable
+        this.minDelay = 1200;
+        this.maxDelay = 2200;
+        this.shotCount = 1; // fijo (sin escalado por altura)
     }
 
     startShooting(projectilesGroup, currentHeight = 0) {
         this.stopShooting();
         this.projectilesGroup = projectilesGroup;
-        this.updateDifficulty(currentHeight);
+        // Sin escalado por altura por ahora
         this.fireOnce();
         this.scheduleNext();
     }
 
     updateDifficulty(currentHeight = 0) {
-        if (currentHeight > 6000) {
-            this.minDelay = Math.floor(800 * 0.85);
-            this.maxDelay = Math.floor(1400 * 0.85);
-            this.shotCount = 3;
-        } else if (currentHeight > 4000) {
-            this.minDelay = Math.floor(1000 * 0.85);
-            this.maxDelay = Math.floor(1800 * 0.85);
-            this.shotCount = 2;
-        } else {
-            this.minDelay = Math.floor(1200 * 0.85);
-            this.maxDelay = Math.floor(2200 * 0.85);
-            this.shotCount = 1;
-        }
+        // No-op: sin escalado por altura
+        this.minDelay = 1200;
+        this.maxDelay = 2200;
+        this.shotCount = 1;
     }
 
     scheduleNext() {

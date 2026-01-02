@@ -111,6 +111,10 @@ export class Player extends Phaser.Physics.Arcade.Sprite {
         const jumpListener = () => {
             if (this.controller) {
                 this.controller.context.intent.jumpJustPressed = true;
+                // Solo reproducir sonido si hay saltos disponibles
+                if (this.controller.context.canAcceptJump() && this.scene.audioManager) {
+                    this.scene.audioManager.playJumpSound();
+                }
             }
         };
         EventBus.on(Events.PLAYER_JUMP_REQUESTED, jumpListener);

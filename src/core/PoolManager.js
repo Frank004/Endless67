@@ -122,13 +122,26 @@ export class PoolManager {
             this.active.splice(index, 1);
         }
 
-        // Desactivar objeto
-        obj.setActive(false);
-        obj.setVisible(false);
-
-        // Llamar método de limpieza si existe
+        // Llamar método de limpieza ANTES de desactivar
+        // Esto asegura que el objeto y su body todavía existan cuando se limpia el estado
         if (obj.despawn && typeof obj.despawn === 'function') {
-            obj.despawn();
+            try {
+                obj.despawn();
+            } catch (e) {
+                console.warn('PoolManager.despawn: Error al llamar obj.despawn():', e);
+            }
+        }
+
+        // Desactivar objeto (después de limpiar estado)
+        try {
+            if (typeof obj.setActive === 'function') {
+                obj.setActive(false);
+            }
+            if (typeof obj.setVisible === 'function') {
+                obj.setVisible(false);
+            }
+        } catch (e) {
+            console.warn('PoolManager.despawn: Error al desactivar objeto:', e);
         }
 
         // Devolver al pool
