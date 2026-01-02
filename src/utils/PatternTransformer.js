@@ -26,6 +26,7 @@ export class PatternTransformer {
      * @param {number} gameWidth - Nuevo ancho del juego
      */
     setGameWidth(gameWidth) {
+        if (!gameWidth || gameWidth === this.gameWidth) return;
         this.gameWidth = gameWidth;
         this.centerX = gameWidth / 2;
     }

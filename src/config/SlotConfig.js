@@ -129,10 +129,14 @@ export const SLOT_CONFIG = {
 export function getPlatformBounds(gameWidth = null) {
     const actualGameWidth = gameWidth || SLOT_CONFIG.gameWidth;
     const halfWidth = SLOT_CONFIG.platformWidth / 2;  // 64
-    // Usar el mismo margen que LevelManager para evitar desalineación
-    const minX = SLOT_CONFIG.wallWidth + WALLS.MARGIN + halfWidth; // 32 + 28 + 64 = 124
-    const maxX = actualGameWidth - SLOT_CONFIG.wallWidth - WALLS.MARGIN - halfWidth;
-    const centerX = actualGameWidth / 2;
+    const margin = SLOT_CONFIG.wallWidth + WALLS.MARGIN;
+    const usableWidth = actualGameWidth - margin * 2;
+    // Si la pantalla es muy estrecha (mobile), evitar que minX supere a maxX
+    const clampedHalf = usableWidth > halfWidth * 2 ? halfWidth : Math.max(usableWidth / 2, 0);
+    const minX = margin + clampedHalf;
+    const maxX = actualGameWidth - margin - clampedHalf;
+    const centerRaw = actualGameWidth / 2;
+    const centerX = Math.max(minX, Math.min(maxX, centerRaw));
     
     return {
         minX,
@@ -150,9 +154,13 @@ export function getPlatformBounds(gameWidth = null) {
 export function getItemBounds(gameWidth = null, itemSize = 32) {
     const actualGameWidth = gameWidth || SLOT_CONFIG.gameWidth;
     const half = itemSize / 2;
-    const minX = SLOT_CONFIG.wallWidth + WALLS.MARGIN + half;
-    const maxX = actualGameWidth - SLOT_CONFIG.wallWidth - WALLS.MARGIN - half;
-    const centerX = actualGameWidth / 2;
+    const margin = SLOT_CONFIG.wallWidth + WALLS.MARGIN;
+    const usableWidth = actualGameWidth - margin * 2;
+    const clampedHalf = usableWidth > itemSize ? half : Math.max(usableWidth / 2, 0);
+    const minX = margin + clampedHalf;
+    const maxX = actualGameWidth - margin - clampedHalf;
+    const centerRaw = actualGameWidth / 2;
+    const centerX = Math.max(minX, Math.min(maxX, centerRaw));
     return { minX, maxX, centerX };
 }
 

@@ -77,6 +77,12 @@ export class SlotGenerator {
      * Genera el siguiente slot basado en reglas
      */
     generateNextSlot(options = {}) {
+        // Mantener el ancho dinámico para clamps en mobile/resize
+        const cam = this.scene?.cameras?.main;
+        const currentWidth = cam?.worldView?.width || cam?.width;
+        if (currentWidth) {
+            this.transformer.setGameWidth(currentWidth);
+        }
         // Calcular Y del slot usando el final del anterior menos el gap mínimo
         let slotYStart;
         if (this.slots.length === 0) {
