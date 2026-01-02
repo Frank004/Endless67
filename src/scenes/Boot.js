@@ -44,17 +44,15 @@ export class Boot extends Phaser.Scene {
         // --- BASKETBALL SPRITE SHEET (POWERUP) ---
         // Cargar sprite sheet del basketball usando multiatlas (formato TexturePacker)
         this.load.multiatlas('basketball', 'assets/spritesheets/basketball.json', 'assets/spritesheets');
-        // Overlay del powerup 67 (animación especial)
-        this.load.multiatlas('basketball_powerup', 'assets/spritesheets/basketball_powerup.json', 'assets/spritesheets');
 
         // --- WALLS SPRITESHEET (LEFT/RIGHT) ---
         this.load.multiatlas('walls', 'assets/spritesheets/walls.json', 'assets/spritesheets');
         this.load.multiatlas('floor', 'assets/spritesheets/floor.json', 'assets/spritesheets');
 
-        // --- PLAYER SPRITE (PNG Placeholder) ---
-        // Cargar PNG si existe. Si no existe, se usará el placeholder generado.
-        // Toggle: Cambiar usePlayerPNG en DebugManager para activar/desactivar
-        // Ruta esperada: assets/images/player_32x32.png
+        // --- PLAYER SPRITES ---
+        // Atlas del player (prioridad)
+        this.load.multiatlas('player', 'assets/spritesheets/player.json', 'assets/spritesheets');
+        // PNG opcional como fallback manual (se usa solo si no hay atlas)
         try {
             this.load.image('player_png', 'assets/images/player_32x32.png');
         } catch (error) {
@@ -72,30 +70,86 @@ export class Boot extends Phaser.Scene {
         // Generate Textures
         let g = this.make.graphics({ x: 0, y: 0 });
 
-        // Player Sprite - Toggle entre PNG y placeholder generado
-        // Toggle controlado por DebugManager.usePlayerPNG
-        // Para cambiar: modifica usePlayerPNG en src/managers/DebugManager.js
+        // Player Sprite - Atlas > PNG > placeholder generado
         const usePlayerPNG = this.registry.get('usePlayerPNG') !== false; // Default: true (usar PNG si existe)
-
-        // Verificar si el PNG se cargó correctamente
+        const atlasLoaded = this.textures.exists('player');
         const pngLoaded = this.textures.exists('player_png');
 
-        // Siempre generar placeholder 'player' como fallback
+        // Placeholder (solo si no hay atlas/PNG)
         const PLAYER_SIZE = 32;
         g.fillStyle(0x00ffff, 1);
         g.fillRoundedRect(0, 0, PLAYER_SIZE, PLAYER_SIZE, 8);
         g.lineStyle(2, 0xffffff, 0.8);
         g.strokeRoundedRect(0, 0, PLAYER_SIZE, PLAYER_SIZE, 8);
-        g.generateTexture('player', PLAYER_SIZE, PLAYER_SIZE);
+        g.generateTexture('player_placeholder', PLAYER_SIZE, PLAYER_SIZE);
 
         // Log del estado
-        if (usePlayerPNG && pngLoaded) {
+        if (atlasLoaded) {
+            console.log('✅ Player atlas disponible (usando frames IDLE)');
+        } else if (usePlayerPNG && pngLoaded) {
             console.log('✅ Player PNG disponible (32x32px) - Se usará si toggle está activo');
         } else if (!usePlayerPNG) {
             console.log('🎨 Usando Player placeholder generado (toggle desactivado)');
         } else {
             console.log('⚠️ PNG no encontrado, usando placeholder generado');
             console.log('   Coloca tu PNG en: assets/images/player_32x32.png');
+        }
+
+        // Registrar animaciones del player (si hay atlas)
+        if (atlasLoaded && this.anims) {
+            const playerTex = this.textures.get('player');
+            const hasFrame = (f) => playerTex.has(f);
+            const makeAnim = (key, frameNames, frameRate = 10, repeat = -1) => {
+                if (this.anims.exists(key)) return;
+                const frames = frameNames.filter(hasFrame).map(f => ({ key: 'player', frame: f }));
+                if (frames.length > 0) {
+                    this.anims.create({ key, frames, frameRate, repeat });
+                }
+            };
+
+            makeAnim('player_idle', ['IDLE 1.png', 'IDLE 2.png', 'IDLE 3.png'], 6, -1);
+            makeAnim('player_run', ['running-01.png', 'running-02.png', 'running-03.png', 'running-04.png', 'running-05.png'], 12, -1);
+            makeAnim('player_run_stop', ['stop-running-01.png', 'stop-running-02.png', 'stop-running-03.png'], 12, 0);
+            makeAnim('player_jump_up', ['jump-01.png', 'jump-02.png', 'jump-03.png'], 12, 0);
+            makeAnim('player_jump_side', ['jump-01.png', 'jump-02.png', 'jump-03.png'], 12, 0);
+            makeAnim('player_jump_wall', ['jump-04.png', 'jump-05.png'], 10, 0);
+            makeAnim('player_fall', ['jump-05.png'], 1, -1);
+            makeAnim('player_wall_slide', ['tocando pared.png'], 1, -1);
+            makeAnim('player_hit', ['hit-01.png', 'hit-02.png'], 10, 0);
+            // Animación de powerup: usa frames dentro del atlas del player (basketball_powerup-01..16)
+            const powerFrameOrder = [
+                'basketball_powerup-01.png',
+                'basketball_powerup-02.png',
+                'basketball_powerup-03.png',
+                'basketball_powerup-04.png',
+                'basketball_powerup-05.png',
+                'basketball_powerup-06.png',
+                'basketball_powerup-07.png',
+                'basketball_powerup-08.png',
+                'basketball_powerup-09.png',
+                'basketball_powerup-10.png',
+                'basketball_powerup-11.png',
+                'basketball_powerup-12.png',
+                'basketball_powerup-13.png',
+                'basketball_powerup-14.png',
+                'basketball_powerup-15.png',
+                'basketball_powerup-16.png'
+            ];
+            const powerFrames = powerFrameOrder.filter(hasFrame).flatMap(f => {
+                // Duplicar frames 05 y 06 para hold extra
+                if (f === 'basketball_powerup-05.png' || f === 'basketball_powerup-06.png') {
+                    return [{ key: 'player', frame: f }, { key: 'player', frame: f }];
+                }
+                return { key: 'player', frame: f };
+            });
+            if (powerFrames.length > 0 && !this.anims.exists('player_powerup')) {
+                this.anims.create({
+                    key: 'player_powerup',
+                    frames: powerFrames,
+                    frameRate: 10,
+                    repeat: 0
+                });
+            }
         }
 
         // Platform - DIMENSIONES CORRECTAS: 128x32

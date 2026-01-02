@@ -5,7 +5,8 @@
  */
 export class PowerupOverlay extends Phaser.GameObjects.Sprite {
     constructor(scene, player) {
-        super(scene, 0, 0, 'basketball_powerup');
+        // Usar atlas 'basketball' como fuente de frames (ya cargado)
+        super(scene, 0, 0, 'basketball', 'basketball 1.png');
         this.scene = scene;
         this.player = player;
 
@@ -30,41 +31,31 @@ export class PowerupOverlay extends Phaser.GameObjects.Sprite {
     ensureAnimation() {
         if (this.scene.anims.exists('powerup67_overlay')) return;
 
-        const texture = this.scene.textures.get('basketball_powerup');
-        if (!texture) {
-            console.warn('⚠️ powerup overlay: textura "basketball_powerup" no encontrada');
+        const texKey = 'basketball';
+        if (!this.scene.textures.exists(texKey)) {
+            console.warn('⚠️ powerup overlay: textura "basketball" no encontrada, usando sprite sin animación');
             return;
         }
 
-        // Orden explícito de frames según el atlas exportado
-        // Orden completo de frames según el atlas
+        // Usar los tres frames del atlas de basketball como efecto simple
         const frameOrder = [
-            'efecto PU 67 -1.png',
-            'efecto PU 67 - 2.png',
-            'basketball_powerup-01.png',
-            'basketball_powerup-02.png',
-            'basketball_powerup-03.png',
-            'basketball_powerup-04.png',
-            'basketball_powerup-05.png',
-            'basketball_powerup-06.png',
-            'basketball_powerup-07.png',
-            'basketball_powerup-08.png',
-            'basketball_powerup-09.png',
-            'basketball_powerup-10.png',
-            'basketball_powerup-11.png',
-            'basketball_powerup-12.png',
-            'basketball_powerup-13.png',
-            'basketball_powerup-14.png',
-            'basketball_powerup-15.png',
-            'basketball_powerup-16.png'
-        ];
+            'basketball 1.png',
+            'basketball 2.png',
+            'basketball 3.png',
+            'basketball 2.png'
+        ].filter(f => this.scene.textures.get(texKey).has(f));
 
-        const frames = frameOrder.map(frame => ({ key: 'basketball_powerup', frame }));
+        if (frameOrder.length === 0) {
+            console.warn('⚠️ powerup overlay: frames de basketball no encontrados');
+            return;
+        }
+
+        const frames = frameOrder.map(frame => ({ key: texKey, frame }));
 
         this.scene.anims.create({
             key: 'powerup67_overlay',
             frames,
-            frameRate: 8,
+            frameRate: 10,
             repeat: 0
         });
     }

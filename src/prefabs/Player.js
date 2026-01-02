@@ -3,21 +3,30 @@ import { PlayerController } from '../player/PlayerController.js';
 
 export class Player extends Phaser.Physics.Arcade.Sprite {
     constructor(scene, x, y) {
-        // Determinar qué textura usar: PNG o placeholder generado
-        // Si existe 'player_png' y el toggle está activo, usarlo; sino usar 'player'
+        // Determinar qué textura usar: atlas de player (prioridad), PNG opcional o placeholder generado
+        const hasAtlas = scene.textures.exists('player');
         const usePNG = scene.registry.get('usePlayerPNG') === true; // Debe ser explícitamente true
-        const textureKey = (usePNG && scene.textures.exists('player_png')) ? 'player_png' : 'player';
+        const hasPNG = scene.textures.exists('player_png');
+        const textureKey = hasAtlas ? 'player' : (usePNG && hasPNG ? 'player_png' : 'player_placeholder');
+        const frameKey = hasAtlas ? 'IDLE 1.png' : undefined;
 
         // Debug log para verificar qué textura se está usando
-        if (usePNG && scene.textures.exists('player_png')) {
+        if (hasAtlas) {
+            console.log('🎨 Player: Usando atlas (player) -> frame IDLE 1.png');
+        } else if (usePNG && hasPNG) {
             console.log('🎨 Player: Usando PNG (player_png)');
         } else {
-            console.log('🎨 Player: Usando placeholder generado (player)');
+            console.log('🎨 Player: Usando placeholder generado (player_placeholder)');
         }
 
-        super(scene, x, y, textureKey);
+        super(scene, x, y, textureKey, frameKey);
         scene.add.existing(this);
         scene.physics.add.existing(this);
+        this.setDisplaySize(32, 32);
+        // Animación idle por defecto
+        if (scene.anims.exists('player_idle')) {
+            this.play('player_idle');
+        }
         // Exponer EventBus en scene para que el contexto pueda emitir sin acoplarse
         if (!scene.eventBus) {
             scene.eventBus = EventBus;
@@ -34,11 +43,11 @@ export class Player extends Phaser.Physics.Arcade.Sprite {
         // IMPORTANTE: El body debe ser más pequeño que el sprite y estar correctamente centrado
         // para evitar que penetre las paredes cuando colisiona con los bounds del mundo
         if (this.body) {
-            const spriteWidth = this.width || 32; // Ancho del sprite visual
-            const spriteHeight = this.height || 32; // Alto del sprite visual
+            const spriteWidth = this.displayWidth || 32; // Ancho del sprite visual
+            const spriteHeight = this.displayHeight || 32; // Alto del sprite visual
 
             // Ancho del body ajustado para que el sprite no se vea dentro de la pared
-            const bodyWidth = 28;
+            const bodyWidth = 26;
             // Altura del body: mantener proporción y pies definidos
             const bodyHeight = Math.max(24, spriteHeight - 8); // Mínimo 24px de altura
 

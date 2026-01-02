@@ -66,6 +66,12 @@ export class ItemHandler {
         scene.physics.pause();
         // Asegurar que el jugador se vea (sin animación de reemplazo)
         player.setVisible(true);
+        // Animación de powerup en el player
+        if (player.controller?.anim) {
+            // Asegurar que la anim de powerup no se espejea (frames contienen números)
+            player.setFlipX(false);
+            player.controller.anim.play('player_powerup');
+        }
 
         // Play celebration sound
         AudioManager.playCelebrationSound();
@@ -75,7 +81,8 @@ export class ItemHandler {
         }).setOrigin(0.5).setDepth(200);
 
         scene.cameras.main.shake(500, 0.005);
-        scene.time.delayedCall(1200, () => {
+        // Mantener pausa el tiempo suficiente para que la anim de powerup (≈1.8s) termine
+        scene.time.delayedCall(2000, () => {
             t.destroy();
             scene.physics.resume();
             scene.isPausedEvent = false;

@@ -28,13 +28,38 @@ export class PlayerAnimationController {
         this.sprite.anims.play(key, true);
     }
 
+    playOnceThen(key, nextKey) {
+        if (!this.sprite || !this.sprite.anims) return;
+        if (!key) return;
+        const anims = this.sprite.anims;
+        const manager = anims.animationManager;
+        if (!manager.exists(key)) return;
+        // No espejar powerup (contiene números)
+        if (key === ANIM_MANIFEST.POWERUP) {
+            this.sprite.setFlipX(false);
+        }
+        this.currentKey = key;
+        this.sprite.off(Phaser.Animations.Events.ANIMATION_COMPLETE, this._onComplete);
+        this._onComplete = (anim) => {
+            if (anim.key !== key) return;
+            this.currentKey = null;
+            if (nextKey && manager.exists(nextKey)) {
+                this.play(nextKey);
+            }
+        };
+        this.sprite.once(Phaser.Animations.Events.ANIMATION_COMPLETE, this._onComplete);
+        anims.play(key, true);
+    }
+
     /**
         * Devuelve el key de anim según estado + estilo
         */
     resolve(state, subStyle = null) {
         switch (state) {
             case 'GROUND':
-                return subStyle === 'run' ? ANIM_MANIFEST.GROUND.run : ANIM_MANIFEST.GROUND.idle;
+                if (subStyle === 'run') return ANIM_MANIFEST.GROUND.run;
+                if (subStyle === 'run_stop') return ANIM_MANIFEST.GROUND.runStop;
+                return ANIM_MANIFEST.GROUND.idle;
             case 'AIR_RISE':
                 if (subStyle === 'wall') return ANIM_MANIFEST.AIR_RISE.wall;
                 if (subStyle === 'side') return ANIM_MANIFEST.AIR_RISE.side;

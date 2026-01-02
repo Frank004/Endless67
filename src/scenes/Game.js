@@ -49,6 +49,11 @@ export class Game extends Phaser.Scene {
         this.uiManager = new UIManager(this);
         this.audioManager = new AudioManager();
         this.audioManager.setScene(this);  // ← Necesario para que el audio funcione
+        this.audioManager.setupAudio();
+        // Reintentar arrancar música tras primer interacción si el contexto estaba suspendido
+        this.input.once('pointerdown', () => {
+            this.audioManager.startMusic();
+        });
         this.particleManager = new ParticleManager(this);
         this.riserManager = new RiserManager(this);
         this.debugManager = new DebugManager(this);

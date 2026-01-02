@@ -6,7 +6,8 @@
 export const ANIM_MANIFEST = {
     GROUND: {
         idle: 'player_idle',
-        run: 'player_run'
+        run: 'player_run',
+        runStop: 'player_run_stop'
     },
     AIR_RISE: {
         up: 'player_jump_up',

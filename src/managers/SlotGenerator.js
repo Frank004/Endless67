@@ -460,7 +460,7 @@ export class SlotGenerator {
         const isDev = this.scene.registry?.get('isDevMode');
         const POWERUP_MIN_DISTANCE = isDev ? 0 : 3000;  // 300m en unidades Y
         const POWERUP_COOLDOWN = isDev ? 0 : 15000;     // 15 segundos
-        const POWERUP_CHANCE = isDev ? 0.5 : 0.08;      // boost en dev
+        const POWERUP_CHANCE = isDev ? 0.5 : (SLOT_CONFIG.types?.PLATFORM?.spawnChances?.powerups ?? 0.08);
         
         // Lista de TODOS los items generados (coins + powerups)
         const allGeneratedItems = [];
@@ -574,7 +574,7 @@ export class SlotGenerator {
                 const itemX = Phaser.Math.Clamp(plat.x, minItemX, maxItemX);
                 
                 // Verificar distancia con otros items
-                if (!tooCloseToOtherItems(itemX, itemY)) {
+            if (!tooCloseToOtherItems(itemX, itemY)) {
                     // SWAP: ¿Powerup o Coin?
                     if (canSpawnPowerup(itemY)) {
                         if (spawnPowerup(itemX, itemY)) {

@@ -1,3 +1,5 @@
+import { ANIM_MANIFEST } from './animationManifest.js';
+
 /**
  * FSM básica del jugador (no altera físicas actuales).
  * Estados: GROUND, AIR_RISE, AIR_FALL, WALL_SLIDE, POWERUP_CUTSCENE, HIT, GOAL
@@ -7,6 +9,7 @@ export class PlayerStateMachine {
         this.ctx = context;
         this.anim = anim;
         this.state = 'GROUND';
+        this.runStopping = false;
     }
 
     transition(next) {
@@ -54,9 +57,39 @@ export class PlayerStateMachine {
             } else {
                 this.transition('GROUND');
                 flags.canDoubleJump = true;
-                const style = Math.abs(intent.moveX) > 0.1 ? 'run' : 'idle';
-                this.anim?.play(this.anim?.resolve('GROUND', style));
-                this.anim?.setFacing(intent.moveX);
+                const absMove = Math.abs(intent.moveX);
+                const wasRunning = this.anim?.currentKey === ANIM_MANIFEST.GROUND.run;
+                const velX = Math.abs(this.ctx.sensors.vx);
+                const stopThreshold = 20; // velocidad mínima antes de pasar a idle
+
+                if (absMove > 0.1) {
+                    this.runStopping = false;
+                    this.anim?.play(this.anim?.resolve('GROUND', 'run'));
+                    this.anim?.setFacing(intent.moveX);
+                } else if (wasRunning) {
+                    // Se soltó el input mientras corría: reproducir transición y luego mantener frame 02
+                    this.runStopping = true;
+                    this.anim?.play(this.anim?.resolve('GROUND', 'run_stop'));
+                    this.anim?.setFacing(this.ctx.intent.moveX);
+                } else if (this.runStopping) {
+                    if (velX > stopThreshold) {
+                        // Mantener en frame stop-running-02 mientras desliza
+                        const sprite = this.ctx.sprite;
+                        if (sprite && sprite.anims) {
+                            sprite.anims.stop();
+                            sprite.setFrame('stop-running-02.png');
+                            if (this.anim) this.anim.currentKey = 'player_run_stop_hold';
+                        }
+                        return;
+                    } else {
+                        this.runStopping = false;
+                        this.anim?.play(this.anim?.resolve('GROUND', 'idle'));
+                        this.anim?.setFacing(intent.moveX);
+                    }
+                } else {
+                    this.anim?.play(this.anim?.resolve('GROUND', 'idle'));
+                    this.anim?.setFacing(intent.moveX);
+                }
             }
             return;
         }
@@ -90,10 +123,27 @@ export class PlayerStateMachine {
                 const res = this.ctx.doDoubleJump();
                 if (res) this.ctx.emitJumpEvent(res);
                 this.transition('AIR_RISE');
+                this.anim?.play(this.anim?.resolve('AIR_RISE', 'side'));
             } else {
                 this.transition('AIR_RISE');
+                // Reproducir jump y mantener último frame (jump-03) hasta siguiente cambio de estado
+                const sprite = this.ctx.sprite;
+                const animKey = this.anim?.resolve('AIR_RISE', 'up');
+                if (animKey && sprite?.anims?.animationManager.exists(animKey)) {
+                    const animObj = sprite.anims.animationManager.get(animKey);
+                    sprite.anims.play(animKey);
+                    const lastFrame = animObj?.getLastFrame() || animObj?.frames?.[animObj.frames.length - 1];
+                    if (lastFrame?.frame?.name) {
+                        sprite.anims.stopOnFrame(lastFrame);
+                    } else {
+                        sprite.setFrame('jump-03.png');
+                    }
+                } else {
+                    // Fallback: set último frame manual
+                    sprite?.anims?.stop();
+                    sprite?.setFrame('jump-03.png');
+                }
             }
-            this.anim?.play(this.anim?.resolve('AIR_RISE', flags.airStyle === 'SIDE' ? 'side' : 'up'));
         } else {
             // falling
             if ((jumpBuffered || intent.jumpJustPressed) && flags.canDoubleJump && !flags.inputLocked) {
@@ -103,7 +153,22 @@ export class PlayerStateMachine {
                 const res = this.ctx.doDoubleJump();
                 if (res) this.ctx.emitJumpEvent(res);
                 this.transition('AIR_RISE');
-                this.anim?.play(this.anim?.resolve('AIR_RISE', flags.airStyle === 'SIDE' ? 'side' : 'up'));
+                // Reproducir jump y mantener último frame (jump-03) hasta siguiente cambio de estado
+                const sprite = this.ctx.sprite;
+                const animKey = this.anim?.resolve('AIR_RISE', flags.airStyle === 'SIDE' ? 'side' : 'up');
+                if (animKey && sprite?.anims?.animationManager.exists(animKey)) {
+                    const animObj = sprite.anims.animationManager.get(animKey);
+                    sprite.anims.play(animKey);
+                    const lastFrame = animObj?.getLastFrame() || animObj?.frames?.[animObj.frames.length - 1];
+                    if (lastFrame?.frame?.name) {
+                        sprite.anims.stopOnFrame(lastFrame);
+                    } else {
+                        sprite.setFrame('jump-03.png');
+                    }
+                } else {
+                    sprite?.anims?.stop();
+                    sprite?.setFrame('jump-03.png');
+                }
                 return;
             }
             // Coyote jump: permitir si hay buffer y coyote
@@ -114,7 +179,21 @@ export class PlayerStateMachine {
                 const res = this.ctx.doJump();
                 if (res) this.ctx.emitJumpEvent(res);
                 this.transition('AIR_RISE');
-                this.anim?.play(this.anim?.resolve('AIR_RISE', flags.airStyle === 'SIDE' ? 'side' : 'up'));
+                const sprite = this.ctx.sprite;
+                const animKey = this.anim?.resolve('AIR_RISE', flags.airStyle === 'SIDE' ? 'side' : 'up');
+                if (animKey && sprite?.anims?.animationManager.exists(animKey)) {
+                    const animObj = sprite.anims.animationManager.get(animKey);
+                    sprite.anims.play(animKey);
+                    const lastFrame = animObj?.getLastFrame() || animObj?.frames?.[animObj.frames.length - 1];
+                    if (lastFrame?.frame?.name) {
+                        sprite.anims.stopOnFrame(lastFrame);
+                    } else {
+                        sprite.setFrame('jump-03.png');
+                    }
+                } else {
+                    sprite?.anims?.stop();
+                    sprite?.setFrame('jump-03.png');
+                }
                 return;
             }
             this.transition('AIR_FALL');
