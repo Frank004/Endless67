@@ -34,6 +34,8 @@ export class PlayerContext {
         this.hitTimer = 0;          // ms
         this.COYOTE_TIME = 120;
         this.JUMP_BUFFER = 150;
+        this.WALL_COYOTE_TIME = 120;
+        this.wallCoyoteTimer = 0;
         this.jumpsUsed = 0;         // saltos usados desde el último toque de piso/parede
         this.wallTouchSide = null;
         this.wallTouchCount = 0;
@@ -61,6 +63,7 @@ export class PlayerContext {
         // Timers
         this.jumpBufferTimer = 0;
         this.coyoteTimer = 0;
+        this.wallCoyoteTimer = 0;
         this.hitTimer = 0;
         this.jumpsUsed = 0;
         // Wall counters
@@ -75,6 +78,9 @@ export class PlayerContext {
         // Timers de buffer/coyote
         this.jumpBufferTimer = Math.max(0, this.jumpBufferTimer - delta);
         this.coyoteTimer = Math.max(0, this.coyoteTimer - delta);
+        if (this.wallCoyoteTimer > 0) {
+            this.wallCoyoteTimer = Math.max(0, this.wallCoyoteTimer - delta);
+        }
         if (this.hitTimer > 0) {
             this.hitTimer = Math.max(0, this.hitTimer - delta);
         }
@@ -93,6 +99,7 @@ export class PlayerContext {
         this.sensors.startedFalling = this.prevVy < 0 && this.sensors.vy > 0;
         if (this.sensors.onFloor) {
             this.coyoteTimer = this.COYOTE_TIME;
+            this.wallCoyoteTimer = 0;
             this.jumpsUsed = 0;
             this.wallTouchSide = null;
             this.wallTouchCount = 0;
@@ -102,6 +109,7 @@ export class PlayerContext {
         }
         if (this.sensors.touchWallLeft || this.sensors.touchWallRight) {
             const side = this.sensors.touchWallLeft ? 'left' : 'right';
+            this.wallCoyoteTimer = this.WALL_COYOTE_TIME;
             if (!this.prevTouchWall || this.prevTouchWallSide !== side) {
                 this.wallTouchSide = side;
                 this.wallTouchCount = 1;
@@ -201,10 +209,12 @@ export class PlayerContext {
     }
 
     canAcceptJump() {
-        const wallOk = this.sensors.touchWall && this.wallJumpCount < this.maxWallJumps;
-        // Bloquear nuevos buffers si no hay saltos disponibles (ya se usó el doble salto)
-        const airborneFirstJumpAvailable = !this.sensors.onFloor && !this.sensors.touchWall && this.jumpsUsed < 1;
-        const canJump = this.sensors.onFloor || wallOk || this.hasCoyote() || (airborneFirstJumpAvailable) || (this.flags.canDoubleJump && this.jumpsUsed === 1);
+        const wallContact = this.sensors.touchWall || this.wallCoyoteTimer > 0;
+        const wallOk = wallContact && this.wallJumpCount < this.maxWallJumps;
+        const groundOk = this.sensors.onFloor || this.hasCoyote();
+        const airborneFirstJumpAvailable = !groundOk && !wallContact && this.jumpsUsed < 1;
+        const doubleOk = this.flags.canDoubleJump && this.jumpsUsed === 1;
+        const canJump = wallOk || groundOk || airborneFirstJumpAvailable || doubleOk;
         if (!canJump) {
             this.jumpBufferTimer = 0;
             this.intent.jumpJustPressed = false;
@@ -245,6 +255,7 @@ export class PlayerContext {
         const vy = -this.sprite.baseWallJumpForceY * mult;
         this.sprite.jumpPhysics(vx, vy);
         this.flags.canDoubleJump = true;
+        this.jumpsUsed = Math.max(this.jumpsUsed, 1);
         const jumpOffsetY = (this.sprite.height || 32) * 0.5;
         return { type: 'wall_jump', x: this.sprite.x + dir * 10, y: this.sprite.y + jumpOffsetY };
     }

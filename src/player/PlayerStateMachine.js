@@ -66,6 +66,8 @@ export class PlayerStateMachine {
             this.transition('WALL_SLIDE');
             // Al tocar pared, rearmar doble salto para la siguiente secuencia
             flags.canDoubleJump = true;
+            // Asegurar que el siguiente salto disponible sea el doble (tras un wall-jump)
+            this.ctx.jumpsUsed = 1;
             // Si hay buffer de salto, permitir salto en pared aun sin input horizontal
             if (jumpBuffered || intent.jumpJustPressed) {
                 this.ctx.consumeJumpBuffer();

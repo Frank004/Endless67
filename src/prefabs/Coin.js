@@ -113,9 +113,8 @@ export class Coin extends Phaser.Physics.Arcade.Sprite {
             
             this.body.allowGravity = false;
             this.body.immovable = true;
-            // Solo overlap: usar sensor para evitar resolución de colisión, pero permitir detección
+            // Solo overlap: no debe comportarse como plataforma/parede
             this.body.checkCollision.none = false;
-            this.body.isSensor = true;
             this.body.updateFromGameObject();
             
             // Debug: mostrar hitbox visual

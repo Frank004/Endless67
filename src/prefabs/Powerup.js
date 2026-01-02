@@ -117,7 +117,6 @@ export class Powerup extends Phaser.Physics.Arcade.Sprite {
             this.body.allowGravity = false;
             this.body.immovable = true;
             this.body.checkCollision.none = false;
-            this.body.isSensor = true;
             this.body.updateFromGameObject();
         }
         
