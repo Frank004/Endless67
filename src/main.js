@@ -7,6 +7,19 @@ import { Playground } from './scenes/Playground.js';
 import { GAME_CONFIG } from './config/GameConstants.js';
 import { isMobileDevice, getResolution } from './utils/DeviceDetection.js';
 
+// ─────────────────────────────────────────────────────────────
+// Disable verbose logs in production build
+// ─────────────────────────────────────────────────────────────
+if (typeof window !== 'undefined') {
+    const disableLogs = true;
+    if (disableLogs && window.console) {
+        const noop = () => {};
+        window.console.log = noop;
+        window.console.info = noop;
+        window.console.debug = noop;
+    }
+}
+
 // Detectar dispositivo para configuración inicial
 // La detección precisa se hace en Game.js usando Phaser.Device
 const isMobile = isMobileDevice();

@@ -458,9 +458,11 @@ export class SlotGenerator {
         
         // Config de POWERUP
         const isDev = this.scene.registry?.get('isDevMode');
-        const POWERUP_MIN_DISTANCE = isDev ? 0 : 3000;  // 300m en unidades Y
-        const POWERUP_COOLDOWN = isDev ? 0 : 15000;     // 15 segundos
-        const POWERUP_CHANCE = isDev ? 0.5 : (SLOT_CONFIG.types?.PLATFORM?.spawnChances?.powerups ?? 0.08);
+        const POWERUP_MIN_DISTANCE = isDev ? 0 : 600;   // 60m en unidades Y (más temprano)
+        const POWERUP_COOLDOWN = isDev ? 0 : 6000;      // 6 segundos
+        const POWERUP_CHANCE = isDev ? 0.5 : (SLOT_CONFIG.types?.PLATFORM?.spawnChances?.powerups ?? 0.25);
+        const logPowerups = this.scene.registry?.get('logPowerups') === true;
+        const logPw = (msg) => { if (logPowerups) console.log(msg); };
         
         // Lista de TODOS los items generados (coins + powerups)
         const allGeneratedItems = [];
@@ -503,15 +505,21 @@ export class SlotGenerator {
             const now = Date.now();
             
             // Condición 1: Distancia mínima de 300m (3000 unidades)
-            const distanceOk = (currentHeight - lastHeight) >= POWERUP_MIN_DISTANCE;
+            const distanceDelta = currentHeight - lastHeight;
+            const distanceOk = distanceDelta >= POWERUP_MIN_DISTANCE;
             
             // Condición 2: Cooldown de 15 segundos
-            const cooldownOk = (now - lastTime) >= POWERUP_COOLDOWN;
+            const cooldownDelta = now - lastTime;
+            const cooldownOk = cooldownDelta >= POWERUP_COOLDOWN;
             
             // Condición 3: Random chance (8%)
             const chanceOk = Math.random() < POWERUP_CHANCE;
             
-            return distanceOk && cooldownOk && chanceOk;
+            const ok = distanceOk && cooldownOk && chanceOk;
+            if (ok) {
+                logPw(`    ⚡ Powerup eligible (platform slot) dist=${distanceDelta.toFixed?.(0) ?? distanceDelta} cooldown=${cooldownDelta}ms chance=${POWERUP_CHANCE}`);
+            }
+            return ok;
         };
         
         // Función para spawnar un POWERUP (usa PoolManager con prefab Powerup)
@@ -531,9 +539,10 @@ export class SlotGenerator {
                 this.scene.lastPowerupSpawnHeight = y;
                 this.scene.lastPowerupTime = Date.now();
                 
-                console.log(`    ⚡ POWERUP spawned at (${x}, ${y})`);
+                logPw(`    ⚡ Powerup (platform slot) at x=${x.toFixed?.(1) ?? x}, y=${y.toFixed?.(1) ?? y}`);
                 return true;
             }
+            logPw('    ⚠️ Powerup spawn failed (pool empty or inactive)');
             return false;
         };
         

@@ -68,8 +68,6 @@ export class MazeDecorator {
     }
 
     decorateBlock(block, width, height) {
-        // Si el decorado visual está deshabilitado, salir inmediatamente
-        if (!this.debugTiles) return;
         if (!block || !block.active) return;
         const ts = this.tileSize;
         // Usamos displayWidth/displayHeight y origin del bloque para alinear el skin exactamente al sprite.

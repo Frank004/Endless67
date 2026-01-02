@@ -10,6 +10,31 @@ export class PlayerStateMachine {
         this.anim = anim;
         this.state = 'GROUND';
         this.runStopping = false;
+        this.hitPlaying = false;
+        this.runStopSoundPlayed = false;
+    }
+
+    /**
+     * Play jump animation and hold its last frame (jump-03) to avoid visual jitter.
+     * Falls back to setting the frame directly if the animation is missing.
+     */
+    _playJumpHold(style = 'up') {
+        const sprite = this.ctx?.sprite;
+        const key = this.anim?.resolve('AIR_RISE', style === 'side' ? 'side' : 'up');
+        const manager = sprite?.anims?.animationManager;
+        // Evitar reiniciar la animación si ya está corriendo o ya quedó en el frame final
+        if (key && sprite?.anims) {
+            if (sprite.anims.currentAnim?.key === key && sprite.anims.isPlaying) return;
+            if (!sprite.anims.isPlaying && sprite.frame?.name === 'jump-03.png') return;
+        }
+        if (key && manager?.exists(key)) {
+            this.anim.playOnceHoldLast(key, 'jump-03.png');
+        } else {
+            sprite?.anims?.stop();
+            if (sprite?.texture?.has('jump-03.png')) {
+                sprite.setFrame('jump-03.png');
+            }
+        }
     }
 
     transition(next) {
@@ -30,11 +55,15 @@ export class PlayerStateMachine {
         }
         if (flags.hit) {
             this.transition('HIT');
-            this.anim?.play(this.anim?.resolve('HIT'));
+            if (!this.hitPlaying) {
+                this.hitPlaying = true;
+                this.anim?.playOnceHoldLast(this.anim?.resolve('HIT'), 'hit-02.png');
+            }
             this.anim?.setFacing(intent.moveX);
             // Cuando termine hitTimer, salir al estado correcto según sensores
             if (this.ctx.hitTimer <= 0) {
                 flags.hit = false;
+                this.hitPlaying = false;
                 // recalcular destino
                 if (sensors.onFloor) this.transition('GROUND');
                 else if (sensors.touchWall) this.transition('WALL_SLIDE');
@@ -46,6 +75,8 @@ export class PlayerStateMachine {
         // Prioridades: powerup/hit/goal quedarían aquí si se usan flags
         // GROUND
         if (sensors.onFloor) {
+            // Reset wall-related hold
+            this.runStopSoundPlayed = sensors.onFloor ? this.runStopSoundPlayed : false;
             if ((jumpBuffered || intent.jumpJustPressed) && !flags.inputLocked && this.ctx.canAcceptJump()) {
                 this.ctx.consumeJumpBuffer();
                 this.ctx.setAirStyleFromInput();
@@ -64,11 +95,17 @@ export class PlayerStateMachine {
 
                 if (absMove > 0.1) {
                     this.runStopping = false;
+                    this.runStopSoundPlayed = false;
+                    this.ctx?.sprite?.scene?.audioManager?.stopShoeBrake?.();
                     this.anim?.play(this.anim?.resolve('GROUND', 'run'));
                     this.anim?.setFacing(intent.moveX);
                 } else if (wasRunning) {
                     // Se soltó el input mientras corría: reproducir transición y luego mantener frame 02
                     this.runStopping = true;
+                    if (!this.runStopSoundPlayed) {
+                        this.ctx?.sprite?.scene?.audioManager?.playShoeBrake?.();
+                        this.runStopSoundPlayed = true;
+                    }
                     this.anim?.play(this.anim?.resolve('GROUND', 'run_stop'));
                     this.anim?.setFacing(this.ctx.intent.moveX);
                 } else if (this.runStopping) {
@@ -82,17 +119,24 @@ export class PlayerStateMachine {
                         }
                         return;
                     } else {
+                        this.ctx?.sprite?.scene?.audioManager?.stopShoeBrake?.();
                         this.runStopping = false;
+                        this.runStopSoundPlayed = false;
                         this.anim?.play(this.anim?.resolve('GROUND', 'idle'));
                         this.anim?.setFacing(intent.moveX);
                     }
                 } else {
+                    this.runStopSoundPlayed = false;
+                    this.ctx?.sprite?.scene?.audioManager?.stopShoeBrake?.();
                     this.anim?.play(this.anim?.resolve('GROUND', 'idle'));
                     this.anim?.setFacing(intent.moveX);
                 }
             }
             return;
         }
+        // Fuera del piso: reset para no bloquear el siguiente sonido
+        this.runStopSoundPlayed = false;
+        this.ctx?.sprite?.scene?.audioManager?.stopShoeBrake?.();
 
         // WALL SLIDE
         if (sensors.touchWall && !flags.inputLocked) {
@@ -123,26 +167,10 @@ export class PlayerStateMachine {
                 const res = this.ctx.doDoubleJump();
                 if (res) this.ctx.emitJumpEvent(res);
                 this.transition('AIR_RISE');
-                this.anim?.play(this.anim?.resolve('AIR_RISE', 'side'));
+                this._playJumpHold(flags.airStyle === 'SIDE' ? 'side' : 'up');
             } else {
                 this.transition('AIR_RISE');
-                // Reproducir jump y mantener último frame (jump-03) hasta siguiente cambio de estado
-                const sprite = this.ctx.sprite;
-                const animKey = this.anim?.resolve('AIR_RISE', 'up');
-                if (animKey && sprite?.anims?.animationManager.exists(animKey)) {
-                    const animObj = sprite.anims.animationManager.get(animKey);
-                    sprite.anims.play(animKey);
-                    const lastFrame = animObj?.getLastFrame() || animObj?.frames?.[animObj.frames.length - 1];
-                    if (lastFrame?.frame?.name) {
-                        sprite.anims.stopOnFrame(lastFrame);
-                    } else {
-                        sprite.setFrame('jump-03.png');
-                    }
-                } else {
-                    // Fallback: set último frame manual
-                    sprite?.anims?.stop();
-                    sprite?.setFrame('jump-03.png');
-                }
+                this._playJumpHold(flags.airStyle === 'SIDE' ? 'side' : 'up');
             }
         } else {
             // falling
@@ -153,22 +181,7 @@ export class PlayerStateMachine {
                 const res = this.ctx.doDoubleJump();
                 if (res) this.ctx.emitJumpEvent(res);
                 this.transition('AIR_RISE');
-                // Reproducir jump y mantener último frame (jump-03) hasta siguiente cambio de estado
-                const sprite = this.ctx.sprite;
-                const animKey = this.anim?.resolve('AIR_RISE', flags.airStyle === 'SIDE' ? 'side' : 'up');
-                if (animKey && sprite?.anims?.animationManager.exists(animKey)) {
-                    const animObj = sprite.anims.animationManager.get(animKey);
-                    sprite.anims.play(animKey);
-                    const lastFrame = animObj?.getLastFrame() || animObj?.frames?.[animObj.frames.length - 1];
-                    if (lastFrame?.frame?.name) {
-                        sprite.anims.stopOnFrame(lastFrame);
-                    } else {
-                        sprite.setFrame('jump-03.png');
-                    }
-                } else {
-                    sprite?.anims?.stop();
-                    sprite?.setFrame('jump-03.png');
-                }
+                this._playJumpHold(flags.airStyle === 'SIDE' ? 'side' : 'up');
                 return;
             }
             // Coyote jump: permitir si hay buffer y coyote
@@ -179,21 +192,7 @@ export class PlayerStateMachine {
                 const res = this.ctx.doJump();
                 if (res) this.ctx.emitJumpEvent(res);
                 this.transition('AIR_RISE');
-                const sprite = this.ctx.sprite;
-                const animKey = this.anim?.resolve('AIR_RISE', flags.airStyle === 'SIDE' ? 'side' : 'up');
-                if (animKey && sprite?.anims?.animationManager.exists(animKey)) {
-                    const animObj = sprite.anims.animationManager.get(animKey);
-                    sprite.anims.play(animKey);
-                    const lastFrame = animObj?.getLastFrame() || animObj?.frames?.[animObj.frames.length - 1];
-                    if (lastFrame?.frame?.name) {
-                        sprite.anims.stopOnFrame(lastFrame);
-                    } else {
-                        sprite.setFrame('jump-03.png');
-                    }
-                } else {
-                    sprite?.anims?.stop();
-                    sprite?.setFrame('jump-03.png');
-                }
+                this._playJumpHold(flags.airStyle === 'SIDE' ? 'side' : 'up');
                 return;
             }
             this.transition('AIR_FALL');

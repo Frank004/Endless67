@@ -11,6 +11,7 @@ export class AudioManager {
         this.bgMusic = null;
         this.lavaSound = null;
         this.soundEnabled = true;
+        this.shoeBrakeInstance = null;
     }
 
     setScene(scene) {
@@ -205,6 +206,44 @@ export class AudioManager {
             }
         } catch (error) {
             console.warn('Error playing jump sound:', error);
+        }
+    }
+
+    /**
+     * Play shoe-brake with slight random pitch to keep it fresh
+     */
+    playShoeBrake() {
+        const scene = this.scene;
+        if (!scene) return;
+        try {
+            if (scene.sound && scene.cache.audio.exists('shoe_brake')) {
+                // Stop any previous instance to avoid overlap
+                this.stopShoeBrake();
+                const detune = Phaser.Math.Between(-500, 500);
+                const rate = Phaser.Math.FloatBetween(1.15, 1.35); // faster, snappier
+                const pan = Phaser.Math.FloatBetween(-0.1, 0.1);
+                this.shoeBrakeInstance = scene.sound.add('shoe_brake', {
+                    detune,
+                    rate,
+                    pan,
+                    volume: 0.28
+                });
+                this.shoeBrakeInstance.once('complete', () => {
+                    this.shoeBrakeInstance?.destroy();
+                    this.shoeBrakeInstance = null;
+                });
+                this.shoeBrakeInstance.play();
+            }
+        } catch (error) {
+            console.warn('Error playing shoe brake sound:', error);
+        }
+    }
+
+    stopShoeBrake() {
+        if (this.shoeBrakeInstance) {
+            this.shoeBrakeInstance.stop();
+            this.shoeBrakeInstance.destroy();
+            this.shoeBrakeInstance = null;
         }
     }
 

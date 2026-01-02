@@ -19,6 +19,7 @@ export class PlayerController {
         this.context?.resetState();
         this.anim?.reset?.();
         this.fsm.state = 'GROUND';
+        this.fsm.hitPlaying = false;
     }
 
     enterHit(duration = 500) {
@@ -53,6 +54,8 @@ export class PlayerController {
         this.applyHorizontalMovement();
 
         this.fsm.update();
+        // Suavizar slide en pared cuando el jugador se está pegando a ella
+        this.applyWallSlideDamp();
         // Reset edge trigger se maneja vía buffer al consumirlo
     }
 
@@ -67,6 +70,21 @@ export class PlayerController {
             this.sprite.move(dir);
         } else {
             this.sprite.stop();
+        }
+    }
+
+    applyWallSlideDamp() {
+        if (!this.sprite || !this.sprite.body) return;
+        const { sensors, intent } = this.context;
+        if (sensors.onFloor) return;
+        const wallDir = sensors.touchWallLeft ? -1 : sensors.touchWallRight ? 1 : 0;
+        if (!wallDir) return;
+        // Solo frenar si el jugador está presionando hacia la pared
+        const pushing = (wallDir === -1 && intent.moveX < -0.2) || (wallDir === 1 && intent.moveX > 0.2);
+        if (!pushing) return;
+        const maxSlideSpeed = 140; // limita la caída al pegarse a la pared
+        if (this.sprite.body.velocity.y > maxSlideSpeed) {
+            this.sprite.body.setVelocityY(maxSlideSpeed);
         }
     }
 }

@@ -52,6 +52,34 @@ export class PlayerAnimationController {
     }
 
     /**
+     * Reproduce una animación sin loop y se queda en su último frame (o uno custom).
+     */
+    playOnceHoldLast(key, holdFrameName = null) {
+        if (!this.sprite || !this.sprite.anims) return;
+        if (!key) return;
+        const anims = this.sprite.anims;
+        const manager = anims.animationManager;
+        if (!manager.exists(key)) return;
+        this.currentKey = key;
+        this.sprite.off(Phaser.Animations.Events.ANIMATION_COMPLETE, this._onCompleteHold);
+        this._onCompleteHold = (anim) => {
+            if (anim.key !== key) return;
+            this.currentKey = null;
+            const animObj = manager.get(key);
+            const lastFrame = animObj?.getLastFrame() || animObj?.frames?.[animObj.frames.length - 1];
+            const frameToHold = (holdFrameName && this.sprite.texture.has(holdFrameName))
+                ? holdFrameName
+                : lastFrame?.frame?.name;
+            if (frameToHold) {
+                this.sprite.anims.stop();
+                this.sprite.setFrame(frameToHold);
+            }
+        };
+        this.sprite.once(Phaser.Animations.Events.ANIMATION_COMPLETE, this._onCompleteHold);
+        anims.play(key);
+    }
+
+    /**
         * Devuelve el key de anim según estado + estilo
         */
     resolve(state, subStyle = null) {

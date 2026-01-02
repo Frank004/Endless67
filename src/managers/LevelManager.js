@@ -632,9 +632,11 @@ export class LevelManager {
 
         // Powerup Logic from Config
         const isDev = scene.registry?.get('isDevMode');
+        const baseMazePowerupChance = (SLOT_CONFIG?.types?.MAZE?.spawnChances?.powerups ?? 0) * 100; // convertir a porcentaje
         let powerupChance = levelConfig.mechanics.powerups ? levelConfig.mechanics.powerupChance : 0;
-        const timeCooldown = isDev ? 0 : 15000;
-        const heightCooldown = isDev ? 0 : 500;
+        powerupChance = Math.max(powerupChance, baseMazePowerupChance);
+        const timeCooldown = isDev ? 0 : 8000;
+        const heightCooldown = isDev ? 0 : 400;
         const now = scene.time.now;
 
         if (scene.currentHeight - scene.lastPowerupSpawnHeight < heightCooldown || now - scene.lastPowerupTime < timeCooldown) {
@@ -642,12 +644,16 @@ export class LevelManager {
         }
 
         if (Phaser.Math.Between(0, 100) < powerupChance) {
-            const itemMargin = WALLS.WIDTH + WALLS.MARGIN + 16;
-            const safeX = Phaser.Math.Clamp(gapX, itemMargin, gameWidth - itemMargin);
+            const { minX, maxX } = getPlayableBounds(scene, 32);
+            const safeX = Phaser.Math.Clamp(gapX, minX, maxX);
             const powerup = scene.powerups.create(safeX, y - 50, 'powerup_ball');
             enablePlatformRider(powerup, { mode: 'carry', marginX: 2 });
             scene.lastPowerupSpawnHeight = scene.currentHeight;
             scene.lastPowerupTime = now;
+            const logPowerups = scene.registry?.get('logPowerups') === true;
+            if (logPowerups) {
+                console.log(`    ⚡ Powerup (maze) at x=${safeX.toFixed?.(1) ?? safeX}, y=${(y - 50).toFixed?.(1) ?? (y - 50)} | chance=${powerupChance}% Δh=${(scene.currentHeight - scene.lastPowerupSpawnHeight).toFixed?.(0) ?? (scene.currentHeight - scene.lastPowerupSpawnHeight)}`);
+            }
         } else {
             // Coins en maze con probabilidad definida en SLOT_CONFIG + bono de maze
             const mazeCoinChance = SLOT_CONFIG?.types?.MAZE?.spawnChances?.coins ?? 0;

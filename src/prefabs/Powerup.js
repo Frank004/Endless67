@@ -89,7 +89,10 @@ export class Powerup extends Phaser.Physics.Arcade.Sprite {
         this.setScale(scale);
         
         // Verificar que el displaySize sea correcto
-        console.log(`  ⚡ Powerup spawn: trimmed=${trimmedWidth}x${trimmedHeight}, visualSize=${VISUAL_SIZE}px, scale=${scale.toFixed(2)}, displaySize=${this.displayWidth.toFixed(0)}x${this.displayHeight.toFixed(0)}`);
+        const logPowerups = this.scene?.registry?.get('logPowerups') === true;
+        if (logPowerups) {
+            console.log(`  ⚡ Powerup spawn: trimmed=${trimmedWidth}x${trimmedHeight}, visualSize=${VISUAL_SIZE}px, scale=${scale.toFixed(2)}, displaySize=${this.displayWidth.toFixed(0)}x${this.displayHeight.toFixed(0)}`);
+        }
         
         // Configurar física para colisiones
         // IMPORTANTE: El hitbox debe ser 10x10px (tamaño fijo), independiente del tamaño visual

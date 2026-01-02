@@ -16,13 +16,13 @@ import { WALLS } from './GameConstants.js';
 
 export const SLOT_CONFIG = {
     // ─────────────────────────────────────────────────────────────
-    // DIMENSIONES BASE (DESKTOP: 400x600)
+    // DIMENSIONES BASE (VERTICAL 9:16, 360x640)
     // ─────────────────────────────────────────────────────────────
     slotHeight: 640,  // Altura FIJA de cada slot (múltiplo de 32px)
     
-    gameWidth: 400,   // ✅ CORREGIDO: era 600, pero el juego es 400px de ancho
+    gameWidth: 360,   // Ancho base vertical
     wallWidth: 32,
-    centerX: 200,     // ✅ CORREGIDO: centro real del juego (400/2)
+    centerX: 180,     // Centro del juego (360/2)
     
     // ─────────────────────────────────────────────────────────────
     // PLATAFORMAS
@@ -52,7 +52,7 @@ export const SLOT_CONFIG = {
             // Spawn chances
             spawnChances: {
                 coins: 0.4,
-                powerups: 0.15,
+                powerups: 0.25,
                 patrol: 0.2,   // Chance de patrullero por plataforma estática
                 shooter: 0.1   // Chance de shooter por plataforma estática
             },
@@ -73,7 +73,7 @@ export const SLOT_CONFIG = {
             },
             spawnChances: {
                 coins: 0.5,
-                powerups: 0.0,
+                powerups: 0.2,
                 enemies: 20,                // 20% chance global de que este maze tenga enemigos
                 enemyCount: { min: 1, max: 2 },
                 enemyTypes: { patrol: 0.5, shooter: 0.5 }
@@ -108,8 +108,8 @@ export const SLOT_CONFIG = {
     rules: {
         tutorialSlots: 1,              // Solo el primer slot es tutorial (plataformas)
         maxConsecutiveSameType: 2,     // No más de 2 del mismo tipo seguidos
-        spawnBuffer: 800,              // Genera nuevo slot cuando jugador está a 800px del último
-        cleanupDistance: 900,          // Limpia slots a más de 900px debajo de cámara
+        spawnBuffer: 600,              // Genera nuevo slot cuando jugador está a 600px del último (menor buffer para 360x640)
+        cleanupDistance: 700,          // Limpia slots a más de 700px debajo de cámara para reducir carga
         startPlatformY: 560            // Ubicación de la plataforma inicial (más abajo para acercar el primer slot)
     }
 };
