@@ -21,15 +21,16 @@ const config = {
     backgroundColor: '#000',
     pixelArt: true,
     roundPixels: true,
+    resolution: 1, // render lógico a la resolución base y dejar que Phaser escale
     render: {
         pixelArt: true,
         antialias: false,
     },
     parent: 'game-container',
     scale: {
-        mode: isMobile ? Phaser.Scale.FIT : Phaser.Scale.FIT,
+        mode: Phaser.Scale.FIT,
         autoCenter: Phaser.Scale.CENTER_BOTH,
-        // En móvil, permitir que se escale para llenar la pantalla manteniendo aspect ratio
+        // Escala base 360x640 (9:16), dejando que Phaser la ajuste al viewport
         min: {
             width: GAME_WIDTH,
             height: GAME_HEIGHT

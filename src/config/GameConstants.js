@@ -10,7 +10,8 @@ export const GAME_CONFIG = {
     TILE_SIZE: 32, // Unidad base para pixel art 32x32
     // Resoluciones por dispositivo (se usan en main.js)
     RESOLUTIONS: {
-        DESKTOP: { width: 400, height: 600 },
+        // Base vertical (9:16) para escalar en cualquier monitor/dispositivo
+        DESKTOP: { width: 360, height: 640 },
         MOBILE: { width: 360, height: 640 },
     },
 };
