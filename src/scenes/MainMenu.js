@@ -1,3 +1,5 @@
+import { UIHelpers } from '../utils/UIHelpers.js';
+
 export class MainMenu extends Phaser.Scene {
 	constructor() {
 		super('MainMenu');
@@ -20,9 +22,9 @@ export class MainMenu extends Phaser.Scene {
 		}).setOrigin(0.5);
 
 		// --- BUTTONS ---
-		const startBtn = this.createButton(width / 2, 250, 'START GAME', '#00ff00', () => this.scene.start('Game'));
-		const leaderboardBtn = this.createButton(width / 2, 330, 'LEADERBOARD', '#00ffff', () => this.scene.start('Leaderboard'));
-		const settingsBtn = this.createButton(width / 2, 410, 'SETTINGS', '#ffffff', () => this.scene.start('Settings'));
+        const startBtn = this.createButton(width / 2, 250, 'START GAME', '#00ff00', () => this.scene.start('Game'));
+        const leaderboardBtn = this.createButton(width / 2, 330, 'LEADERBOARD', '#00ffff', () => this.scene.start('Leaderboard'));
+        const settingsBtn = this.createButton(width / 2, 410, 'SETTINGS', '#ffffff', () => this.scene.start('Settings'));
 
 		// Keyboard Navigation Setup
 		this.menuButtons = [startBtn, leaderboardBtn, settingsBtn];
@@ -79,31 +81,31 @@ export class MainMenu extends Phaser.Scene {
 	}
 
 	updateButtonSelection() {
-		// Reset all buttons to default state
-		this.menuButtons.forEach((btn, index) => {
-			if (index === this.selectedButtonIndex) {
-				// Highlight selected button
-				btn.setColor('#ffff00');
-				btn.setScale(1.1);
-			} else {
-				// Reset to original color
-				btn.setColor(btn.getData('originalColor'));
-				btn.setScale(1.0);
-			}
-		});
+        // Reset all buttons to default state
+        this.menuButtons.forEach((btn, index) => {
+            const label = btn.label || btn.list?.find?.(c => c.style);
+            const originalColor = btn.getData('originalColor') || '#ffffff';
+            if (index === this.selectedButtonIndex) {
+                if (label?.setColor) label.setColor('#ffff00');
+                btn.setScale(1.1);
+            } else {
+                if (label?.setColor) label.setColor(originalColor);
+                btn.setScale(1.0);
+            }
+        });
 	}
 
 	activateSelectedButton() {
-		const selectedButton = this.menuButtons[this.selectedButtonIndex];
-		if (selectedButton && selectedButton.getData('onClick')) {
-			selectedButton.getData('onClick')();
-		}
-	}
+        const selectedButton = this.menuButtons[this.selectedButtonIndex];
+        if (selectedButton && selectedButton.getData('onClick')) {
+            selectedButton.getData('onClick')();
+        }
+    }
 
 	showDevButton(width, height) {
-		const devBtn = this.createButton(width / 2, height - 80, '👾 DEV MODE', '#ff0000', () => this.scene.start('Playground'));
-		this.tweens.add({
-			targets: devBtn,
+        const devBtn = this.createButton(width / 2, height - 80, '👾 DEV MODE', '#ff0000', () => this.scene.start('Playground'));
+        this.tweens.add({
+            targets: devBtn,
 			alpha: { from: 0, to: 1 },
 			duration: 500,
 			yoyo: true,
@@ -111,22 +113,24 @@ export class MainMenu extends Phaser.Scene {
 		});
 	}
 
-	createButton(x, y, text, color, onClick) {
-		const btn = this.add.text(x, y, text, {
-			fontSize: '28px',
-			color: color,
-			backgroundColor: '#333333',
-			padding: { x: 20, y: 10 }
-		}).setOrigin(0.5).setInteractive({ useHandCursor: true });
+    createButton(x, y, text, color, onClick) {
+        const { container, text: label } = UIHelpers.createTextButton(this, x, y, text, {
+            textColor: color,
+            hoverColor: '#ffff00',
+            fontSize: '28px'
+        });
 
-		// Store original color and onClick for keyboard navigation
-		btn.setData('originalColor', color);
-		btn.setData('onClick', onClick);
+        container.setData('originalColor', color);
+        container.setData('onClick', onClick);
+        container.label = label;
 
-		btn.on('pointerdown', onClick);
-		btn.on('pointerover', () => btn.setColor('#ffff00'));
-		btn.on('pointerout', () => btn.setColor(color));
+        container.off('pointerdown');
+        container.on('pointerdown', onClick);
 
-		return btn;
-	}
+        // Propagate hover to ensure consistent color handling with selection
+        container.on('pointerover', () => label.setColor('#ffff00'));
+        container.on('pointerout', () => label.setColor(container.getData('originalColor')));
+
+        return container;
+    }
 }

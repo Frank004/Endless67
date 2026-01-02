@@ -3,6 +3,8 @@
  */
 
 export class UIHelpers {
+    static DEFAULT_BUTTON_WIDTH = 260;
+
     /**
      * Create a button with an icon and text
      * @param {Phaser.Scene} scene - The scene to add the button to
@@ -22,6 +24,7 @@ export class UIHelpers {
             iconTint = 0xffffff,
             depth = 201,
             padding = { x: 20, y: 10 },
+            width = UIHelpers.DEFAULT_BUTTON_WIDTH,
             callback = null
         } = options;
 
@@ -45,8 +48,9 @@ export class UIHelpers {
             .setScale(iconScale)
             .setTint(iconTint);
 
-        // Resize background to fit content with padding
-        const totalWidth = icon.displayWidth + buttonText.width + padding.x * 3;
+        // Resize background to fit content with padding and enforced width
+        const naturalWidth = icon.displayWidth + buttonText.width + padding.x * 3;
+        const totalWidth = Math.max(width, naturalWidth);
         const totalHeight = Math.max(icon.displayHeight, buttonText.height) + padding.y * 2;
         bg.setSize(totalWidth, totalHeight);
 
@@ -90,7 +94,7 @@ export class UIHelpers {
      * @param {number} y - Y position (center)
      * @param {string} text - Button text
      * @param {object} options - Additional options
-     * @returns {Phaser.GameObjects.Text} - The text object
+     * @returns {object} - { container, text, bg }
      */
     static createTextButton(scene, x, y, text, options = {}) {
         const {
@@ -99,24 +103,35 @@ export class UIHelpers {
             hoverColor = '#00ffff',
             depth = 201,
             padding = { x: 20, y: 10 },
+            width = UIHelpers.DEFAULT_BUTTON_WIDTH,
             callback = null
         } = options;
 
-        const button = scene.add.text(x, y, text, {
+        const container = scene.add.container(x, y).setDepth(depth).setScrollFactor(0);
+        const buttonText = scene.add.text(0, 0, text, {
             fontSize: fontSize,
             color: textColor,
-            fontStyle: 'bold',
-            backgroundColor: '#333333',
-            padding: padding
-        }).setOrigin(0.5).setScrollFactor(0).setDepth(depth).setInteractive({ useHandCursor: true });
+            fontStyle: 'bold'
+        }).setOrigin(0.5);
 
-        button.on('pointerover', () => button.setColor(hoverColor));
-        button.on('pointerout', () => button.setColor(textColor));
+        const naturalWidth = buttonText.width + padding.x * 2;
+        const totalWidth = Math.max(width, naturalWidth);
+        const totalHeight = buttonText.height + padding.y * 2;
+        const bg = scene.add.rectangle(0, 0, totalWidth, totalHeight, 0x333333)
+            .setOrigin(0.5);
+
+        container.add([bg, buttonText]);
+        container.setSize(totalWidth, totalHeight);
+        container.setInteractive({ useHandCursor: true });
+        container.setScrollFactor(0);
+
+        container.on('pointerover', () => buttonText.setColor(hoverColor));
+        container.on('pointerout', () => buttonText.setColor(textColor));
 
         if (callback) {
-            button.on('pointerdown', callback);
+            container.on('pointerdown', callback);
         }
 
-        return button;
+        return { container, text: buttonText, bg };
     }
 }

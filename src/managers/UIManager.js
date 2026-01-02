@@ -33,12 +33,12 @@ export class UIManager {
         scene.heightTextBg = scene.add.rectangle(scoreX, scoreY + 42, 110, 22, 0x000000, 0.5)
             .setOrigin(0, 0.5).setScrollFactor(0).setDepth(99);
 
-        scene.heightText = scene.add.text(scoreX + 8, scoreY + 30, 'ALTURA: ' + scene.currentHeight + 'm', {
+        scene.heightText = scene.add.text(scoreX + 8, scoreY + 30, 'HEIGHT: ' + scene.currentHeight + 'm', {
             fontSize: '14px',
             color: '#fff'
         }).setScrollFactor(0).setDepth(100);
 
-        scene.uiText = scene.add.text(centerX, 200, '¡SUBE!', { fontSize: '18px', color: '#00ffff', align: 'center', fontStyle: 'bold' }).setOrigin(0.5).setScrollFactor(0).setDepth(100);
+        scene.uiText = scene.add.text(centerX, 200, 'CLIMB!', { fontSize: '18px', color: '#00ffff', align: 'center', fontStyle: 'bold' }).setOrigin(0.5).setScrollFactor(0).setDepth(100);
 
         // --- PAUSE BUTTON ---
         // Icon should be white (from atlas) and sized appropriately
@@ -60,7 +60,7 @@ export class UIManager {
         scene.pauseMenuBg = scene.add.rectangle(scene.cameras.main.centerX, scene.cameras.main.centerY, scene.cameras.main.width, scene.cameras.main.height, 0x000000, 0.9)
             .setScrollFactor(0).setDepth(200).setVisible(false).setInteractive();
 
-        scene.pauseMenuTitle = scene.add.text(centerX, 180, 'PAUSA', {
+        scene.pauseMenuTitle = scene.add.text(centerX, 180, 'PAUSE', {
             fontSize: '48px', color: '#ffd700', fontStyle: 'bold'
         }).setOrigin(0.5).setScrollFactor(0).setDepth(201).setVisible(false);
 
@@ -73,17 +73,19 @@ export class UIManager {
         let buttonY = 280;
 
         // Continue Button (Text only, no icon)
-        scene.continueButton = UIHelpers.createTextButton(scene, centerX, buttonY, 'CONTINUAR', {
+        const continueBtn = UIHelpers.createTextButton(scene, centerX, buttonY, 'CONTINUE', {
             textColor: '#00ff00',
             hoverColor: '#00ffff',
             callback: () => this.togglePauseMenu()
         });
+        scene.continueButton = continueBtn.container;
+        scene.continueButtonText = continueBtn.text;
         scene.continueButton.setVisible(false);
         buttonY += buttonSpacing;
 
         // Sound Toggle Button (Icon + Text)
         const soundEnabled = scene.registry.get('soundEnabled') !== false;
-        const soundTextStr = soundEnabled ? 'SONIDO: ON' : 'SONIDO: OFF';
+        const soundTextStr = soundEnabled ? 'SOUND: ON' : 'SOUND: OFF';
         const soundIconFrame = soundEnabled ? 'volume-up' : 'volume-mute';
 
         const soundButton = UIHelpers.createIconButton(scene, centerX, buttonY, soundIconFrame, soundTextStr, {
@@ -109,7 +111,7 @@ export class UIManager {
         buttonY += buttonSpacing;
 
         // Exit Button (Icon + Text)
-        const exitButton = UIHelpers.createIconButton(scene, centerX, buttonY, 'door', 'SALIR AL MENÚ', {
+        const exitButton = UIHelpers.createIconButton(scene, centerX, buttonY, 'door', 'EXIT TO MENU', {
             textColor: '#ff6666',
             hoverColor: '#ff0000',
             iconTint: 0xff6666,
@@ -145,7 +147,7 @@ export class UIManager {
             scene.add.text(leftTextX, controlY, '< HOLD & SLIDE >', { fontSize: '12px', color: '#fff', alpha: 0.4 }).setOrigin(0.5).setScrollFactor(0).setDepth(100);
             scene.add.text(rightTextX, controlY, 'JUMP', { fontSize: '12px', color: '#fff', alpha: 0.4 }).setOrigin(0.5).setScrollFactor(0).setDepth(100);
         } else {
-            scene.add.text(centerX, 560, '← → MOVER | SPACE SALTAR', { fontSize: '12px', color: '#fff', alpha: 0.4 }).setOrigin(0.5).setScrollFactor(0);
+            scene.add.text(centerX, 560, '← → MOVE | SPACE JUMP', { fontSize: '12px', color: '#fff', alpha: 0.4 }).setOrigin(0.5).setScrollFactor(0);
         }
     }
 
@@ -254,7 +256,7 @@ export class UIManager {
     updateHeight(height) {
         const scene = this.scene;
         if (scene.heightText) {
-            scene.heightText.setText(`ALTURA: ${height}m`);
+            scene.heightText.setText(`HEIGHT: ${height}m`);
         }
     }
 
@@ -282,7 +284,7 @@ export class UIManager {
 
             // Update button icons and text to reflect current registry state
         const soundEnabled = GameState.soundEnabled;
-            const soundTextStr = soundEnabled ? 'SONIDO: ON' : 'SONIDO: OFF';
+            const soundTextStr = soundEnabled ? 'SOUND: ON' : 'SOUND: OFF';
             const soundIcon = soundEnabled ? 'volume-up' : 'volume-mute';
             if (scene.soundToggleText) {
                 scene.soundToggleText.setText(soundTextStr);

@@ -142,7 +142,7 @@ export class AudioManager {
 
         // Update button text and icon if they exist (in pause menu)
         if (this.scene.soundToggleText) {
-            this.scene.soundToggleText.setText(newState ? 'SONIDO: ON' : 'SONIDO: OFF');
+            this.scene.soundToggleText.setText(newState ? 'SOUND: ON' : 'SOUND: OFF');
             this.scene.soundToggleIcon.setFrame(newState ? 'volume-up' : 'volume-mute');
         }
         // For Settings scene

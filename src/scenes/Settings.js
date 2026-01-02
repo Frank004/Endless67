@@ -64,5 +64,6 @@ export class Settings extends Phaser.Scene {
         const backBtn = UIHelpers.createTextButton(this, width / 2, buttonY, 'BACK TO MENU', {
             callback: () => this.scene.start('MainMenu')
         });
+        this.backButton = backBtn.container;
     }
 }
