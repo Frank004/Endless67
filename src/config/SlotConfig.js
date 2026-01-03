@@ -31,7 +31,7 @@ export const SLOT_CONFIG = {
     platformHeight: PLATFORM_HEIGHT,    // Altura estándar (1 tile de 32px)
     minVerticalGap: 160,     // Distancia mínima entre plataformas (NO NEGOCIABLE)
     maxVerticalGap: 192,     // Distancia máxima entre plataformas
-    slotGap: 120,            // Distancia entre slots 
+    slotGap: 0,              // Distancia entre slots (0 para efecto LEGO continuo) 
 
     // ─────────────────────────────────────────────────────────────
     // TIPOS DE SLOTS
