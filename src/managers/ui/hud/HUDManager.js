@@ -1,4 +1,4 @@
-import GameState from '../../core/GameState.js';
+import GameState from '../../../core/GameState.js';
 
 export class HUDManager {
     constructor(scene) {
