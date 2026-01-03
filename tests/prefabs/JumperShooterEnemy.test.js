@@ -97,6 +97,17 @@ describe('JumperShooterEnemy', () => {
             jumperShooterEnemies: {
                 remove: jest.fn()
             },
+            textures: {
+                exists: jest.fn(() => false)
+            },
+            add: {
+                graphics: jest.fn(() => ({
+                    fillStyle: jest.fn(),
+                    fillRect: jest.fn(),
+                    generateTexture: jest.fn(),
+                    destroy: jest.fn()
+                }))
+            },
             jumperShooterEnemyPool: {
                 despawn: jest.fn()
             },

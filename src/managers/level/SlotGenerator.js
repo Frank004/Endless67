@@ -12,7 +12,8 @@ import { MAZE_PATTERNS_EASY, MAZE_PATTERNS_MEDIUM, MAZE_PATTERNS, MAZE_ROW_HEIGH
 import { PatternTransformer } from '../../utils/PatternTransformer.js';
 import { COIN_BASE_SIZE } from '../../prefabs/Coin.js';
 import { POWERUP_BASE_SIZE } from '../../prefabs/Powerup.js';
-import { ENEMY_CONFIG } from '../../config/EnemyConfig.js';
+// Enemy logic delegated to EnemySpawnStrategy
+import { EnemySpawnStrategy } from './EnemySpawnStrategy.js';
 
 export class SlotGenerator {
     constructor(scene) {
@@ -35,6 +36,9 @@ export class SlotGenerator {
         this.slotHeight = SLOT_CONFIG.slotHeight;
         this.spawnBuffer = SLOT_CONFIG.rules.spawnBuffer;
         this.cleanupDistance = SLOT_CONFIG.rules.cleanupDistance;
+
+        // Estrategia de spawn de enemigos
+        this.enemySpawnStrategy = new EnemySpawnStrategy(scene);
 
         // Flag para prevenir múltiples generaciones en el mismo frame
         this.isGenerating = false;
@@ -350,49 +354,12 @@ export class SlotGenerator {
             }
 
             // ─────────────────────────────────────────────────────────────
-            // SPAWN ENEMIGOS: Solo en plataformas ESTÁTICAS
+            // SPAWN ENEMIGOS: Delegado a EnemySpawnStrategy
             // ─────────────────────────────────────────────────────────────
-            if (!isMoving && platform && platform.active) {
-                const enemyChancePatrol = config.spawnChances.patrol || 0;
-                const enemyChanceShooter = config.spawnChances.shooter || 0;
-                const enemyChanceJumper = config.spawnChances.jumper || 0;
-                const rand = Math.random();
-
-                // Evaluar en orden: patrol, shooter, jumper
-                if (enemyChancePatrol > 0 && rand < enemyChancePatrol) {
-                    // Spawn Patrol Enemy
-                    this.scene.time.delayedCall(200, () => {
-                        const enemy = this.scene.levelManager.spawnPatrol(platform);
-                        if (enemy && enemy.active) {
-                            const platformHalfWidth = SLOT_CONFIG.platformWidth / 2;
-                            const enemyHalfWidth = ENEMY_CONFIG.PATROL.SIZE / 2;
-                            const margin = 4;
-                            const minX = platform.x - platformHalfWidth + enemyHalfWidth + margin;
-                            const maxX = platform.x + platformHalfWidth - enemyHalfWidth - margin;
-                            const patrolSpeed = ENEMY_CONFIG.PATROL.SPEED;
-
-                            if (minX >= maxX) return;
-
-                            this.scene.time.delayedCall(300, () => {
-                                if (enemy && enemy.active && enemy.body) {
-                                    enemy.setPatrolBounds(minX, maxX, patrolSpeed);
-                                    enemy.patrol(minX, maxX, patrolSpeed);
-                                }
-                            });
-                        }
-                    });
-                } else if (enemyChanceShooter > 0 && rand < enemyChancePatrol + enemyChanceShooter) {
-                    // Spawn Shooter Enemy
-                    this.scene.time.delayedCall(200, () => {
-                        this.scene.levelManager.spawnShooter(platform);
-                    });
-                } else if (enemyChanceJumper > 0 && rand < enemyChancePatrol + enemyChanceShooter + enemyChanceJumper) {
-                    // Spawn Jumper Enemy
-                    this.scene.time.delayedCall(200, () => {
-                        this.scene.levelManager.spawnJumperShooter(platform);
-                    });
-                }
-            }
+            this.enemySpawnStrategy.trySpawn(platform, {
+                isMoving: isMoving,
+                spawnChances: config.spawnChances
+            });
 
             // Siguiente Y (siempre 160px arriba)
             const previousY = currentY;

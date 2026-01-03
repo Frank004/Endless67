@@ -1,80 +1,38 @@
 import EventBus, { Events } from '../core/EventBus.js';
 import { PlayerController } from '../player/PlayerController.js';
+import { PlayerVisuals } from '../player/PlayerVisuals.js';
+import { PlayerPhysics } from '../player/PlayerPhysics.js';
 import { PLAYER_CONFIG } from '../config/PlayerConfig.js';
 import { ASSETS } from '../config/AssetKeys.js';
-import { REGISTRY_KEYS } from '../config/RegistryKeys.js';
 
 export class Player extends Phaser.Physics.Arcade.Sprite {
     constructor(scene, x, y) {
-        // Determinar qué textura usar: atlas de player (prioridad), PNG opcional o placeholder generado
-        const hasAtlas = scene.textures.exists(ASSETS.PLAYER);
-        const usePNG = scene.registry.get(REGISTRY_KEYS.USE_PLAYER_PNG) === true; // Debe ser explícitamente true
-        const hasPNG = scene.textures.exists(ASSETS.PLAYER_PNG);
-        const textureKey = hasAtlas ? ASSETS.PLAYER : (usePNG && hasPNG ? ASSETS.PLAYER_PNG : ASSETS.PLAYER_PLACEHOLDER);
-        const frameKey = hasAtlas ? 'IDLE 1.png' : undefined;
+        super(scene, x, y); // Texture is set by Visuals init
 
-        // Debug log para verificar qué textura se está usando
-        if (hasAtlas) {
-            console.log('🎨 Player: Usando atlas (player) -> frame IDLE 1.png');
-        } else if (usePNG && hasPNG) {
-            console.log('🎨 Player: Usando PNG (player_png)');
-        } else {
-            console.log('🎨 Player: Usando placeholder generado (player_placeholder)');
-        }
-
-        super(scene, x, y, textureKey, frameKey);
         scene.add.existing(this);
         scene.physics.add.existing(this);
-        this.setDisplaySize(32, 32);
-        // Animación idle por defecto
-        if (scene.anims.exists('player_idle')) {
-            this.play('player_idle');
-        }
-        // Exponer EventBus en scene para que el contexto pueda emitir sin acoplarse
+
+        // Components
+        this.visuals = new PlayerVisuals(this);
+        this.physics = new PlayerPhysics(this);
+
+        // Initialize Components
+        this.visuals.init();
+        this.physics.init();
+
+        // Exponer EventBus (context support)
         if (!scene.eventBus) {
             scene.eventBus = EventBus;
         }
 
-        // Event listeners storage for cleanup (must be initialized before setupEventListeners)
+        // Event listeners storage
         this.eventListeners = [];
-
-        // Setup event listeners
         this.setupEventListeners();
 
-        // Player sprite size (actualizado para 32x32px)
-        // El body de física se ajusta para evitar penetración en las paredes
-        // IMPORTANTE: El body debe ser más pequeño que el sprite y estar correctamente centrado
-        // para evitar que penetre las paredes cuando colisiona con los bounds del mundo
-        if (this.body) {
-            const spriteWidth = this.displayWidth || 32; // Ancho del sprite visual
-            const spriteHeight = this.displayHeight || 32; // Alto del sprite visual
-
-            // Ancho del body ajustado para que el sprite no se vea dentro de la pared
-            const bodyWidth = PLAYER_CONFIG.BODY.WIDTH;
-            // Altura del body: mantener proporción y pies definidos
-            const bodyHeight = Math.max(PLAYER_CONFIG.BODY.MIN_HEIGHT, spriteHeight - PLAYER_CONFIG.BODY.OFFSET_Y_MARGIN);
-
-            // Centrar horizontalmente y ajustar verticalmente (pies en la parte inferior)
-            const offsetX = (spriteWidth - bodyWidth) / 2;
-            const offsetY = spriteHeight - bodyHeight;
-
-            this.body.setSize(bodyWidth, bodyHeight);
-            this.body.setOffset(offsetX, offsetY);
-
-            // Las paredes físicas manejarán las colisiones, no los world bounds
-            this.body.setBounce(0, 0);
+        // Anims defaults (can be moved to Visuals later if needed)
+        if (scene.anims.exists('player_idle')) {
+            this.play('player_idle');
         }
-
-        // Gravedad heredada del mundo (1200)
-        // No necesitamos setGravityY() porque ya viene del mundo
-        this.setMaxVelocity(PLAYER_CONFIG.MAX_VELOCITY.X, PLAYER_CONFIG.MAX_VELOCITY.Y);
-        this.setDragX(PLAYER_CONFIG.DRAG_X);
-        // IMPORTANTE: NO usar setCollideWorldBounds para permitir que el jugador
-        // toque las paredes físicas y active los walljumps
-        // Las paredes físicas (leftWall, rightWall) manejarán las colisiones
-        this.setCollideWorldBounds(false);
-        this.body.onWorldBounds = false;
-        this.setDepth(20);
 
         // FSM/Animation controller (control único de orquestación)
         this.controller = new PlayerController(this);

@@ -24,28 +24,17 @@ export class EnemySpawner {
         const scene = this.scene;
         if (platform && platform.active === false) return;
 
-        // X position: center of the platform
-        const ex = platform?.x ?? scene.cameras.main.centerX;
+        const pos = this._calculateSpawnPosition(platform, ENEMY_CONFIG.PATROL.SIZE);
+        if (!pos) return null;
 
-        // Y position: directly on top of the platform
-        const platformHalfHeight = (SLOT_CONFIG.platformHeight || 32) / 2;
-        const platformTop = platform.y - platformHalfHeight;
-        const enemyHalfHeight = ENEMY_CONFIG.PATROL.SIZE / 2;
-        const ey = platformTop - enemyHalfHeight + 1;  // 1px overlap to ensure contact
-
-        if (!isFinite(ey) || isNaN(ey)) {
-            console.error(`  ❌ ERROR: Invalid Y position for enemy: ${ey}`);
-            return null;
-        }
-
-        const enemy = scene.patrolEnemyPool.spawn(ex, ey);
+        const enemy = scene.patrolEnemyPool.spawn(pos.x, pos.y);
         if (enemy) {
             // Configure patrol bounds
             const platformHalfWidth = (SLOT_CONFIG.platformWidth || 128) / 2;
             const enemyHalfWidth = ENEMY_CONFIG.PATROL.SIZE / 2;
             const margin = ENEMY_CONFIG.PATROL.BOUNDS_MARGIN;
-            const minX = ex - platformHalfWidth + enemyHalfWidth + margin;
-            const maxX = ex + platformHalfWidth - enemyHalfWidth - margin;
+            const minX = pos.x - platformHalfWidth + enemyHalfWidth + margin;
+            const maxX = pos.x + platformHalfWidth - enemyHalfWidth - margin;
 
             enemy.setPatrolBounds(minX, maxX, ENEMY_CONFIG.PATROL.SPEED);
 
@@ -69,13 +58,10 @@ export class EnemySpawner {
     spawnShooter(platform) {
         const scene = this.scene;
         try {
-            const ex = platform?.x ?? scene.cameras.main.centerX;
-            const platY = platform?.y ?? scene.cameras.main.scrollY;
-            const platHalfH = (SLOT_CONFIG.platformHeight || 32) / 2;
-            const enemyHalfH = ENEMY_CONFIG.SHOOTER.SIZE / 2;
-            const ey = platY - platHalfH - enemyHalfH + 1;
+            const pos = this._calculateSpawnPosition(platform, ENEMY_CONFIG.SHOOTER.SIZE);
+            if (!pos) return null;
 
-            const shooter = scene.shooterEnemyPool.spawn(ex, ey);
+            const shooter = scene.shooterEnemyPool.spawn(pos.x, pos.y);
             if (scene.shooterEnemies) {
                 scene.shooterEnemies.add(shooter, true);
             }
@@ -104,21 +90,13 @@ export class EnemySpawner {
         }
 
         try {
-            // X position: center of the platform
-            const ex = platform?.x ?? scene.cameras.main.centerX;
-
-            // Y position: directly on top of the platform (same as patrol enemy)
-            const platformHalfHeight = (SLOT_CONFIG.platformHeight || 32) / 2;
-            const platformTop = platform.y - platformHalfHeight;
-            const enemyHalfHeight = ENEMY_CONFIG.JUMPER.SIZE / 2;
-            const ey = platformTop - enemyHalfHeight + 1;  // 1px overlap to ensure contact
-
-            if (!isFinite(ey) || isNaN(ey)) {
-                console.error(`  ❌ ERROR: Invalid Y position for jumper: ${ey}`);
+            const pos = this._calculateSpawnPosition(platform, ENEMY_CONFIG.JUMPER.SIZE);
+            if (!pos) {
+                console.error(`  ❌ ERROR: Invalid position for jumper`);
                 return null;
             }
 
-            const jumper = scene.jumperShooterEnemyPool.spawn(ex, ey);
+            const jumper = scene.jumperShooterEnemyPool.spawn(pos.x, pos.y);
             if (!jumper) {
                 console.error('  ❌ ERROR: Failed to spawn jumper from pool');
                 return null;
@@ -129,7 +107,6 @@ export class EnemySpawner {
             }
 
             // IMPORTANTE: Delay para permitir que la física se estabilice antes de iniciar behaviors
-            // Esto previene que el jumper salte inmediatamente antes de detectar la plataforma
             const projectilesGroup = scene.projectilePool || scene.projectiles;
             scene.time.delayedCall(300, () => {
                 if (jumper && jumper.active && jumper.startBehavior) {
@@ -142,5 +119,32 @@ export class EnemySpawner {
             console.warn('Error spawning jumper shooter:', e);
             return null;
         }
+    }
+
+    /**
+     * Internal helper to calculate spawn coordinates.
+     * @private
+     * @returns {Object|null} {x, y} or null if invalid
+     */
+    _calculateSpawnPosition(platform, enemySize) {
+        const scene = this.scene;
+        const ex = platform?.x ?? scene.cameras.main.centerX;
+
+        let ey;
+        if (platform) {
+            const platformHalfHeight = (SLOT_CONFIG.platformHeight || 32) / 2;
+            const platformTop = platform.y - platformHalfHeight;
+            const enemyHalfHeight = enemySize / 2;
+            ey = platformTop - enemyHalfHeight + 1; // 1px overlap
+        } else {
+            // Fallback if no platform provided (rare)
+            const platY = scene.cameras.main.scrollY; // Example fallback
+            ey = platY;
+        }
+
+        if (!isFinite(ey) || isNaN(ey)) {
+            return null;
+        }
+        return { x: ex, y: ey };
     }
 }
