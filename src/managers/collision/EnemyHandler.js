@@ -19,7 +19,7 @@ export class EnemyHandler {
         if (ctx?.hitTimer > 0 || ctx?.flags?.hit) {
             return;
         }
-        if (scene.isInvincible) {
+        if (scene.isInvincible || player.isInvincible) {
             // Prefer devolver al pool para no reciclar objetos destruidos
             const pools = [
                 scene.patrolEnemyPool,

@@ -11,7 +11,8 @@ describe('EnemyHandler', () => {
         player = {
             setTint: jest.fn(),
             setVelocity: jest.fn(),
-            clearTint: jest.fn()
+            clearTint: jest.fn(),
+            isInvincible: false
         };
         enemy = {
             x: 10,
@@ -33,7 +34,7 @@ describe('EnemyHandler', () => {
     });
 
     test('hitEnemy should destroy enemy and play destroy sound when invincible', () => {
-        scene.isInvincible = true;
+        player.isInvincible = true;
 
         handler.hitEnemy(player, enemy);
 
