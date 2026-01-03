@@ -174,8 +174,36 @@ export class Game extends Phaser.Scene {
      */
     activateInvincibility() {
         this.isInvincible = true;
+
+        // Reset blinking/timers if re-acquired while active
         if (this.powerupTimer) this.powerupTimer.remove();
-        this.powerupTimer = this.time.delayedCall(12000, () => {
+        if (this.blinkTimer) this.blinkTimer.remove();
+
+        // Stop any running alpha tweens on player and reset alpha
+        this.tweens.killTweensOf(this.player, 'alpha');
+        this.player.setAlpha(1);
+
+        const DURATION = 12000;
+        const BLINK_START_DELAY = DURATION - 4000; // Start blinking 4 seconds before end
+
+        // Schedule blinking
+        this.blinkTimer = this.time.delayedCall(BLINK_START_DELAY, () => {
+            if (this.player && this.player.active) {
+                this.tweens.add({
+                    targets: this.player,
+                    alpha: 0.3,
+                    duration: 150,
+                    yoyo: true,
+                    repeat: 5, // 6 flashes total
+                    onComplete: () => {
+                        if (this.player && this.player.active) this.player.setAlpha(1);
+                    }
+                });
+            }
+        });
+
+        // Schedule deactivation
+        this.powerupTimer = this.time.delayedCall(DURATION, () => {
             this.deactivatePowerup();
         });
     }
