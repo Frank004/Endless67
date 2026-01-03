@@ -64,9 +64,11 @@ describe('ItemHandler', () => {
         expect(scene.isPausedEvent).toBe(true);
 
         // Simulate delayed call callback to check aura start
+        // Add mock method to player
+        player.activateInvincibility = jest.fn();
+
         const callback = scene.time.delayedCall.mock.calls[0][1];
         callback();
-        expect(scene.particleManager.startAura).toHaveBeenCalled();
-        expect(scene.activateInvincibility).toHaveBeenCalled();
+        expect(player.activateInvincibility).toHaveBeenCalled();
     });
 });

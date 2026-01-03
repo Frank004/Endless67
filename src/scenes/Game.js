@@ -173,53 +173,28 @@ export class Game extends Phaser.Scene {
      * Activates invincibility powerup.
      */
     activateInvincibility() {
-        this.isInvincible = true;
-
-        // Reset blinking/timers if re-acquired while active
-        if (this.powerupTimer) this.powerupTimer.remove();
-        if (this.blinkTimer) this.blinkTimer.remove();
-
-        // Stop any running alpha tweens on player and reset alpha
-        this.tweens.killTweensOf(this.player, 'alpha');
-        this.player.setAlpha(1);
-
-        const DURATION = 12000;
-        const BLINK_START_DELAY = DURATION - 4000; // Start blinking 4 seconds before end
-
-        // Schedule blinking
-        this.blinkTimer = this.time.delayedCall(BLINK_START_DELAY, () => {
-            if (this.player && this.player.active) {
-                this.tweens.add({
-                    targets: this.player,
-                    alpha: 0.3,
-                    duration: 150,
-                    yoyo: true,
-                    repeat: 5, // 6 flashes total
-                    onComplete: () => {
-                        if (this.player && this.player.active) this.player.setAlpha(1);
-                    }
-                });
-            }
-        });
-
-        // Schedule deactivation
-        this.powerupTimer = this.time.delayedCall(DURATION, () => {
-            this.deactivatePowerup();
-        });
+        if (this.player && this.player.activateInvincibility) {
+            this.player.activateInvincibility();
+        }
     }
 
     /**
      * Deactivates invincibility powerup.
      */
     deactivatePowerup() {
-        this.isInvincible = false;
-        if (this.particleManager) this.particleManager.stopAura();
+        if (this.player && this.player.deactivatePowerup) {
+            this.player.deactivatePowerup();
+        }
+    }
 
-        this.player.setTint(0xaaaaaa);
-        this.time.delayedCall(200, () => this.player.clearTint());
+    // Proxy for isInvincible property to maintain compatibility
+    get isInvincible() {
+        return this.player?.isInvincible || false;
+    }
 
-        if (this.powerupOverlay) {
-            this.powerupOverlay.stop();
+    set isInvincible(value) {
+        if (this.player) {
+            this.player.isInvincible = value;
         }
     }
 

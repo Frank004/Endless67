@@ -86,8 +86,11 @@ export class ItemHandler {
             t.destroy();
             scene.physics.resume();
             scene.isPausedEvent = false;
-            scene.activateInvincibility();
-            if (scene.particleManager) scene.particleManager.startAura(); // Aura durante el poder activo
+            if (player && player.activateInvincibility) {
+                player.activateInvincibility();
+            } else if (scene.activateInvincibility) { // Fallback if player method missing (should not happen)
+                scene.activateInvincibility();
+            }
         });
     }
 }

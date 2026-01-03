@@ -91,7 +91,7 @@ export class Player extends Phaser.Physics.Arcade.Sprite {
     }
 
     getPowerupJumpMultiplier() {
-        return this.scene?.isInvincible ? PLAYER_CONFIG.SPEED_MULTIPLIERS.INVINCIBLE_JUMP : 1.0;
+        return this.isInvincible ? PLAYER_CONFIG.SPEED_MULTIPLIERS.INVINCIBLE_JUMP : 1.0;
     }
 
     /**
@@ -130,7 +130,72 @@ export class Player extends Phaser.Physics.Arcade.Sprite {
     /**
      * Clean up event listeners when player is destroyed
      */
+    /**
+     * Activates invincibility powerup.
+     */
+    activateInvincibility() {
+        this.isInvincible = true;
+
+        // Reset blinking/timers if re-acquired while active
+        if (this.powerupTimer) this.powerupTimer.remove();
+        if (this.blinkTimer) this.blinkTimer.remove();
+
+        // Stop any running alpha tweens on player and reset alpha
+        this.scene.tweens.killTweensOf(this, 'alpha');
+        this.setAlpha(1);
+
+        // Start Aura
+        if (this.scene.particleManager) {
+            this.scene.particleManager.startAura();
+        }
+
+        const DURATION = 12000;
+        const BLINK_START_DELAY = DURATION - 2000; // Start blinking 2 seconds before end
+
+        // Schedule blinking
+        this.blinkTimer = this.scene.time.delayedCall(BLINK_START_DELAY, () => {
+            if (this.active) {
+                this.scene.tweens.add({
+                    targets: this,
+                    alpha: 0.3,
+                    duration: 150,
+                    yoyo: true,
+                    repeat: 5, // 6 flashes total
+                    onComplete: () => {
+                        if (this.active) this.setAlpha(1);
+                    }
+                });
+            }
+        });
+
+        // Schedule deactivation
+        this.powerupTimer = this.scene.time.delayedCall(DURATION, () => {
+            this.deactivatePowerup();
+        });
+    }
+
+    /**
+     * Deactivates invincibility powerup.
+     */
+    deactivatePowerup() {
+        this.isInvincible = false;
+
+        // Stop Aura
+        if (this.scene.particleManager) {
+            this.scene.particleManager.stopAura();
+        }
+
+        this.setTint(0xaaaaaa);
+        this.scene.time.delayedCall(200, () => this.clearTint());
+
+        if (this.powerupOverlay) {
+            this.powerupOverlay.stop();
+        }
+    }
+
     destroy() {
+        if (this.powerupTimer) this.powerupTimer.remove();
+        if (this.blinkTimer) this.blinkTimer.remove();
         this.eventListeners.forEach(({ event, listener }) => {
             EventBus.off(event, listener);
         });
@@ -243,7 +308,7 @@ export class Player extends Phaser.Physics.Arcade.Sprite {
 
     // Helpers de física para el FSM/context
     move(direction) {
-        const speedMult = this.scene?.isInvincible ? PLAYER_CONFIG.SPEED_MULTIPLIERS.INVINCIBLE_MOVE : 1.0;
+        const speedMult = this.isInvincible ? PLAYER_CONFIG.SPEED_MULTIPLIERS.INVINCIBLE_MOVE : 1.0;
         const force = this.baseMoveForce * speedMult;
         this.setAccelerationX(direction * force);
     }
