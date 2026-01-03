@@ -13,7 +13,7 @@ import { isMobileDevice, getResolution } from './utils/DeviceDetection.js';
 if (typeof window !== 'undefined') {
     const disableLogs = true;
     if (disableLogs && window.console) {
-        const noop = () => {};
+        const noop = () => { };
         window.console.log = noop;
         window.console.info = noop;
         window.console.debug = noop;
@@ -54,7 +54,7 @@ const config = {
         }
     },
     input: { activePointers: 3 },
-    physics: { default: 'arcade', arcade: { gravity: { y: 0 }, debug: false } },
+    physics: { default: 'arcade', arcade: { gravity: { y: 1200 }, debug: false } },
     scene: [Boot, MainMenu, Game, Leaderboard, Settings, Playground]
 };
 

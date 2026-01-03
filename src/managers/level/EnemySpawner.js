@@ -104,15 +104,39 @@ export class EnemySpawner {
         }
 
         try {
+            // X position: center of the platform
             const ex = platform?.x ?? scene.cameras.main.centerX;
-            const ey = (platform?.y ?? scene.cameras.main.scrollY) - 50;
+
+            // Y position: directly on top of the platform (same as patrol enemy)
+            const platformHalfHeight = (SLOT_CONFIG.platformHeight || 32) / 2;
+            const platformTop = platform.y - platformHalfHeight;
+            const enemyHalfHeight = ENEMY_CONFIG.JUMPER.SIZE / 2;
+            const ey = platformTop - enemyHalfHeight + 1;  // 1px overlap to ensure contact
+
+            if (!isFinite(ey) || isNaN(ey)) {
+                console.error(`  ❌ ERROR: Invalid Y position for jumper: ${ey}`);
+                return null;
+            }
 
             const jumper = scene.jumperShooterEnemyPool.spawn(ex, ey);
+            if (!jumper) {
+                console.error('  ❌ ERROR: Failed to spawn jumper from pool');
+                return null;
+            }
+
             if (scene.jumperShooterEnemies) {
                 scene.jumperShooterEnemies.add(jumper, true);
             }
+
+            // IMPORTANTE: Delay para permitir que la física se estabilice antes de iniciar behaviors
+            // Esto previene que el jumper salte inmediatamente antes de detectar la plataforma
             const projectilesGroup = scene.projectilePool || scene.projectiles;
-            jumper.startBehavior(projectilesGroup);
+            scene.time.delayedCall(300, () => {
+                if (jumper && jumper.active && jumper.startBehavior) {
+                    jumper.startBehavior(projectilesGroup);
+                }
+            });
+
             return jumper;
         } catch (e) {
             console.warn('Error spawning jumper shooter:', e);

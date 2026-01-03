@@ -56,13 +56,13 @@ export class PatrolBehavior {
         if (!this.isPatrolling) {
             return;
         }
-        
+
         // Verificar que el enemigo tenga body
         if (!this.enemy.body) {
             console.error(`  ❌ PatrolBehavior.update: enemy.body es null`);
             return;
         }
-        
+
         // Actualizar información de plataforma
         updatePlatformRider(this.enemy);
 
@@ -73,12 +73,15 @@ export class PatrolBehavior {
         const desiredVel = platformVel + this.patrolSpeed * this.patrolDir;
         this.enemy.setVelocityX(desiredVel);
 
-        // Respetar límites de patrullaje
-        if (this.enemy.x >= this.maxX) {
+        // Respetar límites de patrullaje con margen de tolerancia
+        // Usamos margen porque con velocidad de 60px/s puede "saltar" sobre el límite exacto
+        const tolerance = 2; // 2px de margen
+
+        if (this.enemy.x >= this.maxX - tolerance) {
             this.patrolDir = -1;
             this.enemy.setVelocityX(platformVel - this.patrolSpeed);
             if (this.enemy.setFlipX) this.enemy.setFlipX(true);
-        } else if (this.enemy.x <= this.minX) {
+        } else if (this.enemy.x <= this.minX + tolerance) {
             this.patrolDir = 1;
             this.enemy.setVelocityX(platformVel + this.patrolSpeed);
             if (this.enemy.setFlipX) this.enemy.setFlipX(false);
@@ -86,9 +89,11 @@ export class PatrolBehavior {
 
         // Cambio de dirección por colisión lateral
         if (this.enemy.body.blocked.left) {
+            console.log('🔵 PATROL: Blocked LEFT');
             this.patrolDir = 1;
             if (this.enemy.setFlipX) this.enemy.setFlipX(false);
         } else if (this.enemy.body.blocked.right) {
+            console.log('🔵 PATROL: Blocked RIGHT');
             this.patrolDir = -1;
             if (this.enemy.setFlipX) this.enemy.setFlipX(true);
         }

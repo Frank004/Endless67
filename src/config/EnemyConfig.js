@@ -3,7 +3,7 @@ export const ENEMY_CONFIG = {
         SIZE: 32,
         GRAVITY: 1200,
         SPEED: 60,
-        BOUNDS_MARGIN: 4
+        BOUNDS_MARGIN: 2  // Margen reducido para más espacio de patrullaje
     },
     SHOOTER: {
         SIZE: 32,
@@ -12,8 +12,8 @@ export const ENEMY_CONFIG = {
     JUMPER: {
         SIZE: 32,
         GRAVITY: 1200,
-        JUMP_FORCE: -400,
-        JUMP_INTERVAL_MIN: 1000,
-        JUMP_INTERVAL_MAX: 2000
+        JUMP_FORCE: -465,      // Altura máxima ~90px
+        JUMP_INTERVAL_MIN: 800,  // Saltos más frecuentes para dinamismo
+        JUMP_INTERVAL_MAX: 1500
     }
 };

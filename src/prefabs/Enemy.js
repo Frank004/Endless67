@@ -49,8 +49,11 @@ export class PatrolEnemy extends Phaser.Physics.Arcade.Sprite {
 
         // Configurar física
         this.body.reset(x, y);
+        // IMPORTANTE: PatrolEnemy usa platformRider para movimiento vertical
+        // allowGravity debe estar TRUE para que platformRider detecte bordes
+        // pero gravity.y = 0 para que no caiga (platformRider maneja el movimiento)
         this.body.allowGravity = true;
-        this.setGravityY(ENEMY_CONFIG.PATROL.GRAVITY);
+        this.body.gravity.y = 0;  // Sin gravedad, platformRider maneja vertical
         this.body.immovable = false;
         this.body.updateFromGameObject();  // Sincronizar body con posición del sprite
 
@@ -262,101 +265,115 @@ export class ShooterEnemy extends Phaser.Physics.Arcade.Sprite {
 }
 
 export class JumperShooterEnemy extends Phaser.Physics.Arcade.Sprite {
-    constructor(scene, x = 0, y = 0) {
-        // Constructor puede recibir x, y o no (para pooling)
-        super(scene, x, y, ASSETS.ENEMY_JUMPER_SHOOTER);
+    constructor(scene, x, y) {
+        // Crear textura de cubo violeta sólido si no existe
+        if (!scene.textures.exists('jumper_cube')) {
+            const graphics = scene.add.graphics();
+            graphics.fillStyle(0x9B59B6, 1); // Color violeta
+            graphics.fillRect(0, 0, 32, 32);
+            graphics.generateTexture('jumper_cube', 32, 32);
+            graphics.destroy();
+        }
+
+        super(scene, x, y, 'jumper_cube');
+
+        // Agregar al sistema de física (CRÍTICO para pooling)
+        scene.physics.add.existing(this);
+
         this.setDepth(20);
 
-        // Use 'carry' mode: only follow platform, jumping is handled separately
-        enablePlatformRider(this, { mode: 'carry', marginX: 5 });
-
-        // Strategy Pattern: Usar múltiples comportamientos
+        // Strategy Pattern: Jump + Shoot behaviors
         this.jumpBehavior = new JumpBehavior(this, ENEMY_CONFIG.JUMPER.JUMP_FORCE);
         this.shootBehavior = new ShootBehavior(this);
     }
 
     spawn(x, y) {
-        // Asegurar que está en el physics world
-        if (!this.body) {
-            this.scene.physics.add.existing(this);
+        // Reset physics body
+        this.body.reset(x, y);
+
+        // Tamaño completo 32x32 (visual y física)
+        this.setDisplaySize(ENEMY_CONFIG.JUMPER.SIZE, ENEMY_CONFIG.JUMPER.SIZE);
+        this.setScale(1);
+
+        // Body completo 32x32
+        if (this.body) {
+            this.body.setSize(ENEMY_CONFIG.JUMPER.SIZE, ENEMY_CONFIG.JUMPER.SIZE);
+            this.body.setOffset(0, 0);
         }
 
-        this.setDisplaySize(ENEMY_CONFIG.JUMPER.SIZE, ENEMY_CONFIG.JUMPER.SIZE);
-        this.setScale(1);  // Reset scale before tween
 
-        // Reset body
-        this.body.reset(x, y);
-        this.body.setSize(ENEMY_CONFIG.JUMPER.SIZE, ENEMY_CONFIG.JUMPER.SIZE);
-        this.body.setOffset(0, 0);
+        // La gravedad se hereda del mundo (1200)
+        // Solo necesitamos asegurar que no sea immovable
+        this.body.immovable = false;
 
-        this.body.allowGravity = true; // Needs gravity to jump
-        this.setGravityY(ENEMY_CONFIG.JUMPER.GRAVITY);
-        this.body.immovable = false;   // Needs to move
-        this.setCollideWorldBounds(false);
         this.setActive(true);
         this.setVisible(true);
         this.setDepth(20);
         this.setVelocityX(0);
+        this.setVelocityY(0);
 
-        // 6. Tweens for Dynamic Enemies: Pop-in effect
+        // Reset behaviors
+        this.stopBehavior();
+
+        // Pop-in effect
         this.setScale(0);
         this.scene.tweens.add({ targets: this, scale: 1, duration: 400, ease: 'Back.out' });
     }
 
-    /**
-     * Método llamado cuando el objeto es devuelto al pool
-     */
     despawn() {
-        // Detener comportamientos
         this.stopBehavior();
-
-        // Limpiar estado
         if (this.body) {
             this.setVelocityX(0);
             this.setVelocityY(0);
         }
-        this.setScale(1); // Reset scale
-
-        // Remover del grupo legacy si existe
+        this.setScale(1);
         if (this.scene && this.scene.jumperShooterEnemies) {
             this.scene.jumperShooterEnemies.remove(this);
         }
-
-        // Desactivar
         this.setActive(false);
         this.setVisible(false);
     }
 
-    /**
-     * Iniciar comportamientos (salto y disparo)
-     */
     startBehavior(projectilesGroup) {
         this.stopBehavior();
-
-        // Strategy Pattern: Iniciar ambos comportamientos
         this.jumpBehavior.startJumping(ENEMY_CONFIG.JUMPER.JUMP_INTERVAL_MIN, ENEMY_CONFIG.JUMPER.JUMP_INTERVAL_MAX);
         this.shootBehavior.startShooting(projectilesGroup, this.scene.currentHeight || 0);
     }
 
-    /**
-     * Disparar (delegado a ShootBehavior)
-     * @deprecated Usar startBehavior en su lugar
-     */
-    shoot(projectilesGroup) {
-        // Mantener compatibilidad
-        if (!this.shootBehavior.projectilesGroup) {
-            this.shootBehavior.startShooting(projectilesGroup, this.scene.currentHeight || 0);
-        } else {
-            this.shootBehavior.shoot();
-        }
-    }
-
-    /**
-     * Detener todos los comportamientos
-     */
     stopBehavior() {
         this.jumpBehavior.stopJumping();
         this.shootBehavior.stopShooting();
+    }
+
+    preUpdate(time, delta) {
+        super.preUpdate(time, delta);
+
+        // Efecto visual dinámico: squash and stretch basado en velocidad
+        if (this.body) {
+            const velocityY = this.body.velocity.y;
+
+            // Cuando sube (velocidad negativa): estirar verticalmente
+            // Cuando baja (velocidad positiva): comprimir verticalmente
+            const stretchFactor = Math.abs(velocityY) / 500; // Normalizar
+            const scaleY = 1 + (velocityY < 0 ? stretchFactor * 0.15 : -stretchFactor * 0.1);
+            const scaleX = 1 + (velocityY < 0 ? -stretchFactor * 0.1 : stretchFactor * 0.15);
+
+            // Aplicar escala suave usando lerp manual
+            const lerpX = this.scaleX + (scaleX - this.scaleX) * 0.3;
+            const lerpY = this.scaleY + (scaleY - this.scaleY) * 0.3;
+            this.setScale(lerpX, lerpY);
+        }
+
+        // Cleanup offscreen
+        if (this.y > this.scene.player.y + 900) {
+            if (this.scene.jumperShooterEnemyPool) {
+                this.scene.jumperShooterEnemyPool.despawn(this);
+            } else {
+                this.stopBehavior();
+                this.setActive(false);
+                this.setVisible(false);
+            }
+        }
     }
 
     destroy(fromScene) {
@@ -368,23 +385,5 @@ export class JumperShooterEnemy extends Phaser.Physics.Arcade.Sprite {
             this.shootBehavior.destroy();
         }
         super.destroy(fromScene);
-    }
-
-    preUpdate(time, delta) {
-        super.preUpdate(time, delta);
-
-        // Update platform rider behavior
-        updatePlatformRider(this);
-
-        // Cleanup offscreen - usar despawn si hay pool
-        if (this.y > this.scene.player.y + 900) {
-            if (this.scene.jumperShooterEnemyPool) {
-                this.scene.jumperShooterEnemyPool.despawn(this);
-            } else {
-                this.stopBehavior();
-                this.setActive(false);
-                this.setVisible(false);
-            }
-        }
     }
 }

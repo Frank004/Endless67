@@ -54,9 +54,9 @@ export const SLOT_CONFIG = {
             spawnChances: {
                 coins: 0.4,
                 powerups: 0.25,
-                patrol: 0.2,   // Chance de patrullero por plataforma estática
-                shooter: 0.1,  // Chance de shooter por plataforma estática
-                jumper: 0.1    // Chance de jumper por plataforma estática
+                patrol: 0.2,
+                shooter: 0.1,
+                jumper: 0.1
             },
 
             // Debug

@@ -64,11 +64,14 @@ export class JumpBehavior {
             return;
         }
 
-        // Verificar si está tocando el suelo O si la velocidad es cercana a cero (atascado)
-        const isOnGround = this.enemy.body.touching.down;
-        const isStuck = Math.abs(this.enemy.body.velocity.y) < 10 && this.enemy.y < 800;
+        // Solo saltar si está tocando el suelo
+        const isOnGround = this.enemy.body.touching.down || this.enemy.body.blocked.down;
 
-        if (isOnGround || isStuck) {
+        if (isOnGround) {
+            // Efecto de anticipación: comprimir al momento de saltar
+            this.enemy.setScale(1.15, 0.85);
+
+            // Saltar inmediatamente
             this.enemy.setVelocityY(this.jumpForce);
         }
     }

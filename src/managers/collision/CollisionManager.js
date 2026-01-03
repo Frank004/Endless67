@@ -29,7 +29,7 @@ export class CollisionManager {
             this.scene.physics.add.overlap(player, group, this.enemyHandler.hitEnemy, null, this.enemyHandler);
 
             if (group === patrolEnemies) {
-                // Spikes: use platformRider for both platforms AND mazeWalls
+                // Patrol: use platformRider for both platforms AND mazeWalls
                 this.scene.physics.add.collider(
                     group,
                     mazeWalls,
@@ -45,9 +45,9 @@ export class CollisionManager {
                     this.enemyHandler
                 );
             } else {
-                // Other enemies: normal collision
+                // Shooter and Jumper: normal collision (simple gravity-based)
                 this.scene.physics.add.collider(group, mazeWalls);
-                this.scene.physics.add.collider(group, platforms, this.enemyHandler.handleEnemyPlatformCollision, null, this.enemyHandler);
+                this.scene.physics.add.collider(group, platforms);
             }
 
             // Side walls - only for patrol enemies and jumpers

@@ -28,8 +28,7 @@ describe('Player', () => {
         expect(player).toBeDefined();
         expect(player.x).toBe(100);
         expect(player.y).toBe(100);
-        // We can't easily check gravity value without importing config, but it should be set
-        expect(player.body.gravity.y).toBeGreaterThan(0);
+        // Gravity is now inherited from world (1200), not set on individual sprites
         expect(player.controller).toBeDefined();
     });
 

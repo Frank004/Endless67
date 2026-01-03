@@ -65,7 +65,8 @@ export class Player extends Phaser.Physics.Arcade.Sprite {
             this.body.setBounce(0, 0);
         }
 
-        this.setGravityY(PLAYER_CONFIG.GRAVITY_Y);
+        // Gravedad heredada del mundo (1200)
+        // No necesitamos setGravityY() porque ya viene del mundo
         this.setMaxVelocity(PLAYER_CONFIG.MAX_VELOCITY.X, PLAYER_CONFIG.MAX_VELOCITY.Y);
         this.setDragX(PLAYER_CONFIG.DRAG_X);
         // IMPORTANTE: NO usar setCollideWorldBounds para permitir que el jugador
