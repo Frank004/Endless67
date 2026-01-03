@@ -16,7 +16,7 @@ export class PlayerPhysics {
         const scene = this.scene;
 
         // Configuración física
-        player.body.setGravityY(PLAYER_CONFIG.GRAVITY_Y);
+        // player.body.setGravityY(PLAYER_CONFIG.GRAVITY_Y); // Removing double gravity (World + Local)
         player.body.setBounce(0);
 
         const hasAtlas = scene.textures.exists(ASSETS.PLAYER);
