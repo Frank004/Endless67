@@ -61,6 +61,7 @@ export class ParticleManager {
             lifespan: 400,
             blendMode: 'ADD',
             follow: scene.player,
+            emitting: false,
             depth: 19
         });
         this.auraEmitter = scene.auraEmitter;
@@ -68,6 +69,9 @@ export class ParticleManager {
 
     startAura() {
         if (this.auraEmitter) {
+            if (this.scene.player) {
+                this.auraEmitter.startFollow(this.scene.player);
+            }
             this.auraEmitter.start();
         }
     }
