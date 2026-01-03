@@ -218,3 +218,38 @@ export const MAZE_PATTERNS_HARD = [
     MAZE_13, // Alternancia rápida
     MAZE_15  // Patrón mixto complejo
 ];
+
+/**
+ * Obtiene un maze pattern aleatorio del pool combinado (EASY + MEDIUM)
+ * @returns {Array} Maze pattern aleatorio
+ */
+export function getRandomMazePattern() {
+    const pool = [...MAZE_PATTERNS_EASY, ...MAZE_PATTERNS_MEDIUM];
+    const index = Math.floor(Math.random() * pool.length);
+    return pool[index];
+}
+
+/**
+ * Obtiene un maze pattern aleatorio excluyendo uno específico
+ * @param {Array|null} excludePattern - Pattern a excluir
+ * @returns {Array} Maze pattern aleatorio (diferente al excluido)
+ */
+export function getRandomMazePatternExcluding(excludePattern) {
+    const pool = [...MAZE_PATTERNS_EASY, ...MAZE_PATTERNS_MEDIUM];
+
+    // Si no hay patrón a excluir o solo hay 1 patrón, usar normal
+    if (!excludePattern || pool.length <= 1) {
+        return getRandomMazePattern();
+    }
+
+    // Filtrar el patrón excluido (comparar por referencia)
+    const availablePatterns = pool.filter(p => p !== excludePattern);
+
+    // Si el filtro eliminó todo (no debería pasar), usar todos
+    if (availablePatterns.length === 0) {
+        return getRandomMazePattern();
+    }
+
+    const index = Math.floor(Math.random() * availablePatterns.length);
+    return availablePatterns[index];
+}

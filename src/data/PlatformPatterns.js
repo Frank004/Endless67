@@ -29,7 +29,7 @@ export const PLATFORM_PATTERNS = [
             { x: 280, y: -480 }
         ]
     },
-    
+
     {
         name: 'zigzag_center_left',
         description: 'Zigzag centro hacia izquierda',
@@ -40,7 +40,7 @@ export const PLATFORM_PATTERNS = [
             { x: 120, y: -480 }
         ]
     },
-    
+
     {
         name: 'zigzag_center_right',
         description: 'Zigzag centro hacia derecha',
@@ -51,7 +51,7 @@ export const PLATFORM_PATTERNS = [
             { x: 280, y: -480 }
         ]
     },
-    
+
     {
         name: 'zigzag_wide',
         description: 'Zigzag amplio (extremos)',
@@ -62,7 +62,7 @@ export const PLATFORM_PATTERNS = [
             { x: 300, y: -480 }
         ]
     },
-    
+
     {
         name: 'zigzag_asymmetric',
         description: 'Zigzag asimétrico',
@@ -73,7 +73,7 @@ export const PLATFORM_PATTERNS = [
             { x: 220, y: -480 }
         ]
     },
-    
+
     // ─────────────────────────────────────────────────────────────
     // PATRONES COLUMNA (Verticales)
     // ─────────────────────────────────────────────────────────────
@@ -87,7 +87,7 @@ export const PLATFORM_PATTERNS = [
             { x: 120, y: -480 }
         ]
     },
-    
+
     {
         name: 'column_center',
         description: 'Columna centro',
@@ -98,7 +98,7 @@ export const PLATFORM_PATTERNS = [
             { x: 200, y: -480 }
         ]
     },
-    
+
     {
         name: 'column_right',
         description: 'Columna lado derecho',
@@ -109,7 +109,7 @@ export const PLATFORM_PATTERNS = [
             { x: 280, y: -480 }
         ]
     },
-    
+
     {
         name: 'column_alternating',
         description: 'Columna con alternancia suave',
@@ -120,7 +120,7 @@ export const PLATFORM_PATTERNS = [
             { x: 240, y: -480 }
         ]
     },
-    
+
     // ─────────────────────────────────────────────────────────────
     // PATRONES ESCALERA (Progresión diagonal)
     // ─────────────────────────────────────────────────────────────
@@ -134,7 +134,7 @@ export const PLATFORM_PATTERNS = [
             { x: 300, y: -480 }
         ]
     },
-    
+
     {
         name: 'stairs_right_to_left',
         description: 'Escalera de derecha a izquierda',
@@ -145,7 +145,7 @@ export const PLATFORM_PATTERNS = [
             { x: 100, y: -480 }
         ]
     },
-    
+
     {
         name: 'stairs_center_out',
         description: 'Escalera del centro hacia afuera',
@@ -156,7 +156,7 @@ export const PLATFORM_PATTERNS = [
             { x: 200, y: -480 }
         ]
     },
-    
+
     // ─────────────────────────────────────────────────────────────
     // PATRONES ESPECIALES
     // ─────────────────────────────────────────────────────────────
@@ -170,7 +170,7 @@ export const PLATFORM_PATTERNS = [
             { x: 200, y: -480 }
         ]
     },
-    
+
     {
         name: 'wave_left',
         description: 'Onda hacia la izquierda',
@@ -181,7 +181,7 @@ export const PLATFORM_PATTERNS = [
             { x: 140, y: -480 }
         ]
     },
-    
+
     {
         name: 'wave_right',
         description: 'Onda hacia la derecha',
@@ -192,7 +192,7 @@ export const PLATFORM_PATTERNS = [
             { x: 260, y: -480 }
         ]
     },
-    
+
     // ─────────────────────────────────────────────────────────────
     // PATRONES ADICIONALES (4 nuevos)
     // ─────────────────────────────────────────────────────────────
@@ -206,7 +206,7 @@ export const PLATFORM_PATTERNS = [
             { x: 200, y: -480 }
         ]
     },
-    
+
     {
         name: 'bounce_extreme',
         description: 'Rebote extremo de lado a lado',
@@ -217,7 +217,7 @@ export const PLATFORM_PATTERNS = [
             { x: 300, y: -480 }
         ]
     },
-    
+
     {
         name: 'funnel_down',
         description: 'Embudo hacia el centro',
@@ -228,7 +228,7 @@ export const PLATFORM_PATTERNS = [
             { x: 200, y: -480 }
         ]
     },
-    
+
     {
         name: 'stutter_step',
         description: 'Pasos cortos alternados',
@@ -248,6 +248,29 @@ export const PLATFORM_PATTERNS = [
 export function getRandomPattern() {
     const index = Math.floor(Math.random() * PLATFORM_PATTERNS.length);
     return PLATFORM_PATTERNS[index];
+}
+
+/**
+ * Obtiene un patrón aleatorio excluyendo uno específico
+ * @param {string|null} excludeName - Nombre del patrón a excluir
+ * @returns {Object} Patrón aleatorio (diferente al excluido)
+ */
+export function getRandomPatternExcluding(excludeName) {
+    // Si no hay patrón a excluir o solo hay 1 patrón, usar normal
+    if (!excludeName || PLATFORM_PATTERNS.length <= 1) {
+        return getRandomPattern();
+    }
+
+    // Filtrar el patrón excluido
+    const availablePatterns = PLATFORM_PATTERNS.filter(p => p.name !== excludeName);
+
+    // Si el filtro eliminó todo (no debería pasar), usar todos
+    if (availablePatterns.length === 0) {
+        return getRandomPattern();
+    }
+
+    const index = Math.floor(Math.random() * availablePatterns.length);
+    return availablePatterns[index];
 }
 
 /**

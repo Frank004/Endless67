@@ -16,16 +16,16 @@ describe('GridGenerator Logic (Pure Stacking)', () => {
     test('Should stack 100 slots perfectly ("Lego Style")', () => {
         const slots = [];
         for (let i = 0; i < 100; i++) {
-            slots.push(grid.nextSlot());
+            slots.push(grid.nextSlot(i));
         }
 
         for (let i = 0; i < slots.length - 1; i++) {
             const current = slots[i];
             const next = slots[i + 1];
 
-            // Verify Geometry
-            expect(current.height).toBe(640);
-            expect(current.yEnd).toBe(current.yStart - 640);
+            // Verify Geometry (height varies by type)
+            expect(current.height).toBeGreaterThan(0);
+            expect(current.yEnd).toBe(current.yStart - current.height);
 
             // Verify Continuity (Lego Check)
             // Next start MUST == Current End (if gap is 0)
@@ -35,14 +35,14 @@ describe('GridGenerator Logic (Pure Stacking)', () => {
             // Allow floating point precision issues (epsilon)
             const diff = Math.abs(next.yStart - expectedNextStart);
             if (diff > 0.01) {
-                console.error(`Stack Break at ${i}: Curr End ${current.yEnd}, Next Start ${next.yStart}, Diff ${diff}`);
+                console.error(`Stack Break at ${i}: Type=${current.type}, Height=${current.height}, Curr End ${current.yEnd}, Next Start ${next.yStart}, Diff ${diff}`);
             }
             expect(diff).toBeLessThan(0.01);
         }
     });
 
     test('Internal Platforms should distribute evenly', () => {
-        const slot = grid.nextSlot();
+        const slot = grid.nextSlot(0);
         if (slot.type === 'PLATFORM_BATCH') {
             const platforms = slot.data.platforms;
             expect(platforms.length).toBe(4);

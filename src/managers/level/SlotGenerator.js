@@ -88,8 +88,8 @@ export class SlotGenerator {
             this.gridGenerator.transformer.setGameWidth(currentWidth);
         }
 
-        // Get layout from GridGenerator (pure logic)
-        const layoutData = this.gridGenerator.nextSlot();
+        // Get layout from GridGenerator (pure logic) - pass current index
+        const layoutData = this.gridGenerator.nextSlot(this.currentSlotIndex);
 
         // Extract calculated values
         const slotYStart = layoutData.yStart;
