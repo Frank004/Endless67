@@ -153,19 +153,26 @@ export class Player extends Phaser.Physics.Arcade.Sprite {
         const BLINK_START_DELAY = DURATION - 2000; // Start blinking 2 seconds before end
 
         // Schedule blinking
-        this.blinkTimer = this.scene.time.delayedCall(BLINK_START_DELAY, () => {
-            if (this.active) {
-                this.scene.tweens.add({
-                    targets: this,
-                    alpha: 0.3,
-                    duration: 150,
-                    yoyo: true,
-                    repeat: 5, // 6 flashes total
-                    onComplete: () => {
-                        if (this.active) this.setAlpha(1);
+        // Schedule blinking (Flash White)
+        this.blinkTimer = this.scene.time.addEvent({
+            delay: 150,
+            startAt: 0,
+            repeat: -1, // Infinite loop until manually stopped or destroyed
+            paused: true, // Start paused
+            callback: () => {
+                if (this.active) {
+                    if (this.isTinted) {
+                        this.clearTint();
+                    } else {
+                        this.setTintFill(0xffffff);
                     }
-                });
+                }
             }
+        });
+
+        // Start blinking 2 seconds before end
+        this.startBlinkTimer = this.scene.time.delayedCall(BLINK_START_DELAY, () => {
+            if (this.blinkTimer) this.blinkTimer.paused = false;
         });
 
         // Schedule deactivation
@@ -174,9 +181,6 @@ export class Player extends Phaser.Physics.Arcade.Sprite {
         });
     }
 
-    /**
-     * Deactivates invincibility powerup.
-     */
     deactivatePowerup() {
         this.isInvincible = false;
 
@@ -185,8 +189,17 @@ export class Player extends Phaser.Physics.Arcade.Sprite {
             this.scene.particleManager.stopAura();
         }
 
-        this.setTint(0xaaaaaa);
-        this.scene.time.delayedCall(200, () => this.clearTint());
+        // Cleanup timers
+        if (this.blinkTimer) {
+            this.blinkTimer.remove();
+            this.blinkTimer = null;
+        }
+        if (this.startBlinkTimer) {
+            this.startBlinkTimer.remove();
+            this.startBlinkTimer = null;
+        }
+
+        this.clearTint();
 
         if (this.powerupOverlay) {
             this.powerupOverlay.stop();
@@ -195,7 +208,9 @@ export class Player extends Phaser.Physics.Arcade.Sprite {
 
     destroy() {
         if (this.powerupTimer) this.powerupTimer.remove();
+        if (this.startBlinkTimer) this.startBlinkTimer.remove();
         if (this.blinkTimer) this.blinkTimer.remove();
+
         this.eventListeners.forEach(({ event, listener }) => {
             EventBus.off(event, listener);
         });
