@@ -281,9 +281,16 @@ export class JumperShooterEnemy extends Phaser.Physics.Arcade.Sprite {
             this.scene.physics.add.existing(this);
         }
 
+        this.setDisplaySize(ENEMY_CONFIG.JUMPER.SIZE, ENEMY_CONFIG.JUMPER.SIZE);
+        this.setScale(1);  // Reset scale before tween
+
+        // Reset body
         this.body.reset(x, y);
+        this.body.setSize(ENEMY_CONFIG.JUMPER.SIZE, ENEMY_CONFIG.JUMPER.SIZE);
+        this.body.setOffset(0, 0);
+
         this.body.allowGravity = true; // Needs gravity to jump
-        this.setGravityY(ENEMY_CONFIG.JUMPER.GRAVITY); // Apply gravity since world gravity is 0
+        this.setGravityY(ENEMY_CONFIG.JUMPER.GRAVITY);
         this.body.immovable = false;   // Needs to move
         this.setCollideWorldBounds(false);
         this.setActive(true);

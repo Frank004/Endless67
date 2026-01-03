@@ -3,17 +3,6 @@
  * 
  * Generador de slots para el sistema de nivel procedural.
  * Cada slot tiene 640px de altura y contiene un tipo específico de contenido.
- * 
- * Principios:
- * - Single Responsibility: Solo generación de slots
- * - Dependency Injection: Recibe scene y managers
- * - Separation of Concerns: Delega transformaciones y validaciones
- * 
- * Responsabilidades:
- * - Generar slots en secuencia
- * - Aplicar reglas de variedad
- * - Spawner plataformas con patrones transformados
- * - Cleanup de slots antiguos
  */
 
 import { SLOT_CONFIG, getPlatformBounds, getItemBounds } from '../../config/SlotConfig.js';
@@ -366,9 +355,12 @@ export class SlotGenerator {
             if (!isMoving && platform && platform.active) {
                 const enemyChancePatrol = config.spawnChances.patrol || 0;
                 const enemyChanceShooter = config.spawnChances.shooter || 0;
+                const enemyChanceJumper = config.spawnChances.jumper || 0;
                 const rand = Math.random();
-                // Prefer patrol if both fire; evaluate independently
+
+                // Evaluar en orden: patrol, shooter, jumper
                 if (enemyChancePatrol > 0 && rand < enemyChancePatrol) {
+                    // Spawn Patrol Enemy
                     this.scene.time.delayedCall(200, () => {
                         const enemy = this.scene.levelManager.spawnPatrol(platform);
                         if (enemy && enemy.active) {
@@ -390,8 +382,14 @@ export class SlotGenerator {
                         }
                     });
                 } else if (enemyChanceShooter > 0 && rand < enemyChancePatrol + enemyChanceShooter) {
+                    // Spawn Shooter Enemy
                     this.scene.time.delayedCall(200, () => {
                         this.scene.levelManager.spawnShooter(platform);
+                    });
+                } else if (enemyChanceJumper > 0 && rand < enemyChancePatrol + enemyChanceShooter + enemyChanceJumper) {
+                    // Spawn Jumper Enemy
+                    this.scene.time.delayedCall(200, () => {
+                        this.scene.levelManager.spawnJumperShooter(platform);
                     });
                 }
             }

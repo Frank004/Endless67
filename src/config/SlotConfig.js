@@ -19,11 +19,11 @@ export const SLOT_CONFIG = {
     // DIMENSIONES BASE (VERTICAL 9:16, 360x640)
     // ─────────────────────────────────────────────────────────────
     slotHeight: 640,  // Altura FIJA de cada slot (múltiplo de 32px)
-    
+
     gameWidth: 360,   // Ancho base vertical
     wallWidth: 32,
     centerX: 180,     // Centro del juego (360/2)
-    
+
     // ─────────────────────────────────────────────────────────────
     // PLATAFORMAS
     // ─────────────────────────────────────────────────────────────
@@ -32,7 +32,7 @@ export const SLOT_CONFIG = {
     minVerticalGap: 160,     // Distancia mínima entre plataformas (NO NEGOCIABLE)
     maxVerticalGap: 192,     // Distancia máxima entre plataformas
     slotGap: 120,            // Distancia entre slots 
-    
+
     // ─────────────────────────────────────────────────────────────
     // TIPOS DE SLOTS
     // ─────────────────────────────────────────────────────────────
@@ -41,7 +41,7 @@ export const SLOT_CONFIG = {
             name: 'PLATFORM_BATCH',
             height: 640,
             platformCount: { min: 4, max: 4 },  // Siempre 4 plataformas
-            
+
             // Transformaciones ✅ ACTIVADAS
             transformWeights: {
                 none: 0.4,      // 40% sin transformación
@@ -49,19 +49,20 @@ export const SLOT_CONFIG = {
                 mirrorY: 0.15,  // 15% espejo vertical (arriba ↔ abajo)
                 mirrorXY: 0.15  // 15% espejo ambos
             },
-            
+
             // Spawn chances
             spawnChances: {
                 coins: 0.4,
                 powerups: 0.25,
                 patrol: 0.2,   // Chance de patrullero por plataforma estática
-                shooter: 0.1   // Chance de shooter por plataforma estática
+                shooter: 0.1,  // Chance de shooter por plataforma estática
+                jumper: 0.1    // Chance de jumper por plataforma estática
             },
-            
+
             // Debug
             debugColors: [0xff0000, 0x00ff00, 0xffff00]  // Rojo, Verde, Amarillo
         },
-        
+
         MAZE: {
             name: 'MAZE',
             rowHeight: MAZE_ROW_HEIGHT,     // Altura de cada bloque de muro (2 tiles de 32px)
@@ -80,29 +81,29 @@ export const SLOT_CONFIG = {
                 enemyTypes: { patrol: 0.5, shooter: 0.5 }
             }
         },
-        
+
         SAFE_ZONE: {
             name: 'SAFE_ZONE',
             height: 640,
             platformCount: { min: 4, max: 4 },  // Siempre 4 plataformas
-            
+
             transformWeights: {
                 none: 0.6,      // 60% sin transformación (más predecible)
                 mirrorX: 0.3,   // 30% espejo horizontal
                 mirrorY: 0.05,  // 5% espejo vertical
                 mirrorXY: 0.05  // 5% espejo ambos
             },
-            
+
             spawnChances: {
                 coins: 0.6,
                 powerups: 0.3,
                 enemies: 0.0  // Sin enemigos (zona segura)
             },
-            
+
             debugColors: [0x00ffff, 0xff00ff, 0xffffff]  // Cyan, Magenta, Blanco
         }
     },
-    
+
     // ─────────────────────────────────────────────────────────────
     // REGLAS DE GENERACIÓN
     // ─────────────────────────────────────────────────────────────
@@ -138,7 +139,7 @@ export function getPlatformBounds(gameWidth = null) {
     const maxX = actualGameWidth - margin - clampedHalf;
     const centerRaw = actualGameWidth / 2;
     const centerX = Math.max(minX, Math.min(maxX, centerRaw));
-    
+
     return {
         minX,
         maxX,
