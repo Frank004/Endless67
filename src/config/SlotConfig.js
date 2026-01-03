@@ -108,8 +108,8 @@ export const SLOT_CONFIG = {
     rules: {
         tutorialSlots: 1,              // Solo el primer slot es tutorial (plataformas)
         maxConsecutiveSameType: 2,     // No más de 2 del mismo tipo seguidos
-        spawnBuffer: 600,              // Genera nuevo slot cuando jugador está a 600px del último (menor buffer para 360x640)
-        cleanupDistance: 700,          // Limpia slots a más de 700px debajo de cámara para reducir carga
+        spawnBuffer: 900,              // Buffer mayor para evitar gaps en dispositivos lentos (360x640 base)
+        cleanupDistance: 1100,         // Limpia slots más lejos para que no desaparezcan antes de tiempo en mobile
         startPlatformY: 560            // Ubicación de la plataforma inicial (más abajo para acercar el primer slot)
     }
 };
