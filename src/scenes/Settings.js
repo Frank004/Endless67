@@ -1,27 +1,11 @@
+import GameState from '../core/GameState.js';
 import { UIHelpers } from '../utils/UIHelpers.js';
 
 export class Settings extends Phaser.Scene {
-    constructor() {
-        super('Settings');
-    }
+    // ... existing constructor ...
 
     create() {
-        const width = this.cameras.main.width;
-        const height = this.cameras.main.height;
-
-        // Background
-        this.add.rectangle(width / 2, height / 2, width, height, 0x050505);
-
-        // Title
-        this.add.text(width / 2, 80, 'SETTINGS', {
-            fontSize: '32px',
-            color: '#ffd700',
-            fontStyle: 'bold'
-        }).setOrigin(0.5);
-
-        // Button spacing
-        const buttonSpacing = 100;
-        let buttonY = 200;
+        // ... existing code ...
 
         // --- SOUND TOGGLE ---
         const soundEnabled = this.registry.get('soundEnabled') !== false;
@@ -30,11 +14,18 @@ export class Settings extends Phaser.Scene {
 
         const soundButton = UIHelpers.createIconButton(this, width / 2, buttonY, soundIconFrame, soundTextStr, {
             callback: () => {
-                const currentState = this.registry.get('soundEnabled') !== false;
-                const newState = !currentState;
+                const newState = !GameState.soundEnabled;
+
+                // 1. Update GameState (Source of Truth)
+                GameState.setSoundEnabled(newState);
+
+                // 2. Update Registry
                 this.registry.set('soundEnabled', newState);
-                // Sync Phaser's sound mute state with registry
+
+                // 3. Update Phaser Sound Manager
                 this.sound.mute = !newState;
+
+                // 4. Update UI
                 this.soundText.setText(newState ? 'SOUND: ON' : 'SOUND: OFF');
                 this.soundIcon.setFrame(newState ? 'volume-up' : 'volume-mute');
             }

@@ -52,6 +52,22 @@ describe('AudioManager', () => {
         expect(scene.sound.mute).toBe(true);
     });
 
+    test('toggleSound with payload should set specific state', () => {
+        AudioManager.setScene(scene);
+
+        AudioManager.toggleSound({ enabled: false });
+
+        expect(scene.registry.set).toHaveBeenCalledWith('soundEnabled', false);
+        expect(AudioManager.soundEnabled).toBe(false);
+        expect(scene.sound.mute).toBe(true);
+
+        AudioManager.toggleSound({ enabled: true });
+
+        expect(scene.registry.set).toHaveBeenCalledWith('soundEnabled', true);
+        expect(AudioManager.soundEnabled).toBe(true);
+        expect(scene.sound.mute).toBe(false);
+    });
+
     test('updateAudio should adjust lava and music volumes based on distance', () => {
         AudioManager.scene = scene;
         AudioManager.lavaSound = {

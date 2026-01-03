@@ -167,7 +167,6 @@ export class Game extends Phaser.Scene {
      */
     toggleSound() {
         GameState.toggleSound();
-        this.audioManager.toggleSound();
     }
 
     /**

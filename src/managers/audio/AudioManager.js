@@ -158,11 +158,17 @@ export class AudioManager {
     }
 
 
-    toggleSound() {
+    toggleSound(data) {
         if (!this.scene) return;
 
-        const currentState = this.scene.registry.get('soundEnabled') !== false;
-        const newState = !currentState;
+        let newState;
+        if (data && typeof data.enabled === 'boolean') {
+            newState = data.enabled;
+        } else {
+            const currentState = this.scene.registry.get('soundEnabled') !== false;
+            newState = !currentState;
+        }
+
         this.scene.registry.set('soundEnabled', newState);
         this.scene.sound.mute = !newState;
         this.soundEnabled = newState;
