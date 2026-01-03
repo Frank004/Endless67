@@ -13,9 +13,9 @@ const MAX_JUMP_HEIGHT = (JUMP_VELOCITY * JUMP_VELOCITY) / (2 * GRAVITY_Y); // ~1
 // Aire total aproximado (subida + bajada simétrica)
 const MAX_AIR_TIME = TIME_TO_APEX * 2; // ~1.0s
 
-// Alcance horizontal aproximado considerando maxVelocityX=300 y algo de drag
+// Alcance horizontal aproximado considerando maxVelocityX=276 (reducido 8%) y algo de drag
 // Usamos un factor conservador (0.9) para evitar asumir velocidad tope sostenida.
-const MAX_HORIZONTAL_REACH = 300 * MAX_AIR_TIME * 0.9; // ~270px
+const MAX_HORIZONTAL_REACH = 276 * MAX_AIR_TIME * 0.9; // ~248px (reducido 8%)
 
 // Rangos recomendados para spawns verticales
 const DY_SAFE = {

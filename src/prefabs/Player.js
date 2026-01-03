@@ -65,7 +65,7 @@ export class Player extends Phaser.Physics.Arcade.Sprite {
         }
 
         this.setGravityY(1200);
-        this.setMaxVelocity(300, 1000);
+        this.setMaxVelocity(276, 1000); // Reducido 8%: 300 * 0.92 = 276
         this.setDragX(1200);
         // IMPORTANTE: NO usar setCollideWorldBounds para permitir que el jugador
         // toque las paredes físicas y active los walljumps
@@ -86,7 +86,7 @@ export class Player extends Phaser.Physics.Arcade.Sprite {
         this.baseJumpForce = 580;
         this.baseWallJumpForceX = 400;
         this.baseWallJumpForceY = 600;
-        this.baseMoveForce = 900;
+        this.baseMoveForce = 828; // Reducido 8%: 900 * 0.92 = 828
     }
 
     getPowerupJumpMultiplier() {

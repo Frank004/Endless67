@@ -58,8 +58,8 @@ export class SlotGenerator {
     init(startPlatformY = SLOT_CONFIG.rules.startPlatformY || 450) {
         console.log('🎮 SlotGenerator: Inicializando...');
         
-        // Calcular Y inicial del primer batch: 160px por encima de la plataforma inicial
-        this.startY = startPlatformY - SLOT_CONFIG.minVerticalGap;
+        // Calcular Y inicial del primer batch usando slotGap
+        this.startY = startPlatformY - SLOT_CONFIG.slotGap;
         console.log(`  📍 Plataforma inicio: Y=${startPlatformY}, Primer batch: Y=${this.startY}`);
         
         // Generar slots iniciales (tutorial)
@@ -93,14 +93,14 @@ export class SlotGenerator {
             // Asegurar que usamos la altura estándar del slot para el cálculo
             const lastSlotHeight = lastSlot.height || lastSlot.contentHeight || SLOT_CONFIG.slotHeight;
             const lastSlotYEnd = lastSlot.yEnd || (lastSlot.yStart - lastSlotHeight);
-            slotYStart = lastSlotYEnd - SLOT_CONFIG.minVerticalGap;
+            slotYStart = lastSlotYEnd - SLOT_CONFIG.slotGap;
             
             // Validación: asegurar que slotYStart sea válido
             if (!isFinite(slotYStart) || isNaN(slotYStart)) {
                 console.error(`❌ ERROR: slotYStart inválido calculado. lastSlot:`, lastSlot);
                 // Fallback: usar altura estándar
                 const fallbackYEnd = lastSlot.yStart - SLOT_CONFIG.slotHeight;
-                slotYStart = fallbackYEnd - SLOT_CONFIG.minVerticalGap;
+                slotYStart = fallbackYEnd - SLOT_CONFIG.slotGap;
             }
         }
 
