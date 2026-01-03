@@ -12,16 +12,23 @@ export class PatrolEnemy extends Phaser.Physics.Arcade.Sprite {
         super(scene, x, y, ASSETS.ENEMY_SPIKE);
         this.setDepth(20);
 
-        // Use 'bound' mode: platformRider only provides bounds, we handle movement
-        enablePlatformRider(this, { mode: 'bound', marginX: 5 });
+        // Use 'patrol' mode: platformRider takes full control of movement and bounds
+        enablePlatformRider(this, {
+            mode: 'patrol',
+            marginX: 5,
+            autoPatrol: true,
+            patrolSpeed: ENEMY_CONFIG.PATROL.SPEED
+        });
 
-        // Strategy Pattern: Usar PatrolBehavior
-        this.patrolBehavior = new PatrolBehavior(this, ENEMY_CONFIG.PATROL.SPEED);
-        this.patrolConfig = null; // Bounds pendientes para arrancar patrulla
+        // Strategy Pattern: Usar PatrolBehavior only for extra custom logic if needed (now reduced)
+        // this.patrolBehavior = new PatrolBehavior(this, ENEMY_CONFIG.PATROL.SPEED);
+        // this.patrolConfig = null; 
     }
 
     setPatrolBounds(minX, maxX, speed = ENEMY_CONFIG.PATROL.SPEED) {
-        this.patrolConfig = { minX, maxX, speed };
+        // Legacy method support - platformRider auto-calculates bounds from platform
+        // But if we wanted manual bounds, we'd override rider properties
+        this.riderPatrolSpeed = speed;
     }
 
     spawn(x, y) {
@@ -98,49 +105,44 @@ export class PatrolEnemy extends Phaser.Physics.Arcade.Sprite {
     /**
      * Iniciar patrullaje (delegado a PatrolBehavior)
      */
+    /**
+     * Iniciar patrullaje (Legacy/Deprecated - use autoPatrol in platformRider)
+     */
     patrol(minX, maxX, speed = ENEMY_CONFIG.PATROL.SPEED) {
-        this.patrolBehavior.startPatrol(minX, maxX, speed);
+        // this.patrolBehavior.startPatrol(minX, maxX, speed);
+        this.riderPatrolSpeed = speed;
+        this.riderAutoPatrol = true;
     }
 
     /**
      * Detener movimiento (delegado a PatrolBehavior)
      */
     stopMoving() {
-        this.patrolBehavior.stopPatrol();
+        // this.patrolBehavior.stopPatrol();
+        this.riderAutoPatrol = false;
+        if (this.body) this.setVelocityX(0);
     }
 
     preUpdate(time, delta) {
         super.preUpdate(time, delta);
+
+        // PlatformRider updates logic automatically
+        updatePlatformRider(this);
 
         // Debug: verificar que preUpdate se esté llamando solo si debug activo
         const debugPatrol = this.scene?.registry?.get('showPatrolLogs');
         if (debugPatrol) {
             if (this._preUpdateCounter === undefined) {
                 this._preUpdateCounter = 0;
-                console.log(`  ✅ PatrolEnemy.preUpdate: Llamado por primera vez, active=${this.active}, visible=${this.visible}`);
+                console.log(`  ✅ PatrolEnemy.preUpdate: Llamado por primera vez, active=${this.active}`);
             }
             this._preUpdateCounter++;
-            if (this._preUpdateCounter % 180 === 0) {  // Cada 3 segundos aprox
-                console.log(`  🔄 PatrolEnemy.preUpdate: Frame ${this._preUpdateCounter}, active=${this.active}, body=${!!this.body}, patrolBehavior=${!!this.patrolBehavior}`);
+            if (this._preUpdateCounter % 180 === 0) {
+                console.log(`  🔄 PatrolEnemy: x=${this.x.toFixed(1)}, onPlat=${!!this.ridingPlatform}`);
             }
         }
 
-        // Strategy Pattern: Delegar actualización a PatrolBehavior
-        if (this.patrolBehavior) {
-            this.patrolBehavior.update(time, delta);
-        } else {
-            console.error(`  ❌ PatrolEnemy.preUpdate: patrolBehavior es null`);
-        }
-
-        // Auto-arrancar patrulla si hay bounds pendientes y ya tocó suelo/plataforma
-        if (
-            this.patrolConfig &&
-            !this.patrolBehavior.isPatrolling &&
-            (this.body.blocked?.down || this.body.touching?.down || this.ridingPlatform)
-        ) {
-            const { minX, maxX, speed } = this.patrolConfig;
-            this.patrolBehavior.startPatrol(minX, maxX, speed);
-        }
+        // Cleanup offscreen enemies
 
         // Cleanup offscreen enemies
         if (this.y > this.scene.player.y + 900) {

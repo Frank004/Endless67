@@ -200,6 +200,11 @@ export class Player extends Phaser.Physics.Arcade.Sprite {
             this.controller.update();
         }
 
+        // Update visuals (flipping, etc)
+        if (this.visuals) {
+            this.visuals.update();
+        }
+
         // Move with moving platform (only if player is NOT moving with input)
         if (this.currentPlatform && this.currentPlatform.active && this.body.touching.down) {
             const platform = this.currentPlatform;

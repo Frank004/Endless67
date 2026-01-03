@@ -43,8 +43,9 @@ export class EnemySpawner {
                 scene.patrolEnemies.add(enemy, true);
             }
 
-            // Start patrol behavior
-            enemy.patrolBehavior.startPatrol(minX, maxX, ENEMY_CONFIG.PATROL.SPEED);
+            // Start patrol behavior (Wrapper handles platformRider logic)
+            // Legacy direct call to patrolBehavior removed to fix crash
+            enemy.patrol(minX, maxX, ENEMY_CONFIG.PATROL.SPEED);
         }
 
         return enemy;

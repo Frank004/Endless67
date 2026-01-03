@@ -14,6 +14,8 @@ import { COIN_BASE_SIZE } from '../../prefabs/Coin.js';
 import { POWERUP_BASE_SIZE } from '../../prefabs/Powerup.js';
 // Enemy logic delegated to EnemySpawnStrategy
 import { EnemySpawnStrategy } from './EnemySpawnStrategy.js';
+// Pure layout logic
+import { GridGenerator } from './GridGenerator.js';
 
 export class SlotGenerator {
     constructor(scene) {
@@ -21,6 +23,9 @@ export class SlotGenerator {
         // Obtener gameWidth dinámico desde la escena
         const gameWidth = scene.cameras.main.width;
         this.transformer = new PatternTransformer(gameWidth);
+
+        // Pure layout logic (decoupled from Phaser)
+        this.gridGenerator = new GridGenerator(gameWidth);
 
         // Estado
         this.currentSlotIndex = 0;
@@ -55,6 +60,9 @@ export class SlotGenerator {
         this.startY = startPlatformY - SLOT_CONFIG.slotGap;
         console.log(`  📍 Plataforma inicio: Y=${startPlatformY}, Primer batch: Y=${this.startY}`);
 
+        // Initialize GridGenerator with start position
+        this.gridGenerator.reset(this.startY);
+
         // Generar slots iniciales (tutorial)
         for (let i = 0; i < SLOT_CONFIG.rules.tutorialSlots; i++) {
             this.generateNextSlot({ tutorialIndex: i });
@@ -76,37 +84,27 @@ export class SlotGenerator {
         const currentWidth = cam?.worldView?.width || cam?.width;
         if (currentWidth) {
             this.transformer.setGameWidth(currentWidth);
-        }
-        // Calcular Y del slot usando el final del anterior menos el gap mínimo
-        let slotYStart;
-        if (this.slots.length === 0) {
-            slotYStart = this.startY;
-        } else {
-            const lastSlot = this.slots[this.slots.length - 1];
-            // Asegurar que usamos la altura estándar del slot para el cálculo
-            const lastSlotHeight = lastSlot.height || lastSlot.contentHeight || SLOT_CONFIG.slotHeight;
-            const lastSlotYEnd = lastSlot.yEnd || (lastSlot.yStart - lastSlotHeight);
-            slotYStart = lastSlotYEnd - SLOT_CONFIG.slotGap;
-
-            // Validación: asegurar que slotYStart sea válido
-            if (!isFinite(slotYStart) || isNaN(slotYStart)) {
-                console.error(`❌ ERROR: slotYStart inválido calculado. lastSlot:`, lastSlot);
-                // Fallback: usar altura estándar
-                const fallbackYEnd = lastSlot.yStart - SLOT_CONFIG.slotHeight;
-                slotYStart = fallbackYEnd - SLOT_CONFIG.slotGap;
-            }
+            this.gridGenerator.gameWidth = currentWidth;
+            this.gridGenerator.transformer.setGameWidth(currentWidth);
         }
 
-        const slotType = this.determineSlotType();
-        const typeConfig = SLOT_CONFIG.types?.[slotType] || {};
-        const baseSlotHeight = typeConfig.height || this.slotHeight;
-        let result = null;
+        // Get layout from GridGenerator (pure logic)
+        const layoutData = this.gridGenerator.nextSlot();
+
+        // Extract calculated values
+        const slotYStart = layoutData.yStart;
+        const slotType = layoutData.type;
+        const slotHeight = layoutData.height;
+        const slotYEnd = layoutData.yEnd;
 
         // Opciones para tutorial: patrones fijos y sin transform
         const forcePattern = options.forcePattern || null;
         const disableTransform = options.disableTransform || false;
         const tutorialIndex = options.tutorialIndex;
 
+        let result = null;
+
+        // Render based on type
         switch (slotType) {
             case 'PLATFORM_BATCH':
                 result = this.generatePlatformBatch(slotYStart, slotType, { forcePattern, disableTransform, tutorialIndex });
@@ -122,25 +120,19 @@ export class SlotGenerator {
                 result = this.generatePlatformBatch(slotYStart, 'PLATFORM_BATCH', { forcePattern, disableTransform });
         }
 
-        const contentHeight = result?.contentHeight || baseSlotHeight;
-        // Usar la altura real del contenido para ubicar el siguiente slot.
-        // (Para MAZE ya viene calculada; plataformas devuelven su altura efectiva ~512px).
-        const slotHeight = contentHeight;
-        const slotYEnd = slotYStart - slotHeight;
-
         const verbose = this.scene?.registry?.get('showSlotLogs');
         if (verbose) {
-            console.log(`📦 SLOT ${this.currentSlotIndex}: ${slotType} [Y: ${slotYStart} a ${slotYEnd}] (contentHeight=${contentHeight})`);
+            console.log(`📦 SLOT ${this.currentSlotIndex}: ${slotType} [Y: ${slotYStart} a ${slotYEnd}] (height=${slotHeight})`);
         }
 
-        // Registrar slot
+        // Registrar slot (using GridGenerator's calculated values)
         const slotData = {
             index: this.currentSlotIndex,
             type: slotType,
             yStart: slotYStart,
             yEnd: slotYEnd,
             height: slotHeight,
-            contentHeight,
+            contentHeight: slotHeight, // Always use fixed height for consistency
             slotHeight,
             ...result
         };
@@ -154,7 +146,7 @@ export class SlotGenerator {
                 yStart: slotYStart.toFixed(2),
                 yEnd: slotYEnd.toFixed(2),
                 height: slotHeight.toFixed(2),
-                contentHeight: contentHeight.toFixed(2)
+                contentHeight: slotHeight.toFixed(2)
             });
         }
 
@@ -432,14 +424,21 @@ export class SlotGenerator {
         // Lista de TODOS los items generados (coins + powerups)
         const allGeneratedItems = [];
 
-        // Función para verificar distancia con otros items
+        // Función para verificar distancia con otros items y colisiones con paredes de maze
         const tooCloseToOtherItems = (x, y) => {
+            // 1. Check existing items
             for (const existing of allGeneratedItems) {
                 const dist = Math.sqrt(Math.pow(x - existing.x, 2) + Math.pow(y - existing.y, 2));
                 if (dist < ITEM_DISTANCE) {
                     return true;
                 }
             }
+
+            // 2. Check collision with maze walls (New Fix)
+            if (this._overlapsMazeWall(x, y, ITEM_HALF)) {
+                return true;
+            }
+
             return false;
         };
 
@@ -635,7 +634,14 @@ export class SlotGenerator {
                 console.warn(`⚠️ SlotGenerator: Altura de plataformas inesperada. Esperada: ${expectedHeight}, Actual: ${actualHeight.toFixed(2)}, Diff: ${heightDiff.toFixed(2)}`);
             }
             // Usar la altura real (o la esperada si algo falló) para encadenar slots sin gaps extra
-            contentHeight = isFinite(actualHeight) ? actualHeight : expectedHeight;
+            // FIX: Para mantener el estilo "Lego" (bloques fijos), forzamos que el contenido ocupe siempre slotHeight
+            // Esto asegura que el gap visual al siguiente slot sea consistente con el gap interno (160px).
+            contentHeight = SLOT_CONFIG.slotHeight;
+
+            // Debug warning only
+            if (heightDiff > 10 && verbose) {
+                // console.warn ... (keep visual warning but ignore logic override)
+            }
         }
 
         return {
@@ -785,10 +791,13 @@ export class SlotGenerator {
                 // Si el jugador está más arriba (Y más negativo/más pequeño) que el threshold, generar nuevo slot
                 // Esto significa que el jugador se acercó lo suficiente al final del slot
                 // playerY < spawnThreshold significa que el jugador está más arriba que el threshold
-                if (playerY < spawnThreshold) {
-                    const verbose = this.scene?.registry?.get('showSlotLogs');
-                    if (verbose) {
-                        console.log(`🎯 Generando slot: playerY=${playerY.toFixed(2)}, lastSlot.yEnd=${lastSlot.yEnd.toFixed(2)}, threshold=${spawnThreshold.toFixed(2)}`);
+                const distanceToThreshold = Math.abs(spawnThreshold - playerY);
+                // FAILSAFE: Si tenemos pocos slots activos (menos de 2 ahead), forzar generación
+                const fewSlots = this.slots.filter(s => s.yStart < playerY).length < 2;
+
+                if (playerY < spawnThreshold || fewSlots) {
+                    if (this.scene?.registry?.get('showSlotLogs')) {
+                        console.log(`🎯 Generando slot: playerY=${playerY.toFixed(2)}, threshold=${spawnThreshold.toFixed(2)}, reason=${fewSlots ? 'FEW_SLOTS' : 'THRESHOLD'}`);
                     }
                     this.generateNextSlot();
                     lastSlot = this.slots[this.slots.length - 1];
@@ -834,6 +843,36 @@ export class SlotGenerator {
             // Delegar cleanup de objetos al LevelManager
             this.scene.levelManager.cleanupOnly(limitY);
         }
+    }
+
+    /**
+     * Checks if a point overlaps with any maze wall.
+     * @param {number} x 
+     * @param {number} y 
+     * @param {number} radius 
+     */
+    _overlapsMazeWall(x, y, radius = 16) {
+        if (!this.scene.mazeWalls) return false;
+
+        let overlap = false;
+        // Use manual iteration as we want to return early if overlap found
+        const walls = this.scene.mazeWalls.getChildren();
+        for (const wall of walls) {
+            if (!wall.active) continue;
+
+            // Simple AABB overlap check
+            const wLeft = wall.x - wall.displayWidth / 2;
+            const wRight = wall.x + wall.displayWidth / 2;
+            const wTop = wall.y - wall.displayHeight / 2;
+            const wBottom = wall.y + wall.displayHeight / 2;
+
+            if (x + radius > wLeft && x - radius < wRight &&
+                y + radius > wTop && y - radius < wBottom) {
+                overlap = true;
+                break;
+            }
+        }
+        return overlap;
     }
 
     /**

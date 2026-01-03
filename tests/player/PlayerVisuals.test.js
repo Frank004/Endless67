@@ -83,4 +83,17 @@ describe('PlayerVisuals', () => {
         playerVisuals.setInvincibilityVisuals(true);
         expect(mockScene.tweens.add).toHaveBeenCalled();
     });
+
+    test('should update visuals based on velocity', () => {
+        playerVisuals = new PlayerVisuals(mockPlayer);
+
+        // Setup body mock
+        mockPlayer.body = { velocity: { x: -100 } };
+        playerVisuals.update();
+        expect(mockPlayer.setFlipX).toHaveBeenCalledWith(true);
+
+        mockPlayer.body.velocity.x = 100;
+        playerVisuals.update();
+        expect(mockPlayer.setFlipX).toHaveBeenCalledWith(false);
+    });
 });

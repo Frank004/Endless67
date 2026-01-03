@@ -69,4 +69,22 @@ export class PlayerVisuals {
         }
         this.player.setTexture('player_placeholder');
     }
+
+    update() {
+        const body = this.player.body;
+        if (!body) return;
+
+        // Sprite Flipper logic (restored from legacy Player.js)
+        // Flip based on velocity
+        if (body.velocity.x < -10) {
+            this.setFlipX(true);
+        } else if (body.velocity.x > 10) {
+            this.setFlipX(false);
+        }
+
+        // Also ensure correct flip during wall slides if applicable
+        // The Velocity logic handles jump-off correctly:
+        // Jump Right -> Vel > 0 -> Flip False (Face Right)
+        // Jump Left -> Vel < 0 -> Flip True (Face Left)
+    }
 }
