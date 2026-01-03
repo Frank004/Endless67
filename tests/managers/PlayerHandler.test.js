@@ -1,6 +1,6 @@
 import { PlayerHandler } from '../../src/managers/collision/PlayerHandler.js';
-import ScoreManager from '../../src/managers/ScoreManager.js';
-import AudioManager from '../../src/managers/AudioManager.js';
+import ScoreManager from '../../src/managers/gameplay/ScoreManager.js';
+import AudioManager from '../../src/managers/audio/AudioManager.js';
 
 const createMockText = () => ({
     setOrigin: jest.fn().mockReturnThis(),
@@ -60,7 +60,7 @@ describe('PlayerHandler', () => {
         };
 
         handler = new PlayerHandler(scene);
-        jest.spyOn(AudioManager, 'playLavaDropSound').mockImplementation(() => {});
+        jest.spyOn(AudioManager, 'playLavaDropSound').mockImplementation(() => { });
         jest.spyOn(ScoreManager, 'isHighScore').mockReturnValue(true);
     });
 

@@ -9,6 +9,7 @@
  * para trabajar con PoolManager.
  */
 import { WALLS } from '../config/GameConstants.js';
+import { ASSETS } from '../config/AssetKeys.js';
 
 // 🔴 CONSTANTES DE DIMENSIONES
 export const PLATFORM_HEIGHT = 32;
@@ -21,28 +22,28 @@ export class Platform extends Phaser.Physics.Arcade.Sprite {
             console.error('Platform.constructor: No scene provided');
             throw new Error('Platform requires a scene');
         }
-        
+
         // Usar textura por defecto, se cambiará en spawn()
-        super(scene, 0, 0, 'platform');
-        
+        super(scene, 0, 0, ASSETS.PLATFORM);
+
         // Guardar referencia explícita a la escena (por si Phaser la pierde)
         this._sceneRef = scene;
-        
+
         // Agregar a la escena y al physics world
         scene.add.existing(this);
         scene.physics.add.existing(this);
-        
+
         // Configurar física básica (se ajustará en spawn())
         if (this.body) {
             this.body.allowGravity = false;
             this.body.immovable = true;
         }
-        
+
         // Inicialmente inactivo
         this.setActive(false);
         this.setVisible(false);
     }
-    
+
     /**
      * Método helper para obtener la escena de forma segura
      * Si Phaser perdió la referencia, usar la guardada
@@ -68,33 +69,33 @@ export class Platform extends Phaser.Physics.Arcade.Sprite {
     spawn(x, y, width = PLATFORM_WIDTH, isMoving = false, speed = 100) {
         // Obtener escena de forma segura
         const scene = this.getScene();
-        
+
         // Verificaciones de seguridad: asegurar que la escena existe y está activa
         if (!scene) {
             console.error('Platform.spawn: No scene available');
             return;
         }
-        
+
         // Verificar que la escena tiene sys (necesario para setTexture)
         if (!scene.sys) {
             console.error('Platform.spawn: Scene.sys is not available');
             return;
         }
-        
+
         // 🔴 FORZAR ancho a 128px (ignorar parámetro width)
         width = PLATFORM_WIDTH;
-        
+
         // Determinar textura
-        const texture = isMoving ? 'platform_moving' : 'platform';
-        
+        const texture = isMoving ? ASSETS.PLATFORM_MOVING : ASSETS.PLATFORM;
+
         // Verificar que la textura existe antes de usarla
         try {
             if (scene.textures && scene.textures.exists(texture)) {
                 this.setTexture(texture);
             } else {
                 console.warn(`Platform.spawn: Texture '${texture}' does not exist, using default 'platform'`);
-                if (scene.textures && scene.textures.exists('platform')) {
-                    this.setTexture('platform');
+                if (scene.textures && scene.textures.exists(ASSETS.PLATFORM)) {
+                    this.setTexture(ASSETS.PLATFORM);
                 } else {
                     console.error('Platform.spawn: Default texture "platform" does not exist');
                     return;
@@ -103,9 +104,9 @@ export class Platform extends Phaser.Physics.Arcade.Sprite {
         } catch (e) {
             console.error('Platform.spawn: Error setting texture:', e);
             // Si falla, intentar con la textura por defecto
-            if (scene.textures && scene.textures.exists('platform')) {
+            if (scene.textures && scene.textures.exists(ASSETS.PLATFORM)) {
                 try {
-                    this.setTexture('platform');
+                    this.setTexture(ASSETS.PLATFORM);
                 } catch (e2) {
                     console.error('Platform.spawn: Could not set default texture:', e2);
                     return;
@@ -115,20 +116,20 @@ export class Platform extends Phaser.Physics.Arcade.Sprite {
                 return;
             }
         }
-        
+
         // Posición y tamaño
         this.setPosition(x, y);
         this.setDisplaySize(width, PLATFORM_HEIGHT);
-        
+
         // Asegurar que el body existe antes de refreshBody
         if (!this.body) {
             scene.physics.add.existing(this);
         }
-        
+
         if (this.body) {
             this.refreshBody();
         }
-        
+
         this.setDepth(5);
 
         // Configurar física básica
@@ -140,17 +141,17 @@ export class Platform extends Phaser.Physics.Arcade.Sprite {
             if (isMoving) {
                 this.setData('isMoving', true);
                 this.setData('speed', speed);
-                
+
                 // Configurar física para movimiento
                 this.body.setBounce(1, 0);
                 this.body.setCollideWorldBounds(true);
                 this.setFrictionX(0);  // Sin fricción para movimiento continuo
-                
+
                 // Establecer velocidad inicial (siempre hacia la derecha primero)
                 if (typeof this.setVelocityX === 'function') {
                     this.setVelocityX(speed);
                 }
-                
+
                 // Asegurar que el body se actualice
                 this.body.updateFromGameObject();
             } else {
@@ -176,7 +177,7 @@ export class Platform extends Phaser.Physics.Arcade.Sprite {
         if (!this || !this.body) {
             return;
         }
-        
+
         // Limpiar estado de movimiento
         try {
             if (this.body && typeof this.setVelocityX === 'function') {
@@ -186,7 +187,7 @@ export class Platform extends Phaser.Physics.Arcade.Sprite {
             // Si falla, el objeto ya está destruido, ignorar
             console.warn('Platform.despawn: Error al limpiar velocidad:', e);
         }
-        
+
         // Limpiar datos
         try {
             if (typeof this.setData === 'function') {
@@ -196,7 +197,7 @@ export class Platform extends Phaser.Physics.Arcade.Sprite {
         } catch (e) {
             // Ignorar si el objeto ya está destruido
         }
-        
+
         // Remover del grupo legacy si existe
         try {
             const scene = this.getScene();
@@ -206,7 +207,7 @@ export class Platform extends Phaser.Physics.Arcade.Sprite {
         } catch (e) {
             // Ignorar si ya fue removido
         }
-        
+
         // Desactivar (esto ya se hace en PoolManager, pero por seguridad)
         try {
             if (typeof this.setActive === 'function') {
@@ -226,36 +227,36 @@ export class Platform extends Phaser.Physics.Arcade.Sprite {
      */
     preUpdate(time, delta) {
         super.preUpdate(time, delta);
-        
+
         // Verificaciones de seguridad antes de actualizar
         if (!this.active || !this.body) {
             return;
         }
-        
+
         const scene = this.getScene();
         if (!scene) {
             return;
         }
-        
+
         if (this.getData('isMoving') && this.active) {
             const scene = this.getScene();
             if (!scene) return;
-            
+
             const gameWidth = scene.cameras.main.width;
             const wallWidth = WALLS.WIDTH;  // 32px
             const platformHalfWidth = PLATFORM_WIDTH / 2;  // 64px (128/2)
-            
+
             // Límites: el CENTRO de la plataforma debe estar dentro de estos valores
             // Para que el borde izquierdo no entre en la pared: minX >= wallWidth + halfWidth
             // Para que el borde derecho no entre en la pared: maxX <= gameWidth - wallWidth - halfWidth
             const minPlatformX = wallWidth + platformHalfWidth;  // 32 + 64 = 96px
             const maxPlatformX = gameWidth - wallWidth - platformHalfWidth;  // 400 - 32 - 64 = 304px
-            
+
             const speed = this.getData('speed') || 100;
-            
+
             // Asegurar que siempre tenga velocidad
             const currentVelX = this.body.velocity ? this.body.velocity.x : 0;
-            
+
             // Cambiar dirección en los límites
             if (this.x <= minPlatformX) {
                 // Llegó al límite izquierdo, ir hacia la derecha

@@ -83,12 +83,12 @@
     <script>
         // Esperar a que Phaser esté disponible antes de cargar módulos
         if (typeof Phaser === 'undefined') {
-            window.addEventListener('load', function() {
+            window.addEventListener('load', function () {
                 // Phaser debería estar cargado ahora
                 if (typeof Phaser !== 'undefined') {
                     const script = document.createElement('script');
                     script.type = 'module';
-                    script.src = 'src/main.js?b=2&t=' + Date.now(); // Cache busting
+                    script.src = 'src/main.js?v=20260103-0045'; // Cache busting
                     document.body.appendChild(script);
                 } else {
                     console.error('Phaser no se cargó correctamente');
@@ -98,7 +98,7 @@
             // Phaser ya está disponible, cargar módulos inmediatamente
             const script = document.createElement('script');
             script.type = 'module';
-            script.src = 'src/main.js?b=2&t=' + Date.now(); // Cache busting
+            script.src = 'src/main.js?v=20260103-0045'; // Cache busting
             document.body.appendChild(script);
         }
     </script>

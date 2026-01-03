@@ -1,3 +1,6 @@
+import EventBus, { Events } from '../../core/EventBus.js';
+import { ASSETS } from '../../config/AssetKeys.js';
+
 export class AudioManager {
     static instance = null;
 
@@ -48,9 +51,31 @@ export class AudioManager {
         // Nota: el listener de visibilitychange ahora se maneja en Game y se limpia en shutdown
     }
 
+    setupEventListeners() {
+        // Audio Triggers via EventBus
+        EventBus.on(Events.PLAYER_JUMPED, this.playJumpSound, this);
+        EventBus.on(Events.COIN_COLLECTED, this.playCoinSound, this);
+        EventBus.on(Events.SOUND_TOGGLED, this.toggleSound, this);
+        EventBus.on(Events.PLAYER_HIT, this.playDamageSound, this);
+        EventBus.on(Events.POWERUP_COLLECTED, this.playCelebrationSound, this);
+        EventBus.on(Events.ENEMY_DESTROYED, this.playDestroySound, this);
+        // Add more listeners as needed
+    }
+
+    removeEventListeners() {
+        EventBus.off(Events.PLAYER_JUMPED, this.playJumpSound, this);
+        EventBus.off(Events.COIN_COLLECTED, this.playCoinSound, this);
+        EventBus.off(Events.SOUND_TOGGLED, this.toggleSound, this);
+        EventBus.off(Events.PLAYER_HIT, this.playDamageSound, this);
+        EventBus.off(Events.POWERUP_COLLECTED, this.playCelebrationSound, this);
+        EventBus.off(Events.ENEMY_DESTROYED, this.playDestroySound, this);
+    }
+
     setupAudio() {
         const scene = this.scene;
         if (!scene) return;
+
+        this.setupEventListeners();
 
         // Silently handle audio context issues
         try {
@@ -61,13 +86,13 @@ export class AudioManager {
                 return;
             }
 
-            if (scene.sound && scene.cache.audio.exists('lava_ambient')) {
+            if (scene.sound && scene.cache.audio.exists(ASSETS.LAVA_AMBIENT)) {
                 // Stop any existing lava sound to prevent duplicates
                 if (this.lavaSound) {
                     this.lavaSound.stop();
                 }
 
-                this.lavaSound = scene.sound.add('lava_ambient', { loop: true, volume: 0 });
+                this.lavaSound = scene.sound.add(ASSETS.LAVA_AMBIENT, { loop: true, volume: 0 });
 
                 // Try to play silently - don't show errors to user
                 try {
@@ -90,6 +115,7 @@ export class AudioManager {
     }
 
     stopAudio() {
+        this.removeEventListeners();
         if (this.lavaSound) {
             this.lavaSound.stop();
             this.lavaSound = null;
@@ -111,8 +137,8 @@ export class AudioManager {
                 return;
             }
 
-            if (scene.sound && scene.cache.audio.exists('bg_music') && !this.bgMusic) {
-                this.bgMusic = scene.sound.add('bg_music', { loop: true, volume: 0.80 });
+            if (scene.sound && scene.cache.audio.exists(ASSETS.BG_MUSIC) && !this.bgMusic) {
+                this.bgMusic = scene.sound.add(ASSETS.BG_MUSIC, { loop: true, volume: 0.80 });
 
                 // Try to play silently
                 try {
@@ -200,9 +226,9 @@ export class AudioManager {
         const scene = this.scene;
         if (!scene) return;
         try {
-            if (scene.sound && scene.cache.audio.exists('jump_sfx')) {
+            if (scene.sound && scene.cache.audio.exists(ASSETS.JUMP_SFX)) {
                 const randomDetune = Phaser.Math.Between(-300, 300);
-                scene.sound.play('jump_sfx', { detune: randomDetune, volume: 0.15 });
+                scene.sound.play(ASSETS.JUMP_SFX, { detune: randomDetune, volume: 0.15 });
             }
         } catch (error) {
             console.warn('Error playing jump sound:', error);
@@ -216,13 +242,13 @@ export class AudioManager {
         const scene = this.scene;
         if (!scene) return;
         try {
-            if (scene.sound && scene.cache.audio.exists('shoe_brake')) {
-                // Stop any previous instance to avoid overlap
+            if (scene.sound && scene.cache.audio.exists(ASSETS.SHOE_BRAKE)) {
+                // Stop any existing instance to avoid overlap
                 this.stopShoeBrake();
                 const detune = Phaser.Math.Between(-500, 500);
                 const rate = Phaser.Math.FloatBetween(1.15, 1.35); // faster, snappier
                 const pan = Phaser.Math.FloatBetween(-0.1, 0.1);
-                this.shoeBrakeInstance = scene.sound.add('shoe_brake', {
+                this.shoeBrakeInstance = scene.sound.add(ASSETS.SHOE_BRAKE, {
                     detune,
                     rate,
                     pan,
@@ -254,7 +280,11 @@ export class AudioManager {
         const scene = this.scene;
         if (!scene) return;
         try {
-            const soundKeys = ['coin_sfx_1', 'coin_sfx_2', 'coin_sfx_3'];
+            const soundKeys = [
+                ASSETS.COIN_SFX_PREFIX + '1',
+                ASSETS.COIN_SFX_PREFIX + '2',
+                ASSETS.COIN_SFX_PREFIX + '3'
+            ];
             const randomKey = Phaser.Utils.Array.GetRandom(soundKeys);
             if (scene.sound && scene.cache.audio.exists(randomKey)) {
                 const randomDetune = Phaser.Math.Between(-200, 200);
@@ -272,7 +302,13 @@ export class AudioManager {
         const scene = this.scene;
         if (!scene) return;
         try {
-            const damageKeys = ['damage_sfx_1', 'damage_sfx_2', 'damage_sfx_3', 'damage_sfx_4', 'damage_sfx_5'];
+            const damageKeys = [
+                ASSETS.DAMAGE_SFX_PREFIX + '1',
+                ASSETS.DAMAGE_SFX_PREFIX + '2',
+                ASSETS.DAMAGE_SFX_PREFIX + '3',
+                ASSETS.DAMAGE_SFX_PREFIX + '4',
+                ASSETS.DAMAGE_SFX_PREFIX + '5'
+            ];
             const randomKey = Phaser.Utils.Array.GetRandom(damageKeys);
             if (scene.sound && scene.cache.audio.exists(randomKey)) {
                 scene.sound.play(randomKey, { volume: 0.5 });
@@ -289,8 +325,8 @@ export class AudioManager {
         const scene = this.scene;
         if (!scene) return;
         try {
-            if (scene.sound && scene.cache.audio.exists('destroy_sfx')) {
-                scene.sound.play('destroy_sfx', { volume: 0.5 });
+            if (scene.sound && scene.cache.audio.exists(ASSETS.DESTROY_SFX)) {
+                scene.sound.play(ASSETS.DESTROY_SFX, { volume: 0.5 });
             }
         } catch (error) {
             console.warn('Error playing destroy sound:', error);
@@ -304,8 +340,8 @@ export class AudioManager {
         const scene = this.scene;
         if (!scene) return;
         try {
-            if (scene.sound && scene.cache.audio.exists('celebration_sfx')) {
-                scene.sound.play('celebration_sfx', { volume: 0.6 });
+            if (scene.sound && scene.cache.audio.exists(ASSETS.CELEBRATION_SFX)) {
+                scene.sound.play(ASSETS.CELEBRATION_SFX, { volume: 0.6 });
             }
         } catch (error) {
             console.warn('Error playing celebration sound:', error);
@@ -319,8 +355,8 @@ export class AudioManager {
         const scene = this.scene;
         if (!scene) return;
         try {
-            if (scene.sound && scene.cache.audio.exists('lava_drop')) {
-                scene.sound.play('lava_drop', { volume: 0.7 });
+            if (scene.sound && scene.cache.audio.exists(ASSETS.LAVA_DROP)) {
+                scene.sound.play(ASSETS.LAVA_DROP, { volume: 0.7 });
             }
         } catch (error) {
             console.warn('Error playing lava drop sound:', error);

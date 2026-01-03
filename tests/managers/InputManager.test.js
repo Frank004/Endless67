@@ -1,5 +1,5 @@
-
-import { InputManager } from '../../src/managers/InputManager.js';
+import { InputManager } from '../../src/managers/input/InputManager.js';
+import EventBus, { Events } from '../../src/core/EventBus.js';
 
 describe('InputManager', () => {
     let scene;
@@ -27,6 +27,11 @@ describe('InputManager', () => {
         scene.registry.set = jest.fn();
 
         inputManager = new InputManager(scene);
+        jest.spyOn(EventBus, 'emit');
+    });
+
+    afterEach(() => {
+        jest.restoreAllMocks();
     });
 
     test('should initialize with default settings', () => {
@@ -41,9 +46,9 @@ describe('InputManager', () => {
         expect(scene.input.on).toHaveBeenCalledWith('pointerdown', expect.any(Function));
     });
 
-    test('handleJump should call player jump', () => {
+    test('handleJump should emit PLAYER_JUMP_REQUESTED', () => {
         inputManager.handleJump();
-        expect(scene.player.jump).toHaveBeenCalled();
+        expect(EventBus.emit).toHaveBeenCalledWith(Events.PLAYER_JUMP_REQUESTED, expect.any(Object));
     });
 
     test('update should handle keyboard movement', () => {
@@ -61,7 +66,9 @@ describe('InputManager', () => {
 
         inputManager.update();
 
-        expect(scene.player.move).toHaveBeenCalledWith(-1);
+        inputManager.update();
+
+        expect(EventBus.emit).toHaveBeenCalledWith(Events.PLAYER_MOVE, { direction: -1 });
     });
 
     test('update should handle touch movement (mobile)', () => {
@@ -86,7 +93,7 @@ describe('InputManager', () => {
         pointer.x = 150; // +50 delta
         inputManager.update();
 
-        expect(scene.player.move).toHaveBeenCalledWith(1);
+        expect(EventBus.emit).toHaveBeenCalledWith(Events.PLAYER_MOVE, { direction: 1 });
     });
 
     test('toggleJoystickVisual should toggle registry and property', () => {

@@ -1,4 +1,4 @@
-import { CollisionManager } from '../../src/managers/CollisionManager.js';
+import { CollisionManager } from '../../src/managers/collision/CollisionManager.js';
 
 describe('CollisionManager', () => {
     test('setupCollisions wires all collider and overlap pairs', () => {

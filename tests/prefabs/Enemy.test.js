@@ -10,13 +10,24 @@ describe('Enemies', () => {
         scene = new PhaserMock.Scene('TestScene');
         player = { x: 100, y: 100, active: true };
         scene.player = player;
+        scene.time = {
+            addEvent: jest.fn(() => ({
+                destroy: jest.fn(),
+                remove: jest.fn()
+            })),
+            delayedCall: jest.fn()
+        };
 
         projectilesGroup = {
             get: jest.fn(() => ({
                 fire: jest.fn(),
                 setActive: jest.fn(),
                 setVisible: jest.fn(),
-                body: { reset: jest.fn() }
+                body: {
+                    reset: jest.fn(),
+                    setVelocityX: jest.fn(),
+                    setVelocityY: jest.fn()
+                }
             }))
         };
     });
@@ -76,7 +87,7 @@ describe('Enemies', () => {
             enemy.startShooting(projectilesGroup, 0);
 
             expect(scene.time.addEvent).toHaveBeenCalled();
-            expect(enemy.shootBehavior.shootEvent).toBeDefined(); // Ahora está en behavior
+            expect(enemy.shootBehavior.timer).toBeDefined(); // Ahora está en behavior
         });
 
         test('should shoot projectile towards player', () => {
@@ -86,7 +97,7 @@ describe('Enemies', () => {
             // Iniciar shooting primero para que el behavior tenga el grupo
             enemy.startShooting(projectilesGroup, 0);
             // Luego disparar
-            enemy.shootBehavior.shoot();
+            enemy.shootBehavior.fireOnce();
 
             expect(projectilesGroup.get).toHaveBeenCalled();
             // Should fire left (-1)
@@ -99,7 +110,7 @@ describe('Enemies', () => {
             enemy.startShooting(projectilesGroup, 0);
 
             enemy.stopShooting();
-            expect(enemy.shootBehavior.shootEvent).toBeNull(); // Ahora está en behavior
+            expect(enemy.shootBehavior.timer).toBeNull(); // Ahora está en behavior
         });
     });
 });

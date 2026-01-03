@@ -1,4 +1,4 @@
-import EventBus, { Events } from '../core/EventBus.js';
+import EventBus, { Events } from '../../core/EventBus.js';
 
 export class InputManager {
     constructor(scene) {

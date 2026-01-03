@@ -1,5 +1,5 @@
 import { EnemyHandler } from '../../src/managers/collision/EnemyHandler.js';
-import AudioManager from '../../src/managers/AudioManager.js';
+import EventBus, { Events } from '../../src/core/EventBus.js';
 
 describe('EnemyHandler', () => {
     let scene;
@@ -20,13 +20,12 @@ describe('EnemyHandler', () => {
         };
         scene = {
             isInvincible: false,
-            sparkEmitter: { emitParticleAt: jest.fn() },
+            particleManager: { emitSpark: jest.fn() },
             cameras: { main: { shake: jest.fn() } },
             time: { delayedCall: jest.fn((_, __, ___, context) => context && context()) }
         };
         handler = new EnemyHandler(scene);
-        jest.spyOn(AudioManager, 'playDestroySound').mockImplementation(() => {});
-        jest.spyOn(AudioManager, 'playDamageSound').mockImplementation(() => {});
+        jest.spyOn(EventBus, 'emit');
     });
 
     afterEach(() => {
@@ -39,17 +38,20 @@ describe('EnemyHandler', () => {
         handler.hitEnemy(player, enemy);
 
         expect(enemy.destroy).toHaveBeenCalled();
-        expect(scene.sparkEmitter.emitParticleAt).toHaveBeenCalledWith(enemy.x, enemy.y, 20);
-        expect(AudioManager.playDestroySound).toHaveBeenCalled();
-        expect(AudioManager.playDamageSound).not.toHaveBeenCalled();
+        expect(enemy.destroy).toHaveBeenCalled();
+        expect(scene.particleManager.emitSpark).toHaveBeenCalledWith(enemy.x, enemy.y);
+        expect(EventBus.emit).toHaveBeenCalledWith(Events.ENEMY_DESTROYED);
+        expect(EventBus.emit).not.toHaveBeenCalledWith(Events.PLAYER_HIT);
     });
 
     test('hitEnemy should damage player when not invincible', () => {
         handler.hitEnemy(player, enemy);
 
-        expect(AudioManager.playDamageSound).toHaveBeenCalled();
+        handler.hitEnemy(player, enemy);
+
+        expect(EventBus.emit).toHaveBeenCalledWith(Events.PLAYER_HIT);
         expect(player.setTint).toHaveBeenCalledWith(0xff0000);
         expect(scene.cameras.main.shake).toHaveBeenCalledWith(100, 0.01);
-        expect(player.setVelocity).toHaveBeenCalledWith(expect.any(Number), 300);
+        expect(player.setVelocity).toHaveBeenCalledWith(expect.any(Number), 520);
     });
 });

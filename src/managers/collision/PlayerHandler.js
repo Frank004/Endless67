@@ -1,5 +1,5 @@
-import ScoreManager from '../ScoreManager.js';
-import AudioManager from '../AudioManager.js';
+import ScoreManager from '../gameplay/ScoreManager.js';
+import AudioManager from '../audio/AudioManager.js';
 
 export class PlayerHandler {
     constructor(scene) {

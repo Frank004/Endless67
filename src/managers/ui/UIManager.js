@@ -1,7 +1,7 @@
-import ScoreManager from './ScoreManager.js';
-import { UIHelpers } from '../utils/UIHelpers.js';
-import EventBus, { Events } from '../core/EventBus.js';
-import GameState from '../core/GameState.js';
+import ScoreManager from '../gameplay/ScoreManager.js';
+import { UIHelpers } from '../../utils/UIHelpers.js';
+import EventBus, { Events } from '../../core/EventBus.js';
+import GameState from '../../core/GameState.js';
 
 export class UIManager {
     constructor(scene) {
@@ -144,11 +144,19 @@ export class UIManager {
             // Right side text: center of right area (SPLIT_X + (cameraWidth - SPLIT_X) / 2)
             const rightTextX = Math.round(SPLIT_X + (cameraWidth - SPLIT_X) / 2);
 
-            scene.add.text(leftTextX, controlY, '< HOLD & SLIDE >', { fontSize: '12px', color: '#fff', alpha: 0.4 }).setOrigin(0.5).setScrollFactor(0).setDepth(100);
-            scene.add.text(rightTextX, controlY, 'JUMP', { fontSize: '12px', color: '#fff', alpha: 0.4 }).setOrigin(0.5).setScrollFactor(0).setDepth(100);
+            scene.controlTextLeft = scene.add.text(leftTextX, controlY, '< HOLD & SLIDE >', { fontSize: '12px', color: '#fff', alpha: 0.4 }).setOrigin(0.5).setScrollFactor(0).setDepth(100);
+            scene.controlTextRight = scene.add.text(rightTextX, controlY, 'JUMP', { fontSize: '12px', color: '#fff', alpha: 0.4 }).setOrigin(0.5).setScrollFactor(0).setDepth(100);
         } else {
-            scene.add.text(centerX, 560, '← → MOVE | SPACE JUMP', { fontSize: '12px', color: '#fff', alpha: 0.4 }).setOrigin(0.5).setScrollFactor(0);
+            scene.controlTextPC = scene.add.text(centerX, 560, '← → MOVE | SPACE JUMP', { fontSize: '12px', color: '#fff', alpha: 0.4 }).setOrigin(0.5).setScrollFactor(0);
         }
+    }
+
+    setGameStartUI() {
+        const scene = this.scene;
+        if (scene.uiText) scene.uiText.setVisible(false);
+        if (scene.controlTextLeft) scene.controlTextLeft.setVisible(false);
+        if (scene.controlTextRight) scene.controlTextRight.setVisible(false);
+        if (scene.controlTextPC) scene.controlTextPC.setVisible(false);
     }
 
     showJoystick(x, y, visible) {
@@ -282,31 +290,31 @@ export class UIManager {
     showPauseMenu() {
         const scene = this.scene;
 
-            // Update button icons and text to reflect current registry state
+        // Update button icons and text to reflect current registry state
         const soundEnabled = GameState.soundEnabled;
-            const soundTextStr = soundEnabled ? 'SOUND: ON' : 'SOUND: OFF';
-            const soundIcon = soundEnabled ? 'volume-up' : 'volume-mute';
-            if (scene.soundToggleText) {
-                scene.soundToggleText.setText(soundTextStr);
-                scene.soundToggleIcon.setFrame(soundIcon);
-            }
+        const soundTextStr = soundEnabled ? 'SOUND: ON' : 'SOUND: OFF';
+        const soundIcon = soundEnabled ? 'volume-up' : 'volume-mute';
+        if (scene.soundToggleText) {
+            scene.soundToggleText.setText(soundTextStr);
+            scene.soundToggleIcon.setFrame(soundIcon);
+        }
 
-            const showJoystick = scene.registry.get('showJoystick') !== false;
-            const joystickTextStr = showJoystick ? 'JOYSTICK: ON' : 'JOYSTICK: OFF';
-            if (scene.joystickToggleText) {
-                scene.joystickToggleText.setText(joystickTextStr);
-                scene.joystickToggleIcon.setAlpha(showJoystick ? 1 : 0.5);
-            }
+        const showJoystick = scene.registry.get('showJoystick') !== false;
+        const joystickTextStr = showJoystick ? 'JOYSTICK: ON' : 'JOYSTICK: OFF';
+        if (scene.joystickToggleText) {
+            scene.joystickToggleText.setText(joystickTextStr);
+            scene.joystickToggleIcon.setAlpha(showJoystick ? 1 : 0.5);
+        }
 
-            scene.pauseMenuBg.setVisible(true);
-            scene.pauseMenuTitle.setVisible(true);
-            if (scene.versionText) scene.versionText.setVisible(true);
-            scene.continueButton.setVisible(true);
-            scene.soundToggleContainer.setVisible(true);
-            scene.joystickToggleContainer.setVisible(true);
-            scene.exitButtonContainer.setVisible(true);
-            scene.pauseButton.setFrame('play'); // Play icon
-            scene.tweens.pauseAll();
+        scene.pauseMenuBg.setVisible(true);
+        scene.pauseMenuTitle.setVisible(true);
+        if (scene.versionText) scene.versionText.setVisible(true);
+        scene.continueButton.setVisible(true);
+        scene.soundToggleContainer.setVisible(true);
+        scene.joystickToggleContainer.setVisible(true);
+        scene.exitButtonContainer.setVisible(true);
+        scene.pauseButton.setFrame('play'); // Play icon
+        scene.tweens.pauseAll();
     }
 
     /**
@@ -314,15 +322,15 @@ export class UIManager {
      */
     hidePauseMenu() {
         const scene = this.scene;
-            scene.pauseMenuBg.setVisible(false);
-            scene.pauseMenuTitle.setVisible(false);
-            if (scene.versionText) scene.versionText.setVisible(false);
-            scene.continueButton.setVisible(false);
-            scene.soundToggleContainer.setVisible(false);
-            scene.joystickToggleContainer.setVisible(false);
-            scene.exitButtonContainer.setVisible(false);
-            scene.pauseButton.setFrame('pause'); // Pause icon
-            scene.tweens.resumeAll();
+        scene.pauseMenuBg.setVisible(false);
+        scene.pauseMenuTitle.setVisible(false);
+        if (scene.versionText) scene.versionText.setVisible(false);
+        scene.continueButton.setVisible(false);
+        scene.soundToggleContainer.setVisible(false);
+        scene.joystickToggleContainer.setVisible(false);
+        scene.exitButtonContainer.setVisible(false);
+        scene.pauseButton.setFrame('pause'); // Pause icon
+        scene.tweens.resumeAll();
     }
 
     /**

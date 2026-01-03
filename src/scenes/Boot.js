@@ -3,6 +3,8 @@ import FlamesPipeline from '../pipelines/FlamesPipeline.js';
 import { Leaderboard } from './Leaderboard.js';
 import { Settings } from './Settings.js';
 import { Playground } from './Playground.js';
+import { ASSETS } from '../config/AssetKeys.js';
+import { REGISTRY_KEYS } from '../config/RegistryKeys.js';
 
 /**
  * @phasereditor
@@ -19,29 +21,29 @@ export class Boot extends Phaser.Scene {
     preload() {
         // --- AUDIO ---
         // Estructura compatible con Phaser Editor: assets/audio/
-        this.load.audio('coin_sfx_1', 'assets/audio/collecting-coins/Several Coins 01.mp3');
-        this.load.audio('coin_sfx_2', 'assets/audio/collecting-coins/Several Coins 02.mp3');
-        this.load.audio('coin_sfx_3', 'assets/audio/collecting-coins/Several Coins 03.mp3');
-        this.load.audio('damage_sfx_1', 'assets/audio/take-damage/Retro Game Low Take Damage.wav');
-        this.load.audio('damage_sfx_2', 'assets/audio/take-damage/Retro Game Low Take Damage 2.wav');
-        this.load.audio('damage_sfx_3', 'assets/audio/take-damage/Retro Game Low Take Damage 3.wav');
-        this.load.audio('damage_sfx_4', 'assets/audio/take-damage/Retro Game Low Take Damage 4.wav');
-        this.load.audio('damage_sfx_5', 'assets/audio/take-damage/Retro Game Low Take Damage 5.wav');
-        this.load.audio('lava_ambient', 'assets/audio/lava/Lava.wav');
-        this.load.audio('bg_music', 'assets/audio/bg-music/retro-game-music/Retro hiphop.mp3');
-        this.load.audio('lava_drop', 'assets/audio/lava-drop/lava-drop-in.wav');
-        this.load.audio('jump_sfx', 'assets/audio/jumps/jumping.wav');
-        this.load.audio('destroy_sfx', 'assets/audio/destroy/destroy.wav');
-        this.load.audio('celebration_sfx', 'assets/audio/celebration/67.WAV');
-        this.load.audio('shoe_brake', 'assets/audio/shoes/shoe-brake.WAV');
+        this.load.audio(ASSETS.COIN_SFX_PREFIX + '1', 'assets/audio/collecting-coins/Several Coins 01.mp3');
+        this.load.audio(ASSETS.COIN_SFX_PREFIX + '2', 'assets/audio/collecting-coins/Several Coins 02.mp3');
+        this.load.audio(ASSETS.COIN_SFX_PREFIX + '3', 'assets/audio/collecting-coins/Several Coins 03.mp3');
+        this.load.audio(ASSETS.DAMAGE_SFX_PREFIX + '1', 'assets/audio/take-damage/Retro Game Low Take Damage.wav');
+        this.load.audio(ASSETS.DAMAGE_SFX_PREFIX + '2', 'assets/audio/take-damage/Retro Game Low Take Damage 2.wav');
+        this.load.audio(ASSETS.DAMAGE_SFX_PREFIX + '3', 'assets/audio/take-damage/Retro Game Low Take Damage 3.wav');
+        this.load.audio(ASSETS.DAMAGE_SFX_PREFIX + '4', 'assets/audio/take-damage/Retro Game Low Take Damage 4.wav');
+        this.load.audio(ASSETS.DAMAGE_SFX_PREFIX + '5', 'assets/audio/take-damage/Retro Game Low Take Damage 5.wav');
+        this.load.audio(ASSETS.LAVA_AMBIENT, 'assets/audio/lava/Lava.wav');
+        this.load.audio(ASSETS.BG_MUSIC, 'assets/audio/bg-music/retro-game-music/Retro hiphop.mp3');
+        this.load.audio(ASSETS.LAVA_DROP, 'assets/audio/lava-drop/lava-drop-in.wav');
+        this.load.audio(ASSETS.JUMP_SFX, 'assets/audio/jumps/jumping.wav');
+        this.load.audio(ASSETS.DESTROY_SFX, 'assets/audio/destroy/destroy.wav');
+        this.load.audio(ASSETS.CELEBRATION_SFX, 'assets/audio/celebration/67.WAV');
+        this.load.audio(ASSETS.SHOE_BRAKE, 'assets/audio/shoes/shoe-brake.WAV');
 
         // --- UI ICONS ---
-        this.load.atlas('ui_icons', 'assets/ui/icons.png', 'assets/ui/icons.json');
+        this.load.atlas(ASSETS.UI_ICONS, 'assets/ui/icons.png', 'assets/ui/icons.json');
 
         // --- COIN SPRITE SHEET ---
         // Cargar sprite sheet del coin usando multiatlas (formato TexturePacker)
-        this.load.multiatlas('coins', 'assets/spritesheets/coins.json', 'assets/spritesheets');
-        
+        this.load.multiatlas(ASSETS.COINS, 'assets/spritesheets/coins.json', 'assets/spritesheets');
+
         // --- BASKETBALL SPRITE SHEET (POWERUP) ---
         // Cargar sprite sheet del basketball usando multiatlas (formato TexturePacker)
         this.load.multiatlas('basketball', 'assets/spritesheets/basketball.json', 'assets/spritesheets');
@@ -52,10 +54,10 @@ export class Boot extends Phaser.Scene {
 
         // --- PLAYER SPRITES ---
         // Atlas del player (prioridad)
-        this.load.multiatlas('player', 'assets/spritesheets/player.json', 'assets/spritesheets');
+        this.load.multiatlas(ASSETS.PLAYER, 'assets/spritesheets/player.json', 'assets/spritesheets');
         // PNG opcional como fallback manual (se usa solo si no hay atlas)
         try {
-            this.load.image('player_png', 'assets/images/player_32x32.png');
+            this.load.image(ASSETS.PLAYER_PNG, 'assets/images/player_32x32.png');
         } catch (error) {
             console.warn('Player PNG no encontrado, se usará placeholder generado:', error);
         }
@@ -72,9 +74,9 @@ export class Boot extends Phaser.Scene {
         let g = this.make.graphics({ x: 0, y: 0 });
 
         // Player Sprite - Atlas > PNG > placeholder generado
-        const usePlayerPNG = this.registry.get('usePlayerPNG') !== false; // Default: true (usar PNG si existe)
-        const atlasLoaded = this.textures.exists('player');
-        const pngLoaded = this.textures.exists('player_png');
+        const usePlayerPNG = this.registry.get(REGISTRY_KEYS.USE_PLAYER_PNG) !== false; // Default: true (usar PNG si existe)
+        const atlasLoaded = this.textures.exists(ASSETS.PLAYER);
+        const pngLoaded = this.textures.exists(ASSETS.PLAYER_PNG);
 
         // Placeholder (solo si no hay atlas/PNG)
         const PLAYER_SIZE = 32;
@@ -82,7 +84,7 @@ export class Boot extends Phaser.Scene {
         g.fillRoundedRect(0, 0, PLAYER_SIZE, PLAYER_SIZE, 8);
         g.lineStyle(2, 0xffffff, 0.8);
         g.strokeRoundedRect(0, 0, PLAYER_SIZE, PLAYER_SIZE, 8);
-        g.generateTexture('player_placeholder', PLAYER_SIZE, PLAYER_SIZE);
+        g.generateTexture(ASSETS.PLAYER_PLACEHOLDER, PLAYER_SIZE, PLAYER_SIZE);
 
         // Log del estado
         if (atlasLoaded) {
@@ -98,11 +100,11 @@ export class Boot extends Phaser.Scene {
 
         // Registrar animaciones del player (si hay atlas)
         if (atlasLoaded && this.anims) {
-            const playerTex = this.textures.get('player');
+            const playerTex = this.textures.get(ASSETS.PLAYER);
             const hasFrame = (f) => playerTex.has(f);
             const makeAnim = (key, frameNames, frameRate = 10, repeat = -1) => {
                 if (this.anims.exists(key)) return;
-                const frames = frameNames.filter(hasFrame).map(f => ({ key: 'player', frame: f }));
+                const frames = frameNames.filter(hasFrame).map(f => ({ key: ASSETS.PLAYER, frame: f }));
                 if (frames.length > 0) {
                     this.anims.create({ key, frames, frameRate, repeat });
                 }
@@ -139,9 +141,9 @@ export class Boot extends Phaser.Scene {
             const powerFrames = powerFrameOrder.filter(hasFrame).flatMap(f => {
                 // Duplicar frames 05 y 06 para hold extra
                 if (f === 'basketball_powerup-05.png' || f === 'basketball_powerup-06.png') {
-                    return [{ key: 'player', frame: f }, { key: 'player', frame: f }];
+                    return [{ key: ASSETS.PLAYER, frame: f }, { key: ASSETS.PLAYER, frame: f }];
                 }
-                return { key: 'player', frame: f };
+                return { key: ASSETS.PLAYER, frame: f };
             });
             if (powerFrames.length > 0 && !this.anims.exists('player_powerup')) {
                 this.anims.create({
@@ -158,13 +160,13 @@ export class Boot extends Phaser.Scene {
         // static (magenta)
         g.clear(); g.fillStyle(0xff00aa, 1);
         g.fillRoundedRect(0, 0, 128, 32, 6);
-        g.generateTexture('platform', 128, 32);
+        g.generateTexture(ASSETS.PLATFORM, 128, 32);
         // moving horizontal (blue)
         g.clear(); g.fillStyle(0x0088ff, 1);
         g.fillRoundedRect(0, 0, 128, 32, 6);
         g.lineStyle(2, 0xffffff, 0.5);
         g.strokeRoundedRect(0, 0, 128, 32, 6);
-        g.generateTexture('platform_moving', 128, 32);
+        g.generateTexture(ASSETS.PLATFORM_MOVING, 128, 32);
 
         // Enemigos
 
@@ -178,27 +180,27 @@ export class Boot extends Phaser.Scene {
         g.closePath();
         g.fill();
         g.strokeRoundedRect(32, 32, 32, 8);
-        g.generateTexture('enemy_spike', 32, 32);
+        g.generateTexture(ASSETS.ENEMY_SPIKE, 32, 32);
 
         // Enemy Shooter
         g.clear();
         g.fillStyle(0xff8800, 1);
         g.fillRect(0, 0, 24, 24);
-        g.generateTexture('enemy_shooter', 24, 24);
+        g.generateTexture(ASSETS.ENEMY_SHOOTER, 24, 24);
 
         // Enemy Jumper Shooter (New)
         g.clear();
         g.fillStyle(0x9900ff, 1); // Purple
         g.fillRect(0, 0, 24, 24); // Match player size (24x24)
-        g.generateTexture('enemy_jumper_shooter', 24, 24);
+        g.generateTexture(ASSETS.ENEMY_JUMPER_SHOOTER, 24, 24);
 
         // Proyectil (Rojo brillante)
-        g.clear(); g.fillStyle(0xff0000, 1); g.fillCircle(6, 6, 6); g.generateTexture('projectile', 12, 12);
+        g.clear(); g.fillStyle(0xff0000, 1); g.fillCircle(6, 6, 6); g.generateTexture(ASSETS.PROJECTILE, 12, 12);
 
         // Bloque Laberinto
         g.clear(); g.fillStyle(0x222222, 1); g.fillRect(0, 0, 100, 60);
         g.beginPath(); g.lineStyle(4, 0x444444, 1); g.moveTo(0, 0); g.lineTo(100, 0); g.moveTo(0, 60); g.lineTo(100, 60); g.strokePath();
-        g.generateTexture('maze_block', 100, 60);
+        g.generateTexture(ASSETS.MAZE_BLOCK, 100, 60);
 
         // Riser textures: usar ancho del juego dinámicamente, altura suficiente para tileable
         const riserTextureWidth = this.game.config.width;
@@ -360,7 +362,7 @@ export class Boot extends Phaser.Scene {
                 Phaser.Math.Between(1, 4)
             );
         }
-        g.generateTexture('acid_texture', riserTextureWidth, riserTextureHeight);
+        g.generateTexture(ASSETS.ACID_TEXTURE, riserTextureWidth, riserTextureHeight);
 
         // Fire texture (pixel art style con top irregular como la referencia)
         g.clear();
@@ -428,23 +430,23 @@ export class Boot extends Phaser.Scene {
             g.fillRect(px, py, pixelSize / 3, pixelSize / 3);
         }
 
-        g.generateTexture('fire_texture', riserTextureWidth, riserTextureHeight);
+        g.generateTexture(ASSETS.FIRE_TEXTURE, riserTextureWidth, riserTextureHeight);
 
         // UI & FX
         // UI & FX
         g.clear(); g.lineStyle(4, 0xffffff, 0.3); g.strokeCircle(65, 65, 60); g.generateTexture('joystick_base', 130, 130);
         g.clear(); g.fillStyle(0xffffff, 0.5); g.fillCircle(30, 30, 30); g.generateTexture('joystick_knob', 60, 60);
         g.clear(); g.lineStyle(4, 0xffffff, 0.5); g.strokeCircle(40, 40, 38); g.generateTexture('jump_feedback', 80, 80);
-        g.clear(); g.fillStyle(0xffffff, 1); g.fillRect(0, 0, 6, 6); g.generateTexture('particle_dust', 6, 6);
-        g.clear(); g.fillStyle(0xffff00, 1); g.fillCircle(3, 3, 3); g.generateTexture('particle_spark', 6, 6);
-        g.clear(); g.fillStyle(0xff4400, 1); g.fillCircle(4, 4, 4); g.generateTexture('particle_burn', 8, 8);
+        g.clear(); g.fillStyle(0xffffff, 1); g.fillRect(0, 0, 6, 6); g.generateTexture(ASSETS.PARTICLE_DUST, 6, 6);
+        g.clear(); g.fillStyle(0xffff00, 1); g.fillCircle(3, 3, 3); g.generateTexture(ASSETS.PARTICLE_SPARK, 6, 6);
+        g.clear(); g.fillStyle(0xff4400, 1); g.fillCircle(4, 4, 4); g.generateTexture(ASSETS.PARTICLE_BURN, 8, 8);
         // Coin sprite sheet ya cargado desde assets/spritesheets/coins.json
         // No generar textura placeholder, usar el sprite sheet directamente
 
         // Power Up & Confetti
-        g.clear(); g.fillStyle(0xff6600, 1); g.fillCircle(15, 15, 15); g.lineStyle(2, 0x000000, 1); g.strokeCircle(15, 15, 15); g.beginPath(); g.moveTo(15, 0); g.lineTo(15, 30); g.strokePath(); g.beginPath(); g.moveTo(0, 15); g.lineTo(30, 15); g.strokePath(); g.generateTexture('powerup_ball', 30, 30);
-        g.clear(); g.fillStyle(0xffdd00, 0.8); g.fillCircle(4, 4, 4); g.generateTexture('particle_aura', 8, 8);
-        g.clear(); g.fillStyle(0xffffff, 1); g.fillRect(0, 0, 8, 8); g.generateTexture('confetti', 8, 8);
+        g.clear(); g.fillStyle(0xff6600, 1); g.fillCircle(15, 15, 15); g.lineStyle(2, 0x000000, 1); g.strokeCircle(15, 15, 15); g.beginPath(); g.moveTo(15, 0); g.lineTo(15, 30); g.strokePath(); g.beginPath(); g.moveTo(0, 15); g.lineTo(30, 15); g.strokePath(); g.generateTexture(ASSETS.POWERUP_BALL, 30, 30);
+        g.clear(); g.fillStyle(0xffdd00, 0.8); g.fillCircle(4, 4, 4); g.generateTexture(ASSETS.PARTICLE_AURA, 8, 8);
+        g.clear(); g.fillStyle(0xffffff, 1); g.fillRect(0, 0, 8, 8); g.generateTexture(ASSETS.CONFETTI, 8, 8);
 
         // Ocultar el loader cuando el juego esté listo
         const loader = document.getElementById('loader');

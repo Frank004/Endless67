@@ -1,4 +1,4 @@
-import ScoreManager from '../managers/ScoreManager.js';
+import ScoreManager from '../managers/gameplay/ScoreManager.js';
 
 export class Leaderboard extends Phaser.Scene {
     constructor() {

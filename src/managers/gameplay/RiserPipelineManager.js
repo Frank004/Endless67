@@ -1,4 +1,4 @@
-import { RISER_TYPES } from '../config/RiserConfig.js';
+import { RISER_TYPES } from '../../config/RiserConfig.js';
 
 /**
  * RiserPipelineManager

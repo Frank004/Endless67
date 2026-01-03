@@ -1,7 +1,7 @@
-import { getLevelConfig } from '../data/LevelConfig.js';
-import { RiserConfiguration, RISER_TYPES } from '../config/RiserConfig.js';
-import { Riser } from '../prefabs/Riser.js';
-import { WALLS } from '../config/GameConstants.js';
+import { getLevelConfig } from '../../data/LevelConfig.js';
+import { RiserConfiguration, RISER_TYPES } from '../../config/RiserConfig.js';
+import { Riser } from '../../prefabs/Riser.js';
+import { WALLS } from '../../config/GameConstants.js';
 import RiserPipelineManager from './RiserPipelineManager.js';
 
 export class RiserManager {
@@ -113,7 +113,7 @@ export class RiserManager {
 
     triggerRising() {
         if (this.enabled) {
-        this.isRising = true;
+            this.isRising = true;
         }
     }
 }

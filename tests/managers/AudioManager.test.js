@@ -1,4 +1,4 @@
-import AudioManager from '../../src/managers/AudioManager.js';
+import AudioManager from '../../src/managers/audio/AudioManager.js';
 
 describe('AudioManager', () => {
     let scene;

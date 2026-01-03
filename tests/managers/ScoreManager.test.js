@@ -1,4 +1,4 @@
-import ScoreManager from '../../src/managers/ScoreManager.js';
+import ScoreManager from '../../src/managers/gameplay/ScoreManager.js';
 
 describe('ScoreManager', () => {
     let scoreManager;

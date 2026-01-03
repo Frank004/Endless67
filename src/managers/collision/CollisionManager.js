@@ -1,7 +1,7 @@
-import { PlayerHandler } from './collision/PlayerHandler.js';
-import { EnemyHandler } from './collision/EnemyHandler.js';
-import { ItemHandler } from './collision/ItemHandler.js';
-import { ProjectileHandler } from './collision/ProjectileHandler.js';
+import { PlayerHandler } from './PlayerHandler.js';
+import { EnemyHandler } from './EnemyHandler.js';
+import { ItemHandler } from './ItemHandler.js';
+import { ProjectileHandler } from './ProjectileHandler.js';
 
 export class CollisionManager {
     constructor(scene) {

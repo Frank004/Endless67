@@ -1,7 +1,10 @@
+import EventBus from '../core/EventBus.js';
+
 /**
  * Contexto del jugador: sensores, intent y wrappers a acciones existentes.
  */
 export class PlayerContext {
+
     constructor(sprite) {
         this.sprite = sprite;
         this.intent = {
@@ -223,15 +226,12 @@ export class PlayerContext {
     }
 
     emitJumpEvent(result) {
-        if (!result || !this.sprite?.scene?.eventBus) return;
-        const EventBus = this.sprite.scene.eventBus || this.sprite.scene.eventsBus || null;
-        if (EventBus?.emit) {
-            EventBus.emit('PLAYER_JUMPED', {
-                type: result.type,
-                x: result.x,
-                y: result.y
-            });
-        }
+        if (!result) return;
+        EventBus.emit('PLAYER_JUMPED', {
+            type: result.type,
+            x: result.x,
+            y: result.y
+        });
     }
 
     doWallJump() {

@@ -1,4 +1,4 @@
-import RiserPipelineManager, { RiserPipelineManager as ManagerClass } from '../../src/managers/RiserPipelineManager.js';
+import RiserPipelineManager, { RiserPipelineManager as ManagerClass } from '../../src/managers/gameplay/RiserPipelineManager.js';
 import { RISER_TYPES } from '../../src/config/RiserConfig.js';
 
 describe('RiserPipelineManager', () => {
@@ -8,7 +8,7 @@ describe('RiserPipelineManager', () => {
     });
 
     test('getPipelineForType should warn and default for unknown types', () => {
-        const warnSpy = jest.spyOn(console, 'warn').mockImplementation(() => {});
+        const warnSpy = jest.spyOn(console, 'warn').mockImplementation(() => { });
 
         const result = RiserPipelineManager.getPipelineForType('UNKNOWN');
 

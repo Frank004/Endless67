@@ -1,4 +1,4 @@
-import { WALLS } from '../config/GameConstants.js';
+import { WALLS } from '../../config/GameConstants.js';
 
 /**
  * WallDecorator (tiles individuales)

@@ -1,5 +1,5 @@
 import { handlePlatformRiderCollision, updatePlatformRider } from '../../utils/platformRider.js';
-import AudioManager from '../AudioManager.js';
+import EventBus, { Events } from '../../core/EventBus.js';
 
 export class ItemHandler {
     constructor(scene) {
@@ -37,8 +37,8 @@ export class ItemHandler {
         let t = scene.add.text(player.x, player.y - 30, '+1', { fontSize: '18px', fontStyle: 'bold', color: '#ffff00' }).setDepth(101);
         scene.tweens.add({ targets: t, y: player.y - 80, alpha: 0, duration: 600, onComplete: () => t.destroy() });
 
-        // Play coin sound
-        AudioManager.playCoinSound();
+        // Emit coin collected event
+        EventBus.emit(Events.COIN_COLLECTED);
 
         let strScore = scene.totalScore.toString();
         if (strScore === '67' || strScore.endsWith('67')) {
@@ -73,8 +73,8 @@ export class ItemHandler {
             player.controller.anim.play('player_powerup');
         }
 
-        // Play celebration sound
-        AudioManager.playCelebrationSound();
+        // Emit powerup collected event (which might play sound)
+        EventBus.emit(Events.POWERUP_COLLECTED);
 
         let t = scene.add.text(scene.cameras.main.centerX, scene.cameras.main.scrollY + 200, 'POWERUP 67', {
             fontSize: '32px', color: '#ffd700', fontStyle: 'bold', stroke: '#000000', strokeThickness: 4
@@ -87,7 +87,7 @@ export class ItemHandler {
             scene.physics.resume();
             scene.isPausedEvent = false;
             scene.activateInvincibility();
-            if (scene.auraEmitter) scene.auraEmitter.start(); // Aura durante el poder activo
+            if (scene.particleManager) scene.particleManager.startAura(); // Aura durante el poder activo
         });
     }
 }

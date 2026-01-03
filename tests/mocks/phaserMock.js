@@ -136,6 +136,7 @@ export class PhaserMock {
                 setTint(color) { this.tint = color; return this; }
                 clearTint() { this.tint = 0xffffff; return this; }
                 setOrigin() { return this; }
+                setPosition(x, y) { this.x = x; this.y = y; return this; }
                 setDisplaySize() { return this; }
                 refreshBody() { return this; }
                 setData(k, v) { this[k] = v; return this; }
