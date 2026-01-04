@@ -201,9 +201,15 @@ export class Game extends Phaser.Scene {
             }
         }
         
+        // 🚀 OPTIMIZATION: Only update debug visuals if actually enabled
         if (this.debugManager) {
-            this.debugManager.updateHitboxVisual();
-            this.debugManager.updateRuler();
+            // Skip if debug features are disabled (most common case)
+            if (this.debugManager.showPlayerHitbox) {
+                this.debugManager.updateHitboxVisual();
+            }
+            if (this.debugManager.rulerEnabled) {
+                this.debugManager.updateRuler();
+            }
         }
 
         // Platform Riders (Coins/Powerups)
@@ -217,25 +223,33 @@ export class Game extends Phaser.Scene {
             const cameraBottom = cameraTop + camera.height;
             const updateRange = isMobile ? 150 : 200; // Smaller range on mobile
             
+            // 🚀 OPTIMIZATION: Cache range calculations and use simple iteration
+            const minY = cameraTop - updateRange;
+            const maxY = cameraBottom + updateRange;
+            
             if (this.coins && this.coins.children) {
-                this.coins.children.iterate(coin => {
+                const coinsList = this.coins.children.entries;
+                for (let i = 0; i < coinsList.length; i++) {
+                    const coin = coinsList[i];
                     if (coin && coin.active && coin.body) {
                         // Only update if coin is near camera (within update range)
-                        if (coin.y >= cameraTop - updateRange && coin.y <= cameraBottom + updateRange) {
+                        if (coin.y >= minY && coin.y <= maxY) {
                             updatePlatformRider(coin);
                         }
                     }
-                });
+                }
             }
             if (this.powerups && this.powerups.children) {
-                this.powerups.children.iterate(powerup => {
+                const powerupsList = this.powerups.children.entries;
+                for (let i = 0; i < powerupsList.length; i++) {
+                    const powerup = powerupsList[i];
                     if (powerup && powerup.active && powerup.body) {
                         // Only update if powerup is near camera (within update range)
-                        if (powerup.y >= cameraTop - updateRange && powerup.y <= cameraBottom + updateRange) {
+                        if (powerup.y >= minY && powerup.y <= maxY) {
                             updatePlatformRider(powerup);
                         }
                     }
-                });
+                }
             }
         }
 

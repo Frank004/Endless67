@@ -263,8 +263,8 @@ export class GameInitializer {
     }
 
     static updateWalls(scene) {
-        // Throttle wall updates on mobile (every other frame)
-        // BUT always update on first call or when game just started
+        // 🚀 OPTIMIZATION: Throttle wall updates more aggressively
+        // Update every 2 frames on desktop, every 3 frames on mobile
         const isMobile = scene.isMobile || false;
         const isFirstUpdate = scene._wallUpdateFrame === undefined;
         const gameJustStarted = scene.gameStarted && (scene._wallJustStarted === undefined || scene._wallJustStarted);
@@ -273,11 +273,16 @@ export class GameInitializer {
             scene._wallJustStarted = false; // Mark that we've handled the start
         }
         
-        if (isMobile && !isFirstUpdate && !gameJustStarted) {
+        // Always update on first call or when game just started
+        if (isFirstUpdate || gameJustStarted) {
             scene._wallUpdateFrame = (scene._wallUpdateFrame || 0) + 1;
-            if (scene._wallUpdateFrame % 2 !== 0) return; // Skip every other frame on mobile
         } else {
             scene._wallUpdateFrame = (scene._wallUpdateFrame || 0) + 1;
+            // Skip frames: every 2nd frame on desktop, every 3rd frame on mobile
+            const throttleRate = isMobile ? 3 : 2;
+            if (scene._wallUpdateFrame % throttleRate !== 0) {
+                return; // Skip this update
+            }
         }
         
         const wallYOffset = WALLS.Y_OFFSET;

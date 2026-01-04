@@ -807,9 +807,10 @@ export class SlotGenerator {
                 const spawnThreshold = lastSlot.yEnd + this.spawnBuffer;
 
                 // Count slots that are ahead AND close to the player
-                // OPTIMIZED: Use a simple loop instead of filter to avoid creating intermediate arrays
+                // OPTIMIZED: Use a simple loop with early exit when we find enough slots
                 let slotsAhead = 0;
-                for (let i = 0; i < this.slots.length; i++) {
+                const maxSlotsToCheck = MIN_SLOTS_AHEAD + 2; // Early exit optimization
+                for (let i = 0; i < this.slots.length && slotsAhead < maxSlotsToCheck; i++) {
                     const s = this.slots[i];
                     if (s.yEnd < playerY) {
                         const distance = playerY - s.yEnd;

@@ -46,7 +46,7 @@ export class PauseMenu {
             fontSize: '48px', color: '#ffd700', fontStyle: 'bold'
         }).setOrigin(0.5).setScrollFactor(0).setDepth(201).setVisible(false);
 
-        this.versionText = scene.add.text(centerX, 220, 'v0.0.37', {
+        this.versionText = scene.add.text(centerX, 220, 'v0.0.38', {
             fontSize: '14px', color: '#888888'
         }).setOrigin(0.5).setScrollFactor(0).setDepth(201).setVisible(false);
 

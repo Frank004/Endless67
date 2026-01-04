@@ -169,9 +169,20 @@ export class WallDecorator {
 
     recycle(list, side, top, bottom) {
         if (list.length === 0) return;
-        let maxY = Math.max(...list.map(s => s.yStart));
-        let minY = Math.min(...list.map(s => s.yStart));
-        list.forEach(seg => {
+        
+        // 🚀 OPTIMIZATION: Use simple loops instead of map() and forEach()
+        // Calculate maxY and minY in a single pass
+        let maxY = list[0].yStart;
+        let minY = list[0].yStart;
+        for (let i = 1; i < list.length; i++) {
+            const y = list[i].yStart;
+            if (y > maxY) maxY = y;
+            if (y < minY) minY = y;
+        }
+        
+        // Process segments with simple loop
+        for (let i = 0; i < list.length; i++) {
+            const seg = list[i];
             if (seg.yStart + this.segmentHeight < top) {
                 seg.yStart = maxY + this.segmentHeight;
                 maxY = seg.yStart;
@@ -182,7 +193,7 @@ export class WallDecorator {
                 this.repaintSegment(seg);
             }
             this.positionSegment(seg, side);
-        });
+        }
     }
 
     repaintSegment(seg) {
