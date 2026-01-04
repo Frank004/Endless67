@@ -1,6 +1,5 @@
 
 import { ASSETS } from '../config/AssetKeys.js';
-import { REGISTRY_KEYS } from '../config/RegistryKeys.js';
 import { PLAYER_CONFIG } from '../config/PlayerConfig.js';
 
 export class PlayerVisuals {
@@ -17,10 +16,8 @@ export class PlayerVisuals {
         const player = this.player;
 
         const hasAtlas = scene.textures.exists(ASSETS.PLAYER);
-        const usePNG = scene.registry.get(REGISTRY_KEYS.USE_PLAYER_PNG);
-        const hasPNG = scene.textures.exists('player_png');
 
-        if (hasAtlas && !usePNG) {
+        if (hasAtlas) {
             player.setTexture(ASSETS.PLAYER);
             const frameName = 'IDLE 1.png';
             if (scene.textures.get(ASSETS.PLAYER).has(frameName)) {
@@ -28,8 +25,6 @@ export class PlayerVisuals {
             } else {
                 console.warn(`[PlayerVisuals] Frame ${frameName} not found in atlas!`);
             }
-        } else if (hasPNG || usePNG) {
-            player.setTexture(hasPNG ? 'player_png' : 'player_placeholder');
         } else {
             this._createPlaceholder();
         }

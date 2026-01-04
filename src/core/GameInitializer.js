@@ -112,6 +112,13 @@ export class GameInitializer {
         scene.riserManager = new RiserManager(scene);
         scene.debugManager = new DebugManager(scene);
         scene.wallDecorator = new WallDecorator(scene);
+        
+        // OPTIMIZATION: Pre-initialize wall patterns and segments immediately
+        // This ensures walls are visible from the start and reduces first-frame load
+        if (scene.textures.exists('walls')) {
+            const initialScrollY = scene.cameras.main.scrollY || 0;
+            scene.wallDecorator.preInitialize(initialScrollY);
+        }
     }
 
     createGroups() {
@@ -250,6 +257,23 @@ export class GameInitializer {
     }
 
     static updateWalls(scene) {
+        // Throttle wall updates on mobile (every other frame)
+        // BUT always update on first call or when game just started
+        const isMobile = scene.isMobile || false;
+        const isFirstUpdate = scene._wallUpdateFrame === undefined;
+        const gameJustStarted = scene.gameStarted && (scene._wallJustStarted === undefined || scene._wallJustStarted);
+        
+        if (gameJustStarted) {
+            scene._wallJustStarted = false; // Mark that we've handled the start
+        }
+        
+        if (isMobile && !isFirstUpdate && !gameJustStarted) {
+            scene._wallUpdateFrame = (scene._wallUpdateFrame || 0) + 1;
+            if (scene._wallUpdateFrame % 2 !== 0) return; // Skip every other frame on mobile
+        } else {
+            scene._wallUpdateFrame = (scene._wallUpdateFrame || 0) + 1;
+        }
+        
         const wallYOffset = WALLS.Y_OFFSET;
         const gameWidth = scene.cameras.main.width;
         const wallWidth = WALLS.WIDTH;
@@ -271,6 +295,8 @@ export class GameInitializer {
         }
 
         if (scene.wallDecorator) {
+            // Asegurar que los segmentos se inicialicen si no existen
+            scene.wallDecorator.ensurePatterns();
             scene.wallDecorator.update(scene.cameras.main.scrollY);
         }
     }

@@ -188,8 +188,10 @@ export class Platform extends Phaser.GameObjects.TileSprite {
             scene.sys.displayList.add(this);
         }
 
-        // FINAL VERIFICATION LOG
-        console.log(`[Platform.spawn] ✅ Spawned at (${x}, ${y}) | Frame: ${frameName} | Visible: ${this.visible} | Active: ${this.active} | Body: ${!!this.body} | Depth: ${this.depth}`);
+        // FINAL VERIFICATION LOG (solo si debug está activo)
+        if (scene?.registry?.get('showSlotLogs') === true) {
+            console.log(`[Platform.spawn] ✅ Spawned at (${x}, ${y}) | Frame: ${frameName} | Visible: ${this.visible} | Active: ${this.active} | Body: ${!!this.body} | Depth: ${this.depth}`);
+        }
 
         // Double check texture
         if (this.texture.key === '__MISSING') {

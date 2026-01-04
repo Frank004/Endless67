@@ -27,7 +27,10 @@ export class SlotGenerator {
         // Pure layout logic (decoupled from Phaser)
         this.gridGenerator = new GridGenerator(gameWidth);
 
-        console.log(`[SlotGenerator] Init with gameWidth: ${gameWidth} (Camera: ${scene.cameras.main.width})`);
+        // Only log if debug is enabled
+        if (scene?.registry?.get('showSlotLogs') === true) {
+            console.log(`[SlotGenerator] Init with gameWidth: ${gameWidth} (Camera: ${scene.cameras.main.width})`);
+        }
 
         // Estado
         this.currentSlotIndex = 0;
@@ -56,11 +59,16 @@ export class SlotGenerator {
      * @param {number} startPlatformY - Y de la plataforma de inicio (default: 450)
      */
     init(startPlatformY = SLOT_CONFIG.rules.startPlatformY || 450) {
-        console.log('🎮 SlotGenerator: Inicializando... startY=', startPlatformY);
+        const verbose = this.scene?.registry?.get('showSlotLogs') === true;
+        if (verbose) {
+            console.log('🎮 SlotGenerator: Inicializando... startY=', startPlatformY);
+        }
 
         // Calcular Y inicial del primer batch usando slotGap
         this.startY = startPlatformY - SLOT_CONFIG.slotGap;
-        console.log(`  📍 Plataforma inicio: Y=${startPlatformY}, Primer batch: Y=${this.startY}`);
+        if (verbose) {
+            console.log(`  📍 Plataforma inicio: Y=${startPlatformY}, Primer batch: Y=${this.startY}`);
+        }
 
         // Initialize GridGenerator with start position
         try {
@@ -71,7 +79,9 @@ export class SlotGenerator {
 
         // Generar slots iniciales (tutorial)
         try {
-            console.log('  ...Generating tutorial slots...');
+            if (verbose) {
+                console.log('  ...Generating tutorial slots...');
+            }
             for (let i = 0; i < SLOT_CONFIG.rules.tutorialSlots; i++) {
                 this.generateNextSlot({ tutorialIndex: i });
             }
@@ -81,7 +91,9 @@ export class SlotGenerator {
 
         // Garantizar al menos 3 slots iniciales para evitar huecos de arranque
         try {
-            console.log('  ...Filling initial buffer...');
+            if (verbose) {
+                console.log('  ...Filling initial buffer...');
+            }
             while (this.slots.length < 3) {
                 this.generateNextSlot();
             }
@@ -89,7 +101,9 @@ export class SlotGenerator {
             console.error('❌ SlotGenerator: Buffer checking FAILED:', e);
         }
 
-        console.log(`✅ SlotGenerator: Init Done. ${this.slots.length} slots generated.`);
+        if (verbose) {
+            console.log(`✅ SlotGenerator: Init Done. ${this.slots.length} slots generated.`);
+        }
     }
 
     /**
@@ -126,7 +140,10 @@ export class SlotGenerator {
         const tutorialIndex = options.tutorialIndex;
 
         let result = null;
-        console.log(`  ⚙️ Generating Slot ${this.currentSlotIndex} [${slotType}]...`);
+        const verbose = this.scene?.registry?.get('showSlotLogs') === true;
+        if (verbose) {
+            console.log(`  ⚙️ Generating Slot ${this.currentSlotIndex} [${slotType}]...`);
+        }
 
         // Render based on type
         try {
@@ -150,9 +167,9 @@ export class SlotGenerator {
             // No re-lanzar el error para evitar loops infinitos, pero loguear todo
             return null;
         }
-
-        const verbose = this.scene?.registry?.get('showSlotLogs') ?? true; // Default TRUE
-        console.log(`📦 SLOT ${this.currentSlotIndex}: ${slotType} [Y: ${slotYStart} a ${slotYEnd}] (height=${slotHeight})`);
+        if (verbose) {
+            console.log(`📦 SLOT ${this.currentSlotIndex}: ${slotType} [Y: ${slotYStart} a ${slotYEnd}] (height=${slotHeight})`);
+        }
 
         // Registrar slot (using GridGenerator's calculated values)
         const slotData = {
@@ -174,8 +191,10 @@ export class SlotGenerator {
                 // Permitir pequeña tolerancia por float precision
                 const gap = Math.abs(slotData.yStart - lastSlot.yEnd);
                 if (gap > 0.1) {
-                    console.warn(`⚠️ SLOT GAP: Brecha detectada entre Slot ${this.currentSlotIndex - 1} y ${this.currentSlotIndex}. Diferencia: ${gap.toFixed(2)}px`);
-                    console.warn(`   🔧 Auto-corrigiendo: yStart ${slotData.yStart.toFixed(2)} -> ${lastSlot.yEnd.toFixed(2)}`);
+                    if (verbose) {
+                        console.warn(`⚠️ SLOT GAP: Brecha detectada entre Slot ${this.currentSlotIndex - 1} y ${this.currentSlotIndex}. Diferencia: ${gap.toFixed(2)}px`);
+                        console.warn(`   🔧 Auto-corrigiendo: yStart ${slotData.yStart.toFixed(2)} -> ${lastSlot.yEnd.toFixed(2)}`);
+                    }
 
                     // Auto-corregir posición
                     slotData.yStart = lastSlot.yEnd;
@@ -189,8 +208,8 @@ export class SlotGenerator {
             this.slots.push(slotData);
             this.currentSlotIndex++;
 
-            // LOG DE ÉXITO DETALLADO
-            if (verbose || this.slots.length <= 2) { // Re-added original condition for early slots
+            // LOG DE ÉXITO DETALLADO (solo si verbose está activo)
+            if (verbose) {
                 console.log(`✅ Slot ${this.currentSlotIndex - 1} registrado:`, {
                     type: slotData.type,
                     yStart: slotData.yStart.toFixed(2),
@@ -599,7 +618,7 @@ export class SlotGenerator {
 
         const totalCoins = platformCoinsCount + airCoinsCount;
         const totalItems = totalCoins + platformPowerupsCount;
-        if (totalItems > 0) {
+        if (totalItems > 0 && verbose) {
             let logMsg = `    🪙 Coins: ${platformCoinsCount} plat + ${airCoinsCount} aire = ${totalCoins}`;
             if (platformPowerupsCount > 0) {
                 logMsg += ` | ⚡ Powerups: ${platformPowerupsCount}`;
@@ -749,7 +768,9 @@ export class SlotGenerator {
         const cameraTop = this.scene.cameras.main.scrollY;
         const MIN_SLOTS_AHEAD = 3;
         const LOOKAHEAD_DISTANCE = this.slotHeight * (MIN_SLOTS_AHEAD + 1); // asegúrate de contar suficientes slots
-        const MAX_GENERATIONS_PER_UPDATE = 5; // evita bucles infinitos en un solo frame
+            // Reducir generaciones por frame en mobile para mejor rendimiento
+            const isMobile = this.scene?.isMobile || false;
+            const MAX_GENERATIONS_PER_UPDATE = isMobile ? 2 : 5; // Menos generaciones en mobile
 
         // Generar tantos slots como sean necesarios para mantener el buffer
         try {
@@ -772,13 +793,17 @@ export class SlotGenerator {
                 const spawnThreshold = lastSlot.yEnd + this.spawnBuffer;
 
                 // Count slots that are ahead AND close to the player
-                // Only count slots within lookahead distance to avoid counting all slots
-                const slotsAhead = this.slots.filter(s => {
-                    const isAhead = s.yEnd < playerY;
-                    const distance = playerY - s.yEnd;
-                    const isClose = distance < LOOKAHEAD_DISTANCE;
-                    return isAhead && isClose;
-                }).length;
+                // OPTIMIZED: Use a simple loop instead of filter to avoid creating intermediate arrays
+                let slotsAhead = 0;
+                for (let i = 0; i < this.slots.length; i++) {
+                    const s = this.slots[i];
+                    if (s.yEnd < playerY) {
+                        const distance = playerY - s.yEnd;
+                        if (distance < LOOKAHEAD_DISTANCE) {
+                            slotsAhead++;
+                        }
+                    }
+                }
                 const fewSlots = slotsAhead < MIN_SLOTS_AHEAD; // trigger generation sooner to avoid stalls
 
                 const shouldGenerate = playerY < spawnThreshold || fewSlots;
@@ -812,7 +837,24 @@ export class SlotGenerator {
         }
 
         // Cleanup slots viejos
-        const limitY = (this.scene.player?.y || cameraTop) + this.cleanupDistance;
+        // OPTIMIZED: Use both player position AND riser (lava) position for cleanup
+        // If lava has passed a slot, the player can never go back to it, so we can safely remove it
+        const playerLimitY = (this.scene.player?.y || cameraTop) + this.cleanupDistance;
+        
+        // Get riser (lava) position - if it exists and has started rising, use it as cleanup limit
+        let riserLimitY = playerLimitY; // Default to player limit
+        const riser = this.scene.riserManager?.riser;
+        if (riser && this.scene.riserManager?.hasStartedRising) {
+            // Riser Y is the top of the riser (origin 0.5, 0)
+            // Add a small safety margin (100px) to ensure we don't remove slots too early
+            riserLimitY = riser.y - 100;
+        }
+        
+        // Use the maximum (most aggressive cleanup) between player and riser limits
+        // This ensures we clean up slots that are either:
+        // 1. Below the player + cleanupDistance (traditional cleanup)
+        // 2. Below the riser (lava has passed, player can't go back)
+        const limitY = Math.max(playerLimitY, riserLimitY);
         this.cleanupOldSlots(limitY);
 
         // Safety: enforce original position for platforms to avoid drift (opt-in via enablePlatformLock)
@@ -827,16 +869,29 @@ export class SlotGenerator {
         }
 
         // Debug: log if any platform drifted (position != initial)
+        // OPTIMIZED: Only check drift if debug flags are enabled (throttled check)
         if (this.scene.registry?.get('showSlotLogs') && this.scene.registry?.get('logPlatformDrift')) {
-            const drifted = this.scene.platformPool?.getActive?.().filter(p => {
-                return (p.initialY !== undefined && p.y !== p.initialY) ||
-                       (p.initialX !== undefined && p.x !== p.initialX);
-            }) || [];
-            if (drifted.length > 0) {
-                console.warn('[SlotGenerator] Drift detected on platforms:', drifted.map(p => ({
-                    x: p.x, y: p.y, initX: p.initialX, initY: p.initialY
-                })));
-                console.trace('[SlotGenerator] Drift stack trace');
+            // Throttle drift checks to every 60 frames (1 second at 60fps) to reduce CPU usage
+            if (!this._driftCheckFrame) this._driftCheckFrame = 0;
+            this._driftCheckFrame++;
+            if (this._driftCheckFrame >= 60) {
+                this._driftCheckFrame = 0;
+                const activePlatforms = this.scene.platformPool?.getActive?.() || [];
+                const drifted = [];
+                // OPTIMIZED: Use simple loop instead of filter
+                for (let i = 0; i < activePlatforms.length; i++) {
+                    const p = activePlatforms[i];
+                    if ((p.initialY !== undefined && p.y !== p.initialY) ||
+                        (p.initialX !== undefined && p.x !== p.initialX)) {
+                        drifted.push(p);
+                    }
+                }
+                if (drifted.length > 0) {
+                    console.warn('[SlotGenerator] Drift detected on platforms:', drifted.map(p => ({
+                        x: p.x, y: p.y, initX: p.initialX, initY: p.initialY
+                    })));
+                    console.trace('[SlotGenerator] Drift stack trace');
+                }
             }
         }
     }

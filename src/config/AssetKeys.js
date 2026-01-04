@@ -1,7 +1,6 @@
 export const ASSETS = {
     // Sprites / Atlases
     PLAYER: 'player',
-    PLAYER_PNG: 'player_png',
     PLAYER_PLACEHOLDER: 'player_placeholder',
     COINS: 'coins',
     BASKETBALL: 'basketball',

@@ -8,10 +8,6 @@ export class DebugManager {
         this.enableTestEnemies = false; // Set to true to spawn test enemies
         this.enableLavaDelay = false; // Give player time to react at start
 
-        // PLAYER SPRITE TOGGLE
-        // true = usar PNG placeholder (assets/images/player_32x32.png)
-        // false = usar placeholder generado programáticamente
-        this.usePlayerPNG = false; // Cambiar a false para usar placeholder generado
 
         // PLAYER HITBOX VISUAL DEBUG
         // true = mostrar hitbox rosa del player
@@ -21,9 +17,9 @@ export class DebugManager {
         // HITBOX VISUAL PARA ITEMS (coins/powerups)
         this.showItemHitbox = false;
 
-        // LOGS VERBOSE
+        // LOGS VERBOSE (desactivados por defecto para mejor rendimiento en mobile)
         this.showPatrolLogs = false;
-        this.showSlotLogs = true;
+        this.showSlotLogs = false;
 
         // Ruler overlay (líneas verdes): OFF por defecto
         this.rulerEnabled = false;

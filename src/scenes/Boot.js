@@ -4,7 +4,6 @@ import { Leaderboard } from './Leaderboard.js';
 import { Settings } from './Settings.js';
 import { Playground } from './Playground.js';
 import { ASSETS } from '../config/AssetKeys.js';
-import { REGISTRY_KEYS } from '../config/RegistryKeys.js';
 
 /**
  * @phasereditor
@@ -54,14 +53,8 @@ export class Boot extends Phaser.Scene {
         this.load.multiatlas('platform', 'assets/spritesheets/platform.json', 'assets/spritesheets');
 
         // --- PLAYER SPRITES ---
-        // Atlas del player (prioridad)
+        // Atlas del player
         this.load.multiatlas(ASSETS.PLAYER, 'assets/spritesheets/player.json', 'assets/spritesheets');
-        // PNG opcional como fallback manual (se usa solo si no hay atlas)
-        try {
-            this.load.image(ASSETS.PLAYER_PNG, 'assets/images/player_32x32.png');
-        } catch (error) {
-            console.warn('Player PNG no encontrado, se usará placeholder generado:', error);
-        }
 
         // Register Riser Pipelines
         if (this.game.renderer.type === Phaser.WEBGL) {
@@ -74,29 +67,24 @@ export class Boot extends Phaser.Scene {
         // Generate Textures
         let g = this.make.graphics({ x: 0, y: 0 });
 
-        // Player Sprite - Atlas > PNG > placeholder generado
-        const usePlayerPNG = this.registry.get(REGISTRY_KEYS.USE_PLAYER_PNG) !== false; // Default: true (usar PNG si existe)
+        // Player Sprite - Atlas o placeholder generado
         const atlasLoaded = this.textures.exists(ASSETS.PLAYER);
-        const pngLoaded = this.textures.exists(ASSETS.PLAYER_PNG);
 
-        // Placeholder (solo si no hay atlas/PNG)
-        const PLAYER_SIZE = 32;
-        g.fillStyle(0x00ffff, 1);
-        g.fillRoundedRect(0, 0, PLAYER_SIZE, PLAYER_SIZE, 8);
-        g.lineStyle(2, 0xffffff, 0.8);
-        g.strokeRoundedRect(0, 0, PLAYER_SIZE, PLAYER_SIZE, 8);
-        g.generateTexture(ASSETS.PLAYER_PLACEHOLDER, PLAYER_SIZE, PLAYER_SIZE);
+        // Placeholder (solo si no hay atlas)
+        if (!atlasLoaded) {
+            const PLAYER_SIZE = 32;
+            g.fillStyle(0x00ffff, 1);
+            g.fillRoundedRect(0, 0, PLAYER_SIZE, PLAYER_SIZE, 8);
+            g.lineStyle(2, 0xffffff, 0.8);
+            g.strokeRoundedRect(0, 0, PLAYER_SIZE, PLAYER_SIZE, 8);
+            g.generateTexture(ASSETS.PLAYER_PLACEHOLDER, PLAYER_SIZE, PLAYER_SIZE);
+        }
 
         // Log del estado
         if (atlasLoaded) {
             console.log('✅ Player atlas disponible (usando frames IDLE)');
-        } else if (usePlayerPNG && pngLoaded) {
-            console.log('✅ Player PNG disponible (32x32px) - Se usará si toggle está activo');
-        } else if (!usePlayerPNG) {
-            console.log('🎨 Usando Player placeholder generado (toggle desactivado)');
         } else {
-            console.log('⚠️ PNG no encontrado, usando placeholder generado');
-            console.log('   Coloca tu PNG en: assets/images/player_32x32.png');
+            console.log('⚠️ Player atlas no encontrado, usando placeholder generado');
         }
 
         // Registrar animaciones del player (si hay atlas)

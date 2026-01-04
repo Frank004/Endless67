@@ -14,6 +14,7 @@ export class RiserManager {
         this.currentSpeed = this.config.speedConfig.baseSpeed;
         this.isRising = false;
         this.enabled = true;
+        this.riserHeight = null; // Se calculará dinámicamente en createRiser()
     }
 
     setEnabled(enabled) {
@@ -53,12 +54,17 @@ export class RiserManager {
         // Si el top del riser está en floorY + 20, entonces 20px serán visibles desde floorY hacia abajo
         const initialY = floorY + 20; // 20px abajo del floor, solo 20px visibles
 
+        // Altura dinámica: altura de pantalla completa + margen de seguridad para cubrir cualquier pantalla
+        // Usar al menos 2x la altura de la pantalla para asegurar cobertura completa en game over
+        const safetyMultiplier = 2.5; // Multiplicador para asegurar cobertura en cualquier altura de pantalla
+        this.riserHeight = Math.max(screenHeight * safetyMultiplier, 2000); // Mínimo 2000px para pantallas muy pequeñas
+
         this.riser = new Riser(
             scene,
             riserX,
             initialY,
             visualWidth,
-            800,
+            this.riserHeight,
             this.config.texture,
             pipelineName
         );
@@ -169,17 +175,33 @@ export class RiserManager {
         const camera = scene.cameras.main;
         const cameraTop = camera.scrollY;
         const cameraBottom = camera.scrollY + camera.height;
-        const riserHeight = 800; // Altura del riser
+        const cameraHeight = camera.height;
+        
+        // Usar la altura real del riser (calculada dinámicamente)
+        const riserHeight = this.riserHeight || this.riser.displayHeight || 3000;
 
         if (this.isRising) {
             // Cuando la lava mata al jugador, debe cubrir completamente la pantalla
-            // Subir hasta que el bottom del riser esté MUY ARRIBA del cameraTop
             // Con origin (0.5, 0), el Y es el top del riser
             // El bottom del riser está en riser.y + riserHeight
-            // Queremos que el bottom esté significativamente arriba de cameraTop para cubrir cualquier pantalla
-            const safetyMargin = 100; // Margen extra para asegurar cobertura completa en cualquier pantalla
-            const targetBottomY = cameraTop - safetyMargin; // 100px arriba de cameraTop
-            const targetTopY = targetBottomY - riserHeight; // Top del riser
+            
+            // Estrategia: Asegurar que la lava cubra desde el bottom de la cámara hasta arriba del top
+            // El bottom del riser debe estar arriba del cameraTop (con margen)
+            // El top del riser debe estar abajo del cameraBottom (con margen)
+            // Como el riser es muy alto (2.5x pantalla), esto garantiza cobertura completa
+            
+            const safetyMargin = Math.max(cameraHeight * 0.3, 150); // 30% de la altura de la cámara o mínimo 150px
+            
+            // Target 1: Bottom del riser arriba del cameraTop
+            const targetBottomY = cameraTop - safetyMargin;
+            const targetTopY1 = targetBottomY - riserHeight;
+            
+            // Target 2: Top del riser abajo del cameraBottom (para cubrir el bottom de la pantalla)
+            const targetTopY2 = cameraBottom + safetyMargin - riserHeight;
+            
+            // Usar el target más bajo para asegurar que cubra tanto arriba como abajo
+            // Esto garantiza cobertura completa en cualquier posición de la cámara
+            const targetTopY = Math.min(targetTopY1, targetTopY2);
             
             if (this.riser.y > targetTopY) {
                 // Subir rápidamente para cubrir la pantalla

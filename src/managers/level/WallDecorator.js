@@ -42,6 +42,32 @@ export class WallDecorator {
         this.tilePool = [];
         this.tilesPerSegment = this.rowsPerSegment;
         this.maxTiles = this.tilesPerSegment * this.segmentsPerSide * 2; // dos lados
+        
+        // OPTIMIZATION: Pre-initialize patterns immediately if texture is ready
+        // This avoids delay on first update
+        this._patternsInitialized = false;
+        this._initialSegmentsCreated = false;
+    }
+    
+    /**
+     * Pre-initialize patterns and initial segments for immediate rendering
+     * Call this in Game.create() after textures are loaded
+     */
+    preInitialize(scrollY = 0) {
+        if (this._patternsInitialized && this._initialSegmentsCreated) return;
+        
+        // Pre-generate patterns if texture exists
+        if (this.scene.textures.exists('walls')) {
+            this.ensurePatterns();
+            this._patternsInitialized = true;
+            
+            // Pre-create initial segments for immediate visibility
+            if (!this._initialSegmentsCreated) {
+                this.initSegments('L', scrollY);
+                this.initSegments('R', scrollY);
+                this._initialSegmentsCreated = true;
+            }
+        }
     }
 
     ensurePatterns() {
@@ -71,13 +97,24 @@ export class WallDecorator {
 
     acquireTile(frame) {
         if (!this.scene.textures.exists('walls')) return null;
-        let tile = this.tilePool.find(t => !t.active);
+        
+        // OPTIMIZATION: Use a more efficient pool lookup
+        // Instead of find(), iterate with early exit
+        let tile = null;
+        for (let i = 0; i < this.tilePool.length; i++) {
+            if (!this.tilePool[i].active) {
+                tile = this.tilePool[i];
+                break;
+            }
+        }
+        
         if (!tile && this.tilePool.length < this.maxTiles) {
             tile = this.scene.add.image(0, 0, 'walls', frame);
             tile.setOrigin(0.5, 0.5);
             tile.setDepth(0);
             this.tilePool.push(tile);
         }
+        
         if (tile) {
             tile.setTexture('walls', frame);
             tile.setVisible(true).setActive(true);
@@ -87,11 +124,20 @@ export class WallDecorator {
 
     createSegment(side, yStart) {
         const tiles = [];
-        const pattern = this.patterns[Phaser.Math.Between(0, this.patterns.length - 1)];
+        // OPTIMIZATION: Cache pattern selection to avoid repeated random calls
+        const patternIndex = Phaser.Math.Between(0, this.patterns.length - 1);
+        const pattern = this.patterns[patternIndex];
+        
+        // OPTIMIZATION: Batch tile creation for better performance
         for (let r = 0; r < this.rowsPerSegment; r++) {
             const frame = pattern[r];
             const tile = this.acquireTile(frame);
-            if (tile) tiles.push(tile);
+            if (tile) {
+                tiles.push(tile);
+            } else {
+                // If we can't create a tile, break to avoid incomplete segments
+                break;
+            }
         }
         return { side, yStart, tiles, pattern };
     }
@@ -153,7 +199,13 @@ export class WallDecorator {
 
     update(scrollY = 0) {
         if (!this.scene.textures.exists('walls')) return;
-        this.ensurePatterns();
+        
+        // OPTIMIZATION: Use pre-initialized patterns if available
+        if (!this._patternsInitialized) {
+            this.ensurePatterns();
+            this._patternsInitialized = true;
+        }
+        
         const cam = this.scene.cameras.main;
         const bufferPx = this.bufferTiles * this.tileSize;
         const top = scrollY - bufferPx;
@@ -162,8 +214,12 @@ export class WallDecorator {
         const rangeTop = top - extra;
         const rangeBottom = bottom + extra;
 
-        this.initSegments('L', scrollY);
-        this.initSegments('R', scrollY);
+        // Only init if segments weren't pre-created
+        if (!this._initialSegmentsCreated) {
+            this.initSegments('L', scrollY);
+            this.initSegments('R', scrollY);
+            this._initialSegmentsCreated = true;
+        }
 
         // asegurar conteo por si algún segmento se pierde
         this.ensureCount('L', scrollY);

@@ -54,10 +54,14 @@ export class Game extends Phaser.Scene {
         this.lastPowerupTime = -15000;
 
         // --- VISUAL REFRESH ---
+        // OPTIMIZATION: Pre-initialize walls immediately for instant rendering
+        if (this.wallDecorator && this.textures.exists('walls')) {
+            const initialScrollY = this.cameras.main.scrollY || 0;
+            this.wallDecorator.preInitialize(initialScrollY);
+        }
         GameInitializer.updateWalls(this);
 
         // --- DEBUG SETUP ---
-        this.registry.set(REGISTRY_KEYS.USE_PLAYER_PNG, this.debugManager.usePlayerPNG);
         // Cleanup activado por defecto (solo se desactiva explícitamente con disableCleanup flag)
 
         // --- LAYOUT & STAGE ---
@@ -181,25 +185,56 @@ export class Game extends Phaser.Scene {
         }
 
         // Manager Updates
+        // Check if mobile once for all optimizations
+        const isMobile = this.isMobile || false;
+        
         if (this.inputManager) this.inputManager.update();
         if (this.slotGenerator) this.slotGenerator.update();
         if (this.riserManager) this.riserManager.update(this.player.y, this.currentHeight, false);
-        if (this.audioManager) this.audioManager.updateAudio(this.player.y, this.riserManager?.riser?.y ?? this.player.y);
+        
+        // Throttle audio updates on mobile (every 3 frames = ~20fps updates)
+        if (this.audioManager) {
+            if (!isMobile || (this._audioUpdateFrame = (this._audioUpdateFrame || 0) + 1) % 3 === 0) {
+                this.audioManager.updateAudio(this.player.y, this.riserManager?.riser?.y ?? this.player.y);
+            }
+        }
+        
         if (this.debugManager) {
             this.debugManager.updateHitboxVisual();
             this.debugManager.updateRuler();
         }
 
         // Platform Riders (Coins/Powerups)
-        if (this.coins && this.coins.children) {
-            this.coins.children.iterate(coin => {
-                if (coin && coin.active && coin.body) updatePlatformRider(coin);
-            });
-        }
-        if (this.powerups && this.powerups.children) {
-            this.powerups.children.iterate(powerup => {
-                if (powerup && powerup.active && powerup.body) updatePlatformRider(powerup);
-            });
+        // OPTIMIZED: Only update riders that are near the camera, with throttling for mobile
+        // Throttle updates on mobile to every other frame for better performance
+        const shouldUpdateRiders = !isMobile || (this._riderUpdateFrame = (this._riderUpdateFrame || 0) + 1) % 2 === 0;
+        
+        if (shouldUpdateRiders) {
+            const camera = this.cameras.main;
+            const cameraTop = camera.scrollY;
+            const cameraBottom = cameraTop + camera.height;
+            const updateRange = isMobile ? 150 : 200; // Smaller range on mobile
+            
+            if (this.coins && this.coins.children) {
+                this.coins.children.iterate(coin => {
+                    if (coin && coin.active && coin.body) {
+                        // Only update if coin is near camera (within update range)
+                        if (coin.y >= cameraTop - updateRange && coin.y <= cameraBottom + updateRange) {
+                            updatePlatformRider(coin);
+                        }
+                    }
+                });
+            }
+            if (this.powerups && this.powerups.children) {
+                this.powerups.children.iterate(powerup => {
+                    if (powerup && powerup.active && powerup.body) {
+                        // Only update if powerup is near camera (within update range)
+                        if (powerup.y >= cameraTop - updateRange && powerup.y <= cameraBottom + updateRange) {
+                            updatePlatformRider(powerup);
+                        }
+                    }
+                });
+            }
         }
 
         // Walls
@@ -219,6 +254,8 @@ export class Game extends Phaser.Scene {
      */
     startGame() {
         this.gameStarted = true;
+        // Marcar que el juego acaba de iniciar para forzar renderizado de paredes
+        this._wallJustStarted = true;
 
         this.uiManager.setGameStartUI();
         this.audioManager.startMusic();
@@ -235,6 +272,9 @@ export class Game extends Phaser.Scene {
             this.player.setVelocity(0, 0);
             this.player.setAcceleration(0, 0);
         }
+
+        // Asegurar que las paredes se rendericen al iniciar el juego
+        GameInitializer.updateWalls(this);
     }
 
     /**
