@@ -33,7 +33,9 @@ export class WallDecorator {
             'wall-deco-01.png', 'wall-deco-02.png', 'wall-deco-03.png',
             'wall-deco-04.png', 'wall-deco-05.png', 'wall-deco-06.png',
             'wall-deco-07.png', 'wall-deco-08.png', 'wall-deco-09.png',
-            'wall-deco-10.png'
+            'wall-deco-10.png', 'wall-deco-11.png', 'wall-deco-12.png',
+            'wall-deco-13.png', 'wall-deco-14.png', 'wall-deco-15.png',
+            'wall-deco-16.png'
         ];
 
         this.patterns = [];
@@ -42,6 +44,7 @@ export class WallDecorator {
         this.tilePool = [];
         this.tilesPerSegment = this.rowsPerSegment;
         this.maxTiles = this.tilesPerSegment * this.segmentsPerSide * 2; // dos lados
+        this.patternsVersion = this._computeFrameVersion();
         
         // OPTIMIZATION: Pre-initialize patterns immediately if texture is ready
         // This avoids delay on first update
@@ -71,10 +74,20 @@ export class WallDecorator {
     }
 
     ensurePatterns() {
-        if (this.patterns.length > 0) return;
+        // Si cambió el listado de frames (ej. atlas nuevo), regenerar patrones
+        const currentVersion = this._computeFrameVersion();
+        if (this.patterns.length > 0 && currentVersion === this.patternsVersion) return;
+
+        this.patternsVersion = currentVersion;
+        this.patterns = [];
         for (let i = 0; i < this.patternPoolSize; i++) {
             this.patterns.push(this.generatePattern());
         }
+    }
+
+    _computeFrameVersion() {
+        // Usa el tamaño de los arrays como hash simple para detectar cambios en el atlas
+        return `${this.plainFrames.length}-${this.decoFrames.length}`;
     }
 
     generatePattern() {

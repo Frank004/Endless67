@@ -12,7 +12,8 @@ export const GAME_CONFIG = {
     RESOLUTIONS: {
         // Base vertical (9:16) para escalar en cualquier monitor/dispositivo
         DESKTOP: { width: 360, height: 640 },
-        MOBILE: { width: 360, height: 640 },
+        // Móvil un poco más “cercano” para que se vea más grande al hacer FIT
+        MOBILE: { width: 320, height: 568 },
     },
 };
 

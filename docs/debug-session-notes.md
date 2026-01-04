@@ -23,3 +23,8 @@
 
 ## Latest change (re-enable variety)
 - GridGenerator `_determineType` now picks PLATFORM_BATCH for the first 3 slots, then randomly mixes PLATFORM_BATCH (60%), SAFE_ZONE (20%), MAZE (20%). Moving platforms can be toggled via registry (`disableMovingPlatforms`), but are not forced off. Drift logging is gated behind `logPlatformDrift`. Platform lock safety (restore X/Y) is opt-in via `enablePlatformLock`.
+
+## Fresh updates
+- Cleanup now stays OFF by default in both `CleanupManager` and `SlotGenerator`; only enable if you set `registry.disableCleanup = false` (or `scene.disableCleanup = false`). Logs mode (`showSlotLogs`) also keeps cleanup skipped.
+- Platform bounds margin relaxed when a camera width is provided, so patterns can use the full playable width instead of clamping to the right (previous 236px ceiling).
+- HiDPI sizing: `getHiDpiScale` now clamps `window.devicePixelRatio` for Phaser `config.resolution` so the render es más nítido sin cambiar el tamaño lógico (GAME_WIDTH/GAME_HEIGHT siguen en 360x640 base). Base sizing se conserva; solo sube la resolución de render.

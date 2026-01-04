@@ -12,8 +12,9 @@ export const ENEMY_CONFIG = {
     JUMPER: {
         SIZE: 32,
         GRAVITY: 1200,
-        JUMP_FORCE: -465,      // Altura máxima ~90px
-        JUMP_INTERVAL_MIN: 800,  // Saltos más frecuentes para dinamismo
-        JUMP_INTERVAL_MAX: 1500
+        // Menos altura y menos frecuencia para que sean más lentos
+        JUMP_FORCE: -360,         // Altura moderada
+        JUMP_INTERVAL_MIN: 1400,  // Más tiempo entre saltos
+        JUMP_INTERVAL_MAX: 2200
     }
 };

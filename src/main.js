@@ -5,7 +5,7 @@ import { Leaderboard } from './scenes/Leaderboard.js';
 import { Settings } from './scenes/Settings.js';
 import { Playground } from './scenes/Playground.js';
 import { GAME_CONFIG } from './config/GameConstants.js';
-import { isMobileDevice, getResolution } from './utils/DeviceDetection.js';
+import { isMobileDevice, getResolution, getHiDpiScale } from './utils/DeviceDetection.js';
 
 // ─────────────────────────────────────────────────────────────
 // Disable verbose logs in production build
@@ -26,9 +26,11 @@ if (typeof window !== 'undefined') {
 // Detectar dispositivo para configuración inicial
 // La detección precisa se hace en Game.js usando Phaser.Device
 const isMobile = isMobileDevice();
-const resolution = getResolution(isMobile, GAME_CONFIG.RESOLUTIONS);
-const GAME_WIDTH = resolution.width;
-const GAME_HEIGHT = resolution.height;
+const baseResolution = getResolution(isMobile, GAME_CONFIG.RESOLUTIONS);
+const GAME_WIDTH = baseResolution.width;
+const GAME_HEIGHT = baseResolution.height;
+// Usa DPR para render más nítido sin cambiar el tamaño lógico del juego
+const DPR = getHiDpiScale();
 
 const config = {
     type: Phaser.AUTO,
@@ -37,7 +39,7 @@ const config = {
     backgroundColor: '#000',
     pixelArt: true,
     roundPixels: true,
-    resolution: 1, // render lógico a la resolución base y dejar que Phaser escale
+    resolution: DPR, // HiDPI render; el tamaño lógico se mantiene en GAME_WIDTH/GAME_HEIGHT
     render: {
         pixelArt: true,
         antialias: false,

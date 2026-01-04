@@ -42,7 +42,7 @@ export class HUDManager {
         }).setScrollFactor(0).setDepth(201);
 
         // UI text también debe estar 50px más abajo
-        this.uiText = scene.add.text(centerX, 200 + adBannerHeight, 'CLIMB!', {
+        this.uiText = scene.add.text(centerX, 200 + adBannerHeight, 'JUMP!', {
             fontSize: '18px',
             color: '#00ffff',
             align: 'center',
