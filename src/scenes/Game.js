@@ -58,6 +58,7 @@ export class Game extends Phaser.Scene {
 
         // --- DEBUG SETUP ---
         this.registry.set(REGISTRY_KEYS.USE_PLAYER_PNG, this.debugManager.usePlayerPNG);
+        // Cleanup activado por defecto (solo se desactiva explícitamente con disableCleanup flag)
 
         // --- LAYOUT & STAGE ---
         const screenHeight = this.scale.height;
@@ -104,7 +105,54 @@ export class Game extends Phaser.Scene {
         this.collisionManager.setupCollisions();
 
         // --- CAMERA FOLLOW ---
-        this.cameras.main.startFollow(this.player, true, 0, 0.1);
+        // Offset the camera to keep the player in the lower half and reveal upcoming platforms
+        this.cameras.main.startFollow(this.player, true, 0, 0.12, 0, 140);
+
+        // --- DEV DIAGNOSTICS ---
+        if (typeof window !== 'undefined') {
+            window.__slotDiag = () => {
+                const cam = this.cameras.main;
+                const stats = this.platformPool?.getStats?.();
+                const slots = this.slotGenerator?.slots || [];
+                const activePlatforms = this.platformPool?.getActive?.() || [];
+                const inView = activePlatforms.filter(p => p.y <= cam.scrollY + cam.height + 200 && p.y >= cam.scrollY - 200);
+                const nearestAbove = activePlatforms
+                    .filter(p => p.y < this.player?.y)
+                    .map(p => ({ y: p.y, dy: this.player.y - p.y }))
+                    .sort((a, b) => a.dy - b.dy)[0];
+                const nearestBelow = activePlatforms
+                    .filter(p => p.y >= this.player?.y)
+                    .map(p => ({ y: p.y, dy: p.y - this.player.y }))
+                    .sort((a, b) => a.dy - b.dy)[0];
+                const platformInfo = activePlatforms
+                    .map(p => ({
+                        x: p.x,
+                        y: p.y,
+                        initX: p.initialX ?? null,
+                        initY: p.initialY ?? null
+                    }))
+                    .sort((a, b) => a.y - b.y);
+                console.log('[slotDiag] playerY=', this.player?.y, 'cameraTop=', cam.scrollY, 'height=', cam.height);
+                console.log('[slotDiag] slots count=', slots.length, 'last=', slots[slots.length - 1]);
+                console.log('[slotDiag] platformPool stats=', stats);
+                console.log('[slotDiag] active platforms:', activePlatforms.length, 'inView:', inView.length, 'nearestAbove:', nearestAbove, 'nearestBelow:', nearestBelow);
+                console.table(platformInfo);
+
+                // Visual overlay for platform positions (outline colliders)
+                if (!this._slotDiagGfx) {
+                    this._slotDiagGfx = this.add.graphics().setDepth(9999).setScrollFactor(0);
+                }
+                const g = this._slotDiagGfx;
+                g.clear();
+                g.lineStyle(2, 0x00ff00, 0.6);
+                activePlatforms.forEach(p => {
+                    const halfW = p?.body?.width ? p.body.width / 2 : 64;
+                    const halfH = p?.body?.height ? p.body.height / 2 : 16;
+                    g.strokeRect(p.x - halfW - cam.scrollX, p.y - halfH - cam.scrollY, halfW * 2, halfH * 2);
+                    g.strokeCircle((p.x - cam.scrollX), (p.y - cam.scrollY), 4);
+                });
+            };
+        }
     }
 
     /**

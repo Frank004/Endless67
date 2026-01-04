@@ -27,11 +27,7 @@ export class SlotGenerator {
         // Pure layout logic (decoupled from Phaser)
         this.gridGenerator = new GridGenerator(gameWidth);
 
-        // Logs solo si showSlotLogs está activo (optimización de performance)
-        const showLogs = scene.registry?.get('showSlotLogs');
-        if (showLogs) {
-            console.log(`[SlotGenerator] Init with gameWidth: ${gameWidth} (Camera: ${scene.cameras.main.width})`);
-        }
+        console.log(`[SlotGenerator] Init with gameWidth: ${gameWidth} (Camera: ${scene.cameras.main.width})`);
 
         // Estado
         this.currentSlotIndex = 0;
@@ -45,9 +41,8 @@ export class SlotGenerator {
 
         // Config
         this.slotHeight = SLOT_CONFIG.slotHeight;
-        // spawnBuffer y cleanupDistance se calculan dinámicamente en update() basado en viewport
-        this.spawnBuffer = null; // Se calcula dinámicamente
-        this.cleanupDistance = null; // Se calcula dinámicamente
+        this.spawnBuffer = SLOT_CONFIG.rules.spawnBuffer;
+        this.cleanupDistance = SLOT_CONFIG.rules.cleanupDistance;
 
         // Estrategia de spawn de enemigos
         this.enemySpawnStrategy = new EnemySpawnStrategy(scene);
@@ -61,52 +56,40 @@ export class SlotGenerator {
      * @param {number} startPlatformY - Y de la plataforma de inicio (default: 450)
      */
     init(startPlatformY = SLOT_CONFIG.rules.startPlatformY || 450) {
-        const showLogs = this.scene.registry?.get('showSlotLogs');
-        if (showLogs) {
-            console.log('🎮 SlotGenerator: Inicializando... startY=', startPlatformY);
-        }
+        console.log('🎮 SlotGenerator: Inicializando... startY=', startPlatformY);
 
         // Calcular Y inicial del primer batch usando slotGap
         this.startY = startPlatformY - SLOT_CONFIG.slotGap;
-        if (showLogs) {
-            console.log(`  📍 Plataforma inicio: Y=${startPlatformY}, Primer batch: Y=${this.startY}`);
-        }
+        console.log(`  📍 Plataforma inicio: Y=${startPlatformY}, Primer batch: Y=${this.startY}`);
 
         // Initialize GridGenerator with start position
         try {
             this.gridGenerator.reset(this.startY);
         } catch (e) {
-            // Solo loguear errores críticos
-            if (showLogs) {
-                console.error('❌ SlotGenerator: GridGenerator.reset() FAILED:', e);
-            }
+            console.error('❌ SlotGenerator: GridGenerator.reset() FAILED:', e);
         }
 
         // Generar slots iniciales (tutorial)
         try {
+            console.log('  ...Generating tutorial slots...');
             for (let i = 0; i < SLOT_CONFIG.rules.tutorialSlots; i++) {
                 this.generateNextSlot({ tutorialIndex: i });
             }
         } catch (e) {
-            if (showLogs) {
-                console.error('❌ SlotGenerator: Tutorial slots FAILED:', e);
-            }
+            console.error('❌ SlotGenerator: Tutorial slots FAILED:', e);
         }
 
         // Garantizar al menos 3 slots iniciales para evitar huecos de arranque
         try {
+            console.log('  ...Filling initial buffer...');
             while (this.slots.length < 3) {
                 this.generateNextSlot();
             }
         } catch (e) {
-            if (showLogs) {
-                console.error('❌ SlotGenerator: Buffer checking FAILED:', e);
-            }
+            console.error('❌ SlotGenerator: Buffer checking FAILED:', e);
         }
 
-        if (showLogs) {
-            console.log(`✅ SlotGenerator: Init Done. ${this.slots.length} slots generated.`);
-        }
+        console.log(`✅ SlotGenerator: Init Done. ${this.slots.length} slots generated.`);
     }
 
     /**
@@ -127,10 +110,7 @@ export class SlotGenerator {
         try {
             layoutData = this.gridGenerator.nextSlot(this.currentSlotIndex);
         } catch (e) {
-            const showLogs = this.scene?.registry?.get('showSlotLogs');
-            if (showLogs) {
-                console.error('❌ SlotGenerator: GridGenerator.nextSlot() CRASHED:', e);
-            }
+            console.error('❌ SlotGenerator: GridGenerator.nextSlot() CRASHED:', e);
             throw e; // Rethrow to halt
         }
 
@@ -146,10 +126,7 @@ export class SlotGenerator {
         const tutorialIndex = options.tutorialIndex;
 
         let result = null;
-        const showLogs = this.scene?.registry?.get('showSlotLogs');
-        if (showLogs) {
-            console.log(`  ⚙️ Generating Slot ${this.currentSlotIndex} [${slotType}]...`);
-        }
+        console.log(`  ⚙️ Generating Slot ${this.currentSlotIndex} [${slotType}]...`);
 
         // Render based on type
         try {
@@ -164,26 +141,18 @@ export class SlotGenerator {
                     result = this.generateMaze(layoutData);
                     break;
                 default:
-                    const showLogs = this.scene?.registry?.get('showSlotLogs');
-                    if (showLogs) {
-                        console.warn(`⚠️ Tipo de slot desconocido: ${slotType}, usando MAZE`);
-                    }
+                    console.warn(`⚠️ Tipo de slot desconocido: ${slotType}, usando MAZE`);
                     result = this.generateMaze(layoutData);
             }
         } catch (e) {
-            const showLogs = this.scene?.registry?.get('showSlotLogs');
-            if (showLogs) {
-                console.error(`❌ SlotGenerator: Failed to render slot type ${slotType}:`, e);
-                console.error('Error details:', e.message, e.stack);
-            }
-            // No re-lanzar el error para evitar loops infinitos
+            console.error(`❌ SlotGenerator: Failed to render slot type ${slotType}:`, e);
+            console.error('Error details:', e.message, e.stack);
+            // No re-lanzar el error para evitar loops infinitos, pero loguear todo
             return null;
         }
 
-        // Logs solo si showSlotLogs está activo (optimización de performance)
-        if (showLogs) {
-            console.log(`📦 SLOT ${this.currentSlotIndex}: ${slotType} [Y: ${slotYStart} a ${slotYEnd}] (height=${slotHeight})`);
-        }
+        const verbose = this.scene?.registry?.get('showSlotLogs') ?? true; // Default TRUE
+        console.log(`📦 SLOT ${this.currentSlotIndex}: ${slotType} [Y: ${slotYStart} a ${slotYEnd}] (height=${slotHeight})`);
 
         // Registrar slot (using GridGenerator's calculated values)
         const slotData = {
@@ -205,10 +174,8 @@ export class SlotGenerator {
                 // Permitir pequeña tolerancia por float precision
                 const gap = Math.abs(slotData.yStart - lastSlot.yEnd);
                 if (gap > 0.1) {
-                    if (showLogs) {
-                        console.warn(`⚠️ SLOT GAP: Brecha detectada entre Slot ${this.currentSlotIndex - 1} y ${this.currentSlotIndex}. Diferencia: ${gap.toFixed(2)}px`);
-                        console.warn(`   🔧 Auto-corrigiendo: yStart ${slotData.yStart.toFixed(2)} -> ${lastSlot.yEnd.toFixed(2)}`);
-                    }
+                    console.warn(`⚠️ SLOT GAP: Brecha detectada entre Slot ${this.currentSlotIndex - 1} y ${this.currentSlotIndex}. Diferencia: ${gap.toFixed(2)}px`);
+                    console.warn(`   🔧 Auto-corrigiendo: yStart ${slotData.yStart.toFixed(2)} -> ${lastSlot.yEnd.toFixed(2)}`);
 
                     // Auto-corregir posición
                     slotData.yStart = lastSlot.yEnd;
@@ -222,8 +189,8 @@ export class SlotGenerator {
             this.slots.push(slotData);
             this.currentSlotIndex++;
 
-            // LOG DE ÉXITO DETALLADO - Solo si showSlotLogs está activo
-            if (showLogs) {
+            // LOG DE ÉXITO DETALLADO
+            if (verbose || this.slots.length <= 2) { // Re-added original condition for early slots
                 console.log(`✅ Slot ${this.currentSlotIndex - 1} registrado:`, {
                     type: slotData.type,
                     yStart: slotData.yStart.toFixed(2),
@@ -285,7 +252,7 @@ export class SlotGenerator {
         }
         if (this.scene.registry?.get('disableMovingPlatforms')) {
             numMovingPlatforms = 0;
-            // Log desactivado para performance
+            if (verbose) console.log('⚪ Moving platforms disabled via debug flag');
         }
 
         // Seleccionar índices aleatorios de plataformas que serán móviles
@@ -302,8 +269,14 @@ export class SlotGenerator {
         const maxX = getPlatformBounds(this.gridGenerator.gameWidth).maxX;
         const centerSafe = getPlatformBounds(this.gridGenerator.gameWidth).centerX;
 
-        // Logs desactivados para performance
-        // (Eliminado: logs de patrón y plataformas móviles)
+        const verbose = this.scene?.registry?.get('showSlotLogs');
+
+        if (verbose) {
+            console.log(`  🎨 Patrón: ${basePatternName} | Transform: ${transform}`);
+            if (numMovingPlatforms > 0) {
+                console.log(`  🔵 Plataformas móviles: ${numMovingPlatforms}`);
+            }
+        }
 
         // ─────────────────────────────────────────────────────────────
         // PASO 1: Generar TODAS las plataformas primero
@@ -313,10 +286,7 @@ export class SlotGenerator {
 
         // Iterate over PRE-CALCULATED platforms from GridGenerator
         if (!platforms || platforms.length === 0) {
-            const showLogs = this.scene?.registry?.get('showSlotLogs');
-            if (showLogs) {
-                console.error(`❌ SLOT ERROR (PlatformBatch): No se generaron plataformas para el patrón '${basePatternName}' en Y=${yStart}`);
-            }
+            console.error(`❌ SLOT ERROR (PlatformBatch): No se generaron plataformas para el patrón '${basePatternName}' en Y=${yStart}`);
             return {
                 type: type,
                 yStart: yStart,
@@ -348,10 +318,7 @@ export class SlotGenerator {
 
             // Fallback: si el pool está vacío o falla, crear una estática de emergencia
             if (!platform) {
-                const showLogs = this.scene?.registry?.get('showSlotLogs');
-                if (showLogs) {
-                    console.warn(`⚠️ SlotGenerator: Platform Spawn FAILED at ${spawnX},${currentY}. Creating fallback static.`);
-                }
+                console.warn(`⚠️ SlotGenerator: Platform Spawn FAILED at ${spawnX},${currentY}. Creating fallback static.`);
                 platform = this.scene.physics.add.staticSprite(spawnX, currentY, 'platform');
                 platform.setDisplaySize(SLOT_CONFIG.platformWidth, SLOT_CONFIG.platformHeight).refreshBody();
             }
@@ -371,8 +338,10 @@ export class SlotGenerator {
                 height: SLOT_CONFIG.platformHeight
             });
 
-            // Logs desactivados para performance
-            // (Eliminado: log de cada plataforma spawneada)
+            const platType = isMoving ? '🔵 MÓVIL' : '🟣 ESTÁTICA';
+            if (verbose) {
+                console.log(`    ▓ Plat ${i + 1}: x=${spawnX}, y=${currentY}, ${platType}`);
+            }
 
 
             // ─────────────────────────────────────────────────────────────
@@ -387,8 +356,9 @@ export class SlotGenerator {
                 spawnChances: chances
             });
 
-            // Logs desactivados para performance
-            // (Eliminado: log de enemigos spawneados)
+            if (enemySpawned && verbose) {
+                console.log(`      👹 Enemy Spawned on platform ${i + 1}`);
+            }
 
             // Y already handled by GridGenerator
         }
@@ -421,10 +391,7 @@ export class SlotGenerator {
                         height: SLOT_CONFIG.platformHeight
                     });
 
-                    const showLogs = this.scene?.registry?.get('showSlotLogs');
-                    if (showLogs) {
-                        console.error(`🚨 FALLBACK TRIGGERED in Slot ${layoutData.index}: Generated 0 platforms! Creating SAFE platform at x=${centerSafe}, y=${fbY}`);
-                    }
+                    console.error(`🚨 FALLBACK TRIGGERED in Slot ${layoutData.index}: Generated 0 platforms! Creating SAFE platform at x=${centerSafe}, y=${fbY}`);
                 }
                 fbY -= gap;
             }
@@ -630,8 +597,15 @@ export class SlotGenerator {
             }
         }
 
-        // Logs desactivados para performance
-        // (Eliminado: log de coins y powerups generados)
+        const totalCoins = platformCoinsCount + airCoinsCount;
+        const totalItems = totalCoins + platformPowerupsCount;
+        if (totalItems > 0) {
+            let logMsg = `    🪙 Coins: ${platformCoinsCount} plat + ${airCoinsCount} aire = ${totalCoins}`;
+            if (platformPowerupsCount > 0) {
+                logMsg += ` | ⚡ Powerups: ${platformPowerupsCount}`;
+            }
+            console.log(logMsg);
+        }
 
         // Calcular altura real del contenido (basado en plataformas reales)
         let contentHeight = SLOT_CONFIG.slotHeight; // fallback
@@ -648,8 +622,10 @@ export class SlotGenerator {
             const expectedHeight = (platformCount - 1) * gap + SLOT_CONFIG.platformHeight;
             const heightDiff = Math.abs(actualHeight - expectedHeight);
 
-            // Logs desactivados para performance
-            // (Eliminado: validación de altura de plataformas)
+            const verbose = this.scene?.registry?.get('showSlotLogs');
+            if (heightDiff > 10 && verbose) {
+                console.warn(`⚠️ SlotGenerator: Altura de plataformas inesperada. Esperada: ${expectedHeight}, Actual: ${actualHeight.toFixed(2)}, Diff: ${heightDiff.toFixed(2)}`);
+            }
             // Usar la altura real (o la esperada si algo falló) para encadenar slots sin gaps extra
             // FIX: Para mantener el estilo "Lego" (bloques fijos), forzamos que el contenido ocupe siempre slotHeight
             // Esto asegura que el gap visual al siguiente slot sea consistente con el gap interno (160px).
@@ -681,10 +657,7 @@ export class SlotGenerator {
         // 🔴 FALLBACK: Si no hay pattern (ej: slot convertido de PLATFORM_BATCH a MAZE)
         // generar un pattern simple por defecto
         if (!pattern || !Array.isArray(pattern) || pattern.length === 0) {
-            const showLogs = this.scene?.registry?.get('showSlotLogs');
-            if (showLogs) {
-                console.warn('⚠️ generateMaze: No pattern found, using default simple pattern');
-            }
+            console.warn('⚠️ generateMaze: No pattern found, using default simple pattern');
             pattern = [
                 [1, 0, 0, 0, 0, 0, 0, 0, 1],
                 [1, 0, 1, 0, 0, 0, 1, 0, 1],
@@ -774,15 +747,9 @@ export class SlotGenerator {
 
         const playerY = this.scene.player.y;
         const cameraTop = this.scene.cameras.main.scrollY;
-        
-        // Calcular valores dinámicos basados en viewport (altura visible)
-        const viewportHeight = this.scene.cameras.main.height || 600;
-        const spawnBuffer = SLOT_CONFIG.getSpawnBuffer ? SLOT_CONFIG.getSpawnBuffer(viewportHeight) : (viewportHeight * 2);
-        const cleanupDistance = SLOT_CONFIG.getCleanupDistance ? SLOT_CONFIG.getCleanupDistance(viewportHeight) : (viewportHeight * 1.5);
-        
         const MIN_SLOTS_AHEAD = 3;
         const LOOKAHEAD_DISTANCE = this.slotHeight * (MIN_SLOTS_AHEAD + 1); // asegúrate de contar suficientes slots
-        const MAX_GENERATIONS_PER_UPDATE = 3; // Reducido de 5 a 3 para evitar sobrecarga
+        const MAX_GENERATIONS_PER_UPDATE = 5; // evita bucles infinitos en un solo frame
 
         // Generar tantos slots como sean necesarios para mantener el buffer
         try {
@@ -792,10 +759,7 @@ export class SlotGenerator {
 
             // Si no hay slots, generar el primero
             if (!lastSlot) {
-                const showLogs = this.scene?.registry?.get('showSlotLogs');
-                if (showLogs) {
-                    console.warn('⚠️ SlotGenerator: No hay slots, generando primero...');
-                }
+                console.warn('⚠️ SlotGenerator: No hay slots, generando primero...');
                 this.generateNextSlot();
                 lastSlot = this.slots[this.slots.length - 1];
             }
@@ -805,29 +769,21 @@ export class SlotGenerator {
             const shouldLog = false; // hard-disable noisy update logs
 
             while (lastSlot && generatedThisFrame < MAX_GENERATIONS_PER_UPDATE) {
-                const spawnThreshold = lastSlot.yEnd + spawnBuffer;
+                const spawnThreshold = lastSlot.yEnd + this.spawnBuffer;
 
-                // OPTIMIZACIÓN: Contar slots ahead de manera más eficiente
-                // Solo verificar los últimos slots (más cercanos al jugador) en lugar de todos
-                const lookaheadStart = playerY - LOOKAHEAD_DISTANCE;
-                let slotsAhead = 0;
-                
-                // Iterar desde el final (slots más recientes) hacia atrás
-                // Esto es más eficiente que filter() cuando hay muchos slots
-                for (let i = this.slots.length - 1; i >= 0; i--) {
-                    const slot = this.slots[i];
-                    if (slot.yEnd >= playerY) break; // Ya pasamos los slots ahead
-                    if (slot.yEnd < lookaheadStart) break; // Muy lejos, no contar
-                    if (slot.yEnd < playerY) {
-                        slotsAhead++;
-                        if (slotsAhead >= MIN_SLOTS_AHEAD) break; // Ya tenemos suficientes, no necesitamos contar más
-                    }
-                }
-                
-                const fewSlots = slotsAhead < MIN_SLOTS_AHEAD;
+                // Count slots that are ahead AND close to the player
+                // Only count slots within lookahead distance to avoid counting all slots
+                const slotsAhead = this.slots.filter(s => {
+                    const isAhead = s.yEnd < playerY;
+                    const distance = playerY - s.yEnd;
+                    const isClose = distance < LOOKAHEAD_DISTANCE;
+                    return isAhead && isClose;
+                }).length;
+                const fewSlots = slotsAhead < MIN_SLOTS_AHEAD; // trigger generation sooner to avoid stalls
+
                 const shouldGenerate = playerY < spawnThreshold || fewSlots;
-                
                 if (verbose && shouldLog) {
+                    console.log(`📍 Slots: ${this.slots.map(s => `[${s.yStart.toFixed(0)} to ${s.yEnd.toFixed(0)}]`).join(', ')}`);
                     console.log(`🔍 Check: playerY=${playerY.toFixed(2)}, threshold=${spawnThreshold.toFixed(2)}, slotsAhead=${slotsAhead}, shouldGen=${shouldGenerate}`);
                 }
 
@@ -838,48 +794,26 @@ export class SlotGenerator {
                     this.generateNextSlot();
                     generatedThisFrame++;
                     lastSlot = this.slots[this.slots.length - 1];
-                    
-                    // OPTIMIZACIÓN: Si generamos un slot pero ya tenemos muchos slots totales,
-                    // verificar si realmente necesitamos más antes de continuar
-                    if (this.slots.length > 100 && generatedThisFrame >= 2) {
-                        // Con muchos slots, ser más conservador
-                        const nextThreshold = lastSlot.yEnd + this.spawnBuffer;
-                        if (playerY >= nextThreshold && slotsAhead >= MIN_SLOTS_AHEAD) {
-                            break; // Ya tenemos suficientes slots, no generar más este frame
-                        }
-                    }
                 } else {
                     if (verbose && shouldLog) {
-                        console.log(`⏸️ NO generando: playerY=${playerY.toFixed(2)} >= threshold=${spawnThreshold.toFixed(2)}, slotsAhead=${slotsAhead} >= ${MIN_SLOTS_AHEAD}`);
+                        console.log(`⏸️ NO generando: playerY=${playerY.toFixed(2)} >= threshold=${spawnThreshold.toFixed(2)}, slotsAhead=${slotsAhead} >= 2`);
                     }
                     break;
                 }
             }
 
             if (generatedThisFrame >= MAX_GENERATIONS_PER_UPDATE) {
-                const showLogs = this.scene?.registry?.get('showSlotLogs');
-                if (showLogs) {
-                    console.warn(`[SlotGenerator] Max generations per frame reached (${MAX_GENERATIONS_PER_UPDATE}). Slots=${this.slots.length}`);
-                }
+                console.warn(`[SlotGenerator] Max generations per frame reached (${MAX_GENERATIONS_PER_UPDATE}). Slots=${this.slots.length}`);
             }
         } catch (error) {
-            const showLogs = this.scene?.registry?.get('showSlotLogs');
-            if (showLogs) {
-                console.error('❌ Error en SlotGenerator.update():', error);
-            }
+            console.error('❌ Error en SlotGenerator.update():', error);
         } finally {
             this.isGenerating = false;
         }
 
-        // Cleanup slots viejos - siempre activo para prevenir memory leaks
-        const limitY = (this.scene.player?.y || cameraTop) + cleanupDistance;
+        // Cleanup slots viejos
+        const limitY = (this.scene.player?.y || cameraTop) + this.cleanupDistance;
         this.cleanupOldSlots(limitY);
-        
-        // OPTIMIZACIÓN: Si hay demasiados slots, hacer cleanup más agresivo
-        if (this.slots.length > 100) {
-            const aggressiveLimitY = (this.scene.player?.y || cameraTop) + (cleanupDistance * 0.6);
-            this.cleanupOldSlots(aggressiveLimitY);
-        }
 
         // Safety: enforce original position for platforms to avoid drift (opt-in via enablePlatformLock)
         if (this.scene.registry?.get('enablePlatformLock')) {
@@ -920,8 +854,13 @@ export class SlotGenerator {
         const slotsToRemove = this.slots.filter(slot => slot.yStart > limitY);
 
         if (slotsToRemove.length > 0) {
-            // Logs desactivados para performance
-            // (Eliminado: logs de cleanup de slots)
+            const verbose = this.scene?.registry?.get('showSlotLogs');
+            if (verbose) {
+                console.log(`🧹 Limpiando ${slotsToRemove.length} slots viejos (limitY: ${limitY})`);
+                slotsToRemove.forEach(slot => {
+                    console.log(`  🗑️ SLOT ${slot.index} (${slot.type})`);
+                });
+            }
 
             // Remover del array
             this.slots = this.slots.filter(slot => slot.yStart <= limitY);

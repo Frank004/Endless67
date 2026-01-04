@@ -112,7 +112,7 @@ export const SLOT_CONFIG = {
         tutorialSlots: 1,              // Solo el primer slot es tutorial (plataformas)
         maxConsecutiveSameType: 2,     // No más de 2 del mismo tipo seguidos
         spawnBuffer: 2000,             // Buffer mayor para evitar gaps (ajustado para layouts con banner/piso)
-        cleanupDistance: 1100,         // Limpia slots más lejos para que no desaparezcan antes de tiempo en mobile
+        cleanupDistance: 1800,         // Limpia slots mucho más abajo del jugador para evitar huecos
         startPlatformY: 560            // Ubicación de la plataforma inicial (más abajo para acercar el primer slot)
     }
 };
@@ -132,7 +132,8 @@ export const SLOT_CONFIG = {
 export function getPlatformBounds(gameWidth = null) {
     const actualGameWidth = gameWidth || SLOT_CONFIG.gameWidth;
     const halfWidth = SLOT_CONFIG.platformWidth / 2;  // 64
-    const margin = SLOT_CONFIG.wallWidth + WALLS.MARGIN;
+    // When using actual gameWidth (camera width), be less strict on margin to avoid over-clamping
+    const margin = gameWidth ? SLOT_CONFIG.wallWidth : SLOT_CONFIG.wallWidth + WALLS.MARGIN;
     const usableWidth = actualGameWidth - margin * 2;
     // Si la pantalla es muy estrecha (mobile), evitar que minX supere a maxX
     const clampedHalf = usableWidth > halfWidth * 2 ? halfWidth : Math.max(usableWidth / 2, 0);

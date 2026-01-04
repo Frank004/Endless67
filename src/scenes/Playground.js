@@ -68,10 +68,15 @@ export class Playground extends Game {
             const maxPlatformX = gameWidth - wallWidth - 50; // gameWidth - 32px (wall) - 50px margen
 
             this.platforms.children.iterate((plat) => {
-                if (plat.getData('isMoving')) {
+                if (plat.getData('isMoving') && plat.body) {
                     let speed = plat.getData('speed') || 100;
-                    if (plat.x < minPlatformX) plat.setVelocityX(speed);
-                    else if (plat.x > maxPlatformX) plat.setVelocityX(-speed);
+                    if (plat.x < minPlatformX) {
+                        plat.body.velocity.x = speed;
+                        plat.setData('direction', 1);
+                    } else if (plat.x > maxPlatformX) {
+                        plat.body.velocity.x = -speed;
+                        plat.setData('direction', -1);
+                    }
                 }
             });
         };
