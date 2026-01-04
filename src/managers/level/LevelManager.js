@@ -55,13 +55,15 @@ export class LevelManager {
 
     /**
      * Cleanup de objetos viejos (plataformas, enemigos, coins, etc.)
+     * @param {number} limitY - Y límite para cleanup (opcional, calcula automáticamente si no se proporciona)
      */
-    cleanupOnly() {
+    cleanupOnly(limitY = null) {
         const scene = this.scene;
-        const limitY = scene.player.y + 900;
+        // Si no se proporciona limitY, calcularlo basado en la posición del jugador
+        const calculatedLimitY = limitY !== null ? limitY : (scene.player?.y || 0) + 900;
 
         // Delegate to CleanupManager
-        this.cleanupManager.cleanup(limitY);
+        this.cleanupManager.cleanup(calculatedLimitY);
     }
 
     /**

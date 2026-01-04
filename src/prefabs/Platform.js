@@ -15,7 +15,7 @@ import { ASSETS } from '../config/AssetKeys.js';
 export const PLATFORM_HEIGHT = 32;
 export const PLATFORM_WIDTH = 128; // Ancho ÚNICO para todas las plataformas
 
-export class Platform extends Phaser.Physics.Arcade.Sprite {
+export class Platform extends Phaser.GameObjects.TileSprite {
     constructor(scene) {
         // Verificar que la escena existe
         if (!scene) {
@@ -23,8 +23,9 @@ export class Platform extends Phaser.Physics.Arcade.Sprite {
             throw new Error('Platform requires a scene');
         }
 
+        // TileSprite requiere width y height en el constructor
         // Usar textura por defecto, se cambiará en spawn()
-        super(scene, 0, 0, ASSETS.PLATFORM);
+        super(scene, 0, 0, PLATFORM_WIDTH, PLATFORM_HEIGHT, 'platform', 'plat-static-01.png');
 
         // Guardar referencia explícita a la escena (por si Phaser la pierde)
         this._sceneRef = scene;
@@ -38,6 +39,9 @@ export class Platform extends Phaser.Physics.Arcade.Sprite {
             this.body.allowGravity = false;
             this.body.immovable = true;
         }
+
+        // Debug text reference (será asignado por PlatformSpawner)
+        this.debugText = null;
 
         // Inicialmente inactivo
         this.setActive(false);
@@ -85,52 +89,41 @@ export class Platform extends Phaser.Physics.Arcade.Sprite {
         // 🔴 FORZAR ancho a 128px (ignorar parámetro width)
         width = PLATFORM_WIDTH;
 
-        // Determinar textura
-        const texture = isMoving ? ASSETS.PLATFORM_MOVING : ASSETS.PLATFORM;
+        // 🎨 Usar texturas del atlas 'platform' con variación aleatoria
+        const variant = Phaser.Math.Between(1, 2); // 01 o 02
+        const frameName = isMoving
+            ? `plat-move-0${variant}.png`
+            : `plat-static-0${variant}.png`;
 
-        // Verificar que la textura existe antes de usarla
-        try {
-            if (scene.textures && scene.textures.exists(texture)) {
-                this.setTexture(texture);
-            } else {
-                console.warn(`Platform.spawn: Texture '${texture}' does not exist, using default 'platform'`);
-                if (scene.textures && scene.textures.exists(ASSETS.PLATFORM)) {
-                    this.setTexture(ASSETS.PLATFORM);
-                } else {
-                    console.error('Platform.spawn: Default texture "platform" does not exist');
-                    return;
-                }
-            }
-        } catch (e) {
-            console.error('Platform.spawn: Error setting texture:', e);
-            // Si falla, intentar con la textura por defecto
-            if (scene.textures && scene.textures.exists(ASSETS.PLATFORM)) {
-                try {
-                    this.setTexture(ASSETS.PLATFORM);
-                } catch (e2) {
-                    console.error('Platform.spawn: Could not set default texture:', e2);
-                    return;
-                }
-            } else {
-                console.error('Platform.spawn: Cannot recover from texture error');
-                return;
-            }
+        // Verificar que el atlas existe
+        if (!scene.textures.exists('platform')) {
+            console.error('Platform.spawn: Atlas "platform" not loaded!');
+            return;
         }
 
-        // Posición y tamaño
-        this.setPosition(x, y);
-        this.setDisplaySize(width, PLATFORM_HEIGHT);
+        // Cambiar la textura del TileSprite
+        this.setTexture('platform', frameName);
 
-        // Asegurar que el body existe antes de refreshBody
+        // Posición PRIMERO
+        this.setPosition(x, y);
+
+        // Configurar tamaño del TileSprite (esto repite el tile, no lo estira)
+        this.setSize(width, PLATFORM_HEIGHT);
+
+        // El tile se repite automáticamente para llenar el ancho de 128px
+
+        // Asegurar que el body existe y configurarlo manualmente
         if (!this.body) {
             scene.physics.add.existing(this);
         }
 
+        // TileSprite no tiene refreshBody(), configurar body manualmente
         if (this.body) {
-            this.refreshBody();
+            this.body.setSize(width, PLATFORM_HEIGHT);
+            this.body.updateFromGameObject();
         }
 
-        this.setDepth(5);
+        this.setDepth(100); // 🔴 ULTRA HIGH DEPTH FOR DEBUG
 
         // Configurar física básica
         if (this.body) {
@@ -145,12 +138,10 @@ export class Platform extends Phaser.Physics.Arcade.Sprite {
                 // Configurar física para movimiento
                 this.body.setBounce(1, 0);
                 this.body.setCollideWorldBounds(true);
-                this.setFrictionX(0);  // Sin fricción para movimiento continuo
+                this.body.friction.x = 0;  // Sin fricción (TileSprite no tiene setFrictionX)
 
                 // Establecer velocidad inicial (siempre hacia la derecha primero)
-                if (typeof this.setVelocityX === 'function') {
-                    this.setVelocityX(speed);
-                }
+                this.body.velocity.x = speed;
 
                 // Asegurar que el body se actualice
                 this.body.updateFromGameObject();
@@ -158,15 +149,27 @@ export class Platform extends Phaser.Physics.Arcade.Sprite {
                 // Limpiar datos de movimiento si no es móvil
                 this.setData('isMoving', false);
                 this.setData('speed', 0);
-                if (typeof this.setVelocityX === 'function') {
-                    this.setVelocityX(0);
-                }
+                this.body.velocity.x = 0;
             }
         }
 
         // Activar
         this.setActive(true);
         this.setVisible(true);
+
+        // 🔴 FORCE UPDATE LIST
+        if (scene.sys) {
+            scene.sys.updateList.add(this);
+            scene.sys.displayList.add(this);
+        }
+
+        // FINAL VERIFICATION LOG
+        console.log(`[Platform.spawn] ✅ Spawned at (${x}, ${y}) | Frame: ${frameName} | Visible: ${this.visible} | Active: ${this.active} | Body: ${!!this.body} | Depth: ${this.depth}`);
+
+        // Double check texture
+        if (this.texture.key === '__MISSING') {
+            console.error('[Platform.spawn] ❌ TEXTURE MISSING even after setTexture!');
+        }
     }
 
     /**
@@ -176,6 +179,14 @@ export class Platform extends Phaser.Physics.Arcade.Sprite {
         // Verificaciones de seguridad: asegurar que el objeto y su body existan
         if (!this || !this.body) {
             return;
+        }
+
+        console.log(`[Platform.despawn] 🗑️ Despawning Platform at (${this.x}, ${this.y})`);
+
+        // Destruir debug text si existe
+        if (this.debugText) {
+            this.debugText.destroy();
+            this.debugText = null;
         }
 
         // Limpiar estado de movimiento
@@ -226,7 +237,8 @@ export class Platform extends Phaser.Physics.Arcade.Sprite {
      * Se llama automáticamente por Phaser si el objeto está activo
      */
     preUpdate(time, delta) {
-        super.preUpdate(time, delta);
+        // TileSprite no tiene super.preUpdate() como Sprite
+        // Actualizar animación del tile si es necesario
 
         // Verificaciones de seguridad antes de actualizar
         if (!this.active || !this.body) {

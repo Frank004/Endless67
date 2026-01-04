@@ -21,6 +21,7 @@ export const SLOT_CONFIG = {
     slotHeight: 640,  // Altura FIJA de cada slot (múltiplo de 32px)
 
     gameWidth: 360,   // Ancho base vertical
+    designWidth: 400, // Ancho de diseño de los patrones (para centrado)
     wallWidth: 32,
     centerX: 180,     // Centro del juego (360/2)
 
@@ -110,7 +111,7 @@ export const SLOT_CONFIG = {
     rules: {
         tutorialSlots: 1,              // Solo el primer slot es tutorial (plataformas)
         maxConsecutiveSameType: 2,     // No más de 2 del mismo tipo seguidos
-        spawnBuffer: 900,              // Buffer mayor para evitar gaps en dispositivos lentos (360x640 base)
+        spawnBuffer: 2000,             // Buffer mayor para evitar gaps (ajustado para layouts con banner/piso)
         cleanupDistance: 1100,         // Limpia slots más lejos para que no desaparezcan antes de tiempo en mobile
         startPlatformY: 560            // Ubicación de la plataforma inicial (más abajo para acercar el primer slot)
     }

@@ -1,6 +1,7 @@
 
 import { GridGenerator } from '../../src/managers/level/GridGenerator.js';
 import { SLOT_CONFIG } from '../../src/config/SlotConfig.js';
+import { GAME_CONFIG } from '../../src/config/GameConstants.js';
 
 // Mock dependencies if needed (PatternTransformer is largely pure, but imports SlotConfig)
 // We rely on real PatternTransformer logic here as it's pure enough.
@@ -9,7 +10,7 @@ describe('GridGenerator Logic (Pure Stacking)', () => {
     let grid;
 
     beforeEach(() => {
-        grid = new GridGenerator(360); // Mobile width
+        grid = new GridGenerator(GAME_CONFIG.RESOLUTIONS.MOBILE.width); // Mobile width
         grid.reset(1000); // Start Y
     });
 

@@ -18,6 +18,7 @@ import { POOL, WALLS, PHYSICS } from '../config/GameConstants.js';
 import EventBus, { Events } from './EventBus.js';
 import { getDeviceInfo, applyDeviceClasses } from '../utils/DeviceDetection.js';
 import { ASSETS } from '../config/AssetKeys.js';
+import { LAYOUT_CONFIG } from '../config/LayoutConfig.js';
 
 export class GameInitializer {
     constructor(scene) {
@@ -73,10 +74,21 @@ export class GameInitializer {
 
     setupCamera() {
         const camera = this.scene.cameras.main;
+        const screenWidth = this.scene.scale.width;
+        const screenHeight = this.scene.scale.height;
+
         camera.setBackgroundColor('#050505');
         camera.setRoundPixels(true);
         camera.setZoom(1);
-        this.scene.physics.world.setBounds(0, 0, camera.width, PHYSICS.WORLD_BOUNDS.MAX_Y);
+
+        // Standard Full Viewport
+        camera.setViewport(0, 0, screenWidth, screenHeight);
+
+        // Physics bounds
+        this.scene.physics.world.setBounds(0, -PHYSICS.WORLD_BOUNDS.MAX_Y, screenWidth, PHYSICS.WORLD_BOUNDS.MAX_Y * 2);
+
+        // Camera bounds restricted to content
+        camera.setBounds(0, -PHYSICS.WORLD_BOUNDS.MAX_Y, screenWidth, PHYSICS.WORLD_BOUNDS.MAX_Y + screenHeight);
     }
 
     createManagers() {

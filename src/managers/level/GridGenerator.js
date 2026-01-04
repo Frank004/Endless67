@@ -79,39 +79,31 @@ export class GridGenerator {
     }
 
     _determineType(slotIndex) {
-        if (slotIndex < SLOT_CONFIG.rules.tutorialSlots) {
-            return 'PLATFORM_BATCH';
-        }
-        // Simple Weighted Random (can be enhanced later)
+        // Simple weighted selection: more platforms early, mix later
+        if (slotIndex < 3) return 'PLATFORM_BATCH';
         const r = Math.random();
-        if (r < 0.5) return 'PLATFORM_BATCH';
-        if (r < 0.7) return 'SAFE_ZONE';
+        if (r < 0.6) return 'PLATFORM_BATCH';
+        if (r < 0.8) return 'SAFE_ZONE';
         return 'MAZE';
     }
 
     _calculateSlotHeight(type) {
-        // Visual adjustment: Add 10px to increase gap between slots
-        const VISUAL_GAP_ADJUSTMENT = 10;
-
+        const gap = SLOT_CONFIG.minVerticalGap; // 160px
         if (type === 'MAZE') {
-            // Maze calculation needs to match platform gap (160px) not maze internal gap (100px)
             const config = SLOT_CONFIG.types.MAZE;
             const rowCount = config.rowCount || 5;
             const rowHeight = config.rowHeight || MAZE_ROW_HEIGHT;
             const rowGap = config.rowGap || 100;
 
             // Content height with internal 100px gaps
-            const contentHeight = rowCount * rowHeight + (rowCount - 1) * rowGap;
-            // = 5 * 128 + 4 * 100 = 640 + 400 = 1040
+            const contentHeight = rowCount * rowHeight + (rowCount - 1) * rowGap; // 5*128 + 4*100 = 1040
 
-            // Fine-tuned adjustment to match platform spacing visually
-            // Need to compensate: (160 - 100) + 10 = 70px
-            const gapAdjustment = 70;
-
-            return contentHeight + gapAdjustment + VISUAL_GAP_ADJUSTMENT;
+            // Match periodic vertically (must be multiple of 160)
+            // 1040 -> 1120 (7 * 160)
+            return Math.ceil(contentHeight / gap) * gap;
         } else {
-            // Platform batches: Use standard slot height plus visual adjustment
-            return SLOT_CONFIG.slotHeight + VISUAL_GAP_ADJUSTMENT; // 650px
+            // Standard slots are 640 (4 * 160)
+            return SLOT_CONFIG.slotHeight;
         }
     }
 
@@ -130,40 +122,61 @@ export class GridGenerator {
             };
         } else {
             // Platform Batch
-            return this._generatePlatformPositions(yStart, slotHeight);
+            return this._generatePlatformPositions(yStart, slotHeight, type);
         }
     }
 
-    _generatePlatformPositions(yStart, slotHeight) {
-        // Standard Grid: Get platform count from config
-        const config = SLOT_CONFIG.types.PLATFORM_BATCH;
-        const platformCount = config.platformCount.min; // Always 4 for now
+    _generatePlatformPositions(yStart, slotHeight, type = 'PLATFORM_BATCH') {
+        const config = SLOT_CONFIG.types[type] || SLOT_CONFIG.types.PLATFORM_BATCH;
         const gap = SLOT_CONFIG.minVerticalGap; // 160px
+
+        // Fallback to calculated count if config is missing to avoid runtime errors
+        // Note: SAFE_ZONE and PLATFORM_BATCH both have platformCount { min: 4, max: 4 }
+        const platformCount = config?.platformCount?.min ?? Math.max(1, Math.floor(slotHeight / gap));
         const platforms = [];
 
-        // 1. Get Pattern (excluding last used to prevent repetition)
-        const pattern = getRandomPatternExcluding(this.lastPlatformPattern);
+        // Select random pattern (avoid immediate repetition)
+        let pattern = getRandomPatternExcluding(this.lastPlatformPattern);
+        if (!pattern) pattern = getRandomPattern();
+        this.lastPlatformPattern = pattern?.name;
 
-        // Update history
-        this.lastPlatformPattern = pattern.name;
+        // Scale pattern to current game width (designWidth -> gameWidth), keeping center alignment
+        const designWidth = SLOT_CONFIG.designWidth || 400;
+        const scaleRatio = this.gameWidth / designWidth;
+        const centerOffset = this.gameWidth / 2;
+        let normalizedPlatforms = pattern.platforms.map(p => ({
+            x: ((p.x - designWidth / 2) * scaleRatio) + centerOffset,
+            y: p.y
+        }));
 
-        // 2. Transform (Logic only)
-        const transformed = this.transformer.randomTransform(pattern.platforms);
+        // Apply random transform (mirror) based on config weights
+        const transformed = this.transformer.randomTransform(normalizedPlatforms, config.transformWeights);
+        // Clamp to bounds for safety
         const clamped = this.transformer.clampToBounds(transformed.platforms);
-
-        let currentY = yStart;
+        const patternLength = clamped.length;
 
         for (let i = 0; i < platformCount; i++) {
             // Cycle through pattern platforms
-            const basePlat = clamped[i % clamped.length];
+            const basePlat = clamped[i % patternLength];
+
+            // Calculate Y offset based on repetition (if we need to stack patterns)
+            // But usually platformCount == patternLength for standard slots.
+            const repetition = Math.floor(i / patternLength);
+            const patternHeight = SLOT_CONFIG.slotHeight; // Base height of a pattern cycle
+
+            // Use pattern's local Y (relative to its top-start)
+            // yStart is the top of the slot. basePlat.y is negative (e.g. 0, -160, -320...)
+            const computedY = yStart + basePlat.y - (repetition * patternHeight);
+
+            // basePlat.x is already in absolute coordinates (normalized and centered in line 148)
+            // DO NOT add center again - it's already correctly positioned
+            const computedX = basePlat.x;
 
             platforms.push({
-                x: basePlat.x,
-                y: currentY,
+                x: computedX,
+                y: computedY,
                 width: SLOT_CONFIG.platformWidth
             });
-
-            currentY -= gap;
         }
 
         return {

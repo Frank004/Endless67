@@ -13,11 +13,12 @@ export class CollisionManager {
     }
 
     setupCollisions() {
-        const { player, platforms, mazeWalls, leftWall, rightWall, patrolEnemies, shooterEnemies, jumperShooterEnemies, coins, powerups, riser, projectiles } = this.scene;
+        const { player, platforms, stageFloor, mazeWalls, leftWall, rightWall, patrolEnemies, shooterEnemies, jumperShooterEnemies, coins, powerups, riser, projectiles } = this.scene;
 
         // --- PLAYER COLLISIONS ---
         this.scene.physics.add.collider(player, platforms, this.playerHandler.handlePlatformCollision, null, this.playerHandler);
         this.scene.physics.add.collider(player, mazeWalls, this.playerHandler.handleLand, null, this.playerHandler);
+        this.scene.physics.add.collider(player, stageFloor, this.playerHandler.handleLand, null, this.playerHandler);
         this.scene.physics.add.collider(player, leftWall, () => this.playerHandler.handleWallTouch(player, leftWall, 'left'));
         this.scene.physics.add.collider(player, rightWall, () => this.playerHandler.handleWallTouch(player, rightWall, 'right'));
 

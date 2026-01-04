@@ -18,7 +18,8 @@ jest.mock('../../src/utils/PatternTransformer.js', () => {
 
 jest.mock('../../src/data/PlatformPatterns.js', () => ({
     PLATFORM_PATTERNS: [{ name: 'test_pattern', platforms: [{ x: 200, y: 0 }] }],
-    getRandomPattern: jest.fn(() => ({ name: 'test_pattern', platforms: [{ x: 200, y: 0 }] }))
+    getRandomPattern: jest.fn(() => ({ name: 'test_pattern', platforms: [{ x: 200, y: 0 }] })),
+    getRandomPatternExcluding: jest.fn(() => ({ name: 'test_pattern', platforms: [{ x: 200, y: 0 }] }))
 }));
 jest.mock('../../src/config/SlotConfig.js', () => ({
     SLOT_CONFIG: {
@@ -36,11 +37,13 @@ jest.mock('../../src/config/SlotConfig.js', () => ({
         types: {
             PLATFORM_BATCH: {
                 height: 640,
+                platformCount: { min: 4, max: 4 },
                 transformWeights: {},
                 spawnChances: { patrol: 0, shooter: 0, powerups: 0.1 }
             },
             SAFE_ZONE: {
                 height: 640,
+                platformCount: { min: 4, max: 4 },
                 transformWeights: {},
                 spawnChances: { patrol: 0, shooter: 0, powerups: 0 }
             },
@@ -98,9 +101,12 @@ describe('SlotGenerator', () => {
                     }))
                 }
             },
-            platforms: { add: jest.fn() },
-            powerupPool: { spawn: jest.fn() },
-            coinPool: { spawn: jest.fn() },
+            platforms: {
+                add: jest.fn(),
+                contains: jest.fn(() => false)
+            },
+            powerupPool: { spawn: jest.fn(() => ({})) },
+            coinPool: { spawn: jest.fn(() => ({})) },
             powerups: { add: jest.fn() },
             coins: { add: jest.fn() },
             time: { delayedCall: jest.fn((delay, cb) => cb && cb()) },
@@ -169,8 +175,17 @@ describe('SlotGenerator', () => {
     });
 
     test('generatePlatformBatch should spawn platforms via levelManager', () => {
-        const slotY = 1000;
-        const result = generator.generatePlatformBatch(slotY, 'PLATFORM_BATCH');
+        const layoutData = {
+            yStart: 1000,
+            type: 'PLATFORM_BATCH',
+            index: 10,
+            data: {
+                platforms: [{ x: 200, y: 1000 }],
+                sourcePattern: 'test_pattern',
+                transform: 'none'
+            }
+        };
+        const result = generator.generatePlatformBatch(layoutData);
 
         expect(mockScene.levelManager.spawnPlatform).toHaveBeenCalled();
         expect(result.platformCount).toBeGreaterThan(0);
@@ -178,8 +193,17 @@ describe('SlotGenerator', () => {
     });
 
     test('generateMaze should call spawnMazeRowFromConfig', () => {
-        const slotY = 1000;
-        generator.generateMaze(slotY);
+        const layoutData = {
+            yStart: 1000,
+            yEnd: 400,
+            height: 600,
+            type: 'MAZE',
+            data: {
+                pattern: [['X', 'X', 'X']],
+                patternIndex: 0
+            }
+        };
+        generator.generateMaze(layoutData);
 
         expect(mockScene.levelManager.spawnMazeRowFromConfig).toHaveBeenCalled();
     });

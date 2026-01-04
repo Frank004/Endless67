@@ -7,6 +7,9 @@ import { SLOT_CONFIG } from '../config/SlotConfig.js';
 import { PowerupOverlay } from '../prefabs/PowerupOverlay.js';
 import { registerCoinAnimation, registerBasketballAnimation } from '../utils/animations.js';
 import { REGISTRY_KEYS } from '../config/RegistryKeys.js';
+import { LAYOUT_CONFIG, calculateLayout } from '../config/LayoutConfig.js';
+import { StageFloor } from '../prefabs/StageFloor.js';
+import { AdBanner } from '../prefabs/AdBanner.js';
 
 /**
  * @phasereditor
@@ -24,6 +27,11 @@ export class Game extends Phaser.Scene {
      * Initialize the game scene.
      */
     create() {
+        // CONFIRM UPDATE
+        // CONFIRM UPDATE
+        console.log('🚀 GAME VERSION: LOOKAHEAD-FIX-' + Date.now());
+        // alert('CODE UPDATED: ' + new Date().toTimeString()); // Uncomment if desperate for visual confirmation
+
         // --- INITIALIZER ---
         // Handles setup of camera, devices, groups, pools, managers, and events
         this.initializer = new GameInitializer(this);
@@ -34,6 +42,7 @@ export class Game extends Phaser.Scene {
         this.isGameOver = false;
         this.isPausedEvent = false;
         this.isPaused = false;
+        this.isDevMenuOpen = false;
         this.totalScore = 0;
         this.heightOffset = 0;
         this.currentHeight = 0;
@@ -50,10 +59,22 @@ export class Game extends Phaser.Scene {
         // --- DEBUG SETUP ---
         this.registry.set(REGISTRY_KEYS.USE_PLAYER_PNG, this.debugManager.usePlayerPNG);
 
+        // --- LAYOUT & STAGE ---
+        const screenHeight = this.scale.height;
+        const layout = calculateLayout(screenHeight);
+        this.layout = layout;
+
+        // Internal Internal Ad Banner (Bottom 50px)
+        this.adBanner = new AdBanner(this);
+
+        // Stage Floor (Static ground at the start, 32px)
+        // Positioned at the bottom of the GAMEPLAY viewport (screenHeight - 50)
+        this.stageFloor = new StageFloor(this, screenHeight);
+
         // --- PLAYER ---
-        const startPlatformY = SLOT_CONFIG.rules.startPlatformY || 450;
-        const startPlatformHeight = PLATFORM_HEIGHT;
-        this.player = new Player(this, this.cameras.main.centerX, startPlatformY - startPlatformHeight - 5);
+        // Spawn precisely on the StageFloor
+        this.player = new Player(this, this.cameras.main.centerX, layout.playerSpawnY);
+
         this.powerupOverlay = new PowerupOverlay(this, this.player);
         this.player.powerupOverlay = this.powerupOverlay;
 
@@ -61,14 +82,15 @@ export class Game extends Phaser.Scene {
         this.debugManager.applyDebugSettings();
 
         // --- INITIAL LEVEL GENERATION ---
-        this.startPlatform = this.levelManager.spawnPlatform(this.cameras.main.centerX, SLOT_CONFIG.rules.startPlatformY, PLATFORM_WIDTH, false);
+        // Usamos StageFloor como base inicial
 
         // --- ANIMATIONS ---
         registerCoinAnimation(this);
         registerBasketballAnimation(this);
 
         // --- SLOT GENERATOR ---
-        this.slotGenerator.init(SLOT_CONFIG.rules.startPlatformY);
+        // Slots comienzan sobre el StageFloor
+        this.slotGenerator.init(layout.firstSlotY);
 
         // --- LAVA & PARTICLES ---
         this.riserManager.createRiser();
@@ -135,8 +157,8 @@ export class Game extends Phaser.Scene {
         // Walls
         GameInitializer.updateWalls(this);
 
-        // Height Calculation
-        const referenceHeight = 400;
+        // Height Calculation: 0m starts at the initial spawn point
+        const referenceHeight = this.layout.playerSpawnY;
         let h = Math.floor((referenceHeight - this.player.y) / 10) + this.heightOffset;
         if (h > this.currentHeight) {
             this.currentHeight = h;

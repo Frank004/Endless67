@@ -1,6 +1,6 @@
 import { WALLS } from '../../config/GameConstants.js';
-import { SLOT_CONFIG } from '../../config/SlotConfig.js';
-import { PLATFORM_WIDTH } from '../../prefabs/Platform.js';
+import { SLOT_CONFIG, getPlatformBounds } from '../../config/SlotConfig.js';
+import { PLATFORM_WIDTH, PLATFORM_HEIGHT } from '../../prefabs/Platform.js';
 import { PlatformValidator } from './PlatformValidator.js';
 
 /**
@@ -32,19 +32,45 @@ export class PlatformSpawner {
         const scene = this.scene;
 
         // Clamp center X to safe bounds
+        const camWidth = this.scene.cameras?.main?.worldView?.width || this.scene.cameras?.main?.width || scene.scale.width || SLOT_CONFIG.gameWidth;
+        const { minX: minCenter, maxX: maxCenter, centerX } = getPlatformBounds(camWidth);
         const halfWidth = width / 2;
-        const minCenter = WALLS.WIDTH + WALLS.MARGIN + halfWidth;
-        const maxCenter = scene.cameras.main.width - WALLS.WIDTH - WALLS.MARGIN - halfWidth;
-        let clampedX = Phaser.Math.Clamp(x, minCenter, maxCenter);
-
-        const verbose = this.scene?.registry?.get('showSlotLogs');
-        if (clampedX !== x && verbose) {
-            console.warn(`PlatformSpawner: clamping platform center ${x} -> ${clampedX}`);
+        let targetX = x ?? centerX;
+        
+        // Para plataformas estáticas: asegurar 10px de espacio desde las paredes para que el jugador pueda pasar
+        if (!isMoving) {
+            const playerClearance = 10; // Espacio mínimo entre plataforma y pared
+            const leftEdge = targetX - halfWidth;
+            const rightEdge = targetX + halfWidth;
+            const minWallEdge = WALLS.WIDTH + playerClearance;
+            const maxWallEdge = camWidth - WALLS.WIDTH - playerClearance;
+            
+            // Ajustar posición si los bordes están muy cerca de las paredes
+            if (leftEdge < minWallEdge) {
+                targetX = minWallEdge + halfWidth;
+            } else if (rightEdge > maxWallEdge) {
+                targetX = maxWallEdge - halfWidth;
+            }
         }
+        
+        // Clamp final a los límites seguros
+        let clampedX = Phaser.Math.Clamp(targetX, minCenter, maxCenter);
+
+        // Only clamp if truly out of bounds; allow center positions to pass untouched
+        // Logs desactivados para performance
         x = clampedX;
 
         // Spawn desde el pool
         const p = scene.platformPool.spawn(x, y, width, isMoving, speed);
+        if (!p) {
+            // Log solo si showSlotLogs está activo (errores críticos)
+            const showLogs = scene.registry?.get('showSlotLogs');
+            if (showLogs) {
+                const stats = scene.platformPool?.getStats?.();
+                console.warn('PlatformSpawner: pool spawn returned null', stats || {});
+            }
+            return null;
+        }
 
         // Asegurar physics body
         if (!p.body) {
@@ -59,8 +85,10 @@ export class PlatformSpawner {
         // Registrar para tracking
         this.registerPlatform(x, y, width);
 
-        // Logging y safety checks
-        this.logPlatformPlacement(p.x, p.y, width, isMoving);
+        // Debug text desactivado para performance
+        // (Eliminado: debugText que mostraba Y en cada plataforma)
+
+        // Safety checks (sin logging para performance)
         this.ensureBounds(p, width, isMoving, minCenter, maxCenter);
 
         return p;
@@ -74,7 +102,7 @@ export class PlatformSpawner {
             x: x,
             y: y,
             width: width,
-            height: this.PLATFORM_HEIGHT
+            height: PLATFORM_HEIGHT
         });
     }
 
@@ -93,43 +121,40 @@ export class PlatformSpawner {
         return this.validator.isValidPosition(x, y, width, this.activePlatforms);
     }
 
-    logPlatformPlacement(x, y, width, isMoving) {
-        const scene = this.scene;
-        // Check overlap with items (coins/powerups)
-        const checkItemOverlap = (group, label) => {
-            if (!group || !group.children || typeof group.children.iterate !== 'function') return;
-
-            const halfW = width / 2;
-            const halfH = this.PLATFORM_HEIGHT / 2;
-            const left = x - halfW;
-            const right = x + halfW;
-            const top = y - halfH;
-            const bottom = y + halfH;
-
-            group.children.iterate((item) => {
-                if (!item || !item.active) return;
-                const ix = item.x || 0;
-                const iy = item.y || 0;
-                if (ix >= left && ix <= right && iy >= top && iy <= bottom) {
-                    // Overlap detected
-                }
-            });
-        };
-
-        checkItemOverlap(scene.coins, 'coin');
-        checkItemOverlap(scene.powerups, 'powerup');
-    }
+    // logPlatformPlacement desactivado para performance
+    // (Eliminado: logging de posicionamiento de plataformas)
 
     ensureBounds(p, width, isMoving, minCenter, maxCenter) {
         const halfWidth = width / 2;
+        const camWidth = this.scene.cameras?.main?.worldView?.width || this.scene.cameras?.main?.width || this.scene.scale.width || SLOT_CONFIG.gameWidth;
+        
         const leftEdge = p.x - halfWidth;
         const rightEdge = p.x + halfWidth;
-        const minEdge = WALLS.WIDTH;
-        const maxEdge = this.scene.cameras.main.width - WALLS.WIDTH;
+        
+        // Para plataformas estáticas: asegurar 10px de espacio desde las paredes
+        let minEdge = WALLS.WIDTH;
+        let maxEdge = camWidth - WALLS.WIDTH;
+        
+        if (!isMoving) {
+            const playerClearance = 10;
+            minEdge = WALLS.WIDTH + playerClearance;
+            maxEdge = camWidth - WALLS.WIDTH - playerClearance;
+        }
 
         if (leftEdge < minEdge || rightEdge > maxEdge) {
-            const safeX = Phaser.Math.Clamp(p.x, minCenter, maxCenter);
-            p.x = safeX;
+            // Ajustar posición para mantener el espacio de clearance
+            if (!isMoving) {
+                if (leftEdge < minEdge) {
+                    p.x = minEdge + halfWidth;
+                } else if (rightEdge > maxEdge) {
+                    p.x = maxEdge - halfWidth;
+                }
+            } else {
+                // Para móviles, usar clamp estándar
+                const safeX = Phaser.Math.Clamp(p.x, minCenter, maxCenter);
+                p.x = safeX;
+            }
+            
             if (p.body) {
                 p.body.updateFromGameObject();
                 p.body.setVelocityX(isMoving ? p.body.velocity.x : 0);

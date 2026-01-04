@@ -30,7 +30,7 @@ export class PlayerHandler {
         }
 
         // Fix: If moving platform hits player horizontally, reverse platform to avoid crushing player
-        if (platform.getData('isMoving')) {
+        if (platform.getData('isMoving') && platform.body) {
             if ((player.body.touching.left && platform.body.touching.right) ||
                 (player.body.touching.right && platform.body.touching.left)) {
 
@@ -38,7 +38,13 @@ export class PlayerHandler {
                 // Only reverse if moving towards the player
                 if ((player.body.touching.left && currentVel > 0) ||
                     (player.body.touching.right && currentVel < 0)) {
-                    platform.setVelocityX(-currentVel);
+                    // TileSprite no tiene setVelocityX, usar body.velocity.x directamente
+                    if (platform.body) {
+                        platform.body.velocity.x = -currentVel;
+                        // Actualizar dirección en data para que preUpdate() lo mantenga
+                        const newDirection = -currentVel > 0 ? 1 : -1;
+                        platform.setData('direction', newDirection);
+                    }
                 }
             }
         }

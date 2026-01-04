@@ -12,6 +12,10 @@ export class PlatformValidator {
 
     /**
      * Valida si una posición es adecuada para una nueva plataforma.
+     * 
+     * Nota: Los bounds check (paredes) ya se manejan en PlatformSpawner.spawn(),
+     * así que solo validamos overlap y spacing vertical aquí.
+     * 
      * @param {number} x - Platform center X
      * @param {number} y - Platform center Y
      * @param {number} width - Platform width
@@ -19,42 +23,31 @@ export class PlatformValidator {
      * @returns {boolean} True if valid
      */
     isValidPosition(x, y, width, activePlatforms) {
-        const scene = this.scene;
-        const gameWidth = scene.cameras.main.width;
-        const wallWidth = WALLS.WIDTH;
-        const halfWidth = width / 2;
+        if (!activePlatforms || activePlatforms.length === 0) {
+            return true;
+        }
 
-        // Bounds check
-        const minX = wallWidth + WALLS.MARGIN + halfWidth + 10;
-        const maxX = gameWidth - wallWidth - WALLS.MARGIN - halfWidth - 10;
+        // Vertical spacing validation - evitar plataformas muy cercanas verticalmente
+        const VALIDATION_RANGE = 500;
+        for (const platform of activePlatforms) {
+            const dy = Math.abs(platform.y - y);
+            if (dy > VALIDATION_RANGE) continue;
 
-        if (x < minX || x > maxX) {
+            // Rechazar si está muy cerca verticalmente (menos de MIN_VERTICAL_SPACING)
+            if (dy < this.MIN_VERTICAL_SPACING) {
+                return false;
+            }
+        }
+
+        // Same line check - evitar múltiples plataformas en la misma línea Y
+        const sameLine = activePlatforms.some(p => Math.abs(p.y - y) < this.SAME_LINE_EPS);
+        if (sameLine) {
             return false;
         }
 
-        // Vertical spacing validation
-        const VALIDATION_RANGE = 500;
-        if (activePlatforms) {
-            for (const platform of activePlatforms) {
-                const dy = Math.abs(platform.y - y);
-                if (dy > VALIDATION_RANGE) continue;
-
-                // overlap vertical muy cercano
-                if (dy < this.MIN_VERTICAL_SPACING) {
-                    return false;
-                }
-            }
-
-            // Same line check
-            const sameLine = activePlatforms.some(p => Math.abs(p.y - y) < this.SAME_LINE_EPS);
-            if (sameLine) {
-                return false;
-            }
-
-            // AABB Overlap
-            if (this.checkOverlap(x, y, width, activePlatforms)) {
-                return false;
-            }
+        // AABB Overlap - evitar superposición física
+        if (this.checkOverlap(x, y, width, activePlatforms)) {
+            return false;
         }
 
         return true;

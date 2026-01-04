@@ -2,10 +2,25 @@ import GameState from '../core/GameState.js';
 import { UIHelpers } from '../utils/UIHelpers.js';
 
 export class Settings extends Phaser.Scene {
-    // ... existing constructor ...
+    constructor() {
+        super('Settings');
+    }
 
     create() {
-        // ... existing code ...
+        const width = this.cameras.main.width;
+        const height = this.cameras.main.height;
+        let buttonY = height / 2 - 50;
+        const buttonSpacing = 80;
+
+        // Background
+        this.add.rectangle(width / 2, height / 2, width, height, 0x050505);
+
+        // Title
+        this.add.text(width / 2, 100, 'SETTINGS', {
+            fontSize: '32px',
+            color: '#ffffff',
+            fontStyle: 'bold'
+        }).setOrigin(0.5);
 
         // --- SOUND TOGGLE ---
         const soundEnabled = this.registry.get('soundEnabled') !== false;

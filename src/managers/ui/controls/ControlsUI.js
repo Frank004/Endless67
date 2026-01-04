@@ -21,31 +21,36 @@ export class ControlsUI {
         scene.joystickBase = this.joystickBase;
         scene.joystickKnob = this.joystickKnob;
 
+        // Positions based on the 32px Floor at the bottom of the gameplay stage
+        const adHeight = 50;
+        const floorHeight = 32;
+        const effectiveHeight = scene.scale.height - adHeight;
+        const controlY = effectiveHeight - (floorHeight / 2); // Center of the 32px floor
+
         // Mobile Controls UI
         if (isMobile) {
-            const cameraHeight = scene.cameras.main.height;
             const cameraWidth = scene.cameras.main.width;
             // Dynamic split based on game width (70% for mobile)
             const SPLIT_X = Math.round(cameraWidth * 0.70);
 
             let splitLine = scene.add.graphics();
             splitLine.lineStyle(2, 0xffffff, 0.15);
-            splitLine.beginPath(); splitLine.moveTo(SPLIT_X, cameraHeight); splitLine.lineTo(SPLIT_X, cameraHeight - 50); splitLine.strokePath();
-            splitLine.setScrollFactor(0).setDepth(0);
+            splitLine.beginPath(); splitLine.moveTo(SPLIT_X, effectiveHeight); splitLine.lineTo(SPLIT_X, effectiveHeight - floorHeight); splitLine.strokePath();
+            splitLine.setScrollFactor(0).setDepth(100);
 
-            const controlY = cameraHeight - 40;
             // Left side text: center of left area (SPLIT_X / 2)
             const leftTextX = Math.round(SPLIT_X / 2);
             // Right side text: center of right area (SPLIT_X + (cameraWidth - SPLIT_X) / 2)
             const rightTextX = Math.round(SPLIT_X + (cameraWidth - SPLIT_X) / 2);
 
-            this.controlTextLeft = scene.add.text(leftTextX, controlY, '< HOLD & SLIDE >', { fontSize: '12px', color: '#fff', alpha: 0.4 }).setOrigin(0.5).setScrollFactor(0).setDepth(100);
-            this.controlTextRight = scene.add.text(rightTextX, controlY, 'JUMP', { fontSize: '12px', color: '#fff', alpha: 0.4 }).setOrigin(0.5).setScrollFactor(0).setDepth(100);
+            this.controlTextLeft = scene.add.text(leftTextX, controlY, '< HOLD & SLIDE >', { fontSize: '12px', color: '#333', alpha: 0.8 }).setOrigin(0.5).setScrollFactor(0).setDepth(200);
+            this.controlTextRight = scene.add.text(rightTextX, controlY, 'JUMP', { fontSize: '12px', color: '#333', alpha: 0.8 }).setOrigin(0.5).setScrollFactor(0).setDepth(200);
 
             scene.controlTextLeft = this.controlTextLeft;
             scene.controlTextRight = this.controlTextRight;
+            scene.controlSplitLine = splitLine; // Keep reference to hide it later
         } else {
-            this.controlTextPC = scene.add.text(centerX, 560, '← → MOVE | SPACE JUMP', { fontSize: '12px', color: '#fff', alpha: 0.4 }).setOrigin(0.5).setScrollFactor(0);
+            this.controlTextPC = scene.add.text(centerX, controlY, '← → MOVE | SPACE JUMP', { fontSize: '12px', color: '#f5f5f5ff', alpha: 0.8 }).setOrigin(0.5).setScrollFactor(0).setDepth(200);
             scene.controlTextPC = this.controlTextPC;
         }
     }
@@ -54,6 +59,7 @@ export class ControlsUI {
         if (this.controlTextLeft) this.controlTextLeft.setVisible(false);
         if (this.controlTextRight) this.controlTextRight.setVisible(false);
         if (this.controlTextPC) this.controlTextPC.setVisible(false);
+        if (this.scene.controlSplitLine) this.scene.controlSplitLine.setVisible(false);
     }
 
     showJumpFeedback(x, y) {

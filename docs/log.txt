@@ -1,0 +1,37 @@
+(index)
+x
+y
+initX
+initY
+0	118.99999999999989	-3044	126	-1522
+1	180	-2642	180	-2642
+2	243	-2482	243	-2482
+3	117	-2322	117	-2322
+4	180	-2162	180	-2162
+5	198	-2002	198	-2002
+6	162	-1842	162	-1842
+7	234	-1682	234	-1682
+8	144	-1362	144	-1362
+9	167.6666666666669	-1202	234	-1202
+10	112.33333333333326	-1042	144	-1042
+11	234	-882	234	-882
+12	162	-722	162	-722
+13	182.66666666666708	-562	198	-562
+14	162	-402	162	-402
+15	198	-242	198	-242
+16	108	-82	108	-82
+17	108	78	108	78
+18	108	238	108	238
+
+
+
+
+[CleanupManager] Despawning platform y= 398 limitY= 397.73333333333335
+Platform.js:202 [Platform.despawn] 🗑️ Despawning Platform at (108, 398)
+__slotDiag()
+Game.js:135 [slotDiag] playerY= -1394 cameraTop= -1862 height= 640
+Game.js:136 [slotDiag] slots count= 5 last= {index: 5, type: 'MAZE', yStart: -2802, yEnd: -3762, height: 960, …}
+Game.js:137 [slotDiag] platformPool stats= {created: 20, spawned: 20, despawned: 1, maxActive: 20, active: 19, …}
+Game.js:138 [slotDiag] active platforms: 19 inView: 6 nearestAbove: {y: -1682, dy: 288} nearestBelow: {y: -1362, dy: 32}
+
+

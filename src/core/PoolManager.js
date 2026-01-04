@@ -126,7 +126,7 @@ export class PoolManager {
         // Esto asegura que el objeto y su body todavía existan cuando se limpia el estado
         if (obj.despawn && typeof obj.despawn === 'function') {
             try {
-                obj.despawn();
+            obj.despawn();
             } catch (e) {
                 console.warn('PoolManager.despawn: Error al llamar obj.despawn():', e);
             }

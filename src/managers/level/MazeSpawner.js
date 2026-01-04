@@ -45,8 +45,8 @@ export class MazeSpawner {
         const centerX = (leftPlayable + rightPlayable) / 2;
         let type = config.type;
 
-        const BASE_GAME_WIDTH = GAME_CONFIG.RESOLUTIONS.DESKTOP.width;
-        const scaleRatio = gameWidth / BASE_GAME_WIDTH;
+        const DESIGN_WIDTH = SLOT_CONFIG.designWidth || 400;
+        const scaleRatio = gameWidth / DESIGN_WIDTH;
         const maxPlayableWidth = Math.max(TILE, playableWidth);
         const snap = (v) => Math.max(TILE, Math.floor(v / TILE) * TILE);
         let w1 = snap(Phaser.Math.Clamp((config.width || 0) * scaleRatio, TILE, maxPlayableWidth));
@@ -174,7 +174,16 @@ export class MazeSpawner {
         if (Phaser.Math.Between(0, 100) < powerupChance) {
             const { minX, maxX } = getPlayableBounds(scene, 32);
             const safeX = Phaser.Math.Clamp(gapX, minX, maxX);
-            const powerup = scene.powerups.create(safeX, y - 50, ASSETS.POWERUP_BALL);
+            
+            // Calcular Y con separación adecuada desde el top del bloque del maze
+            const rowHeight = SLOT_CONFIG?.types?.MAZE?.rowHeight || MAZE_ROW_HEIGHT || 64;
+            const POWERUP_BASE_SIZE = 32; // Tamaño base del powerup
+            const ITEM_HALF = POWERUP_BASE_SIZE / 2; // 16px
+            const powerupSeparation = 16; // Separación desde el borde superior del bloque
+            const blockTop = y - (rowHeight / 2);
+            const powerupY = blockTop - ITEM_HALF - powerupSeparation;
+            
+            const powerup = scene.powerups.create(safeX, powerupY, ASSETS.POWERUP_BALL);
             enablePlatformRider(powerup, { mode: 'carry', marginX: 2 });
             scene.lastPowerupSpawnHeight = scene.currentHeight;
             scene.lastPowerupTime = now;
@@ -187,11 +196,21 @@ export class MazeSpawner {
                 let coin = null;
                 const itemMargin = WALLS.WIDTH + WALLS.MARGIN + 16;
                 const safeX = Phaser.Math.Clamp(gapX, itemMargin, gameWidth - itemMargin);
+                
+                // Calcular Y con separación adecuada desde el top del bloque del maze
+                // y es el centro del bloque, rowHeight/2 es la mitad hacia arriba, ITEM_HALF (16px) + 16px de separación
+                const rowHeight = SLOT_CONFIG?.types?.MAZE?.rowHeight || MAZE_ROW_HEIGHT || 64;
+                const COIN_BASE_SIZE = 32; // Tamaño base del coin
+                const ITEM_HALF = COIN_BASE_SIZE / 2; // 16px
+                const coinSeparation = 16; // Separación desde el borde superior del bloque
+                const blockTop = y - (rowHeight / 2);
+                const coinY = blockTop - ITEM_HALF - coinSeparation;
+                
                 if (scene.coinPool) {
-                    coin = scene.coinPool.spawn(safeX, y - 50);
+                    coin = scene.coinPool.spawn(safeX, coinY);
                     if (coin && scene.coins) scene.coins.add(coin, true);
                 } else if (scene.coins) {
-                    coin = scene.coins.create(safeX, y - 50, 'coin');
+                    coin = scene.coins.create(safeX, coinY, 'coin');
                 }
                 if (coin) {
                     enablePlatformRider(coin, { mode: 'carry', marginX: 2 });

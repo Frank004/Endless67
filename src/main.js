@@ -11,7 +11,10 @@ import { isMobileDevice, getResolution } from './utils/DeviceDetection.js';
 // Disable verbose logs in production build
 // ─────────────────────────────────────────────────────────────
 if (typeof window !== 'undefined') {
-    const disableLogs = true;
+    // Allow re-enabling logs via query (?logs=1) or localStorage flag (enableLogs=1)
+    const searchParams = new URLSearchParams(window.location.search || '');
+    const forceLogs = searchParams.get('logs') === '1' || window.localStorage?.getItem('enableLogs') === '1';
+    const disableLogs = !forceLogs;
     if (disableLogs && window.console) {
         const noop = () => { };
         window.console.log = noop;
@@ -43,15 +46,8 @@ const config = {
     scale: {
         mode: Phaser.Scale.FIT,
         autoCenter: Phaser.Scale.CENTER_BOTH,
-        // Escala base 360x640 (9:16), dejando que Phaser la ajuste al viewport
-        min: {
-            width: GAME_WIDTH,
-            height: GAME_HEIGHT
-        },
-        max: {
-            width: GAME_WIDTH,
-            height: GAME_HEIGHT
-        }
+        width: GAME_WIDTH,
+        height: GAME_HEIGHT
     },
     input: { activePointers: 3 },
     physics: { default: 'arcade', arcade: { gravity: { y: 1200 }, debug: false } },

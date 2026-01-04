@@ -51,6 +51,7 @@ export class Boot extends Phaser.Scene {
         // --- WALLS SPRITESHEET (LEFT/RIGHT) ---
         this.load.multiatlas('walls', 'assets/spritesheets/walls.json', 'assets/spritesheets');
         this.load.multiatlas('floor', 'assets/spritesheets/floor.json', 'assets/spritesheets');
+        this.load.multiatlas('platform', 'assets/spritesheets/platform.json', 'assets/spritesheets');
 
         // --- PLAYER SPRITES ---
         // Atlas del player (prioridad)
@@ -157,8 +158,8 @@ export class Boot extends Phaser.Scene {
 
         // Platform - DIMENSIONES CORRECTAS: 128x32
 
-        // static (magenta)
-        g.clear(); g.fillStyle(0xff00aa, 1);
+        // static (Placeholder DEBUG - Green)
+        g.clear(); g.fillStyle(0x00ff00, 1);
         g.fillRoundedRect(0, 0, 128, 32, 6);
         g.generateTexture(ASSETS.PLATFORM, 128, 32);
         // moving horizontal (blue)

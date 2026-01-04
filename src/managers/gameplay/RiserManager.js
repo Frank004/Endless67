@@ -2,6 +2,7 @@ import { getLevelConfig } from '../../data/LevelConfig.js';
 import { RiserConfiguration, RISER_TYPES } from '../../config/RiserConfig.js';
 import { Riser } from '../../prefabs/Riser.js';
 import { WALLS } from '../../config/GameConstants.js';
+import { LAYOUT_CONFIG } from '../../config/LayoutConfig.js';
 import RiserPipelineManager from './RiserPipelineManager.js';
 
 export class RiserManager {
@@ -36,10 +37,14 @@ export class RiserManager {
         const pipelineName = RiserPipelineManager.getPipelineForType(this.config.type);
 
         // Create Riser Prefab with managed pipeline
+        // Initial Y from layout config (bottom of screen). Fallback for tests/mocks without scale.
+        const screenHeight = scene?.scale?.height || scene?.game?.config?.height || 640;
+        const initialY = LAYOUT_CONFIG.lava.getInitialY(screenHeight);
+
         this.riser = new Riser(
             scene,
             riserX,
-            900,
+            initialY,
             visualWidth,
             800,
             this.config.texture,
