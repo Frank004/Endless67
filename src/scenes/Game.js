@@ -34,6 +34,10 @@ export class Game extends Phaser.Scene {
         }
         // alert('CODE UPDATED: ' + new Date().toTimeString()); // Uncomment if desperate for visual confirmation
 
+        // --- CLEANUP FROM PREVIOUS GAME (if restarting) ---
+        // CRITICAL: Clean up any residual objects from previous game session
+        this.cleanupPreviousGame();
+
         // --- INITIALIZER ---
         // Handles setup of camera, devices, groups, pools, managers, and events
         this.initializer = new GameInitializer(this);
@@ -334,5 +338,162 @@ export class Game extends Phaser.Scene {
      */
     trigger67Celebration() {
         this.uiManager.trigger67Celebration();
+    }
+
+    /**
+     * Clean up any residual objects from a previous game session
+     * This is critical when using scene.restart() to prevent memory leaks and performance issues
+     */
+    cleanupPreviousGame() {
+        // Clean up pools (despawn all active objects) - only if they exist
+        try {
+            if (this.platformPool && typeof this.platformPool.despawnAll === 'function') {
+                this.platformPool.despawnAll();
+            }
+            if (this.coinPool && typeof this.coinPool.despawnAll === 'function') {
+                this.coinPool.despawnAll();
+            }
+            if (this.powerupPool && typeof this.powerupPool.despawnAll === 'function') {
+                this.powerupPool.despawnAll();
+            }
+            if (this.patrolEnemyPool && typeof this.patrolEnemyPool.despawnAll === 'function') {
+                this.patrolEnemyPool.despawnAll();
+            }
+            if (this.shooterEnemyPool && typeof this.shooterEnemyPool.despawnAll === 'function') {
+                this.shooterEnemyPool.despawnAll();
+            }
+            if (this.jumperShooterEnemyPool && typeof this.jumperShooterEnemyPool.despawnAll === 'function') {
+                this.jumperShooterEnemyPool.despawnAll();
+            }
+            if (this.projectilePool && typeof this.projectilePool.despawnAll === 'function') {
+                this.projectilePool.despawnAll();
+            }
+        } catch (e) {
+            // Silently ignore pool cleanup errors (pools may not exist on first run)
+        }
+
+        // Clean up Phaser groups (destroy all children) - only if they exist and have children
+        try {
+            if (this.platforms && typeof this.platforms.clear === 'function') {
+                this.platforms.clear(true, true);
+            }
+            if (this.coins && typeof this.coins.clear === 'function') {
+                this.coins.clear(true, true);
+            }
+            if (this.powerups && typeof this.powerups.clear === 'function') {
+                this.powerups.clear(true, true);
+            }
+            if (this.patrolEnemies && typeof this.patrolEnemies.clear === 'function') {
+                this.patrolEnemies.clear(true, true);
+            }
+            if (this.shooterEnemies && typeof this.shooterEnemies.clear === 'function') {
+                this.shooterEnemies.clear(true, true);
+            }
+            if (this.jumperShooterEnemies && typeof this.jumperShooterEnemies.clear === 'function') {
+                this.jumperShooterEnemies.clear(true, true);
+            }
+            if (this.projectiles && typeof this.projectiles.clear === 'function') {
+                this.projectiles.clear(true, true);
+            }
+            if (this.mazeWalls && typeof this.mazeWalls.clear === 'function') {
+                this.mazeWalls.clear(true, true);
+            }
+        } catch (e) {
+            // Silently ignore group cleanup errors (groups may not exist on first run)
+        }
+
+        // Clean up particle emitters (stop and kill all particles) - only if they exist
+        try {
+            if (this.dustEmitter && typeof this.dustEmitter.stop === 'function') {
+                this.dustEmitter.stop();
+                if (typeof this.dustEmitter.killAll === 'function') {
+                    this.dustEmitter.killAll();
+                }
+            }
+            if (this.sparkEmitter && typeof this.sparkEmitter.stop === 'function') {
+                this.sparkEmitter.stop();
+                if (typeof this.sparkEmitter.killAll === 'function') {
+                    this.sparkEmitter.killAll();
+                }
+            }
+            if (this.burnEmitter && typeof this.burnEmitter.stop === 'function') {
+                this.burnEmitter.stop();
+                if (typeof this.burnEmitter.killAll === 'function') {
+                    this.burnEmitter.killAll();
+                }
+            }
+            if (this.auraEmitter && typeof this.auraEmitter.stop === 'function') {
+                this.auraEmitter.stop();
+                if (typeof this.auraEmitter.killAll === 'function') {
+                    this.auraEmitter.killAll();
+                }
+            }
+            if (this.confettiEmitter && typeof this.confettiEmitter.stop === 'function') {
+                this.confettiEmitter.stop();
+                if (typeof this.confettiEmitter.killAll === 'function') {
+                    this.confettiEmitter.killAll();
+                }
+            }
+        } catch (e) {
+            // Silently ignore emitter cleanup errors (emitters may not exist on first run)
+        }
+
+        // Reset slot generator - only if it exists
+        try {
+            if (this.slotGenerator && typeof this.slotGenerator.reset === 'function') {
+                this.slotGenerator.reset();
+            }
+        } catch (e) {
+            // Silently ignore slot generator reset errors
+        }
+
+        // Reset riser manager - only if it exists
+        try {
+            if (this.riserManager) {
+                if (typeof this.riserManager.setEnabled === 'function') {
+                    this.riserManager.setEnabled(false);
+                }
+                if (this.riserManager.riser && typeof this.riserManager.riser.destroy === 'function') {
+                    this.riserManager.riser.destroy();
+                    this.riserManager.riser = null;
+                }
+                this.riserManager.hasStartedRising = false;
+                this.riserManager.initialPlayerY = undefined;
+            }
+        } catch (e) {
+            // Silently ignore riser manager cleanup errors
+        }
+
+        // Clean up timers - only if they exist
+        try {
+            if (this.powerupTimer && typeof this.powerupTimer.remove === 'function') {
+                this.powerupTimer.remove();
+                this.powerupTimer = null;
+            }
+        } catch (e) {
+            // Silently ignore timer cleanup errors
+        }
+
+        // Stop all tweens - only if tweens system exists
+        try {
+            if (this.tweens && typeof this.tweens.killAll === 'function') {
+                this.tweens.killAll();
+            }
+        } catch (e) {
+            // Silently ignore tween cleanup errors
+        }
+
+        // Reset camera - only if camera exists
+        try {
+            if (this.cameras && this.cameras.main) {
+                if (typeof this.cameras.main.stopFollow === 'function') {
+                    this.cameras.main.stopFollow();
+                }
+                this.cameras.main.scrollX = 0;
+                this.cameras.main.scrollY = 0;
+            }
+        } catch (e) {
+            // Silently ignore camera reset errors
+        }
     }
 }
