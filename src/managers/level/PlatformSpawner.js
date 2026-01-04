@@ -86,13 +86,13 @@ export class PlatformSpawner {
         // Registrar para tracking
         this.registerPlatform(x, y, width);
 
-        // 🔴 DEBUG TEXT - Almacenar en la plataforma para destruirlo después
-        if (scene.add?.text) {
-            const debugText = scene.add.text(x, y, `Y:${Math.round(y)}`, { fontSize: '16px', fill: '#ffffff', backgroundColor: '#ff0000' });
-            debugText.setOrigin(0.5);
-            debugText.setDepth(200);
-            p.debugText = debugText; // Asignar a la plataforma para limpieza automática
-        }
+        // DEBUG TEXT desactivado - solo activar si showSlotLogs está activo
+        // if (scene.add?.text && scene.registry?.get('showSlotLogs')) {
+        //     const debugText = scene.add.text(x, y, `Y:${Math.round(y)}`, { fontSize: '16px', fill: '#ffffff', backgroundColor: '#ff0000' });
+        //     debugText.setOrigin(0.5);
+        //     debugText.setDepth(200);
+        //     p.debugText = debugText; // Asignar a la plataforma para limpieza automática
+        // }
 
         // Logging y safety checks
         this.logPlatformPlacement(p.x, p.y, width, isMoving);
