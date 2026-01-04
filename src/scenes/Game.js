@@ -95,7 +95,7 @@ export class Game extends Phaser.Scene {
 
         // --- LAVA & PARTICLES ---
         this.riserManager.createRiser();
-        this.riserManager.setEnabled(false);
+        this.riserManager.setEnabled(true); // ✅ Lava activada
         // ParticleManager initialized in GameInitializer
 
         // --- SETUP COMPLETION ---
@@ -222,6 +222,11 @@ export class Game extends Phaser.Scene {
 
         this.uiManager.setGameStartUI();
         this.audioManager.startMusic();
+
+        // Activar lava cuando el juego comienza
+        if (this.riserManager) {
+            this.riserManager.setEnabled(true);
+        }
 
         if (this.player?.controller?.resetState) {
             this.player.controller.resetState();

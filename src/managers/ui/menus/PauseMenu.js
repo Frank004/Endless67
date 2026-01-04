@@ -18,10 +18,10 @@ export class PauseMenu {
 
         // --- PAUSE BUTTON ---
         this.pauseButtonBg = scene.add.circle(gameWidth - 16, 40, 16, 0x000000, 0.5)
-            .setScrollFactor(0).setDepth(149);
+            .setScrollFactor(0).setDepth(200);
 
         this.pauseButton = scene.add.image(gameWidth - 16, 40, 'ui_icons', 'pause')
-            .setScrollFactor(0).setDepth(150).setInteractive({ useHandCursor: true })
+            .setScrollFactor(0).setDepth(201).setInteractive({ useHandCursor: true })
             .setScale(0.375)
             .setTint(0xffffff)
             .on('pointerdown', () => this.toggle())

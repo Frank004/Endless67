@@ -79,6 +79,8 @@ export class PlayerHandler {
 
     touchRiser(player, riser) {
         const scene = this.scene;
+        // CRÍTICO: No matar al jugador si el juego no ha comenzado
+        if (!scene.gameStarted) return;
         if (scene.isGameOver) return;
         if (scene.isInvincible) {
             scene.deactivatePowerup();

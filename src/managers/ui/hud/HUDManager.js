@@ -20,23 +20,24 @@ export class HUDManager {
         const centerX = scene.cameras.main.centerX;
 
         // Semi-transparent background for score
+        // Depth 200 para estar por encima de la lava (150) pero debajo de menus (300+)
         this.scoreTextBg = scene.add.rectangle(scoreX, scoreY + 12, 130, 28, 0x000000, 0.5)
-            .setOrigin(0, 0.5).setScrollFactor(0).setDepth(99);
+            .setOrigin(0, 0.5).setScrollFactor(0).setDepth(200);
 
         this.scoreText = scene.add.text(scoreX + 8, scoreY, 'SCORE: 0', {
             fontSize: '20px',
             color: '#ffd700',
             fontStyle: 'bold'
-        }).setScrollFactor(0).setDepth(100);
+        }).setScrollFactor(0).setDepth(201);
 
         // Semi-transparent background for height
         this.heightTextBg = scene.add.rectangle(scoreX, scoreY + 42, 110, 22, 0x000000, 0.5)
-            .setOrigin(0, 0.5).setScrollFactor(0).setDepth(99);
+            .setOrigin(0, 0.5).setScrollFactor(0).setDepth(200);
 
         this.heightText = scene.add.text(scoreX + 8, scoreY + 30, 'HEIGHT: ' + scene.currentHeight + 'm', {
             fontSize: '14px',
             color: '#fff'
-        }).setScrollFactor(0).setDepth(100);
+        }).setScrollFactor(0).setDepth(201);
 
         this.uiText = scene.add.text(centerX, 200, 'CLIMB!', {
             fontSize: '18px',

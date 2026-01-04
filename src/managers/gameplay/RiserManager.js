@@ -29,17 +29,29 @@ export class RiserManager {
         const wallWidth = WALLS.WIDTH;
         const waveOffset = 20;
 
-        // Visual width includes the wave offset to cover the edges
-        const visualWidth = gameWidth - (wallWidth * 2) + (waveOffset * 2);
+        // Visual width: más ancho que la pantalla para cubrir completamente
+        // Usar ancho completo de la pantalla + margen extra para asegurar cobertura
+        const visualWidth = gameWidth + (waveOffset * 4); // Más ancho que la pantalla
         const riserX = gameWidth / 2;
 
         // Get pipeline from RiserPipelineManager based on riser type
         const pipelineName = RiserPipelineManager.getPipelineForType(this.config.type);
 
         // Create Riser Prefab with managed pipeline
-        // Initial Y from layout config (bottom of screen). Fallback for tests/mocks without scale.
+        // Initial Y: posicionar para que solo 20px sean visibles al inicio, MÁS ABAJO de los pies del jugador
         const screenHeight = scene?.scale?.height || scene?.game?.config?.height || 640;
-        const initialY = LAYOUT_CONFIG.lava.getInitialY(screenHeight);
+        const adHeight = 50; // Altura del ad banner
+        const floorHeight = 32; // Altura del stage floor
+        const effectiveHeight = screenHeight - adHeight;
+        const floorY = effectiveHeight - floorHeight;
+        const playerSpawnY = effectiveHeight - floorHeight - 16; // Posición del jugador (centro)
+        
+        // Con origin (0.5, 0), el Y es el top del riser
+        // Queremos que solo 20px sean visibles, MÁS ABAJO de los pies del jugador
+        // Los pies del jugador están aproximadamente en floorY (o un poco más abajo)
+        // La lava debe estar más abajo: floorY + offset, mostrando solo 20px visibles
+        // Si el top del riser está en floorY + 20, entonces 20px serán visibles desde floorY hacia abajo
+        const initialY = floorY + 20; // 20px abajo del floor, solo 20px visibles
 
         this.riser = new Riser(
             scene,
@@ -51,6 +63,9 @@ export class RiserManager {
             pipelineName
         );
 
+        // Flag para controlar cuando empieza a subir (espera a que jugador esté a mitad de pantalla)
+        this.hasStartedRising = false;
+
         // Expose riser to scene for collisions
         scene.riser = this.riser;
         // Legacy support (temporarily)
@@ -59,6 +74,23 @@ export class RiserManager {
     }
 
     update(playerY, currentHeight, isGameOver) {
+        // CRÍTICO: No actualizar si el juego no ha comenzado
+        const scene = this.scene;
+        if (!scene.gameStarted) {
+            // Mantener la lava en su posición inicial mientras el juego no inicia
+            if (this.riser) {
+                const screenHeight = scene?.scale?.height || 640;
+                const adHeight = 50;
+                const floorHeight = 32;
+                const effectiveHeight = screenHeight - adHeight;
+                const floorY = effectiveHeight - floorHeight;
+                const targetY = floorY + 20; // Solo 20px visibles, más abajo del floor
+                this.riser.y = targetY;
+                this.riser.tilePositionY -= 0.5; // Animación visual
+            }
+            return;
+        }
+
         if (!this.enabled) {
             if (this.riser) {
                 const cameraBottom = this.scene.cameras.main.scrollY + this.scene.cameras.main.height;
@@ -71,6 +103,45 @@ export class RiserManager {
         if (isGameOver) {
             this.handleGameOverUpdate();
             return;
+        }
+
+        // ESPACIO DE RESPIRO: Esperar hasta que el jugador haya subido una distancia mínima antes de empezar a subir
+        if (!this.hasStartedRising) {
+            // Guardar posición inicial del jugador si no está guardada (solo una vez)
+            if (this.initialPlayerY === undefined) {
+                this.initialPlayerY = playerY;
+                console.log(`🔥 Lava inicializada - Jugador en Y=${Math.round(playerY)}, Lava en Y=${Math.round(this.riser.y)}`);
+            }
+            
+            // Calcular cuánto ha subido el jugador desde su posición inicial
+            const playerRiseDistance = this.initialPlayerY - playerY; // Positivo cuando sube
+            
+            // Esperar hasta que el jugador haya subido al menos la mitad de la altura de la pantalla
+            const camera = this.scene.cameras.main;
+            const requiredRise = camera.height / 2; // Mitad de la altura de la cámara (ej: 590/2 = 295px)
+            
+            // CRÍTICO: Mantener la lava en su posición inicial mientras espera
+            const screenHeight = this.scene?.scale?.height || 640;
+            const adHeight = 50;
+            const floorHeight = 32;
+            const effectiveHeight = screenHeight - adHeight;
+            const floorY = effectiveHeight - floorHeight;
+            const targetY = floorY + 20; // Mantener a 20px visibles, más abajo del floor
+            
+            // Forzar posición inicial si se ha movido
+            if (Math.abs(this.riser.y - targetY) > 1) {
+                this.riser.y = targetY;
+            }
+            
+            if (playerRiseDistance >= requiredRise) {
+                this.hasStartedRising = true;
+                console.log(`🔥 Lava iniciando subida - Jugador subió ${Math.round(playerRiseDistance)}px (requerido: ${Math.round(requiredRise)}px)`);
+            } else {
+                // Mantener la lava en su posición inicial (solo 20px visibles)
+                // Solo animar el tilePositionY para efecto visual
+                this.riser.tilePositionY -= 0.5;
+                return; // No subir todavía
+            }
         }
 
         let distanceToRiser = playerY - this.riser.y;
@@ -95,17 +166,33 @@ export class RiserManager {
 
     handleGameOverUpdate() {
         const scene = this.scene;
-        const cameraTop = scene.cameras.main.scrollY;
-        const cameraBottom = scene.cameras.main.scrollY + scene.cameras.main.height;
+        const camera = scene.cameras.main;
+        const cameraTop = camera.scrollY;
+        const cameraBottom = camera.scrollY + camera.height;
 
         if (this.isRising) {
-            const targetY = cameraTop - 100;
-            if (this.riser.y > targetY) {
-                this.riser.y -= 8;
+            // Cuando la lava mata al jugador, debe cubrir completamente la pantalla
+            // Subir hasta que el bottom del riser esté arriba de cameraTop
+            // Con origin (0.5, 0), el Y es el top del riser
+            // El riser tiene altura 800px, así que el bottom está en riser.y + 800
+            // Queremos que el bottom esté arriba de cameraTop para cubrir toda la pantalla
+            const riserHeight = 800;
+            const targetBottomY = cameraTop - 10; // 10px arriba de cameraTop para asegurar cobertura
+            const targetTopY = targetBottomY - riserHeight; // Top del riser
+            
+            if (this.riser.y > targetTopY) {
+                // Subir rápidamente para cubrir la pantalla
+                this.riser.y -= 25; // Velocidad rápida de subida
+                // Asegurar que no pase del target
+                if (this.riser.y < targetTopY) {
+                    this.riser.y = targetTopY;
+                }
             } else {
-                this.riser.y = targetY;
+                // Ya cubrió la pantalla, mantener posición
+                this.riser.y = targetTopY;
             }
         } else {
+            // Si no está rising, mantener posición actual
             const targetY = cameraBottom - 100;
             if (this.riser.y > targetY) {
                 this.riser.y = Math.max(this.riser.y - 15, targetY);
