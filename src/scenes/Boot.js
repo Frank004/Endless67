@@ -51,6 +51,7 @@ export class Boot extends Phaser.Scene {
         this.load.multiatlas('walls', 'assets/spritesheets/walls.json', 'assets/spritesheets');
         this.load.multiatlas('floor', 'assets/spritesheets/floor.json', 'assets/spritesheets');
         this.load.multiatlas('platform', 'assets/spritesheets/platform.json', 'assets/spritesheets');
+        this.load.multiatlas(ASSETS.PROPS, 'assets/spritesheets/props.json', 'assets/spritesheets');
 
         // --- PLAYER SPRITES ---
         // Atlas del player

@@ -285,6 +285,7 @@ export class Player extends Phaser.Physics.Arcade.Sprite {
         // Wall touches are handled by colliders; no need to check world bounds
     }
 
+
     // Helpers de física para el FSM/context
     move(direction) {
         const speedMult = this.isInvincible ? PLAYER_CONFIG.SPEED_MULTIPLIERS.INVINCIBLE_MOVE : 1.0;

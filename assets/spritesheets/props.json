@@ -1,0 +1,272 @@
+{
+	"textures": [
+		{
+			"image": "props.png",
+			"format": "RGBA8888",
+			"size": {
+				"w": 30,
+				"h": 382
+			},
+			"scale": 1,
+			"frames": [
+				{
+					"filename": "transcan_animation-05.png",
+					"rotated": false,
+					"trimmed": true,
+					"sourceSize": {
+						"w": 32,
+						"h": 64
+					},
+					"spriteSourceSize": {
+						"x": 4,
+						"y": 30,
+						"w": 28,
+						"h": 34
+					},
+					"frame": {
+						"x": 1,
+						"y": 1,
+						"w": 28,
+						"h": 34
+					}
+				},
+				{
+					"filename": "transcan_animation-06.png",
+					"rotated": false,
+					"trimmed": true,
+					"sourceSize": {
+						"w": 32,
+						"h": 64
+					},
+					"spriteSourceSize": {
+						"x": 4,
+						"y": 30,
+						"w": 28,
+						"h": 34
+					},
+					"frame": {
+						"x": 1,
+						"y": 37,
+						"w": 28,
+						"h": 34
+					}
+				},
+				{
+					"filename": "transcan_animation-07.png",
+					"rotated": false,
+					"trimmed": true,
+					"sourceSize": {
+						"w": 32,
+						"h": 64
+					},
+					"spriteSourceSize": {
+						"x": 4,
+						"y": 30,
+						"w": 28,
+						"h": 34
+					},
+					"frame": {
+						"x": 1,
+						"y": 73,
+						"w": 28,
+						"h": 34
+					}
+				},
+				{
+					"filename": "transcan_animation-08.png",
+					"rotated": false,
+					"trimmed": true,
+					"sourceSize": {
+						"w": 32,
+						"h": 64
+					},
+					"spriteSourceSize": {
+						"x": 4,
+						"y": 30,
+						"w": 28,
+						"h": 34
+					},
+					"frame": {
+						"x": 1,
+						"y": 109,
+						"w": 28,
+						"h": 34
+					}
+				},
+				{
+					"filename": "transcan_animation-09.png",
+					"rotated": false,
+					"trimmed": true,
+					"sourceSize": {
+						"w": 32,
+						"h": 64
+					},
+					"spriteSourceSize": {
+						"x": 4,
+						"y": 30,
+						"w": 28,
+						"h": 34
+					},
+					"frame": {
+						"x": 1,
+						"y": 145,
+						"w": 28,
+						"h": 34
+					}
+				},
+				{
+					"filename": "transcan_animation-10.png",
+					"rotated": false,
+					"trimmed": true,
+					"sourceSize": {
+						"w": 32,
+						"h": 64
+					},
+					"spriteSourceSize": {
+						"x": 4,
+						"y": 30,
+						"w": 28,
+						"h": 34
+					},
+					"frame": {
+						"x": 1,
+						"y": 181,
+						"w": 28,
+						"h": 34
+					}
+				},
+				{
+					"filename": "tires.png",
+					"rotated": false,
+					"trimmed": true,
+					"sourceSize": {
+						"w": 32,
+						"h": 32
+					},
+					"spriteSourceSize": {
+						"x": 3,
+						"y": 7,
+						"w": 26,
+						"h": 24
+					},
+					"frame": {
+						"x": 1,
+						"y": 217,
+						"w": 26,
+						"h": 24
+					}
+				},
+				{
+					"filename": "transcan_animation-03.png",
+					"rotated": false,
+					"trimmed": true,
+					"sourceSize": {
+						"w": 32,
+						"h": 64
+					},
+					"spriteSourceSize": {
+						"x": 4,
+						"y": 30,
+						"w": 25,
+						"h": 34
+					},
+					"frame": {
+						"x": 1,
+						"y": 243,
+						"w": 25,
+						"h": 34
+					}
+				},
+				{
+					"filename": "transcan_animation-04.png",
+					"rotated": false,
+					"trimmed": true,
+					"sourceSize": {
+						"w": 32,
+						"h": 64
+					},
+					"spriteSourceSize": {
+						"x": 4,
+						"y": 31,
+						"w": 25,
+						"h": 33
+					},
+					"frame": {
+						"x": 1,
+						"y": 279,
+						"w": 25,
+						"h": 33
+					}
+				},
+				{
+					"filename": "transcan_animation-01.png",
+					"rotated": false,
+					"trimmed": true,
+					"sourceSize": {
+						"w": 32,
+						"h": 64
+					},
+					"spriteSourceSize": {
+						"x": 4,
+						"y": 31,
+						"w": 24,
+						"h": 33
+					},
+					"frame": {
+						"x": 1,
+						"y": 314,
+						"w": 24,
+						"h": 33
+					}
+				},
+				{
+					"filename": "transcan_animation-02.png",
+					"rotated": false,
+					"trimmed": true,
+					"sourceSize": {
+						"w": 32,
+						"h": 64
+					},
+					"spriteSourceSize": {
+						"x": 5,
+						"y": 31,
+						"w": 24,
+						"h": 33
+					},
+					"frame": {
+						"x": 1,
+						"y": 314,
+						"w": 24,
+						"h": 33
+					}
+				},
+				{
+					"filename": "transcan.png",
+					"rotated": false,
+					"trimmed": true,
+					"sourceSize": {
+						"w": 32,
+						"h": 32
+					},
+					"spriteSourceSize": {
+						"x": 4,
+						"y": 0,
+						"w": 23,
+						"h": 32
+					},
+					"frame": {
+						"x": 1,
+						"y": 349,
+						"w": 23,
+						"h": 32
+					}
+				}
+			]
+		}
+	],
+	"meta": {
+		"app": "https://www.codeandweb.com/texturepacker",
+		"version": "3.0",
+		"smartupdate": "$TexturePacker:SmartUpdate:6bc83673a14d3124e0087bf4fda4d8a0:1b9d4bf6d2c6ffe3005615b89f3f483b:f4c39b94f5b79b4c461da96ae5609d50$"
+	}
+}

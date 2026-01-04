@@ -5,11 +5,12 @@ import GameState from '../core/GameState.js';
 import { PLATFORM_WIDTH, PLATFORM_HEIGHT } from '../prefabs/Platform.js';
 import { SLOT_CONFIG } from '../config/SlotConfig.js';
 import { PowerupOverlay } from '../prefabs/PowerupOverlay.js';
-import { registerCoinAnimation, registerBasketballAnimation } from '../utils/animations.js';
+import { registerCoinAnimation, registerBasketballAnimation, registerTrashcanAnimation } from '../utils/animations.js';
 import { REGISTRY_KEYS } from '../config/RegistryKeys.js';
 import { LAYOUT_CONFIG, calculateLayout } from '../config/LayoutConfig.js';
 import { StageFloor } from '../prefabs/StageFloor.js';
 import { AdBanner } from '../prefabs/AdBanner.js';
+import { StageProps } from '../managers/ui/StageProps.js';
 
 /**
  * @phasereditor
@@ -82,6 +83,10 @@ export class Game extends Phaser.Scene {
         // Positioned at the bottom of the screen (screenHeight - 32)
         this.stageFloor = new StageFloor(this, screenHeight);
 
+        // Decorative props on the stage floor (left and right)
+        this.stageProps = new StageProps(this);
+        this.stageProps.create(screenHeight);
+
         // --- PLAYER ---
         // Spawn precisely on the StageFloor
         this.player = new Player(this, this.cameras.main.centerX, layout.playerSpawnY);
@@ -98,6 +103,7 @@ export class Game extends Phaser.Scene {
         // --- ANIMATIONS ---
         registerCoinAnimation(this);
         registerBasketballAnimation(this);
+        registerTrashcanAnimation(this);
 
         // --- SLOT GENERATOR ---
         // Slots comienzan sobre el StageFloor
@@ -494,6 +500,15 @@ export class Game extends Phaser.Scene {
             }
         } catch (e) {
             // Silently ignore camera reset errors
+        }
+
+        // Clean up stage props
+        try {
+            if (this.stageProps && typeof this.stageProps.destroy === 'function') {
+                this.stageProps.destroy();
+            }
+        } catch (e) {
+            // Silently ignore props cleanup errors
         }
     }
 }

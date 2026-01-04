@@ -6,6 +6,7 @@ export const ASSETS = {
     BASKETBALL: 'basketball',
     WALLS: 'walls',
     FLOOR: 'floor',
+    PROPS: 'props',
     UI_ICONS: 'ui_icons',
 
     // Generated Textures

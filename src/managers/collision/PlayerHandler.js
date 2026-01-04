@@ -149,4 +149,46 @@ export class PlayerHandler {
             }
         });
     }
+
+    /**
+     * Handles collision with trashcan prop
+     * Plays animation once, applies knockback, then disables collision
+     */
+    handleTrashcanCollision(player, trashcan) {
+        const scene = this.scene;
+        
+        // Check if collision is still enabled
+        if (!trashcan.getData('collisionEnabled')) {
+            return;
+        }
+
+        // Disable collision immediately to prevent multiple triggers
+        trashcan.setData('collisionEnabled', false);
+
+        // Increase depth to ensure trashcan stays above player during and after animation
+        trashcan.setDepth(25); // Above player (depth 20)
+
+        // Play animation once
+        if (scene.anims.exists('trashcan_hit')) {
+            trashcan.play('trashcan_hit');
+        }
+
+        // Apply knockback to player
+        const playerVX = player.body?.velocity?.x || 0;
+        const dir = playerVX >= 0 ? -1 : 1; // Knockback opposite to player direction
+        const knockbackX = dir * Phaser.Math.Between(400, 500);
+        const knockbackY = -300; // Upward knockback
+        player.setVelocity(knockbackX, knockbackY);
+
+        // Enter hit state briefly
+        const controller = player?.controller;
+        if (controller?.enterHit) {
+            controller.enterHit(200);
+        }
+
+        // Visual feedback
+        player.setTint(0xff8800);
+        scene.time.delayedCall(200, () => player.clearTint());
+        scene.cameras.main.shake(100, 0.01);
+    }
 }

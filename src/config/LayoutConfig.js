@@ -44,7 +44,7 @@ export const LAYOUT_CONFIG = {
         // Y inicial para el spawn del player (sobre el StageFloor)
         getPlayerSpawnY: (screenHeight) => {
             const floorY = screenHeight - 32; // Posición del floor (al fondo)
-            return floorY - 16; // Centro del player sobre el floor (32px/2)
+            return floorY - 18; // Centro del player sobre el floor (32px/2) - 2px para evitar flotación
         },
 
         // Y inicial para el primer slot (160px arriba del StageFloor)
@@ -88,7 +88,7 @@ export function calculateLayout(screenHeight) {
         floorHeight: floorHeight,
 
         // Player Spawn (sobre el floor)
-        playerSpawnY: screenHeight - floorHeight - 16,
+        playerSpawnY: screenHeight - floorHeight - 18, // -2px para evitar flotación
 
         // First Slot (160px arriba del floor)
         firstSlotY: screenHeight - floorHeight - 160,

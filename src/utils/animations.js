@@ -44,3 +44,35 @@ export function registerBasketballAnimation(scene) {
         repeat: -1
     });
 }
+
+export function registerTrashcanAnimation(scene) {
+    const anims = scene.anims;
+    if (!anims || anims.exists('trashcan_hit')) return;
+    if (!scene.textures.exists('props')) return;
+
+    // Frame order from props.json: transcan_animation-01.png to transcan_animation-10.png
+    const frameOrder = [
+        'transcan_animation-01.png',
+        'transcan_animation-02.png',
+        'transcan_animation-03.png',
+        'transcan_animation-04.png',
+        'transcan_animation-05.png',
+        'transcan_animation-06.png',
+        'transcan_animation-07.png',
+        'transcan_animation-08.png',
+        'transcan_animation-09.png',
+        'transcan_animation-10.png'
+    ];
+    const texture = scene.textures.get('props');
+    const frames = frameOrder
+        .filter(name => texture?.has(name))
+        .map(frame => ({ key: 'props', frame }));
+    if (!frames.length) return;
+
+    anims.create({
+        key: 'trashcan_hit',
+        frames,
+        frameRate: 15,
+        repeat: 0 // Play once
+    });
+}
