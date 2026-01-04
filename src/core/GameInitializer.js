@@ -9,7 +9,7 @@ import { RiserManager } from '../managers/gameplay/RiserManager.js';
 import { DebugManager } from '../managers/debug/DebugManager.js';
 import { WallDecorator } from '../managers/level/WallDecorator.js';
 import PoolManager, { poolRegistry } from './PoolManager.js';
-import { Platform, PLATFORM_WIDTH, PLATFORM_HEIGHT } from '../prefabs/Platform.js';
+import { Platform, PLATFORM_WIDTH, PLATFORM_HEIGHT, initializePlatformTextureCache } from '../prefabs/Platform.js';
 import { Coin } from '../prefabs/Coin.js';
 import { Powerup } from '../prefabs/Powerup.js';
 import { PatrolEnemy, ShooterEnemy, JumperShooterEnemy } from '../prefabs/Enemy.js';
@@ -118,6 +118,12 @@ export class GameInitializer {
         if (scene.textures.exists('walls')) {
             const initialScrollY = scene.cameras.main.scrollY || 0;
             scene.wallDecorator.preInitialize(initialScrollY);
+        }
+
+        // 🚀 OPTIMIZATION: Pre-initialize platform texture cache
+        // This caches platform frame references to avoid repeated texture lookups
+        if (scene.textures.exists('platform')) {
+            initializePlatformTextureCache(scene);
         }
     }
 

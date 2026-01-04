@@ -231,8 +231,6 @@ export class SlotGenerator {
     determineSlotType() {
         // Slots iniciales tutorial: todos plataformas
         if (this.currentSlotIndex < SLOT_CONFIG.rules.tutorialSlots) {
-            // Forzar maze en el segundo slot si hay tutorial (para pruebas)
-            if (this.currentSlotIndex === 1) return 'MAZE';
             return 'PLATFORM_BATCH';
         }
 
@@ -337,7 +335,10 @@ export class SlotGenerator {
 
             // Fallback: si el pool está vacío o falla, crear una estática de emergencia
             if (!platform) {
-                console.warn(`⚠️ SlotGenerator: Platform Spawn FAILED at ${spawnX},${currentY}. Creating fallback static.`);
+                // OPTIMIZATION: Only warn if debug is enabled (this is a critical error but can spam)
+                if (verbose) {
+                    console.warn(`⚠️ SlotGenerator: Platform Spawn FAILED at ${spawnX},${currentY}. Creating fallback static.`);
+                }
                 platform = this.scene.physics.add.staticSprite(spawnX, currentY, 'platform');
                 platform.setDisplaySize(SLOT_CONFIG.platformWidth, SLOT_CONFIG.platformHeight).refreshBody();
             }
@@ -537,7 +538,11 @@ export class SlotGenerator {
                 return true;
             }
             if (!coin) {
-                console.warn('SlotGenerator: no se pudo spawnar coin (pool vacío o maxSize alcanzado)');
+                // OPTIMIZATION: Only warn if debug is enabled
+                const verbose = this.scene?.registry?.get('showSlotLogs') === true;
+                if (verbose) {
+                    console.warn('SlotGenerator: no se pudo spawnar coin (pool vacío o maxSize alcanzado)');
+                }
             }
             return false;
         };
@@ -707,7 +712,11 @@ export class SlotGenerator {
         const mazeColors = [0xff7777, 0x77ff77, 0x7777ff, 0xffcc66, 0x66ccff];
         const color = mazeColors[this.currentSlotIndex % mazeColors.length];
 
-        console.log(`  🌀 Generando MAZE [${rowCount} filas] (Y: ${yStart} a ${slotYEnd})`);
+        // OPTIMIZATION: Only log maze generation if debug is enabled
+        const verbose = this.scene?.registry?.get('showSlotLogs') === true;
+        if (verbose) {
+            console.log(`  🌀 Generando MAZE [${rowCount} filas] (Y: ${yStart} a ${slotYEnd})`);
+        }
 
         // Presupuesto de enemigos por maze (con chance global por maze)
         const mazeSpawnConfig = SLOT_CONFIG?.types?.MAZE?.spawnChances || {};
@@ -790,6 +799,11 @@ export class SlotGenerator {
             const shouldLog = false; // hard-disable noisy update logs
 
             while (lastSlot && generatedThisFrame < MAX_GENERATIONS_PER_UPDATE) {
+                // Calcular distancia desde el jugador hasta el final del último slot
+                const distanceToLastSlot = playerY - lastSlot.yEnd;
+                
+                // Generar solo si el jugador está cerca del final del último slot
+                // spawnBuffer ahora es 800px, así que generamos cuando el jugador está a 800px del final
                 const spawnThreshold = lastSlot.yEnd + this.spawnBuffer;
 
                 // Count slots that are ahead AND close to the player
@@ -806,7 +820,9 @@ export class SlotGenerator {
                 }
                 const fewSlots = slotsAhead < MIN_SLOTS_AHEAD; // trigger generation sooner to avoid stalls
 
-                const shouldGenerate = playerY < spawnThreshold || fewSlots;
+                // Generar solo si el jugador está por encima del threshold (más cerca del slot)
+                // O si hay pocos slots adelante Y el jugador está relativamente cerca
+                const shouldGenerate = playerY < spawnThreshold || (fewSlots && distanceToLastSlot < this.spawnBuffer * 1.2);
                 if (verbose && shouldLog) {
                     console.log(`📍 Slots: ${this.slots.map(s => `[${s.yStart.toFixed(0)} to ${s.yEnd.toFixed(0)}]`).join(', ')}`);
                     console.log(`🔍 Check: playerY=${playerY.toFixed(2)}, threshold=${spawnThreshold.toFixed(2)}, slotsAhead=${slotsAhead}, shouldGen=${shouldGenerate}`);
@@ -827,7 +843,8 @@ export class SlotGenerator {
                 }
             }
 
-            if (generatedThisFrame >= MAX_GENERATIONS_PER_UPDATE) {
+            // OPTIMIZATION: Only warn about max generations if debug is enabled
+            if (generatedThisFrame >= MAX_GENERATIONS_PER_UPDATE && verbose) {
                 console.warn(`[SlotGenerator] Max generations per frame reached (${MAX_GENERATIONS_PER_UPDATE}). Slots=${this.slots.length}`);
             }
         } catch (error) {
@@ -959,7 +976,10 @@ export class SlotGenerator {
      * Limpia todos los slots y reinicia el generador
      */
     reset() {
-        console.log('🔄 SlotGenerator: Reiniciando...');
+        // OPTIMIZATION: Only log reset if debug is enabled
+        if (this.scene?.registry?.get('showSlotLogs') === true) {
+            console.log('🔄 SlotGenerator: Reiniciando...');
+        }
         this.slots = [];
         this.currentSlotIndex = 0;
         // this.colorIndex = 0;  // Comentado: colores debug desactivados

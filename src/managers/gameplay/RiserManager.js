@@ -116,7 +116,7 @@ export class RiserManager {
             // Guardar posición inicial del jugador si no está guardada (solo una vez)
             if (this.initialPlayerY === undefined) {
                 this.initialPlayerY = playerY;
-                console.log(`🔥 Lava inicializada - Jugador en Y=${Math.round(playerY)}, Lava en Y=${Math.round(this.riser.y)}`);
+                // Log removido para reducir ruido en consola
             }
             
             // Calcular cuánto ha subido el jugador desde su posición inicial
@@ -141,7 +141,7 @@ export class RiserManager {
             
             if (playerRiseDistance >= requiredRise) {
                 this.hasStartedRising = true;
-                console.log(`🔥 Lava iniciando subida - Jugador subió ${Math.round(playerRiseDistance)}px (requerido: ${Math.round(requiredRise)}px)`);
+                // Log removido para reducir ruido en consola
             } else {
                 // Mantener la lava en su posición inicial (solo 20px visibles)
                 // Solo animar el tilePositionY para efecto visual

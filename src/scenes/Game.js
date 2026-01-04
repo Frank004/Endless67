@@ -27,9 +27,11 @@ export class Game extends Phaser.Scene {
      * Initialize the game scene.
      */
     create() {
-        // CONFIRM UPDATE
-        // CONFIRM UPDATE
-        console.log('🚀 GAME VERSION: LOOKAHEAD-FIX-' + Date.now());
+        // CONFIRM UPDATE (only log if debug is enabled)
+        // OPTIMIZATION: Disable version log by default to reduce console noise
+        if (this.registry?.get('showSlotLogs') === true) {
+            console.log('🚀 GAME VERSION: LOOKAHEAD-FIX-' + Date.now());
+        }
         // alert('CODE UPDATED: ' + new Date().toTimeString()); // Uncomment if desperate for visual confirmation
 
         // --- INITIALIZER ---

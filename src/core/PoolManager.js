@@ -80,7 +80,10 @@ export class PoolManager {
                 // Crecer solo hasta el maxSize
                 this.grow(this.maxSize - this.getTotalCount());
             } else {
-                console.warn(`Pool ${this.name}: sin objetos disponibles y maxSize alcanzado`);
+                // OPTIMIZATION: Only log pool warnings if debug is enabled
+                if (this.scene?.registry?.get('showSlotLogs') === true) {
+                    console.warn(`Pool ${this.name}: sin objetos disponibles y maxSize alcanzado`);
+                }
                 return null;
             }
         }
@@ -88,7 +91,10 @@ export class PoolManager {
         // Obtener objeto del pool
         obj = this.pool.pop();
         if (!obj) {
-            console.warn(`Pool ${this.name}: no se pudo obtener objeto del pool`);
+            // OPTIMIZATION: Only log pool warnings if debug is enabled
+            if (this.scene?.registry?.get('showSlotLogs') === true) {
+                console.warn(`Pool ${this.name}: no se pudo obtener objeto del pool`);
+            }
             return null;
         }
 
@@ -128,7 +134,10 @@ export class PoolManager {
             try {
             obj.despawn();
             } catch (e) {
-                console.warn('PoolManager.despawn: Error al llamar obj.despawn():', e);
+                // OPTIMIZATION: Only log errors if debug is enabled (errors are important but can spam)
+                if (this.scene?.registry?.get('showSlotLogs') === true) {
+                    console.warn('PoolManager.despawn: Error al llamar obj.despawn():', e);
+                }
             }
         }
 
@@ -141,7 +150,10 @@ export class PoolManager {
                 obj.setVisible(false);
             }
         } catch (e) {
-            console.warn('PoolManager.despawn: Error al desactivar objeto:', e);
+            // OPTIMIZATION: Only log errors if debug is enabled
+            if (this.scene?.registry?.get('showSlotLogs') === true) {
+                console.warn('PoolManager.despawn: Error al desactivar objeto:', e);
+            }
         }
 
         // Devolver al pool
