@@ -22,9 +22,9 @@ export class ControlsUI {
         scene.joystickKnob = this.joystickKnob;
 
         // Positions based on the 32px Floor at the bottom of the gameplay stage
-        const adHeight = 50;
+        // Ad banner está arriba, así que el floor va al fondo sin restar adHeight
         const floorHeight = 32;
-        const effectiveHeight = scene.scale.height - adHeight;
+        const effectiveHeight = scene.scale.height; // Ad banner está arriba, no resta altura
         const controlY = effectiveHeight - (floorHeight / 2); // Center of the 32px floor
 
         // Mobile Controls UI

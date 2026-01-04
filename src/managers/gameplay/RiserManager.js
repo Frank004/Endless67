@@ -41,11 +41,10 @@ export class RiserManager {
         // Create Riser Prefab with managed pipeline
         // Initial Y: posicionar para que solo 20px sean visibles al inicio, MÁS ABAJO de los pies del jugador
         const screenHeight = scene?.scale?.height || scene?.game?.config?.height || 640;
-        const adHeight = 50; // Altura del ad banner
         const floorHeight = 32; // Altura del stage floor
-        const effectiveHeight = screenHeight - adHeight;
-        const floorY = effectiveHeight - floorHeight;
-        const playerSpawnY = effectiveHeight - floorHeight - 16; // Posición del jugador (centro)
+        // Ad banner está arriba, así que el floor va al fondo sin restar adHeight
+        const floorY = screenHeight - floorHeight;
+        const playerSpawnY = screenHeight - floorHeight - 16; // Posición del jugador (centro)
         
         // Con origin (0.5, 0), el Y es el top del riser
         // Queremos que solo 20px sean visibles, MÁS ABAJO de los pies del jugador
@@ -86,10 +85,9 @@ export class RiserManager {
             // Mantener la lava en su posición inicial mientras el juego no inicia
             if (this.riser) {
                 const screenHeight = scene?.scale?.height || 640;
-                const adHeight = 50;
                 const floorHeight = 32;
-                const effectiveHeight = screenHeight - adHeight;
-                const floorY = effectiveHeight - floorHeight;
+                // Ad banner está arriba, así que el floor va al fondo sin restar adHeight
+                const floorY = screenHeight - floorHeight;
                 const targetY = floorY + 20; // Solo 20px visibles, más abajo del floor
                 this.riser.y = targetY;
                 this.riser.tilePositionY -= 0.5; // Animación visual
@@ -128,10 +126,9 @@ export class RiserManager {
             
             // CRÍTICO: Mantener la lava en su posición inicial mientras espera
             const screenHeight = this.scene?.scale?.height || 640;
-            const adHeight = 50;
             const floorHeight = 32;
-            const effectiveHeight = screenHeight - adHeight;
-            const floorY = effectiveHeight - floorHeight;
+            // Ad banner está arriba, así que el floor va al fondo sin restar adHeight
+            const floorY = screenHeight - floorHeight;
             const targetY = floorY + 20; // Mantener a 20px visibles, más abajo del floor
             
             // Forzar posición inicial si se ha movido

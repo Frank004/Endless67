@@ -17,10 +17,13 @@ export class PauseMenu {
         const gameWidth = scene.cameras.main.width;
 
         // --- PAUSE BUTTON ---
-        this.pauseButtonBg = scene.add.circle(gameWidth - 16, 40, 16, 0x000000, 0.5)
+        // Ad banner está arriba (50px), así que el gameplay empieza desde Y=50
+        const adBannerHeight = 50;
+        const pauseButtonY = 40 + adBannerHeight; // 50px debajo del ad banner
+        this.pauseButtonBg = scene.add.circle(gameWidth - 16, pauseButtonY, 16, 0x000000, 0.5)
             .setScrollFactor(0).setDepth(200);
 
-        this.pauseButton = scene.add.image(gameWidth - 16, 40, 'ui_icons', 'pause')
+        this.pauseButton = scene.add.image(gameWidth - 16, pauseButtonY, 'ui_icons', 'pause')
             .setScrollFactor(0).setDepth(201).setInteractive({ useHandCursor: true })
             .setScale(0.375)
             .setTint(0xffffff)

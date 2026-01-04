@@ -113,7 +113,7 @@ export const SLOT_CONFIG = {
         maxConsecutiveSameType: 2,     // No más de 2 del mismo tipo seguidos
         spawnBuffer: 800,              // Buffer reducido para generar slots más cerca del jugador
         cleanupDistance: 1800,         // Limpia slots mucho más abajo del jugador para evitar huecos
-        startPlatformY: 560            // Ubicación de la plataforma inicial (más abajo para acercar el primer slot)
+        startPlatformY: null            // Se calcula dinámicamente desde LayoutConfig (ad banner ahora está arriba)
     }
 };
 

@@ -3,7 +3,7 @@ export class AdBanner extends Phaser.GameObjects.Container {
         const width = scene.scale.width;
         const height = 50;
         const x = 0;
-        const y = scene.scale.height - height;
+        const y = 0; // Posición arriba (top)
 
         super(scene, x, y);
 
@@ -21,7 +21,7 @@ export class AdBanner extends Phaser.GameObjects.Container {
 
         this.add([this.bg, this.text]);
 
-        // Fixed rendering at the bottom
+        // Fixed rendering at the top
         this.setScrollFactor(0);
         this.setDepth(10000);
 

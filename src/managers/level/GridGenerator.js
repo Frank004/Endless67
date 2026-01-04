@@ -47,8 +47,14 @@ export class GridGenerator {
         if (startYOverride !== null) {
             yStart = startYOverride;
         } else if (this.lastSlotYEnd === null) {
-            // First slot default
-            yStart = SLOT_CONFIG.rules.startPlatformY || 450;
+            // First slot default - este fallback no debería ejecutarse porque SlotGenerator
+            // siempre llama a reset() con startY calculado. Pero por seguridad:
+            // Ad banner está arriba, así que asumimos screenHeight = 640 (default)
+            // Floor está en 640 - 32 = 608, primera plataforma en 608 - 160 = 448
+            const screenHeight = 640; // Default, pero SlotGenerator siempre pasa el valor correcto
+            const floorHeight = 32;
+            const floorY = screenHeight - floorHeight;
+            yStart = floorY - 160; // 160px arriba del floor
         } else {
             // Stack on top of last slot
             yStart = this.lastSlotYEnd - SLOT_CONFIG.slotGap;

@@ -11,8 +11,8 @@ import { WALLS } from '../config/GameConstants.js';
 export class StageFloor extends Phaser.GameObjects.TileSprite {
     constructor(scene, screenHeight) {
         const config = LAYOUT_CONFIG.stageFloor;
-        const adHeight = LAYOUT_CONFIG.adBanner.height;
-        const effectiveHeight = screenHeight - adHeight;
+        // Ad banner está arriba, así que el floor va al fondo sin restar adHeight
+        const effectiveHeight = screenHeight;
 
         const x = scene.scale.width / 2;
         const floorHeight = config.height; // 32

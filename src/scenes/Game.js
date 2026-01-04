@@ -71,11 +71,11 @@ export class Game extends Phaser.Scene {
         const layout = calculateLayout(screenHeight);
         this.layout = layout;
 
-        // Internal Internal Ad Banner (Bottom 50px)
+        // Internal Ad Banner (Top 50px)
         this.adBanner = new AdBanner(this);
 
         // Stage Floor (Static ground at the start, 32px)
-        // Positioned at the bottom of the GAMEPLAY viewport (screenHeight - 50)
+        // Positioned at the bottom of the screen (screenHeight - 32)
         this.stageFloor = new StageFloor(this, screenHeight);
 
         // --- PLAYER ---

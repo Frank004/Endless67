@@ -56,9 +56,16 @@ export class SlotGenerator {
 
     /**
      * Inicializa el generador y crea el primer batch
-     * @param {number} startPlatformY - Y de la plataforma de inicio (default: 450)
+     * @param {number} startPlatformY - Y de la plataforma de inicio (se calcula desde layout si no se proporciona)
      */
-    init(startPlatformY = SLOT_CONFIG.rules.startPlatformY || 450) {
+    init(startPlatformY = null) {
+        // Si no se proporciona startPlatformY, calcularlo desde el layout
+        if (startPlatformY === null) {
+            const screenHeight = this.scene?.scale?.height || 640;
+            const floorHeight = 32;
+            const floorY = screenHeight - floorHeight; // Floor al fondo (ad banner está arriba)
+            startPlatformY = floorY - 160; // 160px arriba del floor (mismo cálculo que firstSlotY)
+        }
         const verbose = this.scene?.registry?.get('showSlotLogs') === true;
         if (verbose) {
             console.log('🎮 SlotGenerator: Inicializando... startY=', startPlatformY);

@@ -15,8 +15,10 @@ export class HUDManager {
         const isMobile = scene.isMobile;
 
         // UI - Position away from left wall
+        // Ad banner está arriba (50px), así que el gameplay empieza desde Y=50
+        const adBannerHeight = 50;
         const scoreX = 35; // Align with wall
-        const scoreY = isMobile ? 20 : 10;
+        const scoreY = (isMobile ? 20 : 10) + adBannerHeight; // 50px debajo del ad banner
         const centerX = scene.cameras.main.centerX;
 
         // Semi-transparent background for score
@@ -39,7 +41,8 @@ export class HUDManager {
             color: '#fff'
         }).setScrollFactor(0).setDepth(201);
 
-        this.uiText = scene.add.text(centerX, 200, 'CLIMB!', {
+        // UI text también debe estar 50px más abajo
+        this.uiText = scene.add.text(centerX, 200 + adBannerHeight, 'CLIMB!', {
             fontSize: '18px',
             color: '#00ffff',
             align: 'center',
