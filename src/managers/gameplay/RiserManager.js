@@ -169,26 +169,27 @@ export class RiserManager {
         const camera = scene.cameras.main;
         const cameraTop = camera.scrollY;
         const cameraBottom = camera.scrollY + camera.height;
+        const riserHeight = 800; // Altura del riser
 
         if (this.isRising) {
             // Cuando la lava mata al jugador, debe cubrir completamente la pantalla
-            // Subir hasta que el bottom del riser esté arriba de cameraTop
+            // Subir hasta que el bottom del riser esté MUY ARRIBA del cameraTop
             // Con origin (0.5, 0), el Y es el top del riser
-            // El riser tiene altura 800px, así que el bottom está en riser.y + 800
-            // Queremos que el bottom esté arriba de cameraTop para cubrir toda la pantalla
-            const riserHeight = 800;
-            const targetBottomY = cameraTop - 10; // 10px arriba de cameraTop para asegurar cobertura
+            // El bottom del riser está en riser.y + riserHeight
+            // Queremos que el bottom esté significativamente arriba de cameraTop para cubrir cualquier pantalla
+            const safetyMargin = 100; // Margen extra para asegurar cobertura completa en cualquier pantalla
+            const targetBottomY = cameraTop - safetyMargin; // 100px arriba de cameraTop
             const targetTopY = targetBottomY - riserHeight; // Top del riser
             
             if (this.riser.y > targetTopY) {
                 // Subir rápidamente para cubrir la pantalla
-                this.riser.y -= 25; // Velocidad rápida de subida
+                this.riser.y -= 30; // Velocidad rápida de subida
                 // Asegurar que no pase del target
                 if (this.riser.y < targetTopY) {
                     this.riser.y = targetTopY;
                 }
             } else {
-                // Ya cubrió la pantalla, mantener posición
+                // Ya cubrió la pantalla completamente, mantener posición
                 this.riser.y = targetTopY;
             }
         } else {
