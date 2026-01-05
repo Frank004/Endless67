@@ -1,5 +1,6 @@
 import ScoreManager from '../gameplay/ScoreManager.js';
 import AudioManager from '../audio/AudioManager.js';
+import { PLAYER_CONFIG } from '../../config/PlayerConfig.js';
 
 export class PlayerHandler {
     constructor(scene) {
@@ -158,18 +159,27 @@ export class PlayerHandler {
         const scene = this.scene;
         
         // Check if collision is still enabled
-        if (!trashcan.getData('collisionEnabled')) {
+        if (trashcan.isCollisionEnabled && !trashcan.isCollisionEnabled()) {
+            return;
+        }
+        if (trashcan.getData && !trashcan.getData('collisionEnabled')) {
             return;
         }
 
         // Disable collision immediately to prevent multiple triggers
-        trashcan.setData('collisionEnabled', false);
+        if (trashcan.enableCollision) {
+            trashcan.enableCollision(false);
+        } else {
+            trashcan.setData('collisionEnabled', false);
+        }
 
         // Increase depth to ensure trashcan stays above player during and after animation
         trashcan.setDepth(25); // Above player (depth 20)
 
         // Play animation once
-        if (scene.anims.exists('trashcan_hit')) {
+        if (trashcan.playHit) {
+            trashcan.playHit();
+        } else if (scene.anims.exists('trashcan_hit')) {
             trashcan.play('trashcan_hit');
         }
 
@@ -190,5 +200,44 @@ export class PlayerHandler {
         player.setTint(0xff8800);
         scene.time.delayedCall(200, () => player.clearTint());
         scene.cameras.main.shake(100, 0.01);
+    }
+
+    /**
+     * Bounce when landing on tires
+     */
+    handleTireBounce(player, tires) {
+        const scene = this.scene;
+        const now = scene.time.now;
+        if (tires.canBounce && !tires.canBounce(now)) {
+            return;
+        }
+
+        if (!player.body) {
+            return;
+        }
+
+        // Snap player to top of tires before bounce
+        if (tires.body && player.body) {
+            const playerHalfHeight = player.body.height / 2;
+            const targetY = tires.body.y - playerHalfHeight;
+            player.setY(targetY);
+            player.body.updateFromGameObject();
+        }
+
+        const bounceForce = PLAYER_CONFIG.FORCES.JUMP * 1.5;
+        player.setVelocityY(-bounceForce);
+
+        const ctx = player.controller?.context;
+        if (ctx) {
+            ctx.coyoteTimer = 0;
+            ctx.jumpBufferTimer = 0;
+            ctx.jumpCount = 0;
+        }
+
+        if (tires.onBounce) {
+            tires.onBounce(now);
+        } else {
+            tires.setTexture?.('props', 'tires.png');
+        }
     }
 }

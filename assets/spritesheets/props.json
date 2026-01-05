@@ -4,11 +4,242 @@
 			"image": "props.png",
 			"format": "RGBA8888",
 			"size": {
-				"w": 30,
-				"h": 382
+				"w": 61,
+				"h": 274
 			},
 			"scale": 1,
 			"frames": [
+				{
+					"filename": "tire-bounce4.png",
+					"rotated": false,
+					"trimmed": true,
+					"sourceSize": {
+						"w": 32,
+						"h": 32
+					},
+					"spriteSourceSize": {
+						"x": 0,
+						"y": 4,
+						"w": 32,
+						"h": 27
+					},
+					"frame": {
+						"x": 1,
+						"y": 1,
+						"w": 32,
+						"h": 27
+					}
+				},
+				{
+					"filename": "transcan_animation-03.png",
+					"rotated": false,
+					"trimmed": true,
+					"sourceSize": {
+						"w": 32,
+						"h": 64
+					},
+					"spriteSourceSize": {
+						"x": 4,
+						"y": 30,
+						"w": 25,
+						"h": 34
+					},
+					"frame": {
+						"x": 35,
+						"y": 1,
+						"w": 25,
+						"h": 34
+					}
+				},
+				{
+					"filename": "tire-bounce5.png",
+					"rotated": false,
+					"trimmed": true,
+					"sourceSize": {
+						"w": 32,
+						"h": 32
+					},
+					"spriteSourceSize": {
+						"x": 0,
+						"y": 4,
+						"w": 32,
+						"h": 27
+					},
+					"frame": {
+						"x": 1,
+						"y": 30,
+						"w": 32,
+						"h": 27
+					}
+				},
+				{
+					"filename": "transcan_animation-04.png",
+					"rotated": false,
+					"trimmed": true,
+					"sourceSize": {
+						"w": 32,
+						"h": 64
+					},
+					"spriteSourceSize": {
+						"x": 4,
+						"y": 31,
+						"w": 25,
+						"h": 33
+					},
+					"frame": {
+						"x": 35,
+						"y": 37,
+						"w": 25,
+						"h": 33
+					}
+				},
+				{
+					"filename": "tire-bounce6.png",
+					"rotated": false,
+					"trimmed": true,
+					"sourceSize": {
+						"w": 32,
+						"h": 32
+					},
+					"spriteSourceSize": {
+						"x": 0,
+						"y": 7,
+						"w": 32,
+						"h": 24
+					},
+					"frame": {
+						"x": 1,
+						"y": 59,
+						"w": 32,
+						"h": 24
+					}
+				},
+				{
+					"filename": "transcan_animation-01.png",
+					"rotated": false,
+					"trimmed": true,
+					"sourceSize": {
+						"w": 32,
+						"h": 64
+					},
+					"spriteSourceSize": {
+						"x": 4,
+						"y": 31,
+						"w": 24,
+						"h": 33
+					},
+					"frame": {
+						"x": 35,
+						"y": 72,
+						"w": 24,
+						"h": 33
+					}
+				},
+				{
+					"filename": "transcan_animation-02.png",
+					"rotated": false,
+					"trimmed": true,
+					"sourceSize": {
+						"w": 32,
+						"h": 64
+					},
+					"spriteSourceSize": {
+						"x": 5,
+						"y": 31,
+						"w": 24,
+						"h": 33
+					},
+					"frame": {
+						"x": 35,
+						"y": 72,
+						"w": 24,
+						"h": 33
+					}
+				},
+				{
+					"filename": "tire-bounce2.png",
+					"rotated": false,
+					"trimmed": true,
+					"sourceSize": {
+						"w": 32,
+						"h": 32
+					},
+					"spriteSourceSize": {
+						"x": 0,
+						"y": 9,
+						"w": 32,
+						"h": 22
+					},
+					"frame": {
+						"x": 1,
+						"y": 85,
+						"w": 32,
+						"h": 22
+					}
+				},
+				{
+					"filename": "transcan.png",
+					"rotated": false,
+					"trimmed": true,
+					"sourceSize": {
+						"w": 32,
+						"h": 32
+					},
+					"spriteSourceSize": {
+						"x": 4,
+						"y": 0,
+						"w": 23,
+						"h": 32
+					},
+					"frame": {
+						"x": 35,
+						"y": 107,
+						"w": 23,
+						"h": 32
+					}
+				},
+				{
+					"filename": "tire-bounce3.png",
+					"rotated": false,
+					"trimmed": true,
+					"sourceSize": {
+						"w": 32,
+						"h": 32
+					},
+					"spriteSourceSize": {
+						"x": 0,
+						"y": 17,
+						"w": 32,
+						"h": 14
+					},
+					"frame": {
+						"x": 1,
+						"y": 109,
+						"w": 32,
+						"h": 14
+					}
+				},
+				{
+					"filename": "tires.png",
+					"rotated": false,
+					"trimmed": true,
+					"sourceSize": {
+						"w": 32,
+						"h": 32
+					},
+					"spriteSourceSize": {
+						"x": 3,
+						"y": 7,
+						"w": 29,
+						"h": 23
+					},
+					"frame": {
+						"x": 1,
+						"y": 125,
+						"w": 29,
+						"h": 23
+					}
+				},
 				{
 					"filename": "transcan_animation-05.png",
 					"rotated": false,
@@ -24,8 +255,8 @@
 						"h": 34
 					},
 					"frame": {
-						"x": 1,
-						"y": 1,
+						"x": 32,
+						"y": 141,
 						"w": 28,
 						"h": 34
 					}
@@ -46,7 +277,7 @@
 					},
 					"frame": {
 						"x": 1,
-						"y": 37,
+						"y": 150,
 						"w": 28,
 						"h": 34
 					}
@@ -66,8 +297,8 @@
 						"h": 34
 					},
 					"frame": {
-						"x": 1,
-						"y": 73,
+						"x": 31,
+						"y": 177,
 						"w": 28,
 						"h": 34
 					}
@@ -88,7 +319,7 @@
 					},
 					"frame": {
 						"x": 1,
-						"y": 109,
+						"y": 186,
 						"w": 28,
 						"h": 34
 					}
@@ -108,8 +339,8 @@
 						"h": 34
 					},
 					"frame": {
-						"x": 1,
-						"y": 145,
+						"x": 31,
+						"y": 213,
 						"w": 28,
 						"h": 34
 					}
@@ -130,13 +361,13 @@
 					},
 					"frame": {
 						"x": 1,
-						"y": 181,
+						"y": 222,
 						"w": 28,
 						"h": 34
 					}
 				},
 				{
-					"filename": "tires.png",
+					"filename": "tire-bounce1.png",
 					"rotated": false,
 					"trimmed": true,
 					"sourceSize": {
@@ -146,119 +377,14 @@
 					"spriteSourceSize": {
 						"x": 3,
 						"y": 7,
-						"w": 26,
+						"w": 27,
 						"h": 24
 					},
 					"frame": {
-						"x": 1,
-						"y": 217,
-						"w": 26,
+						"x": 31,
+						"y": 249,
+						"w": 27,
 						"h": 24
-					}
-				},
-				{
-					"filename": "transcan_animation-03.png",
-					"rotated": false,
-					"trimmed": true,
-					"sourceSize": {
-						"w": 32,
-						"h": 64
-					},
-					"spriteSourceSize": {
-						"x": 4,
-						"y": 30,
-						"w": 25,
-						"h": 34
-					},
-					"frame": {
-						"x": 1,
-						"y": 243,
-						"w": 25,
-						"h": 34
-					}
-				},
-				{
-					"filename": "transcan_animation-04.png",
-					"rotated": false,
-					"trimmed": true,
-					"sourceSize": {
-						"w": 32,
-						"h": 64
-					},
-					"spriteSourceSize": {
-						"x": 4,
-						"y": 31,
-						"w": 25,
-						"h": 33
-					},
-					"frame": {
-						"x": 1,
-						"y": 279,
-						"w": 25,
-						"h": 33
-					}
-				},
-				{
-					"filename": "transcan_animation-01.png",
-					"rotated": false,
-					"trimmed": true,
-					"sourceSize": {
-						"w": 32,
-						"h": 64
-					},
-					"spriteSourceSize": {
-						"x": 4,
-						"y": 31,
-						"w": 24,
-						"h": 33
-					},
-					"frame": {
-						"x": 1,
-						"y": 314,
-						"w": 24,
-						"h": 33
-					}
-				},
-				{
-					"filename": "transcan_animation-02.png",
-					"rotated": false,
-					"trimmed": true,
-					"sourceSize": {
-						"w": 32,
-						"h": 64
-					},
-					"spriteSourceSize": {
-						"x": 5,
-						"y": 31,
-						"w": 24,
-						"h": 33
-					},
-					"frame": {
-						"x": 1,
-						"y": 314,
-						"w": 24,
-						"h": 33
-					}
-				},
-				{
-					"filename": "transcan.png",
-					"rotated": false,
-					"trimmed": true,
-					"sourceSize": {
-						"w": 32,
-						"h": 32
-					},
-					"spriteSourceSize": {
-						"x": 4,
-						"y": 0,
-						"w": 23,
-						"h": 32
-					},
-					"frame": {
-						"x": 1,
-						"y": 349,
-						"w": 23,
-						"h": 32
 					}
 				}
 			]
@@ -267,6 +393,6 @@
 	"meta": {
 		"app": "https://www.codeandweb.com/texturepacker",
 		"version": "3.0",
-		"smartupdate": "$TexturePacker:SmartUpdate:6bc83673a14d3124e0087bf4fda4d8a0:1b9d4bf6d2c6ffe3005615b89f3f483b:f4c39b94f5b79b4c461da96ae5609d50$"
+		"smartupdate": "$TexturePacker:SmartUpdate:fb5f34e70328d02641afb8038b74939d:f2b3b92837203c3a5d8e4fba26610d4a:f4c39b94f5b79b4c461da96ae5609d50$"
 	}
 }

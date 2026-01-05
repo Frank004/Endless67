@@ -71,7 +71,27 @@ export class CollisionManager {
                 player,
                 this.scene.stageProps.rightProp,
                 this.playerHandler.handleTrashcanCollision,
-                (player, trashcan) => trashcan && trashcan.getData('collisionEnabled') === true,
+                (player, trashcan) => {
+                    if (!trashcan) return false;
+                    if (trashcan.isCollisionEnabled) return trashcan.isCollisionEnabled();
+                    return trashcan.getData('collisionEnabled') === true;
+                },
+                this.playerHandler
+            );
+        }
+        if (this.scene.stageProps && this.scene.stageProps.tires) {
+            this.scene.physics.add.overlap(
+                player,
+                this.scene.stageProps.tires,
+                this.playerHandler.handleTireBounce,
+                (player, tires) => {
+                    if (!tires || !player.body) return false;
+                    // Only from above and while falling (lenient top check)
+                    const falling = player.body.velocity.y > 30;
+                    const above = player.y <= tires.y + 12;
+                    const canBounce = !tires.canBounce || tires.canBounce(this.scene.time.now);
+                    return falling && above && canBounce;
+                },
                 this.playerHandler
             );
         }

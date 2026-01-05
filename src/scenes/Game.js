@@ -5,7 +5,7 @@ import GameState from '../core/GameState.js';
 import { PLATFORM_WIDTH, PLATFORM_HEIGHT } from '../prefabs/Platform.js';
 import { SLOT_CONFIG } from '../config/SlotConfig.js';
 import { PowerupOverlay } from '../prefabs/PowerupOverlay.js';
-import { registerCoinAnimation, registerBasketballAnimation, registerTrashcanAnimation } from '../utils/animations.js';
+import { registerCoinAnimation, registerBasketballAnimation, registerTrashcanAnimation, registerTireAnimation } from '../utils/animations.js';
 import { REGISTRY_KEYS } from '../config/RegistryKeys.js';
 import { LAYOUT_CONFIG, calculateLayout } from '../config/LayoutConfig.js';
 import { StageFloor } from '../prefabs/StageFloor.js';
@@ -104,6 +104,7 @@ export class Game extends Phaser.Scene {
         registerCoinAnimation(this);
         registerBasketballAnimation(this);
         registerTrashcanAnimation(this);
+        registerTireAnimation(this);
 
         // --- SLOT GENERATOR ---
         // Slots comienzan sobre el StageFloor

@@ -76,3 +76,32 @@ export function registerTrashcanAnimation(scene) {
         repeat: 0 // Play once
     });
 }
+
+export function registerTireAnimation(scene) {
+    const anims = scene.anims;
+    if (!anims || anims.exists('tire_bounce')) return;
+    if (!scene.textures.exists('props')) return;
+
+    // Frames from props.json (bounce sequence + regreso a idle)
+    const frameOrder = [
+        'tire-bounce1.png',
+        'tire-bounce2.png',
+        'tire-bounce3.png',
+        'tire-bounce4.png',
+        'tire-bounce5.png',
+        'tire-bounce6.png',
+        'tires.png'
+    ];
+    const texture = scene.textures.get('props');
+    const frames = frameOrder
+        .filter(name => texture?.has(name))
+        .map(frame => ({ key: 'props', frame }));
+    if (!frames.length) return;
+
+    anims.create({
+        key: 'tire_bounce',
+        frames,
+        frameRate: 20,
+        repeat: 0
+    });
+}
