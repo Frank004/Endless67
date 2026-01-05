@@ -245,17 +245,15 @@ export class BackgroundManager {
         sprite.setScale(0.85); // 25% smaller than 1.15
         sprite.clearTint();
         sprite.setAlpha(1.0);
-        // Restore Blur FX
+        // Blur FX removed (Sprites are pre-blurred)
         if (sprite.preFX) {
             sprite.preFX.clear();
-            sprite.preFX.setPadding(32); // Visible blur
-            sprite.preFX.addBlur(0, 0, 0, 8); // Stronger blur
         }
 
         const cam = this.scene.cameras.main;
         // Project logical BG Y to Real World Y (y * 2)
         sprite.setPosition(cam.width / 2, y * 2);
-        sprite.setDepth(900);
+        sprite.setDepth(150);
         // FG: Faster than world (1.0) -> 1.1. Appears very close/passes quickly.
         sprite.setScrollFactor(1.1);
         sprite.setActive(true).setVisible(true);
