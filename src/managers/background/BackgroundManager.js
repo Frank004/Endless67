@@ -25,7 +25,7 @@ export class BackgroundManager {
         this.segments = []; // Active segments
         this.pool = []; // Inactive sprites
         this.segmentHeight = 640; // Approx 1 screen height
-        this.bufferSegments = 2; // Keep 2 segments above/below view
+        this.bufferSegments = 4; // Increased buffer to spawn well ahead of view
 
         // Dimensions
         this.viewWidth = GAME_CONFIG.RESOLUTIONS.MOBILE.width; // Base design width
@@ -41,6 +41,9 @@ export class BackgroundManager {
         const width = cam.width;
         const height = cam.height;
 
+        // Ensure clean state
+        this.reset();
+
         // 1. Create Base Layer (TileSprite)
         this.bgLayer = this.scene.add.tileSprite(0, 0, width, height, 'walls', 'wall-bg.png');
         this.bgLayer.setOrigin(0, 0);
@@ -55,31 +58,28 @@ export class BackgroundManager {
             runChildUpdate: false
         });
 
-        // 3b. Cables Layer Group (New)
+        // 4. Background Cables Group
         this.cableGroup = this.scene.add.group({
             classType: Phaser.GameObjects.Image,
-            maxSize: 15,
+            maxSize: 50,
             runChildUpdate: false
         });
-        // this.nextCableY is no longer used, we use this.minCableY for upward spawning
 
-
+        // 5. Foreground Cables Group
+        this.fgCableGroup = this.scene.add.group({
+            classType: Phaser.GameObjects.Image,
+            maxSize: 30,
+            runChildUpdate: false
+        });
 
         // 5. Side Shadows (Depth Dimension)
         this.createSideShadows(width, height);
-
-        // 6. Init FG Cables
-        this.initFgCables();
-
-
 
         this.initialized = true;
 
         // Init initial segments
         this.updateSegments(0);
     }
-
-
 
     createSideShadows(width, height) {
         const textureName = 'side_shadows';
@@ -110,16 +110,14 @@ export class BackgroundManager {
         shadows.setDepth(-4); // On top of BG and Vignette even
     }
 
-
-
     /**
      * Manages creation and recycling of decoration segments
      * based on the Parallax Scroll Y position.
      */
     updateSegments(bgScrollY) {
         const cam = this.scene.cameras.main;
-        const topY = bgScrollY - (this.segmentHeight * 1); // 1 segment buffer above
-        const bottomY = bgScrollY + cam.height + (this.segmentHeight * 1); // 1 segment buffer below
+        const topY = bgScrollY - (this.segmentHeight * this.bufferSegments); // Buffer above
+        const bottomY = bgScrollY + cam.height + (this.segmentHeight * this.bufferSegments); // Buffer below
 
         // 1. Remove/Recycle segments out of range
         for (let i = this.segments.length - 1; i >= 0; i--) {
@@ -176,156 +174,122 @@ export class BackgroundManager {
 
             sprite.setScrollFactor(0);
             sprite.setData('logicalY', posY); // Store absolute BG space Y
+            sprite.setData('parallaxFactor', 1.0); // Standard items move with BG layer (relative 1.0)
+            sprite.setData('useManualScroll', true); // Flag to use manual loop update
             items.push(sprite);
         });
+
+        // --- CABLE SPAWNING ---
+
+        // 1. Background Cables (High density)
+        // Chance: 90% per segment
+        if (Math.random() < 0.9) {
+            const bgCable = this.createBgCable(y + (this.segmentHeight * 0.5)); // Middle of segment
+            if (bgCable) items.push(bgCable);
+        }
+
+        // 2. Foreground Cables (~Every 4-5th segment / 2500-3000px)
+        // Chance: 20% per segment
+        if (Math.random() < 0.25) {
+            const fgCable = this.createFgCable(y + (this.segmentHeight * 0.5));
+            if (fgCable) items.push(fgCable);
+        }
 
         this.segments.push({ y, items });
     }
 
+    createBgCable(y) {
+        // Frames: cable1-5.png
+        const cableFrames = ['cable1.png', 'cable2.png', 'cable3.png', 'cable4.png', 'cable5.png'];
+        const frame = Phaser.Utils.Array.GetRandom(cableFrames);
+
+        const sprite = this.cableGroup.get();
+        if (!sprite) return null;
+
+        // Setup Sprite
+        sprite.setTexture('props', frame);
+        sprite.setFlipX(Math.random() > 0.5);
+        sprite.setScale(0.7); // 20% smaller than 0.9
+        sprite.setTint(0x444444);
+        sprite.setAlpha(0.7);
+        // Restore Blur FX
+        if (sprite.preFX) {
+            sprite.preFX.clear();
+            sprite.preFX.setPadding(32); // Ensure blur has space
+            sprite.preFX.addBlur(0, 0, 0, 2);
+        }
+
+        const cam = this.scene.cameras.main;
+        // Project logical BG Y (compressed 0.5) to Real World Y (1.0)
+        // effectively y * (1/0.5) = y * 2
+        sprite.setPosition(cam.width / 2, y * 2);
+        sprite.setDepth(-16);
+        sprite.setScrollFactor(0.95); // Subtle parallax (super smooth movement)
+        sprite.setActive(true).setVisible(true);
+
+        sprite.setData('logicalY', y);
+        sprite.setData('useManualScroll', false);
+
+        return sprite;
+    }
+
+    createFgCable(y) {
+        const frames = ['cable-black01.png', 'cableblack02.png', 'cableblack03.png'];
+        const frame = Phaser.Utils.Array.GetRandom(frames);
+
+        const sprite = this.fgCableGroup.get();
+        if (!sprite) return null;
+
+        sprite.setTexture('props', frame);
+        sprite.setFlipX(Math.random() > 0.5);
+        sprite.setScale(0.85); // 25% smaller than 1.15
+        sprite.clearTint();
+        sprite.setAlpha(1.0);
+        // Restore Blur FX
+        if (sprite.preFX) {
+            sprite.preFX.clear();
+            sprite.preFX.setPadding(32); // Visible blur
+            sprite.preFX.addBlur(0, 0, 0, 8); // Stronger blur
+        }
+
+        const cam = this.scene.cameras.main;
+        // Project logical BG Y to Real World Y (y * 2)
+        sprite.setPosition(cam.width / 2, y * 2);
+        sprite.setDepth(900);
+        // FG: Faster than world (1.0) -> 1.1. Appears very close/passes quickly.
+        sprite.setScrollFactor(1.1);
+        sprite.setActive(true).setVisible(true);
+
+        sprite.setData('logicalY', y);
+        sprite.setData('useManualScroll', false);
+
+        return sprite;
+    }
+
     recycleSegment(seg) {
-        seg.items.forEach(sprite => {
-            this.decoGroup.killAndHide(sprite);
+        seg.items.forEach(item => {
+            // Check which group it belongs to based on constructor type or simple check
+            if (this.decoGroup.contains(item)) {
+                this.decoGroup.killAndHide(item);
+            } else if (this.cableGroup.contains(item)) {
+                this.cableGroup.killAndHide(item);
+            } else if (this.fgCableGroup.contains(item)) {
+                this.fgCableGroup.killAndHide(item);
+            }
         });
         seg.items = [];
     }
 
-    updateCables(scrollY) {
-        // IGNORE parallax argument, use REAL scrollY for cables to lock them to world (or 1.0 parallax)
-        const cam = this.scene.cameras.main;
-        const realScrollY = cam.scrollY;
-
-        const viewTop = realScrollY - 200; // Buffer above (higher negative)
-        const viewBottom = realScrollY + cam.height + 200; // Buffer below
-
-        // Initialize minCableY if first run (start at current camera BOTTOM to fill screen)
-        if (this.minCableY === undefined) {
-            this.minCableY = viewBottom;
-        }
-
-        // 1. Spawn new cables UPWARDS
-        while (this.minCableY > viewTop) {
-            // User request: Start from "30 meters" (approx -3000px height)
-            if (this.minCableY < -3000) {
-                this.spawnCable(this.minCableY);
-            }
-            // User request: "render menos veces" -> Increased gap significantly
-            this.minCableY -= Phaser.Math.Between(800, 1200);
-        }
-
-        // 2. Update/Recycle existing cables
-        this.cableGroup.children.iterate(cable => {
-            if (!cable.active) return;
-
-            const logicalY = cable.getData('logicalY');
-
-            // Cleanup if went too far DOWN (Active cables are above, if logicY > viewBottom, it's way below)
-            if (logicalY > viewBottom) {
-                this.cableGroup.killAndHide(cable);
-                return;
-            }
-
-            // Update screen position (Locked to World)
-            // ScreenY = WorldY - CameraScrollY
-            // Round to integer to prevent sub-pixel shimmering (anti-aliasing flicker on 1px lines)
-            cable.y = Math.round(logicalY - realScrollY);
-        });
-    }
-
-    spawnCable(y) {
-        // Updated frame list based on new props.json (cable1-5 exist)
-        const cableFrames = ['cable1.png', 'cable2.png', 'cable3.png', 'cable4.png', 'cable5.png'];
-        const frame = Phaser.Utils.Array.GetRandom(cableFrames);
-        // console.log('Spawned cable:', frame); // Debug
-        const cam = this.scene.cameras.main;
-
-        const cable = this.cableGroup.get();
-        if (!cable) return;
-
-        cable.setTexture('props', frame);
-
-        // Scale 1 (Original Size) as requested
-        cable.setScale(1);
-
-        // Center exactly
-        cable.setPosition(cam.width / 2, 0);
-
-        cable.setDepth(-5); // Behind side shadows (-4), effectively "just behind" the walls' shadow casting
-
-        cable.setScrollFactor(0);
-        cable.setData('logicalY', y);
-
-        cable.setActive(true).setVisible(true);
-
-        // Random flip for variety
-        cable.setFlipX(Math.random() > 0.5);
+    reset() {
+        // Recycle all active segments to clear the screen
+        this.segments.forEach(seg => this.recycleSegment(seg));
+        this.segments = [];
     }
 
     /* -------------------------------------------------------------
        FOREGROUND CABLES (Black Cables for Depth)
        Depth: 100 (Above Game/Player(20), Below Riser(150), UI(200+))
     ------------------------------------------------------------- */
-
-    initFgCables() {
-        this.fgCableGroup = this.scene.add.group({
-            classType: Phaser.GameObjects.Image,
-            maxSize: 20, // Increased size for higher frequency
-            runChildUpdate: false
-        });
-
-        const cam = this.scene.cameras.main;
-        const viewBottom = cam.scrollY + cam.height + 200;
-        this.minFgCableY = viewBottom;
-    }
-
-    updateFgCables(scrollY) {
-        if (!this.fgCableGroup) return;
-
-        const cam = this.scene.cameras.main;
-        const realScrollY = cam.scrollY;
-        const viewTop = realScrollY - 200;
-        const viewBottom = realScrollY + cam.height + 200;
-
-        // 1. Spawn new FG cables UPWARDS
-        // Reduced gap for more frequency
-        while (this.minFgCableY > viewTop) {
-            this.spawnFgCable(this.minFgCableY);
-            this.minFgCableY -= Phaser.Math.Between(400, 800);
-        }
-
-        // 2. Update/Recycle
-        this.fgCableGroup.children.iterate(cable => {
-            if (!cable.active) return;
-            const logicalY = cable.getData('logicalY');
-
-            if (logicalY > viewBottom) {
-                this.fgCableGroup.killAndHide(cable);
-                return;
-            }
-
-            // Lock to world (1.0 scroll factor logic)
-            cable.y = Math.round(logicalY - realScrollY);
-        });
-    }
-
-    spawnFgCable(y) {
-        // Corrected frame names from props.json
-        const frames = ['cable-black01.png', 'cableblack02.png', 'cableblack03.png'];
-        // Fallback or random pick
-        const frame = Phaser.Utils.Array.GetRandom(frames);
-
-        const cable = this.fgCableGroup.get();
-        if (!cable) return;
-
-        cable.setTexture('props', frame);
-        cable.setScale(1); // Original scale
-        cable.setPosition(this.scene.cameras.main.width / 2, 0); // Center X
-        cable.setDepth(100); // Start foreground layer
-        cable.setScrollFactor(0);
-        cable.setData('logicalY', y);
-        cable.clearTint(); // Ensure no tint on black cables
-        cable.setActive(true).setVisible(true);
-        cable.setFlipX(Math.random() > 0.5);
-    }
 
     update(scrollY) {
         if (!this.initialized) return;
@@ -339,22 +303,15 @@ export class BackgroundManager {
         // This manages the LIFECYCLE of segments (spawn/despawn)
         this.updateSegments(bgScrollY);
 
-        // 3. Update Background Cables (Depth -5)
-        this.updateCables(scrollY);
-
-        // 4. Update Foreground Cables (Depth 100)
-        this.updateFgCables(scrollY);
-
         // 5. Render Positioning (Screen Space)
-        // Update Y positions of active sprites to create scrolling effect
-        // They are scrollFactor(0), so (0,0) is top-left of screen.
+        // Only update Y positions for items marked for manual scroll (Walls)
         this.segments.forEach(seg => {
             seg.items.forEach(sprite => {
-                const logicalY = sprite.getData('logicalY');
-                // Calculate position relative to the "Background Camera"
-                // BgCameraTop = bgScrollY
-                // SpriteScreenY = logicalY - bgScrollY
-                sprite.y = logicalY - bgScrollY;
+                if (sprite.getData('useManualScroll')) {
+                    const logicalY = sprite.getData('logicalY');
+                    const pFactor = sprite.getData('parallaxFactor') || 1.0;
+                    sprite.y = (logicalY - bgScrollY) * pFactor;
+                }
             });
         });
     }

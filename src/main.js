@@ -38,6 +38,7 @@ const config = {
     height: GAME_HEIGHT,
     backgroundColor: '#000',
     pixelArt: true,
+    antialias: false, // Force disable antialias
     roundPixels: true,
     resolution: DPR, // HiDPI render; el tamaño lógico se mantiene en GAME_WIDTH/GAME_HEIGHT
     render: {

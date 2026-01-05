@@ -1,6 +1,7 @@
 import { Player } from '../prefabs/Player.js';
 import { GameInitializer } from '../core/GameInitializer.js';
 import { updatePlatformRider } from '../utils/platformRider.js';
+import { BackgroundManager } from '../managers/background/BackgroundManager.js';
 import GameState from '../core/GameState.js';
 import { PLATFORM_WIDTH, PLATFORM_HEIGHT } from '../prefabs/Platform.js';
 import { SLOT_CONFIG } from '../config/SlotConfig.js';
@@ -34,11 +35,15 @@ export class Game extends Phaser.Scene {
         if (this.registry?.get('showSlotLogs') === true) {
             console.log('🚀 GAME VERSION: LOOKAHEAD-FIX-' + Date.now());
         }
-        // alert('CODE UPDATED: ' + new Date().toTimeString()); // Uncomment if desperate for visual confirmation
 
         // --- CLEANUP FROM PREVIOUS GAME (if restarting) ---
         // CRITICAL: Clean up any residual objects from previous game session
         this.cleanupPreviousGame();
+
+        // --- BACKGROUND SYSTEM ---
+        // Initialize first to ensure it's at the very back (Z-index -20)
+        this.backgroundManager = new BackgroundManager(this);
+        this.backgroundManager.create();
 
         // --- INITIALIZER ---
         // Handles setup of camera, devices, groups, pools, managers, and events
@@ -215,6 +220,7 @@ export class Game extends Phaser.Scene {
         if (this.inputManager) this.inputManager.update();
         if (this.slotGenerator) this.slotGenerator.update();
         if (this.riserManager) this.riserManager.update(this.player.y, this.currentHeight, false);
+        if (this.backgroundManager) this.backgroundManager.update(this.cameras.main.scrollY);
 
         // Throttle audio updates on mobile (every 3 frames = ~20fps updates)
         if (this.audioManager) {
