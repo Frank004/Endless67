@@ -139,8 +139,11 @@ export class PlatformSpawner {
                 if (!item || !item.active) return;
                 const ix = item.x || 0;
                 const iy = item.y || 0;
+
+                // Active overlap removal
                 if (ix >= left && ix <= right && iy >= top && iy <= bottom) {
-                    // Overlap detected
+                    item.setActive(false).setVisible(false);
+                    if (item.body) item.body.enable = false;
                 }
             });
         };

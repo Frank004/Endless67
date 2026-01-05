@@ -132,7 +132,7 @@ export class Game extends Phaser.Scene {
 
         // --- CAMERA FOLLOW ---
         // Offset the camera to keep the player in the lower half and reveal upcoming platforms
-        this.cameras.main.startFollow(this.player, true, 0, 0.12, 0, 140);
+        this.cameras.main.startFollow(this.player, true, 0, 0.25, 0, 140);
 
         // --- DEV DIAGNOSTICS ---
         if (typeof window !== 'undefined') {

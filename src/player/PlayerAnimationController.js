@@ -91,6 +91,7 @@ export class PlayerAnimationController {
             case 'AIR_RISE':
                 if (subStyle === 'wall') return ANIM_MANIFEST.AIR_RISE.wall;
                 if (subStyle === 'side') return ANIM_MANIFEST.AIR_RISE.side;
+                if (subStyle === 'double') return ANIM_MANIFEST.AIR_RISE.double;
                 return ANIM_MANIFEST.AIR_RISE.up;
             case 'AIR_FALL':
                 if (subStyle === 'start') return ANIM_MANIFEST.AIR_FALL.start;

@@ -12,7 +12,8 @@ export const ANIM_MANIFEST = {
     AIR_RISE: {
         up: 'player_jump_up',
         side: 'player_jump_side',
-        wall: 'player_jump_wall'
+        wall: 'player_jump_wall',
+        double: 'player_double_jump'
     },
     AIR_FALL: {
         start: 'player_fall_start',

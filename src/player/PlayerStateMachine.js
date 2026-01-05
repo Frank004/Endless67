@@ -20,18 +20,30 @@ export class PlayerStateMachine {
      */
     _playJumpHold(style = 'up') {
         const sprite = this.ctx?.sprite;
-        const key = this.anim?.resolve('AIR_RISE', style === 'side' ? 'side' : 'up');
+
+        let subStyle = 'up';
+        if (style === 'side') subStyle = 'side';
+        if (style === 'double') subStyle = 'double';
+        if (style === 'wall') subStyle = 'wall';
+
+        const key = this.anim?.resolve('AIR_RISE', subStyle);
+        const finalFrame = (style === 'double') ? 'double-jump-03.png' : 'jump-03.png';
         const manager = sprite?.anims?.animationManager;
+
         // Evitar reiniciar la animación si ya está corriendo o ya quedó en el frame final
         if (key && sprite?.anims) {
             if (sprite.anims.currentAnim?.key === key && sprite.anims.isPlaying) return;
-            if (!sprite.anims.isPlaying && sprite.frame?.name === 'jump-03.png') return;
+            if (!sprite.anims.isPlaying && sprite.frame?.name === finalFrame) return;
         }
+
         if (key && manager?.exists(key)) {
-            this.anim.playOnceHoldLast(key, 'jump-03.png');
+            this.anim.playOnceHoldLast(key, finalFrame);
         } else {
             sprite?.anims?.stop();
-            if (sprite?.texture?.has('jump-03.png')) {
+            // Fallback frame set
+            if (sprite?.texture?.has(finalFrame)) {
+                sprite.setFrame(finalFrame);
+            } else if (sprite?.texture?.has('jump-03.png')) {
                 sprite.setFrame('jump-03.png');
             }
         }
@@ -174,10 +186,11 @@ export class PlayerStateMachine {
                 const res = this.ctx.doDoubleJump();
                 if (res) this.ctx.emitJumpEvent(res);
                 this.transition('AIR_RISE');
-                this._playJumpHold(flags.airStyle === 'SIDE' ? 'side' : 'up');
+                this._playJumpHold('double');
             } else {
                 this.transition('AIR_RISE');
-                this._playJumpHold(flags.airStyle === 'SIDE' ? 'side' : 'up');
+                const isDouble = this.ctx.jumpsUsed >= 2;
+                this._playJumpHold(isDouble ? 'double' : (flags.airStyle === 'SIDE' ? 'side' : 'up'));
             }
         } else {
             // falling
@@ -188,7 +201,7 @@ export class PlayerStateMachine {
                 const res = this.ctx.doDoubleJump();
                 if (res) this.ctx.emitJumpEvent(res);
                 this.transition('AIR_RISE');
-                this._playJumpHold(flags.airStyle === 'SIDE' ? 'side' : 'up');
+                this._playJumpHold('double');
                 return;
             }
             // Coyote jump: permitir si hay buffer y coyote

@@ -122,11 +122,15 @@ export class Boot extends Phaser.Scene {
             };
 
             makeAnim('player_idle', ['IDLE 1.png', 'IDLE 2.png', 'IDLE 3.png'], 6, -1);
-            makeAnim('player_run', ['running-01.png', 'running-02.png', 'running-03.png', 'running-04.png', 'running-05.png'], 12, -1);
+            makeAnim('player_run', [
+                'running-01.png', 'running-02.png', 'running-03.png', 'running-04.png',
+                'running-05.png', 'running-06.png', 'running-07.png', 'running-08.png'
+            ], 12, -1);
             makeAnim('player_run_stop', ['stop-running-01.png', 'stop-running-02.png', 'stop-running-03.png'], 12, 0);
             makeAnim('player_jump_up', ['jump-01.png', 'jump-02.png', 'jump-03.png'], 12, 0);
             makeAnim('player_jump_side', ['jump-01.png', 'jump-02.png', 'jump-03.png'], 12, 0);
             makeAnim('player_jump_wall', ['jump-03.png'], 10, 0);
+            makeAnim('player_double_jump', ['double-jump-01.png', 'double-jump-02.png', 'double-jump-03.png'], 12, 0);
             makeAnim('player_fall_start', ['falling-01.png', 'falling-02.png'], 12, 0);
             makeAnim('player_fall_loop', [
                 'falling-04.png', 'falling-05.png', 'falling-06.png',

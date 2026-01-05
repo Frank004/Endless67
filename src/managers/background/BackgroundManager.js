@@ -119,23 +119,31 @@ export class BackgroundManager {
         const topY = bgScrollY - (this.segmentHeight * this.bufferSegments); // Buffer above
         const bottomY = bgScrollY + cam.height + (this.segmentHeight * this.bufferSegments); // Buffer below
 
-        // 1. Remove/Recycle segments out of range
-        for (let i = this.segments.length - 1; i >= 0; i--) {
-            const seg = this.segments[i];
-            if (seg.y + this.segmentHeight < topY || seg.y > bottomY) {
-                this.recycleSegment(seg);
-                this.segments.splice(i, 1);
-            }
-        }
-
         // 2. Add new segments if gaps exist
         // We need to cover from floor(topY) to ceil(bottomY)
         const startIdx = Math.floor(topY / this.segmentHeight);
         const endIdx = Math.ceil(bottomY / this.segmentHeight);
 
+        // 1. Remove/Recycle segments out of range (Index based comparison avoids float jitter)
+        for (let i = this.segments.length - 1; i >= 0; i--) {
+            const seg = this.segments[i];
+            const segIdx = Math.round(seg.y / this.segmentHeight);
+
+            if (segIdx < startIdx || segIdx > endIdx) {
+                this.recycleSegment(seg);
+                this.segments.splice(i, 1);
+            }
+        }
+
+        // 2. Fill gaps
         for (let i = startIdx; i <= endIdx; i++) {
             const targetY = i * this.segmentHeight;
-            const exists = this.segments.some(s => s.y === targetY);
+
+            // Restricción de altura: Solo generar cables a partir de 50m (Y < 0)
+            // Asumiendo que startY es ~500, Y < 0 es aprox 50m hacia arriba.
+            if (targetY > 0) continue;
+
+            const exists = this.segments.some(s => Math.abs(s.y - targetY) < 1); // Float tolerance check
             if (!exists) {
                 this.createSegment(targetY);
             }
