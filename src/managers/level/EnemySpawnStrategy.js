@@ -27,28 +27,37 @@ export class EnemySpawnStrategy {
         // Rule 2: Platform must be valid and active
         if (!platform || !platform.active) return false;
 
-        const enemyChancePatrol = spawnChances.patrol || 0;
-        const enemyChanceShooter = spawnChances.shooter || 0;
-        const enemyChanceJumper = spawnChances.jumper || 0;
+        // Unpack configuration from SlotGenerator
+        // SlotGenerator passes { enemies: 0.4, distribution: { patrol: 50, shooter: 50... } }
+        const totalChance = spawnChances.enemies || 0;
+        const distribution = spawnChances.distribution || { patrol: 100, shooter: 0, jumper: 0 };
 
-        const rand = Math.random();
+        if (totalChance <= 0) return false;
+
+        // Step 1: Check if ANY enemy spawns based on total chance
+        if (Math.random() > totalChance) return false;
+
+        // Step 2: Determine WHICH enemy type based on distribution weights
+        const typeRand = Math.random() * 100; // 0-100
+        let cumulative = 0;
 
         // Check Patrol
-        if (enemyChancePatrol > 0 && rand < enemyChancePatrol) {
+        cumulative += (distribution.patrol || 0);
+        if (typeRand < cumulative) {
             this._spawnPatrol(platform);
             return true;
         }
 
         // Check Shooter
-        const thresholdShooter = enemyChancePatrol + enemyChanceShooter;
-        if (enemyChanceShooter > 0 && rand >= enemyChancePatrol && rand < thresholdShooter) {
+        cumulative += (distribution.shooter || 0);
+        if (typeRand < cumulative) {
             this._spawnShooter(platform);
             return true;
         }
 
         // Check Jumper
-        const thresholdJumper = thresholdShooter + enemyChanceJumper;
-        if (enemyChanceJumper > 0 && rand >= thresholdShooter && rand < thresholdJumper) {
+        cumulative += (distribution.jumper || 0);
+        if (typeRand < cumulative) {
             this._spawnJumper(platform);
             return true;
         }

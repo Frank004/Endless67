@@ -150,19 +150,40 @@ export class MazeSpawner {
         const gapMargin = Math.min(20, gapWidth * 0.25);
         gapX = Phaser.Math.Clamp(gapX, gapStart + gapMargin, gapEnd - gapMargin);
 
-        // Config checks
-        let levelConfig = (scene.levelManager && scene.levelManager.difficultyManager)
-            ? scene.levelManager.difficultyManager.getConfig(scene.currentHeight)
-            : (LEVEL_CONFIG.world1?.progression?.[0] || {
-                mechanics: { powerups: false, powerupChance: 0 },
-                maze: { enemyChance: SLOT_CONFIG?.types?.MAZE?.spawnChances?.enemies ?? 0, enemyCount: { min: 0, max: 2 } }
-            });
+        // Config checks - Priority: DifficultyManager > Dynamic Tier > Defaults
+        let mazeConfig = null;
+        if (scene.difficultyManager) {
+            mazeConfig = scene.difficultyManager.getMazeConfig();
+        } else if (scene.levelManager && scene.levelManager.difficultyManager) {
+            mazeConfig = scene.levelManager.difficultyManager.getMazeConfig();
+        } else {
+            // Fallback
+            mazeConfig = {
+                enabled: true,
+                chance: 0,
+                patterns: 'easy',
+                allowEnemies: SLOT_CONFIG?.types?.MAZE?.spawnChances?.enemies > 0,
+                enemyCount: SLOT_CONFIG?.types?.MAZE?.spawnChances?.enemyCount || { min: 0, max: 2 },
+                enemyChance: SLOT_CONFIG?.types?.MAZE?.spawnChances?.enemies || 20
+            };
+        }
+
+        // Ensure mechanics config is also available
+        let mechanicsConfig = { powerups: true, powerupChance: 25 };
+        if (scene.difficultyManager) {
+            mechanicsConfig = scene.difficultyManager.getMechanicsConfig();
+        }
 
         // Powerups
         const isDev = scene.registry?.get('isDevMode');
-        const baseMazePowerupChance = (SLOT_CONFIG?.types?.MAZE?.spawnChances?.powerups ?? 0) * 100;
-        let powerupChance = levelConfig.mechanics.powerups ? levelConfig.mechanics.powerupChance : 0;
-        powerupChance = Math.max(powerupChance, baseMazePowerupChance);
+
+        // Use logic from DifficultyManager keys if available, else fallback
+        let powerupChance = 0;
+        if (mechanicsConfig.powerups) {
+            powerupChance = mechanicsConfig.powerupChance;
+        }
+
+        // Apply strict cooldowns
         const timeCooldown = isDev ? 0 : 8000;
         const heightCooldown = isDev ? 0 : 400;
         const now = scene.time.now;
@@ -172,9 +193,10 @@ export class MazeSpawner {
         }
 
         if (Phaser.Math.Between(0, 100) < powerupChance) {
+            // ... spawn powerup logic ...
             const { minX, maxX } = getPlayableBounds(scene, 32);
             const safeX = Phaser.Math.Clamp(gapX, minX, maxX);
-            
+
             // Calcular Y con separación adecuada desde el top del bloque del maze
             const rowHeight = SLOT_CONFIG?.types?.MAZE?.rowHeight || MAZE_ROW_HEIGHT || 64;
             const POWERUP_BASE_SIZE = 32; // Tamaño base del powerup
@@ -182,30 +204,30 @@ export class MazeSpawner {
             const powerupSeparation = 16; // Separación desde el borde superior del bloque
             const blockTop = y - (rowHeight / 2);
             const powerupY = blockTop - ITEM_HALF - powerupSeparation;
-            
+
             const powerup = scene.powerups.create(safeX, powerupY, ASSETS.POWERUP_BALL);
             enablePlatformRider(powerup, { mode: 'carry', marginX: 2 });
             scene.lastPowerupSpawnHeight = scene.currentHeight;
             scene.lastPowerupTime = now;
         } else {
-            // Coins
-            const mazeCoinChance = SLOT_CONFIG?.types?.MAZE?.spawnChances?.coins ?? 0;
+            // Coins - Always allowed if random chance met
+            const mazeCoinChance = SLOT_CONFIG?.types?.MAZE?.spawnChances?.coins ?? 0.5;
             const bonusAvailable = coinBudget && (coinBudget.used < (coinBudget.bonus ?? 0));
             const chance = isDev ? 1 : mazeCoinChance;
+
             if (Phaser.Math.FloatBetween(0, 1) < chance || bonusAvailable) {
                 let coin = null;
                 const itemMargin = WALLS.WIDTH + WALLS.MARGIN + 16;
                 const safeX = Phaser.Math.Clamp(gapX, itemMargin, gameWidth - itemMargin);
-                
+
                 // Calcular Y con separación adecuada desde el top del bloque del maze
-                // y es el centro del bloque, rowHeight/2 es la mitad hacia arriba, ITEM_HALF (16px) + 16px de separación
                 const rowHeight = SLOT_CONFIG?.types?.MAZE?.rowHeight || MAZE_ROW_HEIGHT || 64;
                 const COIN_BASE_SIZE = 32; // Tamaño base del coin
                 const ITEM_HALF = COIN_BASE_SIZE / 2; // 16px
                 const coinSeparation = 16; // Separación desde el borde superior del bloque
                 const blockTop = y - (rowHeight / 2);
                 const coinY = blockTop - ITEM_HALF - coinSeparation;
-                
+
                 if (scene.coinPool) {
                     coin = scene.coinPool.spawn(safeX, coinY);
                     if (coin && scene.coins) scene.coins.add(coin, true);
@@ -224,14 +246,25 @@ export class MazeSpawner {
         // Enemies
         if (wallSegments.length === 0 || !allowSpikes) return;
 
-        const mazeSpawnConfig = SLOT_CONFIG?.types?.MAZE?.spawnChances || {};
-        const enemyChanceCfg = levelConfig.maze?.enemyChance;
-        const enemyCountCfg = levelConfig.maze?.enemyCount ?? mazeSpawnConfig.enemyCount ?? { min: 1, max: 1 };
-        const enemyTypes = mazeSpawnConfig.enemyTypes || { patrol: 1 };
+        // Dynamic Enemy Configuration from DifficultyManager
+        const allowEnemies = mazeConfig.allowEnemies;
 
-        let enemySpawnChance = (enemyChanceCfg !== undefined) ? enemyChanceCfg : (mazeSpawnConfig.enemies ?? 0);
+        // If enemies not allowed in this tier/maze, abort
+        if (!allowEnemies) return;
+
+        // Fetch global enemy config for this tier to distinguish types
+        let tierEnemyConfig = { types: ['patrol'], distribution: { patrol: 100, shooter: 0, jumper: 0 } };
+        if (scene.difficultyManager) {
+            tierEnemyConfig = scene.difficultyManager.getEnemyConfig();
+        }
+
+        const enemyChanceCfg = mazeConfig.enemyChance;
+        const enemyCountCfg = mazeConfig.enemyCount || { min: 1, max: 1 };
+
+        let enemySpawnChance = (enemyChanceCfg !== undefined) ? enemyChanceCfg : 20;
         let maxEnemiesRow = Phaser.Math.Between(enemyCountCfg.min ?? 1, enemyCountCfg.max ?? 1);
         maxEnemiesRow = Math.min(wallSegments.length, maxEnemiesRow);
+
         if (enemySpawnChance > 0 && maxEnemiesRow < 1) {
             maxEnemiesRow = 1;
         }
@@ -258,11 +291,27 @@ export class MazeSpawner {
                         const platformTop = y - rowHeight / 2;
                         const enemyY = platformTop - enemyHalfHeight;
 
-                        const rType = Math.random();
-                        const usePatrol = rType < (enemyTypes.patrol ?? 1);
+                        // Weighted Random Selection based on Tier Distribution
+                        const dist = tierEnemyConfig.distribution || { patrol: 100, shooter: 0, jumper: 0 };
+                        const totalWeight = (dist.patrol || 0) + (dist.shooter || 0) + (dist.jumper || 0);
+                        const r = Phaser.Math.Between(0, totalWeight);
 
-                        // Delegar back a LevelManager (o EnemySpawner en el futuro)
-                        if (usePatrol) {
+                        let selectedType = 'patrol';
+                        let cumulative = dist.patrol || 0;
+
+                        if (r <= cumulative) {
+                            selectedType = 'patrol';
+                        } else {
+                            cumulative += (dist.shooter || 0);
+                            if (r <= cumulative) {
+                                selectedType = 'shooter';
+                            } else {
+                                selectedType = 'jumper';
+                            }
+                        }
+
+                        // Spawn based on type
+                        if (selectedType === 'patrol') {
                             if (scene.patrolEnemyPool) {
                                 const enemy = scene.patrolEnemyPool.spawn(enemyX, enemyY);
                                 if (scene.patrolEnemies) scene.patrolEnemies.add(enemy, true);
@@ -277,12 +326,20 @@ export class MazeSpawner {
                                     }
                                 }
                             }
-                        } else {
+                        } else if (selectedType === 'shooter') {
                             if (scene.shooterEnemyPool) {
                                 const shooter = scene.shooterEnemyPool.spawn(enemyX, enemyY);
                                 if (scene.shooterEnemies) scene.shooterEnemies.add(shooter, true);
                                 const projectilesGroup = scene.projectilePool || scene.projectiles;
                                 if (shooter?.startShooting) shooter.startShooting(projectilesGroup, scene.currentHeight);
+                            }
+                        } else if (selectedType === 'jumper') {
+                            if (scene.jumperShooterEnemyPool) {
+                                const jumper = scene.jumperShooterEnemyPool.spawn(enemyX, enemyY);
+                                if (scene.jumperShooterEnemies) scene.jumperShooterEnemies.add(jumper, true);
+                                const projectilesGroup = scene.projectilePool || scene.projectiles;
+                                if (jumper?.startShooting) jumper.startShooting(projectilesGroup, scene.currentHeight);
+                                // Jumper logic handles jumping automatically via update()
                             }
                         }
 

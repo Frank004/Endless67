@@ -67,7 +67,7 @@
                 if (typeof Phaser !== 'undefined') {
                     const script = document.createElement('script');
                     script.type = 'module';
-                    script.src = 'src/main.js?v=LOGS-FIX-' + Date.now();
+                    script.src = 'src/main.js?v=20260105-0220';
                     document.body.appendChild(script);
                 } else {
                     console.error('Phaser no se cargó correctamente');
@@ -77,7 +77,7 @@
             // Phaser ya está disponible, cargar módulos inmediatamente
             const script = document.createElement('script');
             script.type = 'module';
-            script.src = 'src/main.js?v=DEBUG-' + Date.now();
+            script.src = 'src/main.js?v=20260105-0220';
             document.body.appendChild(script);
         }
     </script>

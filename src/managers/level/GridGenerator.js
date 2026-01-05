@@ -39,35 +39,34 @@ export class GridGenerator {
      * Does NOT spawn anything. Returns strictly DATA.
      * 
      * @param {number} slotIndex - Current slot index from SlotGenerator
+     * @param {string} [typeOverride=null] - Force specific slot type
+     * @param {Object} [configOverride=null] - Override config options (e.g. pattern filters)
      * @returns {Object} SlotData
      */
-    nextSlot(slotIndex, startYOverride = null) {
+    nextSlot(slotIndex, startYOverride = null, typeOverride = null, configOverride = null) {
         // 1. Calculate Y Start
         let yStart;
         if (startYOverride !== null) {
             yStart = startYOverride;
         } else if (this.lastSlotYEnd === null) {
-            // First slot default - este fallback no debería ejecutarse porque SlotGenerator
-            // siempre llama a reset() con startY calculado. Pero por seguridad:
-            // Ad banner está arriba, así que asumimos screenHeight = 640 (default)
-            // Floor está en 640 - 32 = 608, primera plataforma en 608 - 160 = 448
-            const screenHeight = 640; // Default, pero SlotGenerator siempre pasa el valor correcto
+            // First slot default - fallback
+            const screenHeight = 640;
             const floorHeight = 32;
             const floorY = screenHeight - floorHeight;
-            yStart = floorY - 160; // 160px arriba del floor
+            yStart = floorY - 160;
         } else {
             // Stack on top of last slot
             yStart = this.lastSlotYEnd - SLOT_CONFIG.slotGap;
         }
 
-        // 2. Determine Type
-        const type = this._determineType(slotIndex);
+        // 2. Determine Type (Use override if provided, else internal logic)
+        const type = typeOverride || this._determineType(slotIndex);
 
         // 3. Calculate height based on type
         const height = this._calculateSlotHeight(type);
 
         // 4. Generate Internal Layout
-        const internalData = this._generateInternalLayout(type, yStart, height);
+        const internalData = this._generateInternalLayout(type, yStart, height, configOverride);
 
         // 5. Update State
         const yEnd = yStart - height;
@@ -113,7 +112,7 @@ export class GridGenerator {
         }
     }
 
-    _generateInternalLayout(type, yStart, slotHeight) {
+    _generateInternalLayout(type, yStart, slotHeight, configOverride = null) {
         if (type === 'MAZE') {
             // Get maze pattern (excluding last used to prevent repetition)
             const pattern = getRandomMazePatternExcluding(this.lastMazePattern);

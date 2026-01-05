@@ -75,6 +75,19 @@ export class CleanupManager {
             });
         }
 
+        // Cleanup Debug Texts (Critical for memory leaks if debug is enabled)
+        if (scene.children && scene.children.list) {
+            // Filter first to avoid modifying collection while iterating (though usually safe in Phaser depending on structure)
+            const textsToRemove = scene.children.list.filter(child =>
+                child.active &&
+                child.type === 'Text' &&
+                child.y > limitY &&
+                child.scrollFactorX !== 0 // Exclude UI elements (fixed to camera)
+            );
+
+            textsToRemove.forEach(text => text.destroy());
+        }
+
         // Trim inactive objects to save memory
         this._trimPools();
     }

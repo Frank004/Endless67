@@ -2,7 +2,8 @@ import { ASSETS } from '../config/AssetKeys.js';
 
 export class Tires extends Phaser.Physics.Arcade.Sprite {
     constructor(scene, x, y) {
-        super(scene, x, y, ASSETS.PROPS, 'tires.png');
+        const textureKey = scene.textures.exists(ASSETS.PROPS) ? ASSETS.PROPS : null;
+        super(scene, x, y, textureKey || undefined, textureKey ? 'tires.png' : undefined);
         this.scene = scene;
 
         scene.add.existing(this);

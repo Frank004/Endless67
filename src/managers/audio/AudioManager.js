@@ -137,6 +137,14 @@ export class AudioManager {
                 return;
             }
 
+            // Check if music exists but stopped
+            if (this.bgMusic) {
+                if (!this.bgMusic.isPlaying) {
+                    this.bgMusic.play();
+                }
+                return;
+            }
+
             if (scene.sound && scene.cache.audio.exists(ASSETS.BG_MUSIC) && !this.bgMusic) {
                 this.bgMusic = scene.sound.add(ASSETS.BG_MUSIC, { loop: true, volume: 0.80 });
 
@@ -172,6 +180,11 @@ export class AudioManager {
         this.scene.registry.set('soundEnabled', newState);
         this.scene.sound.mute = !newState;
         this.soundEnabled = newState;
+
+        // Force restart music if enabling sound
+        if (this.soundEnabled) {
+            this.startMusic();
+        }
 
         // Update button text and icon if they exist (in pause menu)
         if (this.scene.soundToggleText) {

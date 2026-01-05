@@ -21,9 +21,26 @@ export class StageFloor extends Phaser.GameObjects.TileSprite {
 
         // Choose a random frame
         const frames = ['stagefloor-01.png', 'stagefloor-02.png', 'stagefloor-03.png'];
-        const randomFrame = Phaser.Utils.Array.GetRandom(frames);
+        let randomFrame = Phaser.Utils.Array.GetRandom(frames);
 
-        super(scene, x, y, width, floorHeight, ASSETS.FLOOR, randomFrame);
+        // Fallback: if floor atlas not ready or frame missing, generate a placeholder texture
+        let textureKey = ASSETS.FLOOR;
+        if (!scene.textures.exists(ASSETS.FLOOR) || !scene.textures.get(ASSETS.FLOOR).has(randomFrame)) {
+            const key = 'floor_placeholder';
+            if (!scene.textures.exists(key)) {
+                const g = scene.make.graphics({ x: 0, y: 0 });
+                g.fillStyle(0x444444, 1);
+                g.fillRect(0, 0, 32, 32);
+                g.lineStyle(2, 0x666666, 1);
+                g.strokeRect(0, 0, 32, 32);
+                g.generateTexture(key, 32, 32);
+                g.destroy();
+            }
+            textureKey = key;
+            randomFrame = undefined;
+        }
+
+        super(scene, x, y, width, floorHeight, textureKey, randomFrame);
 
         scene.add.existing(this);
         scene.physics.add.existing(this, true);

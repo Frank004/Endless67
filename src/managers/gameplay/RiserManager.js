@@ -45,7 +45,7 @@ export class RiserManager {
         // Ad banner está arriba, así que el floor va al fondo sin restar adHeight
         const floorY = screenHeight - floorHeight;
         const playerSpawnY = screenHeight - floorHeight - 16; // Posición del jugador (centro)
-        
+
         // Con origin (0.5, 0), el Y es el top del riser
         // Queremos que solo 20px sean visibles, MÁS ABAJO de los pies del jugador
         // Los pies del jugador están aproximadamente en floorY (o un poco más abajo)
@@ -116,26 +116,26 @@ export class RiserManager {
                 this.initialPlayerY = playerY;
                 // Log removido para reducir ruido en consola
             }
-            
+
             // Calcular cuánto ha subido el jugador desde su posición inicial
             const playerRiseDistance = this.initialPlayerY - playerY; // Positivo cuando sube
-            
+
             // Esperar hasta que el jugador haya subido al menos la mitad de la altura de la pantalla
             const camera = this.scene.cameras.main;
             const requiredRise = camera.height / 2; // Mitad de la altura de la cámara (ej: 590/2 = 295px)
-            
+
             // CRÍTICO: Mantener la lava en su posición inicial mientras espera
             const screenHeight = this.scene?.scale?.height || 640;
             const floorHeight = 32;
             // Ad banner está arriba, así que el floor va al fondo sin restar adHeight
             const floorY = screenHeight - floorHeight;
             const targetY = floorY + 20; // Mantener a 20px visibles, más abajo del floor
-            
+
             // Forzar posición inicial si se ha movido
             if (Math.abs(this.riser.y - targetY) > 1) {
                 this.riser.y = targetY;
             }
-            
+
             if (playerRiseDistance >= requiredRise) {
                 this.hasStartedRising = true;
                 // Log removido para reducir ruido en consola
@@ -149,9 +149,10 @@ export class RiserManager {
 
         let distanceToRiser = playerY - this.riser.y;
 
-        // Get base speed from level config (difficulty progression)
-        const levelConfig = getLevelConfig(currentHeight);
-        let difficultySpeed = levelConfig.lava.speed;
+        // Get base speed from DifficultyManager (Source of Truth)
+        const difficulty = this.scene.difficultyManager;
+        // Fallback for safety if manager not ready
+        let difficultySpeed = difficulty ? difficulty.getLavaSpeed() : -40; // Default slow speed
 
         let targetSpeed = difficultySpeed;
 
@@ -173,7 +174,7 @@ export class RiserManager {
         const cameraTop = camera.scrollY;
         const cameraBottom = camera.scrollY + camera.height;
         const cameraHeight = camera.height;
-        
+
         // Usar la altura real del riser (calculada dinámicamente)
         const riserHeight = this.riserHeight || this.riser.displayHeight || 3000;
 
@@ -181,25 +182,25 @@ export class RiserManager {
             // Cuando la lava mata al jugador, debe cubrir completamente la pantalla
             // Con origin (0.5, 0), el Y es el top del riser
             // El bottom del riser está en riser.y + riserHeight
-            
+
             // Estrategia: Asegurar que la lava cubra desde el bottom de la cámara hasta arriba del top
             // El bottom del riser debe estar arriba del cameraTop (con margen)
             // El top del riser debe estar abajo del cameraBottom (con margen)
             // Como el riser es muy alto (2.5x pantalla), esto garantiza cobertura completa
-            
+
             const safetyMargin = Math.max(cameraHeight * 0.3, 150); // 30% de la altura de la cámara o mínimo 150px
-            
+
             // Target 1: Bottom del riser arriba del cameraTop
             const targetBottomY = cameraTop - safetyMargin;
             const targetTopY1 = targetBottomY - riserHeight;
-            
+
             // Target 2: Top del riser abajo del cameraBottom (para cubrir el bottom de la pantalla)
             const targetTopY2 = cameraBottom + safetyMargin - riserHeight;
-            
+
             // Usar el target más bajo para asegurar que cubra tanto arriba como abajo
             // Esto garantiza cobertura completa en cualquier posición de la cámara
             const targetTopY = Math.min(targetTopY1, targetTopY2);
-            
+
             if (this.riser.y > targetTopY) {
                 // Subir rápidamente para cubrir la pantalla
                 this.riser.y -= 30; // Velocidad rápida de subida

@@ -36,7 +36,7 @@ export class PlatformSpawner {
         const { minX: minCenter, maxX: maxCenter, centerX } = getPlatformBounds(camWidth);
         const halfWidth = width / 2;
         let targetX = x ?? centerX;
-        
+
         // Para plataformas estáticas: asegurar 10px de espacio desde las paredes para que el jugador pueda pasar
         if (!isMoving) {
             const playerClearance = 10; // Espacio mínimo entre plataforma y pared
@@ -44,7 +44,7 @@ export class PlatformSpawner {
             const rightEdge = targetX + halfWidth;
             const minWallEdge = WALLS.WIDTH + playerClearance;
             const maxWallEdge = camWidth - WALLS.WIDTH - playerClearance;
-            
+
             // Ajustar posición si los bordes están muy cerca de las paredes
             if (leftEdge < minWallEdge) {
                 targetX = minWallEdge + halfWidth;
@@ -52,7 +52,7 @@ export class PlatformSpawner {
                 targetX = maxWallEdge - halfWidth;
             }
         }
-        
+
         // Clamp final a los límites seguros
         let clampedX = Phaser.Math.Clamp(targetX, minCenter, maxCenter);
 
@@ -86,13 +86,7 @@ export class PlatformSpawner {
         // Registrar para tracking
         this.registerPlatform(x, y, width);
 
-        // DEBUG TEXT desactivado - solo activar si showSlotLogs está activo
-        // if (scene.add?.text && scene.registry?.get('showSlotLogs')) {
-        //     const debugText = scene.add.text(x, y, `Y:${Math.round(y)}`, { fontSize: '16px', fill: '#ffffff', backgroundColor: '#ff0000' });
-        //     debugText.setOrigin(0.5);
-        //     debugText.setDepth(200);
-        //     p.debugText = debugText; // Asignar a la plataforma para limpieza automática
-        // }
+
 
         // Logging y safety checks
         this.logPlatformPlacement(p.x, p.y, width, isMoving);
@@ -158,14 +152,14 @@ export class PlatformSpawner {
     ensureBounds(p, width, isMoving, minCenter, maxCenter) {
         const halfWidth = width / 2;
         const camWidth = this.scene.cameras?.main?.worldView?.width || this.scene.cameras?.main?.width || this.scene.scale.width || SLOT_CONFIG.gameWidth;
-        
+
         const leftEdge = p.x - halfWidth;
         const rightEdge = p.x + halfWidth;
-        
+
         // Para plataformas estáticas: asegurar 10px de espacio desde las paredes
         let minEdge = WALLS.WIDTH;
         let maxEdge = camWidth - WALLS.WIDTH;
-        
+
         if (!isMoving) {
             const playerClearance = 10;
             minEdge = WALLS.WIDTH + playerClearance;
@@ -185,7 +179,7 @@ export class PlatformSpawner {
                 const safeX = Phaser.Math.Clamp(p.x, minCenter, maxCenter);
                 p.x = safeX;
             }
-            
+
             if (p.body) {
                 p.body.updateFromGameObject();
                 p.body.setVelocityX(isMoving ? p.body.velocity.x : 0);

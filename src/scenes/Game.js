@@ -11,6 +11,7 @@ import { LAYOUT_CONFIG, calculateLayout } from '../config/LayoutConfig.js';
 import { StageFloor } from '../prefabs/StageFloor.js';
 import { AdBanner } from '../prefabs/AdBanner.js';
 import { StageProps } from '../managers/ui/StageProps.js';
+import { DifficultyManager } from '../managers/level/DifficultyManager.js';
 
 /**
  * @phasereditor
@@ -59,6 +60,9 @@ export class Game extends Phaser.Scene {
         this.powerupTimer = null;
         this.lastPowerupSpawnHeight = -1000;
         this.lastPowerupTime = -15000;
+
+        // --- DIFFICULTY MANAGER ---
+        this.difficultyManager = new DifficultyManager(this);
 
         // --- VISUAL REFRESH ---
         // OPTIMIZATION: Pre-initialize walls immediately for instant rendering
@@ -200,18 +204,25 @@ export class Game extends Phaser.Scene {
         // Manager Updates
         // Check if mobile once for all optimizations
         const isMobile = this.isMobile || false;
-        
+
+        // Update Difficulty Manager (Source of Truth for progression)
+        if (this.difficultyManager) {
+            // Note: currentHeight is updated at the end of this method, so this uses previous frame's height
+            // which is fine. passing absolute height (meters)
+            this.difficultyManager.update(this.currentHeight);
+        }
+
         if (this.inputManager) this.inputManager.update();
         if (this.slotGenerator) this.slotGenerator.update();
         if (this.riserManager) this.riserManager.update(this.player.y, this.currentHeight, false);
-        
+
         // Throttle audio updates on mobile (every 3 frames = ~20fps updates)
         if (this.audioManager) {
             if (!isMobile || (this._audioUpdateFrame = (this._audioUpdateFrame || 0) + 1) % 3 === 0) {
                 this.audioManager.updateAudio(this.player.y, this.riserManager?.riser?.y ?? this.player.y);
             }
         }
-        
+
         // 🚀 OPTIMIZATION: Only update debug visuals if actually enabled
         if (this.debugManager) {
             // Skip if debug features are disabled (most common case)
@@ -227,17 +238,17 @@ export class Game extends Phaser.Scene {
         // OPTIMIZED: Only update riders that are near the camera, with throttling for mobile
         // Throttle updates on mobile to every other frame for better performance
         const shouldUpdateRiders = !isMobile || (this._riderUpdateFrame = (this._riderUpdateFrame || 0) + 1) % 2 === 0;
-        
+
         if (shouldUpdateRiders) {
             const camera = this.cameras.main;
             const cameraTop = camera.scrollY;
             const cameraBottom = cameraTop + camera.height;
             const updateRange = isMobile ? 150 : 200; // Smaller range on mobile
-            
+
             // 🚀 OPTIMIZATION: Cache range calculations and use simple iteration
             const minY = cameraTop - updateRange;
             const maxY = cameraBottom + updateRange;
-            
+
             if (this.coins && this.coins.children) {
                 const coinsList = this.coins.children.entries;
                 for (let i = 0; i < coinsList.length; i++) {

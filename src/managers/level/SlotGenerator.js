@@ -126,10 +126,14 @@ export class SlotGenerator {
             this.gridGenerator.transformer.setGameWidth(currentWidth);
         }
 
-        // Get layout from GridGenerator (pure logic) - pass current index
+        // Determine type via DifficultyManager integration
+        const requestedType = this.determineSlotType();
+
+        // Get layout from GridGenerator (pure logic) - pass determined type
         let layoutData;
         try {
-            layoutData = this.gridGenerator.nextSlot(this.currentSlotIndex);
+            // nextSlot(slotIndex, startYOverride, typeOverride, configOverride)
+            layoutData = this.gridGenerator.nextSlot(this.currentSlotIndex, null, requestedType);
         } catch (e) {
             console.error('❌ SlotGenerator: GridGenerator.nextSlot() CRASHED:', e);
             throw e; // Rethrow to halt
@@ -236,16 +240,40 @@ export class SlotGenerator {
      * @returns {string} Tipo de slot
      */
     determineSlotType() {
-        // Slots iniciales tutorial: todos plataformas
+        const difficulty = this.scene.difficultyManager;
+        // Fallback if no manager (shouldn't happen)
+        if (!difficulty) return 'PLATFORM_BATCH';
+
+        const tier = difficulty.getCurrentTier();
+
+        // 1. Check if tutorial slots are needed (handled by LevelConfig height/tier logic mostly, 
+        // but we keep the rigid index check for the absolute start)
         if (this.currentSlotIndex < SLOT_CONFIG.rules.tutorialSlots) {
             return 'PLATFORM_BATCH';
         }
 
-        // Distribución aleatoria: 50% plataforma, 20% safe, 30% maze
+        const mazeConfig = difficulty.getMazeConfig();
         const r = Math.random();
-        if (r < 0.5) return 'PLATFORM_BATCH';
-        if (r < 0.7) return 'SAFE_ZONE';
-        return 'MAZE';
+
+        // 2. Logic:
+        // - Safe Zone: ~20% change if enabled (TODO: Add to config if needed, for now standard)
+        // - Maze: Uses config.chance (percentage)
+
+        const mazeChance = (mazeConfig.enabled ? mazeConfig.chance : 0) / 100;
+
+        // Priority: Maze > Safe Zone > Platform
+        if (mazeConfig.enabled && r < mazeChance) {
+            // Check for cooldown if needed, but config handles chance
+            return 'MAZE';
+        }
+
+        // Safe Zone logic (Hardcoded 20% for now or add to Manager)
+        // For now, let's say Safe Zones act as spacers.
+        if (Math.random() < 0.15) {
+            return 'SAFE_ZONE';
+        }
+
+        return 'PLATFORM_BATCH';
     }
 
     /**
@@ -259,13 +287,19 @@ export class SlotGenerator {
         const basePatternName = internalData.sourcePattern;
         const transform = internalData.transform;
 
-        const config = SLOT_CONFIG.types[type];
-        const isTutorial = (layoutData.index < SLOT_CONFIG.rules.tutorialSlots);
+        // --- DIFFICULTY MANAGER INTEGRATION ---
+        const difficulty = this.scene.difficultyManager;
+        const platformConfig = difficulty ? difficulty.getPlatformConfig() : SLOT_CONFIG.types.PLATFORM_BATCH;
+        const mechanicsConfig = difficulty ? difficulty.getMechanicsConfig() : { powerups: true, powerupChance: 25 };
+        const enemyConfig = difficulty ? difficulty.getEnemyConfig() : { spawnChance: 0 };
+        // -------------------------------------
+
+        const verbose = this.scene?.registry?.get('showSlotLogs') === true;
 
         // 4) Sistema de SWAP para plataformas móviles
-        // Porcentaje de chance de tener plataformas móviles por slot
-        const MOVING_PLATFORM_CHANCE = isTutorial ? 0 : 0.35;  // Sin móviles en tutorial
-        const MOVING_PLATFORM_SPEED = 100;    // Velocidad de movimiento
+        // Porcentaje de chance de tener plataformas móviles por slot (from DifficultyManager)
+        const MOVING_PLATFORM_CHANCE = (platformConfig.movingChance ?? 35) / 100;
+        const MOVING_PLATFORM_SPEED = platformConfig.movingSpeed ?? 100;
         const platformCount = platforms.length;
 
         // Determinar cuántas plataformas móviles tendrá este slot (0, 1 o 2)
@@ -292,8 +326,6 @@ export class SlotGenerator {
         const minX = getPlatformBounds(this.gridGenerator.gameWidth).minX;
         const maxX = getPlatformBounds(this.gridGenerator.gameWidth).maxX;
         const centerSafe = getPlatformBounds(this.gridGenerator.gameWidth).centerX;
-
-        const verbose = this.scene?.registry?.get('showSlotLogs');
 
         if (verbose) {
             console.log(`  🎨 Patrón: ${basePatternName} | Transform: ${transform}`);
@@ -375,12 +407,18 @@ export class SlotGenerator {
             // SPAWN ENEMIGOS: Delegado a EnemySpawnStrategy
             // ─────────────────────────────────────────────────────────────
 
-            // Configure spawn chances for this slot type
-            const chances = config?.spawnChances || {};
+            // ─────────────────────────────────────────────────────────────
+            // SPAWN ENEMIGOS: Delegado a EnemySpawnStrategy
+            // ─────────────────────────────────────────────────────────────
 
             const enemySpawned = this.enemySpawnStrategy.trySpawn(platform, {
                 isMoving: isMoving,
-                spawnChances: chances
+                spawnChances: {
+                    enemies: enemyConfig.spawnChance / 100, // Normalized to 0-1
+                    // Pass the whole config so Strategy can pick types
+                    types: enemyConfig.types,
+                    distribution: enemyConfig.distribution
+                }
             });
 
             if (enemySpawned && verbose) {
@@ -436,7 +474,9 @@ export class SlotGenerator {
         const isDev = this.scene.registry?.get('isDevMode');
         const POWERUP_MIN_DISTANCE = isDev ? 0 : 2000;   // 200 unidades Y (20m) - distancia mínima entre powerups
         const POWERUP_COOLDOWN = isDev ? 0 : 15000;      // 15 segundos - cooldown entre powerups
-        const POWERUP_CHANCE = isDev ? 0.5 : (SLOT_CONFIG.types?.PLATFORM?.spawnChances?.powerups ?? 0.25);
+
+        // Chance from DifficultyManager
+        const POWERUP_CHANCE = (mechanicsConfig.powerups ? mechanicsConfig.powerupChance : 0) / 100;
         const logPowerups = this.scene.registry?.get('logPowerups') === true;
         const logPw = (msg) => { if (logPowerups) console.log(msg); };
 
@@ -726,10 +766,15 @@ export class SlotGenerator {
         }
 
         // Presupuesto de enemigos por maze (con chance global por maze)
-        const mazeSpawnConfig = SLOT_CONFIG?.types?.MAZE?.spawnChances || {};
-        const enemyCountCfg = mazeSpawnConfig.enemyCount || { min: 1, max: 2 };
-        const enemyChance = (mazeSpawnConfig.enemies ?? 0) / 100;
-        const spawnEnemiesThisMaze = Math.random() < enemyChance;
+        const difficulty = this.scene.difficultyManager;
+        const mazeConfig = difficulty ? difficulty.getMazeConfig() : { allowEnemies: false, enemyCount: { min: 0, max: 0 } };
+
+        // Override hardcoded config with dynamic config
+        const allowEnemies = mazeConfig.allowEnemies;
+        const enemyCountCfg = mazeConfig.enemyCount || { min: 1, max: 2 };
+        const enemyChance = (mazeConfig.enemyChance ?? 40) / 100;
+
+        const spawnEnemiesThisMaze = allowEnemies && Math.random() < enemyChance;
         const enemyBudget = {
             target: spawnEnemiesThisMaze ? Phaser.Math.Between(enemyCountCfg.min ?? 1, enemyCountCfg.max ?? 1) : 0,
             spawned: 0
@@ -784,9 +829,9 @@ export class SlotGenerator {
         const cameraTop = this.scene.cameras.main.scrollY;
         const MIN_SLOTS_AHEAD = 3;
         const LOOKAHEAD_DISTANCE = this.slotHeight * (MIN_SLOTS_AHEAD + 1); // asegúrate de contar suficientes slots
-            // Reducir generaciones por frame en mobile para mejor rendimiento
-            const isMobile = this.scene?.isMobile || false;
-            const MAX_GENERATIONS_PER_UPDATE = isMobile ? 2 : 5; // Menos generaciones en mobile
+        // Reducir generaciones por frame en mobile para mejor rendimiento
+        const isMobile = this.scene?.isMobile || false;
+        const MAX_GENERATIONS_PER_UPDATE = isMobile ? 2 : 5; // Menos generaciones en mobile
 
         // Generar tantos slots como sean necesarios para mantener el buffer
         try {
@@ -808,7 +853,7 @@ export class SlotGenerator {
             while (lastSlot && generatedThisFrame < MAX_GENERATIONS_PER_UPDATE) {
                 // Calcular distancia desde el jugador hasta el final del último slot
                 const distanceToLastSlot = playerY - lastSlot.yEnd;
-                
+
                 // Generar solo si el jugador está cerca del final del último slot
                 // spawnBuffer ahora es 800px, así que generamos cuando el jugador está a 800px del final
                 const spawnThreshold = lastSlot.yEnd + this.spawnBuffer;
@@ -865,7 +910,7 @@ export class SlotGenerator {
         // OPTIMIZED: Use both player position AND riser (lava) position for cleanup
         // If lava has passed a slot, the player can never go back to it, so we can safely remove it
         const playerLimitY = (this.scene.player?.y || cameraTop) + this.cleanupDistance;
-        
+
         // Get riser (lava) position - if it exists and has started rising, use it as cleanup limit
         let riserLimitY = playerLimitY; // Default to player limit
         const riser = this.scene.riserManager?.riser;
@@ -874,7 +919,7 @@ export class SlotGenerator {
             // Add a small safety margin (100px) to ensure we don't remove slots too early
             riserLimitY = riser.y - 100;
         }
-        
+
         // Use the maximum (most aggressive cleanup) between player and riser limits
         // This ensures we clean up slots that are either:
         // 1. Below the player + cleanupDistance (traditional cleanup)
@@ -930,7 +975,7 @@ export class SlotGenerator {
         if (this.scene.registry?.get('disableCleanup') || this.scene.disableCleanup) {
             return;
         }
-        
+
         const slotsToRemove = this.slots.filter(slot => slot.yStart > limitY);
 
         if (slotsToRemove.length > 0) {
