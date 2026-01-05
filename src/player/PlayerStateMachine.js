@@ -140,6 +140,7 @@ export class PlayerStateMachine {
 
         // WALL SLIDE
         if (sensors.touchWall && !flags.inputLocked) {
+            const entering = this.state !== 'WALL_SLIDE';
             this.transition('WALL_SLIDE');
             // Al tocar pared, rearmar doble salto para la siguiente secuencia
             flags.canDoubleJump = true;
@@ -153,7 +154,13 @@ export class PlayerStateMachine {
                 if (res) this.ctx.emitJumpEvent(res);
                 this.transition('AIR_RISE');
             }
-            this.anim?.play(this.anim?.resolve('WALL_SLIDE'));
+
+            if (entering && this.anim) {
+                this.anim.playOnceThen(
+                    this.anim.resolve('WALL_SLIDE', 'start'),
+                    this.anim.resolve('WALL_SLIDE', 'loop')
+                );
+            }
             return;
         }
 
@@ -195,8 +202,20 @@ export class PlayerStateMachine {
                 this._playJumpHold(flags.airStyle === 'SIDE' ? 'side' : 'up');
                 return;
             }
-            this.transition('AIR_FALL');
-            this.anim?.play(this.anim?.resolve('AIR_FALL'));
+
+            // Normal falling state update
+            if (this.state !== 'AIR_FALL') {
+                this.transition('AIR_FALL');
+                if (this.anim) {
+                    this.anim.playOnceThen(
+                        this.anim.resolve('AIR_FALL', 'start'),
+                        this.anim.resolve('AIR_FALL', 'loop')
+                    );
+                }
+            } else {
+                // Ya estamos en fall, mantener facing
+                // No llamamos play() aquí para no reiniciar el ciclo start->loop
+            }
         }
 
         this.anim?.setFacing(intent.moveX);

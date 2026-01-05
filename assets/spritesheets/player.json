@@ -4,11 +4,32 @@
 			"image": "player.png",
 			"format": "RGBA8888",
 			"size": {
-				"w": 228,
-				"h": 102
+				"w": 1005,
+				"h": 34
 			},
 			"scale": 1,
 			"frames": [
+				{
+					"filename": "falling-01.png",
+					"rotated": false,
+					"trimmed": true,
+					"sourceSize": {
+						"w": 32,
+						"h": 32
+					},
+					"spriteSourceSize": {
+						"x": 1,
+						"y": 0,
+						"w": 31,
+						"h": 32
+					},
+					"frame": {
+						"x": 1,
+						"y": 1,
+						"w": 31,
+						"h": 32
+					}
+				},
 				{
 					"filename": "jump-03.png",
 					"rotated": false,
@@ -24,29 +45,8 @@
 						"h": 32
 					},
 					"frame": {
-						"x": 1,
+						"x": 34,
 						"y": 1,
-						"w": 31,
-						"h": 32
-					}
-				},
-				{
-					"filename": "jump-04.png",
-					"rotated": false,
-					"trimmed": true,
-					"sourceSize": {
-						"w": 32,
-						"h": 32
-					},
-					"spriteSourceSize": {
-						"x": 1,
-						"y": 0,
-						"w": 31,
-						"h": 32
-					},
-					"frame": {
-						"x": 1,
-						"y": 35,
 						"w": 31,
 						"h": 32
 					}
@@ -66,8 +66,8 @@
 						"h": 32
 					},
 					"frame": {
-						"x": 1,
-						"y": 69,
+						"x": 67,
+						"y": 1,
 						"w": 30,
 						"h": 32
 					}
@@ -87,8 +87,8 @@
 						"h": 32
 					},
 					"frame": {
-						"x": 1,
-						"y": 69,
+						"x": 67,
+						"y": 1,
 						"w": 30,
 						"h": 32
 					}
@@ -108,14 +108,14 @@
 						"h": 32
 					},
 					"frame": {
-						"x": 1,
-						"y": 69,
+						"x": 67,
+						"y": 1,
 						"w": 30,
 						"h": 32
 					}
 				},
 				{
-					"filename": "jump-05.png",
+					"filename": "falling-02.png",
 					"rotated": false,
 					"trimmed": true,
 					"sourceSize": {
@@ -129,8 +129,8 @@
 						"h": 32
 					},
 					"frame": {
-						"x": 33,
-						"y": 69,
+						"x": 99,
+						"y": 1,
 						"w": 30,
 						"h": 32
 					}
@@ -150,7 +150,7 @@
 						"h": 32
 					},
 					"frame": {
-						"x": 34,
+						"x": 131,
 						"y": 1,
 						"w": 29,
 						"h": 32
@@ -171,8 +171,8 @@
 						"h": 32
 					},
 					"frame": {
-						"x": 34,
-						"y": 35,
+						"x": 162,
+						"y": 1,
 						"w": 29,
 						"h": 32
 					}
@@ -192,7 +192,7 @@
 						"h": 31
 					},
 					"frame": {
-						"x": 65,
+						"x": 193,
 						"y": 1,
 						"w": 29,
 						"h": 31
@@ -213,7 +213,7 @@
 						"h": 31
 					},
 					"frame": {
-						"x": 65,
+						"x": 193,
 						"y": 1,
 						"w": 29,
 						"h": 31
@@ -234,8 +234,8 @@
 						"h": 31
 					},
 					"frame": {
-						"x": 65,
-						"y": 34,
+						"x": 224,
+						"y": 1,
 						"w": 29,
 						"h": 31
 					}
@@ -255,8 +255,8 @@
 						"h": 31
 					},
 					"frame": {
-						"x": 65,
-						"y": 34,
+						"x": 224,
+						"y": 1,
 						"w": 29,
 						"h": 31
 					}
@@ -276,8 +276,8 @@
 						"h": 31
 					},
 					"frame": {
-						"x": 65,
-						"y": 67,
+						"x": 255,
+						"y": 1,
 						"w": 29,
 						"h": 31
 					}
@@ -297,8 +297,8 @@
 						"h": 31
 					},
 					"frame": {
-						"x": 65,
-						"y": 67,
+						"x": 255,
+						"y": 1,
 						"w": 29,
 						"h": 31
 					}
@@ -318,7 +318,7 @@
 						"h": 32
 					},
 					"frame": {
-						"x": 96,
+						"x": 286,
 						"y": 1,
 						"w": 28,
 						"h": 32
@@ -339,8 +339,8 @@
 						"h": 31
 					},
 					"frame": {
-						"x": 96,
-						"y": 35,
+						"x": 316,
+						"y": 1,
 						"w": 28,
 						"h": 31
 					}
@@ -360,10 +360,136 @@
 						"h": 31
 					},
 					"frame": {
-						"x": 96,
-						"y": 68,
+						"x": 346,
+						"y": 1,
 						"w": 28,
 						"h": 31
+					}
+				},
+				{
+					"filename": "falling-04.png",
+					"rotated": false,
+					"trimmed": true,
+					"sourceSize": {
+						"w": 32,
+						"h": 32
+					},
+					"spriteSourceSize": {
+						"x": 0,
+						"y": 0,
+						"w": 27,
+						"h": 32
+					},
+					"frame": {
+						"x": 376,
+						"y": 1,
+						"w": 27,
+						"h": 32
+					}
+				},
+				{
+					"filename": "falling-05.png",
+					"rotated": false,
+					"trimmed": true,
+					"sourceSize": {
+						"w": 32,
+						"h": 32
+					},
+					"spriteSourceSize": {
+						"x": 0,
+						"y": 0,
+						"w": 27,
+						"h": 32
+					},
+					"frame": {
+						"x": 405,
+						"y": 1,
+						"w": 27,
+						"h": 32
+					}
+				},
+				{
+					"filename": "falling-06.png",
+					"rotated": false,
+					"trimmed": true,
+					"sourceSize": {
+						"w": 32,
+						"h": 32
+					},
+					"spriteSourceSize": {
+						"x": 0,
+						"y": 0,
+						"w": 27,
+						"h": 32
+					},
+					"frame": {
+						"x": 434,
+						"y": 1,
+						"w": 27,
+						"h": 32
+					}
+				},
+				{
+					"filename": "falling-07.png",
+					"rotated": false,
+					"trimmed": true,
+					"sourceSize": {
+						"w": 32,
+						"h": 32
+					},
+					"spriteSourceSize": {
+						"x": 0,
+						"y": 0,
+						"w": 27,
+						"h": 32
+					},
+					"frame": {
+						"x": 463,
+						"y": 1,
+						"w": 27,
+						"h": 32
+					}
+				},
+				{
+					"filename": "falling-08.png",
+					"rotated": false,
+					"trimmed": true,
+					"sourceSize": {
+						"w": 32,
+						"h": 32
+					},
+					"spriteSourceSize": {
+						"x": 0,
+						"y": 0,
+						"w": 27,
+						"h": 32
+					},
+					"frame": {
+						"x": 492,
+						"y": 1,
+						"w": 27,
+						"h": 32
+					}
+				},
+				{
+					"filename": "falling-09.png",
+					"rotated": false,
+					"trimmed": true,
+					"sourceSize": {
+						"w": 32,
+						"h": 32
+					},
+					"spriteSourceSize": {
+						"x": 0,
+						"y": 0,
+						"w": 27,
+						"h": 32
+					},
+					"frame": {
+						"x": 521,
+						"y": 1,
+						"w": 27,
+						"h": 32
 					}
 				},
 				{
@@ -381,7 +507,7 @@
 						"h": 32
 					},
 					"frame": {
-						"x": 126,
+						"x": 550,
 						"y": 1,
 						"w": 26,
 						"h": 32
@@ -402,7 +528,7 @@
 						"h": 32
 					},
 					"frame": {
-						"x": 126,
+						"x": 550,
 						"y": 1,
 						"w": 26,
 						"h": 32
@@ -423,7 +549,7 @@
 						"h": 32
 					},
 					"frame": {
-						"x": 126,
+						"x": 550,
 						"y": 1,
 						"w": 26,
 						"h": 32
@@ -444,8 +570,8 @@
 						"h": 32
 					},
 					"frame": {
-						"x": 126,
-						"y": 35,
+						"x": 578,
+						"y": 1,
 						"w": 26,
 						"h": 32
 					}
@@ -465,8 +591,8 @@
 						"h": 32
 					},
 					"frame": {
-						"x": 126,
-						"y": 69,
+						"x": 606,
+						"y": 1,
 						"w": 25,
 						"h": 32
 					}
@@ -486,8 +612,8 @@
 						"h": 32
 					},
 					"frame": {
-						"x": 153,
-						"y": 69,
+						"x": 633,
+						"y": 1,
 						"w": 25,
 						"h": 32
 					}
@@ -507,7 +633,7 @@
 						"h": 32
 					},
 					"frame": {
-						"x": 154,
+						"x": 660,
 						"y": 1,
 						"w": 25,
 						"h": 32
@@ -528,8 +654,8 @@
 						"h": 32
 					},
 					"frame": {
-						"x": 154,
-						"y": 35,
+						"x": 687,
+						"y": 1,
 						"w": 24,
 						"h": 32
 					}
@@ -549,8 +675,8 @@
 						"h": 32
 					},
 					"frame": {
-						"x": 154,
-						"y": 35,
+						"x": 687,
+						"y": 1,
 						"w": 24,
 						"h": 32
 					}
@@ -570,8 +696,8 @@
 						"h": 32
 					},
 					"frame": {
-						"x": 180,
-						"y": 35,
+						"x": 713,
+						"y": 1,
 						"w": 23,
 						"h": 32
 					}
@@ -591,10 +717,178 @@
 						"h": 32
 					},
 					"frame": {
-						"x": 180,
-						"y": 35,
+						"x": 713,
+						"y": 1,
 						"w": 23,
 						"h": 32
+					}
+				},
+				{
+					"filename": "wallslide-01.png",
+					"rotated": false,
+					"trimmed": true,
+					"sourceSize": {
+						"w": 32,
+						"h": 32
+					},
+					"spriteSourceSize": {
+						"x": 7,
+						"y": 0,
+						"w": 23,
+						"h": 30
+					},
+					"frame": {
+						"x": 738,
+						"y": 1,
+						"w": 23,
+						"h": 30
+					}
+				},
+				{
+					"filename": "wallslide-02.png",
+					"rotated": false,
+					"trimmed": true,
+					"sourceSize": {
+						"w": 32,
+						"h": 32
+					},
+					"spriteSourceSize": {
+						"x": 7,
+						"y": 0,
+						"w": 23,
+						"h": 30
+					},
+					"frame": {
+						"x": 763,
+						"y": 1,
+						"w": 23,
+						"h": 30
+					}
+				},
+				{
+					"filename": "wallslide-03.png",
+					"rotated": false,
+					"trimmed": true,
+					"sourceSize": {
+						"w": 32,
+						"h": 32
+					},
+					"spriteSourceSize": {
+						"x": 7,
+						"y": 0,
+						"w": 23,
+						"h": 30
+					},
+					"frame": {
+						"x": 788,
+						"y": 1,
+						"w": 23,
+						"h": 30
+					}
+				},
+				{
+					"filename": "wallslide-04.png",
+					"rotated": false,
+					"trimmed": true,
+					"sourceSize": {
+						"w": 32,
+						"h": 32
+					},
+					"spriteSourceSize": {
+						"x": 7,
+						"y": 0,
+						"w": 23,
+						"h": 30
+					},
+					"frame": {
+						"x": 788,
+						"y": 1,
+						"w": 23,
+						"h": 30
+					}
+				},
+				{
+					"filename": "wallslide-05.png",
+					"rotated": false,
+					"trimmed": true,
+					"sourceSize": {
+						"w": 32,
+						"h": 32
+					},
+					"spriteSourceSize": {
+						"x": 7,
+						"y": 0,
+						"w": 23,
+						"h": 30
+					},
+					"frame": {
+						"x": 813,
+						"y": 1,
+						"w": 23,
+						"h": 30
+					}
+				},
+				{
+					"filename": "wallslide-06.png",
+					"rotated": false,
+					"trimmed": true,
+					"sourceSize": {
+						"w": 32,
+						"h": 32
+					},
+					"spriteSourceSize": {
+						"x": 7,
+						"y": 0,
+						"w": 23,
+						"h": 30
+					},
+					"frame": {
+						"x": 838,
+						"y": 1,
+						"w": 23,
+						"h": 30
+					}
+				},
+				{
+					"filename": "wallslide-07.png",
+					"rotated": false,
+					"trimmed": true,
+					"sourceSize": {
+						"w": 32,
+						"h": 32
+					},
+					"spriteSourceSize": {
+						"x": 7,
+						"y": 0,
+						"w": 23,
+						"h": 30
+					},
+					"frame": {
+						"x": 863,
+						"y": 1,
+						"w": 23,
+						"h": 30
+					}
+				},
+				{
+					"filename": "wallslide-08.png",
+					"rotated": false,
+					"trimmed": true,
+					"sourceSize": {
+						"w": 32,
+						"h": 32
+					},
+					"spriteSourceSize": {
+						"x": 7,
+						"y": 0,
+						"w": 23,
+						"h": 30
+					},
+					"frame": {
+						"x": 888,
+						"y": 1,
+						"w": 23,
+						"h": 30
 					}
 				},
 				{
@@ -612,7 +906,7 @@
 						"h": 32
 					},
 					"frame": {
-						"x": 181,
+						"x": 913,
 						"y": 1,
 						"w": 22,
 						"h": 32
@@ -633,7 +927,7 @@
 						"h": 32
 					},
 					"frame": {
-						"x": 181,
+						"x": 913,
 						"y": 1,
 						"w": 22,
 						"h": 32
@@ -654,8 +948,8 @@
 						"h": 32
 					},
 					"frame": {
-						"x": 180,
-						"y": 69,
+						"x": 937,
+						"y": 1,
 						"w": 21,
 						"h": 32
 					}
@@ -675,8 +969,8 @@
 						"h": 32
 					},
 					"frame": {
-						"x": 203,
-						"y": 69,
+						"x": 960,
+						"y": 1,
 						"w": 21,
 						"h": 32
 					}
@@ -696,8 +990,8 @@
 						"h": 32
 					},
 					"frame": {
-						"x": 203,
-						"y": 69,
+						"x": 960,
+						"y": 1,
 						"w": 21,
 						"h": 32
 					}
@@ -717,31 +1011,10 @@
 						"h": 32
 					},
 					"frame": {
-						"x": 205,
+						"x": 983,
 						"y": 1,
 						"w": 21,
 						"h": 32
-					}
-				},
-				{
-					"filename": "tocando pared.png",
-					"rotated": false,
-					"trimmed": true,
-					"sourceSize": {
-						"w": 32,
-						"h": 32
-					},
-					"spriteSourceSize": {
-						"x": 8,
-						"y": 0,
-						"w": 22,
-						"h": 30
-					},
-					"frame": {
-						"x": 205,
-						"y": 35,
-						"w": 22,
-						"h": 30
 					}
 				}
 			]
@@ -750,6 +1023,6 @@
 	"meta": {
 		"app": "https://www.codeandweb.com/texturepacker",
 		"version": "3.0",
-		"smartupdate": "$TexturePacker:SmartUpdate:8d4a8a47cd09f55d9cc0a8ffa5f72722:015711f4e527ebd25199b3a972b82e56:86d5339b780aedd87b35e2b7c0a7e11b$"
+		"smartupdate": "$TexturePacker:SmartUpdate:bbbe36fdd3b7d20dad469f1969c7d606:121464c51e59d754ff0ccd24bb46ac0e:86d5339b780aedd87b35e2b7c0a7e11b$"
 	}
 }

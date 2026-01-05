@@ -93,9 +93,13 @@ export class PlayerAnimationController {
                 if (subStyle === 'side') return ANIM_MANIFEST.AIR_RISE.side;
                 return ANIM_MANIFEST.AIR_RISE.up;
             case 'AIR_FALL':
-                return ANIM_MANIFEST.AIR_FALL;
+                if (subStyle === 'start') return ANIM_MANIFEST.AIR_FALL.start;
+                if (subStyle === 'loop') return ANIM_MANIFEST.AIR_FALL.loop;
+                return ANIM_MANIFEST.AIR_FALL.loop; // Fallback
             case 'WALL_SLIDE':
-                return ANIM_MANIFEST.WALL_SLIDE;
+                if (subStyle === 'start') return ANIM_MANIFEST.WALL_SLIDE.start;
+                if (subStyle === 'loop') return ANIM_MANIFEST.WALL_SLIDE.loop;
+                return ANIM_MANIFEST.WALL_SLIDE.loop;
             case 'POWERUP_CUTSCENE':
                 return ANIM_MANIFEST.POWERUP;
             case 'HIT':

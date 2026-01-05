@@ -14,8 +14,14 @@ export const ANIM_MANIFEST = {
         side: 'player_jump_side',
         wall: 'player_jump_wall'
     },
-    AIR_FALL: 'player_fall',
-    WALL_SLIDE: 'player_wall_slide',
+    AIR_FALL: {
+        start: 'player_fall_start',
+        loop: 'player_fall_loop'
+    },
+    WALL_SLIDE: {
+        start: 'player_wall_slide_start',
+        loop: 'player_wall_slide_loop'
+    },
     POWERUP: 'player_powerup',
     HIT: 'player_hit',
     GOAL: 'player_goal'

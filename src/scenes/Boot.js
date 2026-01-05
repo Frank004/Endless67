@@ -65,6 +65,7 @@ export class Boot extends Phaser.Scene {
     }
 
     create() {
+        console.log('Boot sequence loaded - Rev 3 (No Wallslide-09)');
         // Generate Textures
         let g = this.make.graphics({ x: 0, y: 0 });
 
@@ -91,12 +92,32 @@ export class Boot extends Phaser.Scene {
         // Registrar animaciones del player (si hay atlas)
         if (atlasLoaded && this.anims) {
             const playerTex = this.textures.get(ASSETS.PLAYER);
-            const hasFrame = (f) => playerTex.has(f);
+
+            // Helper más robusto para encontrar frames (maneja espacios extra)
+            const findFrame = (f) => {
+                if (playerTex.has(f)) return f;
+                if (playerTex.has(f.trim())) return f.trim();
+                console.warn(`Frame no encontrado en Player Atlas: "${f}"`);
+                return null;
+            };
+            const hasFrame = (f) => findFrame(f) !== null;
+
             const makeAnim = (key, frameNames, frameRate = 10, repeat = -1) => {
                 if (this.anims.exists(key)) return;
-                const frames = frameNames.filter(hasFrame).map(f => ({ key: ASSETS.PLAYER, frame: f }));
+
+                const frames = [];
+                frameNames.forEach(name => {
+                    const realName = findFrame(name);
+                    if (realName) {
+                        frames.push({ key: ASSETS.PLAYER, frame: realName });
+                    }
+                });
+
                 if (frames.length > 0) {
                     this.anims.create({ key, frames, frameRate, repeat });
+                    console.log(`Animación creada: ${key} (${frames.length} frames)`);
+                } else {
+                    console.error(`No se pudo crear animación ${key}: Ningún frame válido.`);
                 }
             };
 
@@ -105,9 +126,17 @@ export class Boot extends Phaser.Scene {
             makeAnim('player_run_stop', ['stop-running-01.png', 'stop-running-02.png', 'stop-running-03.png'], 12, 0);
             makeAnim('player_jump_up', ['jump-01.png', 'jump-02.png', 'jump-03.png'], 12, 0);
             makeAnim('player_jump_side', ['jump-01.png', 'jump-02.png', 'jump-03.png'], 12, 0);
-            makeAnim('player_jump_wall', ['jump-04.png', 'jump-05.png'], 10, 0);
-            makeAnim('player_fall', ['jump-05.png'], 1, -1);
-            makeAnim('player_wall_slide', ['tocando pared.png'], 1, -1);
+            makeAnim('player_jump_wall', ['jump-03.png'], 10, 0);
+            makeAnim('player_fall_start', ['falling-01.png', 'falling-02.png'], 12, 0);
+            makeAnim('player_fall_loop', [
+                'falling-04.png', 'falling-05.png', 'falling-06.png',
+                'falling-07.png', 'falling-08.png', 'falling-09.png'
+            ], 12, -1);
+            makeAnim('player_wall_slide_start', [
+                'wallslide-01.png', 'wallslide-02.png', 'wallslide-03.png',
+                'wallslide-04.png', 'wallslide-05.png'
+            ], 12, 0);
+            makeAnim('player_wall_slide_loop', ['wallslide-06.png', 'wallslide-07.png', 'wallslide-08.png'], 12, -1);
             makeAnim('player_hit', ['hit-01.png', 'hit-02.png'], 10, 0);
             // Animación de powerup: usa frames dentro del atlas del player (basketball_powerup-01..16)
             const powerFrameOrder = [
