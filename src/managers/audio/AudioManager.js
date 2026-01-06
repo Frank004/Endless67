@@ -375,6 +375,38 @@ export class AudioManager {
     }
 
     /**
+     * Play trashcan hit sound with random pitch
+     */
+    playTrashcanHit() {
+        const scene = this.scene;
+        if (!scene) return;
+        try {
+            if (scene.sound && scene.cache.audio.exists(ASSETS.TRASHCAN_HIT)) {
+                const randomDetune = Phaser.Math.Between(-300, 300);
+                scene.sound.play(ASSETS.TRASHCAN_HIT, { detune: randomDetune, volume: 0.6 });
+            }
+        } catch (error) {
+            console.warn('Error playing trashcan sound:', error);
+        }
+    }
+
+    /**
+     * Play tire bounce sound with random pitch
+     */
+    playTireBounce() {
+        const scene = this.scene;
+        if (!scene) return;
+        try {
+            if (scene.sound && scene.cache.audio.exists(ASSETS.TIRE_BOUNCE)) {
+                const randomDetune = Phaser.Math.Between(-200, 200);
+                scene.sound.play(ASSETS.TIRE_BOUNCE, { detune: randomDetune, volume: 0.5 });
+            }
+        } catch (error) {
+            console.warn('Error playing tire sound:', error);
+        }
+    }
+
+    /**
      * Play lava drop sound (player touches lava)
      */
     playLavaDropSound() {

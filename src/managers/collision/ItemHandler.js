@@ -14,6 +14,7 @@ export class ItemHandler {
     collectCoin(player, coin) {
         const scene = this.scene;
         if (!coin || !coin.active) return;
+        if (coin.getData && coin.getData('ignoreCollection')) return;
 
         // Deshabilitar colisión de inmediato para evitar múltiples triggers en el mismo coin
         if (coin.body) {
@@ -49,6 +50,7 @@ export class ItemHandler {
     collectPowerup(player, powerup) {
         const scene = this.scene;
         if (!powerup || !powerup.active) return;
+        if (powerup.getData && powerup.getData('ignoreCollection')) return;
 
         // Deshabilitar colisión de inmediato para evitar múltiples triggers
         if (powerup.body) {

@@ -35,6 +35,8 @@ export class Boot extends Phaser.Scene {
         this.load.audio(ASSETS.DESTROY_SFX, 'assets/audio/destroy/destroy.mp3');
         this.load.audio(ASSETS.CELEBRATION_SFX, 'assets/audio/celebration/67.mp3');
         this.load.audio(ASSETS.SHOE_BRAKE, 'assets/audio/shoes/shoe-brake.mp3');
+        this.load.audio(ASSETS.TRASHCAN_HIT, 'assets/audio/trashcan/trashcan.mp3');
+        this.load.audio(ASSETS.TIRE_BOUNCE, 'assets/audio/tire bounce/tirebounce.mp3');
 
         // --- UI ICONS ---
         this.load.atlas(ASSETS.UI_ICONS, 'assets/ui/icons.png', 'assets/ui/icons.json');

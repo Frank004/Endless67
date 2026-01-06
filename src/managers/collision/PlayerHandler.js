@@ -2,6 +2,7 @@ import GameState from '../../core/GameState.js';
 import ScoreManager from '../gameplay/ScoreManager.js';
 import AudioManager from '../audio/AudioManager.js';
 import { PLAYER_CONFIG } from '../../config/PlayerConfig.js';
+import { launchItem } from '../../utils/physicsUtils.js';
 
 export class PlayerHandler {
     constructor(scene) {
@@ -188,11 +189,54 @@ export class PlayerHandler {
             trashcan.play('trashcan_hit');
         }
 
+        // Play SFX
+        AudioManager.playTrashcanHit();
+
+        // --- NEW LOGIC: Spawn Bouncing Item (Coin or Powerup) ---
+        // Fix offset: Trashcan appears to offset coin to the right, adjusting spawnX left by 25px
+        const spawnX = trashcan.x - 25;
+        const spawnY = trashcan.y - 35; // Slightly higher to ensure it clears the can lid
+
+        // 5% Chance for Powerup, 95% for Coin
+        let item;
+        let group;
+
+        if (Math.random() < 0.05) {
+            // Spawn Powerup
+            item = scene.powerupPool.spawn(spawnX, spawnY);
+            group = scene.powerups;
+        } else {
+            // Spawn Coin
+            item = scene.coinPool.spawn(spawnX, spawnY);
+            group = scene.coins;
+        }
+
+        if (item) {
+            // Add to group IMMEDIATELY so physics/gravity works from start
+            if (group && !group.contains(item)) {
+                group.add(item, true);
+            }
+
+            // Set flag to ignore pickup initially (so animation can be seen)
+            item.setData('ignoreCollection', true);
+
+            // Launch item
+            const obstacles = [scene.stageFloor, scene.leftWall, scene.rightWall];
+            launchItem(scene, item, player.x, obstacles);
+
+            // Enable pickup after delay
+            scene.time.delayedCall(600, () => {
+                if (item.active) {
+                    item.setData('ignoreCollection', false);
+                }
+            });
+        }
+
         // Apply knockback to player
         const playerVX = player.body?.velocity?.x || 0;
         const dir = playerVX >= 0 ? -1 : 1; // Knockback opposite to player direction
-        const knockbackX = dir * Phaser.Math.Between(400, 500);
-        const knockbackY = -300; // Upward knockback
+        const knockbackX = dir * Phaser.Math.Between(600, 700); // Stronger horizontal push
+        const knockbackY = -250; // Lower vertical kick (more horizontal trajectory)
         player.setVelocity(knockbackX, knockbackY);
 
         // Enter hit state briefly
@@ -231,6 +275,9 @@ export class PlayerHandler {
 
         const bounceForce = PLAYER_CONFIG.FORCES.JUMP * 1.5;
         player.setVelocityY(-bounceForce);
+
+        // Play SFX
+        AudioManager.playTireBounce();
 
         const ctx = player.controller?.context;
         if (ctx) {

@@ -37,6 +37,8 @@ export const ASSETS = {
     DESTROY_SFX: 'destroy_sfx',
     CELEBRATION_SFX: 'celebration_sfx',
     SHOE_BRAKE: 'shoe_brake',
+    TRASHCAN_HIT: 'trashcan_hit',
+    TIRE_BOUNCE: 'tire_bounce',
 
     // Audio Arrays (Prefixes)
     COIN_SFX_PREFIX: 'coin_sfx_',
