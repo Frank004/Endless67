@@ -45,6 +45,7 @@ class GameState {
         this._lives = 3;
         this._isPaused = false;
         this._isGameOver = false;
+        console.log('[GameState] RESET. isGameOver:', this._isGameOver);
 
         EventBus.emit(Events.SCORE_UPDATED, { score: this._score });
         EventBus.emit(Events.HEIGHT_UPDATED, { height: this._height });

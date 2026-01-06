@@ -115,14 +115,19 @@ export class PauseMenu {
     }
 
     toggle() {
-        // Refrescar estado actual
+        console.log('[PauseMenu] Toggle called. GameOver:', GameState.isGameOver, 'Paused:', GameState.isPaused);
+        if (GameState.isGameOver) {
+            console.log('[PauseMenu] Blocked by Game Over');
+            return;
+        }
+
         const currentlyPaused = GameState.isPaused;
         if (currentlyPaused) {
-            GameState.resume();     // Emitirá GAME_RESUMED
-            this.hide();   // Fallback directo
+            console.log('[PauseMenu] Resuming');
+            GameState.resume();
         } else {
-            GameState.pause();      // Emitirá GAME_PAUSED
-            this.show();   // Fallback directo
+            console.log('[PauseMenu] Pausing');
+            GameState.pause();
         }
     }
 
@@ -170,4 +175,5 @@ export class PauseMenu {
         this.pauseButton.setFrame('pause'); // Pause icon
         scene.tweens.resumeAll();
     }
+
 }

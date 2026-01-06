@@ -139,9 +139,8 @@ export class BackgroundManager {
         for (let i = startIdx; i <= endIdx; i++) {
             const targetY = i * this.segmentHeight;
 
-            // Restricción de altura: Solo generar cables a partir de 50m (Y < 0)
-            // Asumiendo que startY es ~500, Y < 0 es aprox 50m hacia arriba.
-            if (targetY > 0) continue;
+            // Removed segment-level block to allow wall decorations.
+            // Cable restriction is now inside createSegment.
 
             const exists = this.segments.some(s => Math.abs(s.y - targetY) < 1); // Float tolerance check
             if (!exists) {
@@ -189,19 +188,25 @@ export class BackgroundManager {
 
         // --- CABLE SPAWNING ---
 
-        // 1. Background Cables (High density)
-        // Chance: 90% per segment
-        if (Math.random() < 0.9) {
-            const bgCable = this.createBgCable(y + (this.segmentHeight * 0.5)); // Middle of segment
-            if (bgCable) items.push(bgCable);
-        }
+        // RESTRICTION: Only spawn cables if we are high enough (Y < -300)
+        // This prevents cables from appearing in the starting 'safe zone'.
+        if (y < -300) {
 
-        // 2. Foreground Cables (~Every 4-5th segment / 2500-3000px)
-        // Chance: 20% per segment
-        if (Math.random() < 0.25) {
-            const fgCable = this.createFgCable(y + (this.segmentHeight * 0.5));
-            if (fgCable) items.push(fgCable);
-        }
+            // 1. Background Cables (High density)
+            // Chance: 90% per segment
+            if (Math.random() < 0.9) {
+                const bgCable = this.createBgCable(y + (this.segmentHeight * 0.5)); // Middle of segment
+                if (bgCable) items.push(bgCable);
+            }
+
+            // 2. Foreground Cables (~Every 4-5th segment / 2500-3000px)
+            // Chance: 20% per segment
+            if (Math.random() < 0.25) {
+                const fgCable = this.createFgCable(y + (this.segmentHeight * 0.5));
+                if (fgCable) items.push(fgCable);
+            }
+
+        } // End Cable Restriction
 
         this.segments.push({ y, items });
     }

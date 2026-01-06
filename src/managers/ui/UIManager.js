@@ -108,6 +108,7 @@ export class UIManager {
 
         // Listen to pause/resume events
         const pauseListener = () => {
+            console.log('[UIManager] Received GAME_PAUSED');
             this.showPauseMenu();
         };
         EventBus.on(Events.GAME_PAUSED, pauseListener);

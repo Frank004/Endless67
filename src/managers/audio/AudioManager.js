@@ -59,6 +59,7 @@ export class AudioManager {
         EventBus.on(Events.PLAYER_HIT, this.playDamageSound, this);
         EventBus.on(Events.POWERUP_COLLECTED, this.playCelebrationSound, this);
         EventBus.on(Events.ENEMY_DESTROYED, this.playDestroySound, this);
+        EventBus.on(Events.GAME_OVER, this.stopAudio, this);
         // Add more listeners as needed
     }
 
@@ -69,6 +70,7 @@ export class AudioManager {
         EventBus.off(Events.PLAYER_HIT, this.playDamageSound, this);
         EventBus.off(Events.POWERUP_COLLECTED, this.playCelebrationSound, this);
         EventBus.off(Events.ENEMY_DESTROYED, this.playDestroySound, this);
+        EventBus.off(Events.GAME_OVER, this.stopAudio, this);
     }
 
     setupAudio() {
@@ -123,6 +125,11 @@ export class AudioManager {
         if (this.bgMusic) {
             this.bgMusic.stop();
             this.bgMusic = null;
+        }
+
+        // Nuclear option: Stop all sounds in the scene manager to ensure silence
+        if (this.scene && this.scene.sound) {
+            this.scene.sound.stopAll();
         }
     }
 

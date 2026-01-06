@@ -1,3 +1,4 @@
+import GameState from '../../core/GameState.js';
 import ScoreManager from '../gameplay/ScoreManager.js';
 import AudioManager from '../audio/AudioManager.js';
 import { PLAYER_CONFIG } from '../../config/PlayerConfig.js';
@@ -120,6 +121,10 @@ export class PlayerHandler {
         // Play riser drop sound
         AudioManager.playLavaDropSound();
 
+        // NOTIFICAR AL ESTADO GLOBAL PARA PARAR AUDIO Y BLOQUEAR PAUSA
+        // NOTIFICAR AL ESTADO GLOBAL PARA PARAR AUDIO Y BLOQUEAR PAUSA
+        GameState.gameOver();
+
         scene.isGameOver = true;
         scene.burnEmitter.emitParticleAt(player.x, player.y, 50);
         player.setVelocity(0, 0);
@@ -157,7 +162,7 @@ export class PlayerHandler {
      */
     handleTrashcanCollision(player, trashcan) {
         const scene = this.scene;
-        
+
         // Check if collision is still enabled
         if (trashcan.isCollisionEnabled && !trashcan.isCollisionEnabled()) {
             return;

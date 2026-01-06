@@ -40,6 +40,9 @@ export class Game extends Phaser.Scene {
         // CRITICAL: Clean up any residual objects from previous game session
         this.cleanupPreviousGame();
 
+        // Reset Global State
+        GameState.reset();
+
         // --- BACKGROUND SYSTEM ---
         // Initialize first to ensure it's at the very back (Z-index -20)
         this.backgroundManager = new BackgroundManager(this);
@@ -49,6 +52,13 @@ export class Game extends Phaser.Scene {
         // Handles setup of camera, devices, groups, pools, managers, and events
         this.initializer = new GameInitializer(this);
         this.initializer.init();
+
+        // CRITICAL: Ensure UIManager cleans up global EventBus listeners on scene shutdown
+        this.events.once('shutdown', () => {
+            if (this.uiManager) {
+                this.uiManager.destroy();
+            }
+        });
 
         // --- GAME STATE VARIABLES ---
         this.gameStarted = false;
@@ -518,6 +528,24 @@ export class Game extends Phaser.Scene {
             }
         } catch (e) {
             // Silently ignore camera reset errors
+        }
+
+        // Clean up UI Manager listeners
+        try {
+            if (this.uiManager && typeof this.uiManager.destroy === 'function') {
+                this.uiManager.destroy();
+            }
+        } catch (e) {
+            // Silently ignore UI cleanup errors
+        }
+
+        // Clean up Audio Manager listeners
+        try {
+            if (this.audioManager && typeof this.audioManager.stopAudio === 'function') {
+                this.audioManager.stopAudio();
+            }
+        } catch (e) {
+            // Silently ignore Audio cleanup errors
         }
 
         // Clean up stage props
