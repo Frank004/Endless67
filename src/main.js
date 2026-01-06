@@ -1,4 +1,5 @@
 import { Boot } from './scenes/Boot.js';
+import { Preloader } from './scenes/Preloader.js';
 import { Game } from './scenes/Game.js';
 import { MainMenu } from './scenes/MainMenu.js';
 import { Leaderboard } from './scenes/Leaderboard.js';
@@ -54,7 +55,7 @@ const config = {
     },
     input: { activePointers: 3 },
     physics: { default: 'arcade', arcade: { gravity: { y: 1200 }, debug: false } },
-    scene: [Boot, MainMenu, Game, Leaderboard, Settings, Playground]
+    scene: [Boot, Preloader, MainMenu, Game, Leaderboard, Settings, Playground]
 };
 
 const game = new Phaser.Game(config);
