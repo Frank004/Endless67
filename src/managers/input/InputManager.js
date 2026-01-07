@@ -149,6 +149,15 @@ export class InputManager {
             const axisH = pad.getAxisValue(0); // Left Stick Horizontal
             const axisV = pad.getAxisValue(1); // Left Stick Vertical
 
+            // Check if we should start the game (any gamepad button)
+            if (!scene.gameStarted && !scene.isPaused && typeof scene.startGame === 'function') {
+                if (pad.A || pad.B || pad.X || pad.Y || pad.up || pad.down || pad.left || pad.right) {
+                    scene.startGame();
+                    this.lastNavTime = time;
+                    return;
+                }
+            }
+
             if (pad.up || axisV < -0.5) navAction = Events.UI_NAV_UP;
             else if (pad.down || axisV > 0.5) navAction = Events.UI_NAV_DOWN;
             else if (pad.left || axisH < -0.5) navAction = Events.UI_NAV_LEFT;
@@ -168,19 +177,23 @@ export class InputManager {
 
         // 2. Keyboard Navigation (Fallback / Parallel)
         const cursors = scene.cursors;
+
+        // Check if we should start the game (any keyboard input)
+        if (!scene.gameStarted && !scene.isPaused && typeof scene.startGame === 'function') {
+            if (cursors.up.isDown || cursors.down.isDown || cursors.left.isDown || cursors.right.isDown ||
+                scene.spaceKey.isDown || scene.enterKey.isDown) {
+                scene.startGame();
+                this.lastNavTime = time;
+                return;
+            }
+        }
+
         if (cursors.up.isDown) navAction = Events.UI_NAV_UP;
         else if (cursors.down.isDown) navAction = Events.UI_NAV_DOWN;
         else if (cursors.left.isDown) navAction = Events.UI_NAV_LEFT;
         else if (cursors.right.isDown) navAction = Events.UI_NAV_RIGHT;
 
         if (scene.spaceKey.isDown || scene.enterKey.isDown) {
-            // CRITICAL: Check if we should start the game (Game Scene Pre-start)
-            if (!scene.gameStarted && !scene.isPaused && typeof scene.startGame === 'function') {
-                scene.startGame();
-                this.lastNavTime = time;
-                return;
-            }
-
             EventBus.emit(Events.UI_SELECT);
             this.lastNavTime = time;
             return;
