@@ -150,7 +150,7 @@ export class PauseMenu {
         Object.values(this.buttons).forEach(btn => btn.container.setVisible(true));
 
         this.pauseButton.setFrame('play'); // Play icon
-        scene.tweens.pauseAll();
+        // Removed pauseAll to prevent UI tween lockup
 
         this.menuNavigation.setup();
     }
@@ -164,7 +164,7 @@ export class PauseMenu {
         Object.values(this.buttons).forEach(btn => btn.container.setVisible(false));
 
         this.pauseButton.setFrame('pause'); // Pause icon
-        scene.tweens.resumeAll();
+        // Removed resumeAll
 
         this.menuNavigation.cleanup();
     }
@@ -177,9 +177,9 @@ export class PauseMenu {
         const soundTextStr = soundEnabled ? 'SOUND: ON' : 'SOUND: OFF';
         const soundIcon = soundEnabled ? 'volume-up' : 'volume-mute';
 
-        if (this.buttons.sound && this.buttons.sound.text && this.buttons.sound.text.active) {
+        if (this.buttons.sound && this.buttons.sound.text && this.buttons.sound.text.scene) {
             this.buttons.sound.text.setText(soundTextStr);
-            if (this.buttons.sound.icon && this.buttons.sound.icon.active) {
+            if (this.buttons.sound.icon && this.buttons.sound.icon.scene) {
                 this.buttons.sound.icon.setFrame(soundIcon);
             }
         }
@@ -187,9 +187,9 @@ export class PauseMenu {
         const showJoystick = scene.registry.get('showJoystick') !== false;
         const joystickTextStr = showJoystick ? 'JOYSTICK: ON' : 'JOYSTICK: OFF';
 
-        if (this.buttons.joystick && this.buttons.joystick.text && this.buttons.joystick.text.active) {
+        if (this.buttons.joystick && this.buttons.joystick.text && this.buttons.joystick.text.scene) {
             this.buttons.joystick.text.setText(joystickTextStr);
-            if (this.buttons.joystick.icon && this.buttons.joystick.icon.active) {
+            if (this.buttons.joystick.icon && this.buttons.joystick.icon.scene) {
                 this.buttons.joystick.icon.setAlpha(showJoystick ? 1 : 0.5);
             }
         }

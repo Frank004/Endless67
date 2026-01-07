@@ -67,6 +67,8 @@ describe('Menu Navigation Integration', () => {
     beforeEach(() => {
         // Setup common Phaser Scene mocks
         mockContainer = {
+            active: true,
+            scene: {},
             setData: jest.fn(),
             getData: jest.fn(),
             on: jest.fn().mockReturnThis(),
@@ -78,6 +80,8 @@ describe('Menu Navigation Integration', () => {
             emit: jest.fn()
         };
         mockText = {
+            active: true,
+            scene: {},
             setText: jest.fn().mockReturnThis(),
             setColor: jest.fn().mockReturnThis(),
             setVisible: jest.fn().mockReturnThis(),
@@ -91,6 +95,8 @@ describe('Menu Navigation Integration', () => {
             destroy: jest.fn()
         };
         mockIcon = {
+            active: true,
+            scene: {},
             setFrame: jest.fn().mockReturnThis(),
             setAlpha: jest.fn().mockReturnThis(),
             setVisible: jest.fn().mockReturnThis(),

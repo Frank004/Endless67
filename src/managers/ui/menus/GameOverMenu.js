@@ -215,5 +215,7 @@ export class GameOverMenu {
 
         this.menuNavigation = new MenuNavigation(scene, [restartBtn, leaderboardBtn, menuBtn]);
         this.menuNavigation.setup();
+        // Force selection of first button to ensure visual highlight
+        this.menuNavigation.selectButton(0);
     }
 }

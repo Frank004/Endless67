@@ -99,9 +99,14 @@ export class InputManager {
 
     processMenuInputs(time) {
         if (time - this.lastNavTime < this.navThreshold) return;
-        // console.log('[InputManager] Processing Menu Inputs'); // Uncommented via tool request if needed, but I'll add explicit one below handling context better
 
         const scene = this.scene;
+
+        // DEBUG: Log when in Game Over state
+        if (scene.isGameOver) {
+            console.log('[InputManager] 🎮 Processing inputs in GAME OVER state');
+        }
+
         const pad = scene.input.gamepad ? scene.input.gamepad.getPad(0) : null;
         let navAction = null;
 
@@ -137,20 +142,17 @@ export class InputManager {
         if (scene.spaceKey.isDown || scene.enterKey.isDown) {
             // CRITICAL: Check if we should start the game (Game Scene Pre-start)
             if (!scene.gameStarted && !scene.isPaused && typeof scene.startGame === 'function') {
-                console.log('[InputManager] Starting game via Keyboard');
                 scene.startGame();
                 this.lastNavTime = time;
                 return;
             }
 
-            console.log('[InputManager] Emitting UI_SELECT');
             EventBus.emit(Events.UI_SELECT);
             this.lastNavTime = time;
             return;
         }
 
         if (navAction) {
-            console.log('[InputManager] Emitting Nav Action:', navAction);
             EventBus.emit(navAction);
             this.lastNavTime = time;
         }

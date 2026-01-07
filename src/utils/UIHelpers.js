@@ -31,35 +31,37 @@ export class UIHelpers {
         // Define Actions
         buttonObj.select = () => {
             if (!container.scene) return;
-            if (text && text.active) text.setColor(hoverColor);
-            if (icon && icon.active) icon.setTint(hoverColor === '#ffff00' ? 0xffff00 : parseInt(hoverColor.replace('#', '0x')));
-            if (container.active) container.setScale(1.1);
+            if (text && text.scene) text.setColor(hoverColor);
+            if (icon && icon.scene) icon.setTint(hoverColor === '#ffff00' ? 0xffff00 : parseInt(hoverColor.replace('#', '0x')));
+            if (container.scene) container.setScale(1.1);
         };
 
         buttonObj.deselect = () => {
             if (!container.scene) return;
-            if (text && text.active) text.setColor(textColor);
-            if (icon && icon.active) icon.setTint(iconTint);
-            if (container.active) container.setScale(1.0);
+            if (text && text.scene) text.setColor(textColor);
+            if (icon && icon.scene) icon.setTint(iconTint);
+            if (container.scene) container.setScale(1.0);
         };
 
         buttonObj.trigger = () => {
-            if (!container.scene) {
-                if (callback) callback();
-                return;
-            }
-            // Visual feedback push
-            if (container.active) container.setScale(0.95);
+            // 1. Execute Logic IMMEDIATELY for responsiveness
+            if (callback) callback();
 
-            container.scene.tweens.add({
-                targets: container,
-                scale: 1.1,
-                duration: 100,
-                yoyo: true,
-                onComplete: () => {
-                    if (callback) callback();
-                }
-            });
+            if (!container.scene) return;
+
+            // 2. Subtle Visual Feedback (Non-blocking)
+            if (container.active) {
+                // Reset scale first to avoid drift if clicked rapidly
+                container.setScale(1.0);
+
+                container.scene.tweens.add({
+                    targets: container,
+                    scale: 0.95, // Subtle "press" feel
+                    duration: 50, // Very fast
+                    yoyo: true,
+                    ignoreGlobalTimeScale: true
+                });
+            }
         };
 
         // Bind Pointer Events

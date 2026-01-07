@@ -207,14 +207,14 @@ export class Game extends Phaser.Scene {
      * Main game loop.
      */
     update() {
-        if (!this.player || !this.player.active || !this.player.scene) {
-            return;
-        }
-
         // --- INPUT UPDATE ---
-        // CRITICAL: Must be updated before pause/gameover checks to handle menu navigation
+        // CRITICAL: Must be updated FIRST, even if player is inactive, to handle menu navigation in Game Over
         if (this.inputManager) {
             this.inputManager.update(this.time.now, this.game.loop.delta);
+        }
+
+        if (!this.player || !this.player.active || !this.player.scene) {
+            return;
         }
 
         // Game Over Logic
