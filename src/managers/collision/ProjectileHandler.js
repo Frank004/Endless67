@@ -1,3 +1,6 @@
+import AudioManager from '../audio/AudioManager.js';
+import { ASSETS } from '../../config/AssetKeys.js';
+
 export class ProjectileHandler {
     constructor(scene) {
         this.scene = scene;
@@ -8,11 +11,11 @@ export class ProjectileHandler {
         let projectile = null;
         let wall = null;
 
-        if (obj1.texture && obj1.texture.key === 'projectile') projectile = obj1;
-        else if (obj2.texture && obj2.texture.key === 'projectile') projectile = obj2;
+        if (obj1.texture && obj1.texture.key === ASSETS.PROJECTILE) projectile = obj1;
+        else if (obj2.texture && obj2.texture.key === ASSETS.PROJECTILE) projectile = obj2;
 
-        if (obj1.texture && obj1.texture.key === 'wall') wall = obj1;
-        else if (obj2.texture && obj2.texture.key === 'wall') wall = obj2;
+        if (obj1.texture && (obj1.texture.key === ASSETS.WALL_PLACEHOLDER || obj1.texture.key === ASSETS.MAZE_BLOCK)) wall = obj1;
+        else if (obj2.texture && (obj2.texture.key === ASSETS.WALL_PLACEHOLDER || obj2.texture.key === ASSETS.MAZE_BLOCK)) wall = obj2;
 
         if (!wall) {
             if (obj1 === scene.leftWall || obj1 === scene.rightWall) wall = obj1;
@@ -21,7 +24,7 @@ export class ProjectileHandler {
 
         if (!projectile) return;
         if (projectile === scene.leftWall || projectile === scene.rightWall) return;
-        if (projectile.texture && projectile.texture.key === 'wall') return;
+        if (projectile.texture && (projectile.texture.key === ASSETS.WALL_PLACEHOLDER || projectile.texture.key === ASSETS.MAZE_BLOCK)) return;
 
         if (!projectile.active || projectile.getData('processed')) return;
 
@@ -43,11 +46,11 @@ export class ProjectileHandler {
         let player = null;
         let projectile = null;
 
-        if (obj1.texture && obj1.texture.key === 'player') player = obj1;
-        else if (obj2.texture && obj2.texture.key === 'player') player = obj2;
+        if (obj1.texture && obj1.texture.key === ASSETS.PLAYER) player = obj1;
+        else if (obj2.texture && obj2.texture.key === ASSETS.PLAYER) player = obj2;
 
-        if (obj1.texture && obj1.texture.key === 'projectile') projectile = obj1;
-        else if (obj2.texture && obj2.texture.key === 'projectile') projectile = obj2;
+        if (obj1.texture && obj1.texture.key === ASSETS.PROJECTILE) projectile = obj1;
+        else if (obj2.texture && obj2.texture.key === ASSETS.PROJECTILE) projectile = obj2;
 
         if (!player && (obj1 === scene.player || obj2 === scene.player)) player = scene.player;
 
@@ -75,10 +78,8 @@ export class ProjectileHandler {
                 projectile.destroy();
             }
 
-            // Play damage sound - delegate to AudioManager
-            if (scene.audioManager) {
-                scene.audioManager.playDamageSound();
-            }
+            // Play damage sound
+            AudioManager.playDamageSound();
 
             let dir = (player.x < projX) ? -1 : 1;
             if (projVelX > 0) dir = 1; else if (projVelX < 0) dir = -1;

@@ -1,22 +1,19 @@
-import { Player } from '../prefabs/Player.js';
-import { PatrolEnemy, ShooterEnemy, JumperShooterEnemy } from '../prefabs/Enemy.js';
-import { Projectile } from '../prefabs/Projectile.js';
-import { CollisionManager } from '../managers/CollisionManager.js';
-import { LevelManager } from '../managers/LevelManager.js';
-import { InputManager } from '../managers/InputManager.js';
-import { UIManager } from '../managers/UIManager.js';
-import { AudioManager } from '../managers/AudioManager.js';
-import { ParticleManager } from '../managers/ParticleManager.js';
-import { RiserManager } from '../managers/RiserManager.js';
-import { RISER_TYPES } from '../config/RiserConfig.js';
-import { DebugManager } from '../managers/DebugManager.js';
-import { updatePlatformRider } from '../utils/platformRider.js';
 import EventBus, { Events } from '../core/EventBus.js';
+import { Player } from '../prefabs/Player.js';
+import { GameInitializer } from '../core/GameInitializer.js';
+import { updatePlatformRider } from '../utils/platformRider.js';
+import { BackgroundManager } from '../managers/background/BackgroundManager.js';
 import GameState from '../core/GameState.js';
-import PoolManager, { poolRegistry } from '../core/PoolManager.js';
-import { Platform } from '../prefabs/Platform.js';
-import { POOL, WALLS, PHYSICS } from '../config/GameConstants.js';
-import { getDeviceInfo, applyDeviceClasses } from '../utils/DeviceDetection.js';
+import { PLATFORM_WIDTH, PLATFORM_HEIGHT } from '../prefabs/Platform.js';
+import { SLOT_CONFIG } from '../config/SlotConfig.js';
+import { PowerupOverlay } from '../prefabs/PowerupOverlay.js';
+import { registerCoinAnimation, registerBasketballAnimation, registerTrashcanAnimation, registerTireAnimation } from '../utils/animations.js';
+import { REGISTRY_KEYS } from '../config/RegistryKeys.js';
+import { LAYOUT_CONFIG, calculateLayout } from '../config/LayoutConfig.js';
+import { StageFloor } from '../prefabs/StageFloor.js';
+import { AdBanner } from '../prefabs/AdBanner.js';
+import { StageProps } from '../managers/ui/StageProps.js';
+import { DifficultyManager } from '../managers/level/DifficultyManager.js';
 
 /**
  * @phasereditor
@@ -32,47 +29,44 @@ export class Game extends Phaser.Scene {
 
     /**
      * Initialize the game scene.
-     * Sets up managers, physics, input, and initial game state.
      */
     create() {
-        // --- MANAGERS ---
-        this.collisionManager = new CollisionManager(this);
-        this.levelManager = new LevelManager(this);
-        this.inputManager = new InputManager(this);
-        this.uiManager = new UIManager(this);
-        this.audioManager = new AudioManager(this);
-        this.particleManager = new ParticleManager(this);
-        this.riserManager = new RiserManager(this, RISER_TYPES.ACID);
-        this.debugManager = new DebugManager(this);
+        // CONFIRM UPDATE (only log if debug is enabled)
+        // OPTIMIZATION: Disable version log by default to reduce console noise
+        if (this.registry?.get('showSlotLogs') === true) {
+            console.log('🚀 GAME VERSION: ROCKET-ITEMS-REFACTOR-' + Date.now());
+        }
 
-        // --- PHYSICS & CAMERA SETUP ---
-        this.input.addPointer(3);
-        // Physics bounds: dinámico basado en el ancho del juego
-        // Usar constantes centralizadas para parámetros de paredes
-        // IMPORTANTE: Los bounds deben coincidir exactamente con las paredes para evitar penetración
-        // Las paredes ocupan desde x=0 hasta x=wallWidth (izquierda) y desde x=gameWidth-wallWidth hasta x=gameWidth (derecha)
-        // El área jugable va desde x=wallWidth hasta x=gameWidth-wallWidth
-        const gameWidth = this.cameras.main.width;
-        const wallWidth = WALLS.WIDTH;
-        const physicsLeft = wallWidth; // Borde izquierdo del área jugable (donde termina la pared izquierda)
-        const physicsRight = gameWidth - wallWidth; // Borde derecho del área jugable (donde empieza la pared derecha)
-        const physicsWidth = physicsRight - physicsLeft; // Ancho del área jugable
-        this.physics.world.setBounds(
-            physicsLeft,
-            PHYSICS.WORLD_BOUNDS.MIN_Y,
-            physicsWidth,
-            PHYSICS.WORLD_BOUNDS.MAX_Y
-        );
-        this.cameras.main.setBackgroundColor('#050505');
+        // --- CLEANUP FROM PREVIOUS GAME (if restarting) ---
+        // CRITICAL: Clean up any residual objects from previous game session
+        this.cleanupPreviousGame();
 
-        // --- DEVICE DETECTION ---
-        this.setupDeviceDetection(); // Usa DeviceDetection centralizado
+        // Reset Global State
+        GameState.reset();
+
+        // --- BACKGROUND SYSTEM ---
+        // Initialize first to ensure it's at the very back (Z-index -20)
+        this.backgroundManager = new BackgroundManager(this);
+        this.backgroundManager.create();
+
+        // --- INITIALIZER ---
+        // Handles setup of camera, devices, groups, pools, managers, and events
+        this.initializer = new GameInitializer(this);
+        this.initializer.init();
+
+        // CRITICAL: Ensure UIManager cleans up global EventBus listeners on scene shutdown
+        this.events.once('shutdown', () => {
+            if (this.uiManager) {
+                this.uiManager.destroy();
+            }
+        });
 
         // --- GAME STATE VARIABLES ---
         this.gameStarted = false;
         this.isGameOver = false;
         this.isPausedEvent = false;
         this.isPaused = false;
+        this.isDevMenuOpen = false;
         this.totalScore = 0;
         this.heightOffset = 0;
         this.currentHeight = 0;
@@ -83,97 +77,151 @@ export class Game extends Phaser.Scene {
         this.lastPowerupSpawnHeight = -1000;
         this.lastPowerupTime = -15000;
 
-        // --- GROUPS ---
-        this.createGroups();
+        // --- DIFFICULTY MANAGER ---
+        this.difficultyManager = new DifficultyManager(this);
 
-        // --- WALLS ---
-        this.createWalls();
+        // --- VISUAL REFRESH ---
+        // OPTIMIZATION: Pre-initialize walls immediately for instant rendering
+        if (this.wallDecorator && this.textures.exists('walls')) {
+            const initialScrollY = this.cameras.main.scrollY || 0;
+            this.wallDecorator.preInitialize(initialScrollY);
+        }
+        GameInitializer.updateWalls(this);
 
-        // --- DEBUG SETUP (ANTES DE CREAR PLAYER) ---
-        // Configurar toggle de Player PNG ANTES de crear el player
-        // El toggle se lee desde DebugManager y se guarda en registry para acceso global
-        this.registry.set('usePlayerPNG', this.debugManager.usePlayerPNG);
+        // --- DEBUG SETUP ---
+        // Cleanup activado por defecto (solo se desactiva explícitamente con disableCleanup flag)
+
+        // --- LAYOUT & STAGE ---
+        const screenHeight = this.scale.height;
+        const layout = calculateLayout(screenHeight);
+        this.layout = layout;
+
+        // Internal Ad Banner (Top 50px)
+        this.adBanner = new AdBanner(this);
+
+        // Stage Floor (Static ground at the start, 32px)
+        // Positioned at the bottom of the screen (screenHeight - 32)
+        this.stageFloor = new StageFloor(this, screenHeight);
+
+        // Decorative props on the stage floor (left and right)
+        this.stageProps = new StageProps(this);
+        this.stageProps.create(screenHeight);
 
         // --- PLAYER ---
-        // Spawn player en el centro horizontal de la pantalla
-        // El Player leerá el toggle del registry para decidir qué textura usar
-        this.player = new Player(this, this.cameras.main.centerX, 400);
+        // Spawn precisely on the StageFloor
+        this.player = new Player(this, this.cameras.main.centerX, layout.playerSpawnY);
 
-        // --- APLICAR OTROS DEBUG SETTINGS ---
+        this.powerupOverlay = new PowerupOverlay(this, this.player);
+        this.player.powerupOverlay = this.powerupOverlay;
+
+        // --- DEBUG SETTINGS ---
         this.debugManager.applyDebugSettings();
 
         // --- INITIAL LEVEL GENERATION ---
-        // Spawn plataforma inicial en el centro horizontal
-        this.levelManager.spawnPlatform(this.cameras.main.centerX, 450, 140, false);
-        this.levelManager.lastPlatformY = 450;
-        for (let i = 0; i < 6; i++) this.levelManager.generateNextRow();
+        // Usamos StageFloor como base inicial
+
+        // --- ANIMATIONS ---
+        registerCoinAnimation(this);
+        registerBasketballAnimation(this);
+        registerTrashcanAnimation(this);
+        registerTireAnimation(this);
+
+        // --- SLOT GENERATOR ---
+        // Slots comienzan sobre el StageFloor
+        this.slotGenerator.init(layout.firstSlotY);
 
         // --- LAVA & PARTICLES ---
-        // --- RISER & PARTICLES ---
         this.riserManager.createRiser();
-        this.particleManager.createParticles();
+        this.riserManager.setEnabled(true); // ✅ Lava activada
+        // ParticleManager initialized in GameInitializer
 
-        // --- SETUP MANAGERS ---
+        // --- SETUP COMPLETION ---
         this.uiManager.createUI();
-        this.uiManager.setupEventListeners(); // Setup EventBus listeners
+        this.uiManager.setupEventListeners();
         this.inputManager.setupInputs();
         this.collisionManager.setupCollisions();
-        this.audioManager.setupAudio();
 
-        // --- SETUP EVENT LISTENERS ---
-        this.setupGameEventListeners();
+        // Listen for Pause Toggle
+        const onPauseToggle = () => {
+            if (this.uiManager && this.uiManager.pauseMenu) {
+                this.uiManager.pauseMenu.toggle();
+            }
+        };
+        EventBus.on(Events.PAUSE_TOGGLE, onPauseToggle, this);
+        this.events.once('shutdown', () => {
+            EventBus.off(Events.PAUSE_TOGGLE, onPauseToggle, this);
+        });
 
         // --- CAMERA FOLLOW ---
-        this.cameras.main.startFollow(this.player, true, 0, 0.1);
+        // Offset the camera to keep the player in the lower half and reveal upcoming platforms
+        this.cameras.main.startFollow(this.player, true, 0, 0.25, 0, 140);
 
-        // --- CLEANUP ON SCENE SHUTDOWN ---
-        this.events.once('shutdown', () => {
-            this.audioManager.stopAudio();
-            this.uiManager.destroy(); // Clean up event listeners
-            this.cleanupGameEventListeners();
-        });
-    }
+        // --- DEV DIAGNOSTICS ---
+        if (typeof window !== 'undefined') {
+            window.__slotDiag = () => {
+                const cam = this.cameras.main;
+                const stats = this.platformPool?.getStats?.();
+                const slots = this.slotGenerator?.slots || [];
+                const activePlatforms = this.platformPool?.getActive?.() || [];
+                const inView = activePlatforms.filter(p => p.y <= cam.scrollY + cam.height + 200 && p.y >= cam.scrollY - 200);
+                const nearestAbove = activePlatforms
+                    .filter(p => p.y < this.player?.y)
+                    .map(p => ({ y: p.y, dy: this.player.y - p.y }))
+                    .sort((a, b) => a.dy - b.dy)[0];
+                const nearestBelow = activePlatforms
+                    .filter(p => p.y >= this.player?.y)
+                    .map(p => ({ y: p.y, dy: p.y - this.player.y }))
+                    .sort((a, b) => a.dy - b.dy)[0];
+                const platformInfo = activePlatforms
+                    .map(p => ({
+                        x: p.x,
+                        y: p.y,
+                        initX: p.initialX ?? null,
+                        initY: p.initialY ?? null
+                    }))
+                    .sort((a, b) => a.y - b.y);
+                console.log('[slotDiag] playerY=', this.player?.y, 'cameraTop=', cam.scrollY, 'height=', cam.height);
+                console.log('[slotDiag] slots count=', slots.length, 'last=', slots[slots.length - 1]);
+                console.log('[slotDiag] platformPool stats=', stats);
+                console.log('[slotDiag] active platforms:', activePlatforms.length, 'inView:', inView.length, 'nearestAbove:', nearestAbove, 'nearestBelow:', nearestBelow);
+                console.table(platformInfo);
 
-    /**
-     * Setup EventBus listeners for game state changes
-     */
-    setupGameEventListeners() {
-        // Handle physics pause/resume when game state changes
-        const pauseListener = () => {
-            this.physics.pause();
-            this.isPaused = true;
-        };
-        EventBus.on(Events.GAME_PAUSED, pauseListener);
-        this._pauseListener = pauseListener;
-
-        const resumeListener = () => {
-            this.physics.resume();
-            this.isPaused = false;
-        };
-        EventBus.on(Events.GAME_RESUMED, resumeListener);
-        this._resumeListener = resumeListener;
-    }
-
-    /**
-     * Clean up game event listeners
-     */
-    cleanupGameEventListeners() {
-        if (this._pauseListener) {
-            EventBus.off(Events.GAME_PAUSED, this._pauseListener);
-        }
-        if (this._resumeListener) {
-            EventBus.off(Events.GAME_RESUMED, this._resumeListener);
+                // Visual overlay for platform positions (outline colliders)
+                if (!this._slotDiagGfx) {
+                    this._slotDiagGfx = this.add.graphics().setDepth(9999).setScrollFactor(0);
+                }
+                const g = this._slotDiagGfx;
+                g.clear();
+                g.lineStyle(2, 0x00ff00, 0.6);
+                activePlatforms.forEach(p => {
+                    const halfW = p?.body?.width ? p.body.width / 2 : 64;
+                    const halfH = p?.body?.height ? p.body.height / 2 : 16;
+                    g.strokeRect(p.x - halfW - cam.scrollX, p.y - halfH - cam.scrollY, halfW * 2, halfH * 2);
+                    g.strokeCircle((p.x - cam.scrollX), (p.y - cam.scrollY), 4);
+                });
+            };
         }
     }
 
     /**
      * Main game loop.
-     * Delegates updates to managers and handles game state transitions.
      */
     update() {
+        // --- INPUT UPDATE ---
+        // CRITICAL: Must be updated FIRST, even if player is inactive, to handle menu navigation in Game Over
+        if (this.inputManager) {
+            this.inputManager.update(this.time.now, this.game.loop.delta);
+        }
+
+        if (!this.player || !this.player.active || !this.player.scene) {
+            return;
+        }
+
         // Game Over Logic
         if (this.isGameOver) {
-            this.riserManager.update(this.player.y, this.currentHeight, true);
+            if (this.riserManager) {
+                this.riserManager.update(this.player.y, this.currentHeight, true);
+            }
             return;
         }
 
@@ -181,267 +229,159 @@ export class Game extends Phaser.Scene {
         if (this.isPausedEvent || this.isPaused) return;
         if (!this.gameStarted) return;
 
-        // Player Update - now only handles physics, input is via EventBus
-        this.player.update();
+        // Player Update
+        if (this.player && this.player.update) {
+            this.player.update();
+        }
 
         // Manager Updates
-        this.inputManager.update();
-        this.levelManager.update();
-        // UIManager.update() removed - now uses EventBus listeners
-        this.riserManager.update(this.player.y, this.currentHeight, false);
-        this.audioManager.updateAudio(this.player.y, this.riserManager.riser.y);
-        this.debugManager.updateHitboxVisual(); // Actualizar hitbox visual si está activo
+        // Check if mobile once for all optimizations
+        const isMobile = this.isMobile || false;
 
-        // Update platformRider for coins and powerups
-        this.coins.children.iterate(coin => {
-            if (coin && coin.active) updatePlatformRider(coin);
-        });
-        this.powerups.children.iterate(powerup => {
-            if (powerup && powerup.active) updatePlatformRider(powerup);
-        });
+        // Update Difficulty Manager (Source of Truth for progression)
+        if (this.difficultyManager) {
+            // Note: currentHeight is updated at the end of this method, so this uses previous frame's height
+            // which is fine. passing absolute height (meters)
+            this.difficultyManager.update(this.currentHeight);
+        }
 
-        // Wall Movement (Keep walls fixed relative to camera)
-        this.updateWalls();
+        if (this.slotGenerator) this.slotGenerator.update();
+        if (this.riserManager) this.riserManager.update(this.player.y, this.currentHeight, false);
+        if (this.backgroundManager) this.backgroundManager.update(this.cameras.main.scrollY);
 
-        // Height Calculation
-        // Usar altura de referencia dinámica (400 era la altura inicial de referencia)
-        const referenceHeight = 400;
+        // Throttle audio updates on mobile (every 3 frames = ~20fps updates)
+        if (this.audioManager) {
+            if (!isMobile || (this._audioUpdateFrame = (this._audioUpdateFrame || 0) + 1) % 3 === 0) {
+                this.audioManager.updateAudio(this.player.y, this.riserManager?.riser?.y ?? this.player.y);
+            }
+        }
+
+        // 🚀 OPTIMIZATION: Only update debug visuals if actually enabled
+        if (this.debugManager) {
+            // Skip if debug features are disabled (most common case)
+            if (this.debugManager.showPlayerHitbox) {
+                this.debugManager.updateHitboxVisual();
+            }
+            if (this.debugManager.rulerEnabled) {
+                this.debugManager.updateRuler();
+            }
+        }
+
+        // Platform Riders (Coins/Powerups)
+        // OPTIMIZED: Only update riders that are near the camera, with throttling for mobile
+        // Throttle updates on mobile to every other frame for better performance
+        const shouldUpdateRiders = !isMobile || (this._riderUpdateFrame = (this._riderUpdateFrame || 0) + 1) % 2 === 0;
+
+        if (shouldUpdateRiders) {
+            const camera = this.cameras.main;
+            const cameraTop = camera.scrollY;
+            const cameraBottom = cameraTop + camera.height;
+            const updateRange = isMobile ? 150 : 200; // Smaller range on mobile
+
+            // 🚀 OPTIMIZATION: Cache range calculations and use simple iteration
+            const minY = cameraTop - updateRange;
+            const maxY = cameraBottom + updateRange;
+
+            if (this.coins && this.coins.children) {
+                const coinsList = this.coins.children.entries;
+                for (let i = 0; i < coinsList.length; i++) {
+                    const coin = coinsList[i];
+                    if (coin && coin.active && coin.body) {
+                        // Only update if coin is near camera (within update range)
+                        if (coin.y >= minY && coin.y <= maxY) {
+                            updatePlatformRider(coin);
+                        }
+                    }
+                }
+            }
+            if (this.powerups && this.powerups.children) {
+                const powerupsList = this.powerups.children.entries;
+                for (let i = 0; i < powerupsList.length; i++) {
+                    const powerup = powerupsList[i];
+                    if (powerup && powerup.active && powerup.body) {
+                        // Only update if powerup is near camera (within update range)
+                        if (powerup.y >= minY && powerup.y <= maxY) {
+                            updatePlatformRider(powerup);
+                        }
+                    }
+                }
+            }
+        }
+
+        // Walls
+        GameInitializer.updateWalls(this);
+
+        // Height Calculation: 0m starts at the initial spawn point
+        const referenceHeight = this.layout.playerSpawnY;
         let h = Math.floor((referenceHeight - this.player.y) / 10) + this.heightOffset;
         if (h > this.currentHeight) {
             this.currentHeight = h;
-            // Update GameState and emit event
             GameState.updateHeight(this.currentHeight);
         }
     }
 
     /**
-     * Detects device type and adds CSS classes to the body.
-     * Usa el sistema centralizado de detección de dispositivos.
-     */
-    setupDeviceDetection() {
-        const deviceInfo = getDeviceInfo(this.sys.game);
-
-        // Asignar propiedades para compatibilidad
-        this.isMobile = deviceInfo.isMobile;
-        this.isAndroid = deviceInfo.isAndroid;
-        this.isIOS = deviceInfo.isIOS;
-        this.isIPad = deviceInfo.isIPad;
-        this.isIPhone = deviceInfo.isIPhone;
-
-        // Aplicar clases CSS
-        applyDeviceClasses(deviceInfo);
-
-        console.log(`Device Detection: Mobile=${this.isMobile}, Android=${this.isAndroid}, iOS=${this.isIOS}`);
-
-        // Orientation Check
-        const checkOrientation = () => {
-            if (window.innerWidth > window.innerHeight) {
-                document.body.classList.add('landscape');
-                document.body.classList.remove('portrait');
-            } else {
-                document.body.classList.add('portrait');
-                document.body.classList.remove('landscape');
-            }
-        };
-
-        window.addEventListener('resize', checkOrientation);
-        window.addEventListener('orientationchange', checkOrientation);
-        checkOrientation(); // Initial check
-    }
-
-    /**
-     * Creates physics groups for game objects.
-     */
-    createGroups() {
-        // Crear PoolManager para plataformas
-        this.platformPool = new PoolManager(
-            this,
-            'platforms',
-            Platform,
-            POOL.INITIAL_SIZE.PLATFORMS || 20,
-            POOL.GROW_SIZE || 5
-        );
-
-        // Registrar en el registry global (para debugging)
-        poolRegistry.register('platforms', this.platformPool);
-
-        // Mantener grupo legacy para compatibilidad temporal (se eliminará después)
-        this.platforms = this.physics.add.group({ allowGravity: false, immovable: true });
-
-        // Coins and powerups need to be dynamic to use platformRider on moving platforms
-        this.coins = this.physics.add.group({ allowGravity: false, immovable: true });
-        this.powerups = this.physics.add.group({ allowGravity: false, immovable: true });
-
-        // Crear pools para enemigos
-        this.patrolEnemyPool = new PoolManager(
-            this,
-            'patrolEnemies',
-            PatrolEnemy,
-            POOL.INITIAL_SIZE.ENEMIES || 10,
-            POOL.GROW_SIZE || 5
-        );
-        poolRegistry.register('patrolEnemies', this.patrolEnemyPool);
-
-        this.shooterEnemyPool = new PoolManager(
-            this,
-            'shooterEnemies',
-            ShooterEnemy,
-            POOL.INITIAL_SIZE.ENEMIES || 10,
-            POOL.GROW_SIZE || 5
-        );
-        poolRegistry.register('shooterEnemies', this.shooterEnemyPool);
-
-        this.jumperShooterEnemyPool = new PoolManager(
-            this,
-            'jumperShooterEnemies',
-            JumperShooterEnemy,
-            POOL.INITIAL_SIZE.ENEMIES || 10,
-            POOL.GROW_SIZE || 5
-        );
-        poolRegistry.register('jumperShooterEnemies', this.jumperShooterEnemyPool);
-
-        // Crear pool para proyectiles
-        this.projectilePool = new PoolManager(
-            this,
-            'projectiles',
-            Projectile,
-            POOL.INITIAL_SIZE.PROJECTILES || 15,
-            POOL.GROW_SIZE || 5
-        );
-        poolRegistry.register('projectiles', this.projectilePool);
-
-        // Mantener grupos legacy para compatibilidad (colisiones, etc.)
-        // Los objetos del pool se agregarán a estos grupos cuando se spawnean
-        this.patrolEnemies = this.physics.add.group({ classType: PatrolEnemy, allowGravity: false, immovable: true, runChildUpdate: true });
-        this.shooterEnemies = this.physics.add.group({ classType: ShooterEnemy, allowGravity: false, immovable: true, runChildUpdate: true });
-        this.jumperShooterEnemies = this.physics.add.group({ classType: JumperShooterEnemy, allowGravity: true, immovable: false, runChildUpdate: true });
-        this.projectiles = this.physics.add.group({
-            classType: Projectile,
-            allowGravity: false,
-            runChildUpdate: true,
-            maxSize: 50
-        });
-        this.mazeWalls = this.physics.add.staticGroup();
-    }
-
-    /**
-     * Creates the side walls.
-     * IMPORTANTE: Los bodies de las paredes deben estar perfectamente alineados
-     * con los bounds del mundo físico para evitar penetración del jugador.
-     */
-    createWalls() {
-        const gameWidth = this.cameras.main.width;
-        const wallWidth = WALLS.WIDTH;
-        const wallHeight = WALLS.HEIGHT;
-        const wallYOffset = WALLS.Y_OFFSET;
-        const wallDepth = WALLS.DEPTH;
-
-        // Crear paredes: leftWall en x=0, rightWall en x=gameWidth
-        // Usar setOrigin(0, 0.5) para leftWall y setOrigin(1, 0.5) para rightWall
-        // para que el sprite visual esté correctamente posicionado
-        this.leftWall = this.add.tileSprite(0, wallYOffset, wallWidth, wallHeight, 'wall')
-            .setOrigin(0, 0.5)
-            .setDepth(wallDepth);
-        this.rightWall = this.add.tileSprite(gameWidth, wallYOffset, wallWidth, wallHeight, 'wall')
-            .setOrigin(1, 0.5)
-            .setDepth(wallDepth);
-
-        // Agregar física a las paredes (static = true para que sean inamovibles)
-        this.physics.add.existing(this.leftWall, true);
-        this.physics.add.existing(this.rightWall, true);
-
-        // CRÍTICO: Configurar los bodies de las paredes para que coincidan exactamente
-        // con su posición visual y los bounds del mundo físico
-        // IMPORTANTE: Con setOrigin(0, 0.5) y setOrigin(1, 0.5), Phaser ajusta automáticamente
-        // la posición del body, pero debemos asegurarnos de que el tamaño y offset sean correctos
-        if (this.leftWall.body) {
-            // Pared izquierda: body desde x=0 hasta x=wallWidth
-            // Con setOrigin(0, 0.5), el gameObject está en x=0 y el sprite se extiende hasta x=wallWidth
-            // El body debe cubrir exactamente desde x=0 hasta x=wallWidth
-            this.leftWall.body.setSize(wallWidth, wallHeight);
-            // Offset en Y para centrar verticalmente (el origin está en 0.5 verticalmente)
-            this.leftWall.body.setOffset(0, -wallHeight / 2);
-            // Asegurar que el body esté sincronizado con el gameObject
-            this.leftWall.body.updateFromGameObject();
-        }
-        if (this.rightWall.body) {
-            // Pared derecha: body desde x=gameWidth-wallWidth hasta x=gameWidth
-            // Con setOrigin(1, 0.5), el gameObject está en x=gameWidth y el sprite se extiende desde x=gameWidth-wallWidth
-            // El body debe cubrir exactamente desde x=gameWidth-wallWidth hasta x=gameWidth
-            this.rightWall.body.setSize(wallWidth, wallHeight);
-            // Offset en X: -wallWidth para que el body empiece en x=gameWidth-wallWidth
-            // Offset en Y: -wallHeight/2 para centrar verticalmente
-            this.rightWall.body.setOffset(-wallWidth, -wallHeight / 2);
-            // Asegurar que el body esté sincronizado con el gameObject
-            this.rightWall.body.updateFromGameObject();
-        }
-    }
-
-    /**
-     * Updates wall positions to follow the camera.
-     * IMPORTANTE: Mantener los bodies de las paredes correctamente posicionados
-     * para evitar que el jugador penetre las paredes.
-     */
-    updateWalls() {
-        const wallYOffset = WALLS.Y_OFFSET;
-        const gameWidth = this.cameras.main.width;
-        const wallWidth = WALLS.WIDTH;
-
-        if (this.leftWall && this.leftWall.active && this.leftWall.body) {
-            this.leftWall.y = this.cameras.main.scrollY + wallYOffset;
-            this.leftWall.x = 0;
-            // Asegurar que el body mantenga su offset correcto
-            this.leftWall.body.setOffset(0, -WALLS.HEIGHT / 2);
-            this.leftWall.body.updateFromGameObject();
-        }
-
-        if (this.rightWall && this.rightWall.active && this.rightWall.body) {
-            this.rightWall.y = this.cameras.main.scrollY + wallYOffset;
-            this.rightWall.x = gameWidth;
-            // Asegurar que el body mantenga su offset correcto
-            this.rightWall.body.setOffset(-wallWidth, -WALLS.HEIGHT / 2);
-            this.rightWall.body.updateFromGameObject();
-        }
-    }
-
-    /**
-     * Starts the game, enabling music and hiding the start UI.
+     * Starts the game.
      */
     startGame() {
         this.gameStarted = true;
-        this.uiText.setVisible(false);
+        // Marcar que el juego acaba de iniciar para forzar renderizado de paredes
+        this._wallJustStarted = true;
+
+        this.uiManager.setGameStartUI();
         this.audioManager.startMusic();
+
+        // Activar lava cuando el juego comienza
+        if (this.riserManager) {
+            this.riserManager.setEnabled(true);
+        }
+
+        if (this.player?.controller?.resetState) {
+            this.player.controller.resetState();
+        }
+        if (this.player?.body) {
+            this.player.setVelocity(0, 0);
+            this.player.setAcceleration(0, 0);
+        }
+
+        // Asegurar que las paredes se rendericen al iniciar el juego
+        GameInitializer.updateWalls(this);
     }
 
     /**
-     * Toggles sound on/off.
-     * Now uses GameState to manage sound state.
+     * Toggles sound.
      */
     toggleSound() {
         GameState.toggleSound();
-        // AudioManager will listen to SOUND_TOGGLED event
-        this.audioManager.toggleSound();
     }
 
     /**
      * Activates invincibility powerup.
      */
     activateInvincibility() {
-        this.isInvincible = true;
-        if (this.powerupTimer) this.powerupTimer.remove();
-        this.powerupTimer = this.time.delayedCall(12000, () => {
-            this.deactivatePowerup();
-        });
+        if (this.player && this.player.activateInvincibility) {
+            this.player.activateInvincibility();
+        }
     }
 
     /**
      * Deactivates invincibility powerup.
      */
     deactivatePowerup() {
-        this.isInvincible = false;
-        this.auraEmitter.stop();
-        this.player.setTint(0xaaaaaa);
-        this.time.delayedCall(200, () => this.player.clearTint());
+        if (this.player && this.player.deactivatePowerup) {
+            this.player.deactivatePowerup();
+        }
+    }
+
+    // Proxy for isInvincible property to maintain compatibility
+    get isInvincible() {
+        return this.player?.isInvincible || false;
+    }
+
+    set isInvincible(value) {
+        if (this.player) {
+            this.player.isInvincible = value;
+        }
     }
 
     /**
@@ -449,5 +389,189 @@ export class Game extends Phaser.Scene {
      */
     trigger67Celebration() {
         this.uiManager.trigger67Celebration();
+    }
+
+    /**
+     * Clean up any residual objects from a previous game session
+     * This is critical when using scene.restart() to prevent memory leaks and performance issues
+     */
+    cleanupPreviousGame() {
+        // Clean up pools (despawn all active objects) - only if they exist
+        try {
+            if (this.platformPool && typeof this.platformPool.despawnAll === 'function') {
+                this.platformPool.despawnAll();
+            }
+            if (this.coinPool && typeof this.coinPool.despawnAll === 'function') {
+                this.coinPool.despawnAll();
+            }
+            if (this.powerupPool && typeof this.powerupPool.despawnAll === 'function') {
+                this.powerupPool.despawnAll();
+            }
+            if (this.patrolEnemyPool && typeof this.patrolEnemyPool.despawnAll === 'function') {
+                this.patrolEnemyPool.despawnAll();
+            }
+            if (this.shooterEnemyPool && typeof this.shooterEnemyPool.despawnAll === 'function') {
+                this.shooterEnemyPool.despawnAll();
+            }
+            if (this.jumperShooterEnemyPool && typeof this.jumperShooterEnemyPool.despawnAll === 'function') {
+                this.jumperShooterEnemyPool.despawnAll();
+            }
+            if (this.projectilePool && typeof this.projectilePool.despawnAll === 'function') {
+                this.projectilePool.despawnAll();
+            }
+        } catch (e) {
+            // Silently ignore pool cleanup errors (pools may not exist on first run)
+        }
+
+        // Clean up Phaser groups (destroy all children) - only if they exist and have children
+        try {
+            if (this.platforms && typeof this.platforms.clear === 'function') {
+                this.platforms.clear(true, true);
+            }
+            if (this.coins && typeof this.coins.clear === 'function') {
+                this.coins.clear(true, true);
+            }
+            if (this.powerups && typeof this.powerups.clear === 'function') {
+                this.powerups.clear(true, true);
+            }
+            if (this.patrolEnemies && typeof this.patrolEnemies.clear === 'function') {
+                this.patrolEnemies.clear(true, true);
+            }
+            if (this.shooterEnemies && typeof this.shooterEnemies.clear === 'function') {
+                this.shooterEnemies.clear(true, true);
+            }
+            if (this.jumperShooterEnemies && typeof this.jumperShooterEnemies.clear === 'function') {
+                this.jumperShooterEnemies.clear(true, true);
+            }
+            if (this.projectiles && typeof this.projectiles.clear === 'function') {
+                this.projectiles.clear(true, true);
+            }
+            if (this.mazeWalls && typeof this.mazeWalls.clear === 'function') {
+                this.mazeWalls.clear(true, true);
+            }
+        } catch (e) {
+            // Silently ignore group cleanup errors (groups may not exist on first run)
+        }
+
+        // Clean up particle emitters (stop and kill all particles) - only if they exist
+        try {
+            if (this.dustEmitter && typeof this.dustEmitter.stop === 'function') {
+                this.dustEmitter.stop();
+                if (typeof this.dustEmitter.killAll === 'function') {
+                    this.dustEmitter.killAll();
+                }
+            }
+            if (this.sparkEmitter && typeof this.sparkEmitter.stop === 'function') {
+                this.sparkEmitter.stop();
+                if (typeof this.sparkEmitter.killAll === 'function') {
+                    this.sparkEmitter.killAll();
+                }
+            }
+            if (this.burnEmitter && typeof this.burnEmitter.stop === 'function') {
+                this.burnEmitter.stop();
+                if (typeof this.burnEmitter.killAll === 'function') {
+                    this.burnEmitter.killAll();
+                }
+            }
+            if (this.auraEmitter && typeof this.auraEmitter.stop === 'function') {
+                this.auraEmitter.stop();
+                if (typeof this.auraEmitter.killAll === 'function') {
+                    this.auraEmitter.killAll();
+                }
+            }
+            if (this.confettiEmitter && typeof this.confettiEmitter.stop === 'function') {
+                this.confettiEmitter.stop();
+                if (typeof this.confettiEmitter.killAll === 'function') {
+                    this.confettiEmitter.killAll();
+                }
+            }
+        } catch (e) {
+            // Silently ignore emitter cleanup errors (emitters may not exist on first run)
+        }
+
+        // Reset slot generator - only if it exists
+        try {
+            if (this.slotGenerator && typeof this.slotGenerator.reset === 'function') {
+                this.slotGenerator.reset();
+            }
+        } catch (e) {
+            // Silently ignore slot generator reset errors
+        }
+
+        // Reset riser manager - only if it exists
+        try {
+            if (this.riserManager) {
+                if (typeof this.riserManager.setEnabled === 'function') {
+                    this.riserManager.setEnabled(false);
+                }
+                if (this.riserManager.riser && typeof this.riserManager.riser.destroy === 'function') {
+                    this.riserManager.riser.destroy();
+                    this.riserManager.riser = null;
+                }
+                this.riserManager.hasStartedRising = false;
+                this.riserManager.initialPlayerY = undefined;
+            }
+        } catch (e) {
+            // Silently ignore riser manager cleanup errors
+        }
+
+        // Clean up timers - only if they exist
+        try {
+            if (this.powerupTimer && typeof this.powerupTimer.remove === 'function') {
+                this.powerupTimer.remove();
+                this.powerupTimer = null;
+            }
+        } catch (e) {
+            // Silently ignore timer cleanup errors
+        }
+
+        // Stop all tweens - only if tweens system exists
+        try {
+            if (this.tweens && typeof this.tweens.killAll === 'function') {
+                this.tweens.killAll();
+            }
+        } catch (e) {
+            // Silently ignore tween cleanup errors
+        }
+
+        // Reset camera - only if camera exists
+        try {
+            if (this.cameras && this.cameras.main) {
+                if (typeof this.cameras.main.stopFollow === 'function') {
+                    this.cameras.main.stopFollow();
+                }
+                this.cameras.main.scrollX = 0;
+                this.cameras.main.scrollY = 0;
+            }
+        } catch (e) {
+            // Silently ignore camera reset errors
+        }
+
+        // Clean up UI Manager listeners
+        try {
+            if (this.uiManager && typeof this.uiManager.destroy === 'function') {
+                this.uiManager.destroy();
+            }
+        } catch (e) {
+            // Silently ignore UI cleanup errors
+        }
+
+        // Clean up Audio Manager listeners
+        try {
+            if (this.audioManager && typeof this.audioManager.stopAudio === 'function') {
+                this.audioManager.stopAudio();
+            }
+        } catch (e) {
+            // Silently ignore Audio cleanup errors
+        }
+
+        // Clean up stage props
+        try {
+            if (this.stageProps && typeof this.stageProps.destroy === 'function') {
+                this.stageProps.destroy();
+            }
+        } catch (e) {
+            // Silently ignore props cleanup errors
+        }
     }
 }

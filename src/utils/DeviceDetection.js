@@ -85,6 +85,44 @@ export function getResolution(isMobile, resolutions) {
 }
 
 /**
+ * Retorna una resolución escalada por devicePixelRatio usando innerWidth/innerHeight.
+ * Incluye fallback seguro para no romper SSR ni valores base.
+ * @param {{width:number,height:number}} baseResolution
+ * @param {Object} [opts]
+ * @param {number} [opts.maxDpr=3] - Límite superior para devicePixelRatio
+ * @returns {{width:number,height:number}}
+ */
+export function getHiDpiResolution(baseResolution, opts = {}) {
+    const { maxDpr = 3 } = opts;
+    if (typeof window === 'undefined') return baseResolution;
+
+    const dpr = Math.min(Math.max(window.devicePixelRatio || 1, 1), maxDpr);
+    const innerW = window.innerWidth || baseResolution.width;
+    const innerH = window.innerHeight || baseResolution.height;
+
+    const scaledWidth = Math.round(innerW * dpr);
+    const scaledHeight = Math.round(innerH * dpr);
+
+    return {
+        width: Math.max(baseResolution.width, scaledWidth),
+        height: Math.max(baseResolution.height, scaledHeight)
+    };
+}
+
+/**
+ * Retorna un factor de resolución HiDPI clamped para usar en Phaser (config.resolution).
+ * @param {Object} [opts]
+ * @param {number} [opts.maxDpr=3]
+ * @returns {number}
+ */
+export function getHiDpiScale(opts = {}) {
+    const { maxDpr = 3 } = opts;
+    if (typeof window === 'undefined') return 1;
+    const dpr = window.devicePixelRatio || 1;
+    return Math.min(Math.max(dpr, 1), maxDpr);
+}
+
+/**
  * Aplica clases CSS al body según el tipo de dispositivo
  * @param {Object} deviceInfo - Información del dispositivo (de getDeviceInfo)
  */
@@ -97,4 +135,3 @@ export function applyDeviceClasses(deviceInfo) {
         if (deviceInfo.isIOS) document.body.classList.add('ios');
     }
 }
-

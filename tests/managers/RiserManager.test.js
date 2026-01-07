@@ -1,4 +1,4 @@
-import { RiserManager } from '../../src/managers/RiserManager.js';
+import { RiserManager } from '../../src/managers/gameplay/RiserManager.js';
 import { RISER_TYPES } from '../../src/config/RiserConfig.js';
 
 // Mock dependencies

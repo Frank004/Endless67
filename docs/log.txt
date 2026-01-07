@@ -1,0 +1,363 @@
+client:789 [vite] connecting...
+client:912 [vite] connected.
+phaser.min.js:1      Phaser v3.87 (WebGL | Web Audio)  https://phaser.io/v387
+Boot.js:85 ✅ Player atlas disponible (usando frames IDLE)
+Game.js:32 🚀 GAME VERSION: LOOKAHEAD-FIX-1767520077582
+GameInitializer.js:49 Device Detection: Mobile=true, Android=false, iOS=true
+DebugManager.js:124 ✅ DebugManager: Slot Logs ENABLED via registry
+SlotGenerator.js:64 🎮 SlotGenerator: Inicializando... startY= 398
+SlotGenerator.js:70   📍 Plataforma inicio: Y=398, Primer batch: Y=398
+SlotGenerator.js:83   ...Generating tutorial slots...
+SlotGenerator.js:145   ⚙️ Generating Slot 0 [PLATFORM_BATCH]...
+SlotGenerator.js:294   🎨 Patrón: stutter_step | Transform: mirrorX
+Platform.js:193 [Platform.spawn] ✅ Spawned at (198, 398) | Frame: plat-static-02.png | Visible: true | Active: true | Body: true | Depth: 100
+SlotGenerator.js:362     ▓ Plat 1: x=198, y=398, 🟣 ESTÁTICA
+SlotGenerator.js:379       👹 Enemy Spawned on platform 1
+Platform.js:193 [Platform.spawn] ✅ Spawned at (162, 238) | Frame: plat-static-02.png | Visible: true | Active: true | Body: true | Depth: 100
+SlotGenerator.js:362     ▓ Plat 2: x=162, y=238, 🟣 ESTÁTICA
+SlotGenerator.js:379       👹 Enemy Spawned on platform 2
+Platform.js:193 [Platform.spawn] ✅ Spawned at (198, 78) | Frame: plat-static-01.png | Visible: true | Active: true | Body: true | Depth: 100
+SlotGenerator.js:362     ▓ Plat 3: x=198, y=78, 🟣 ESTÁTICA
+Platform.js:193 [Platform.spawn] ✅ Spawned at (162, -82) | Frame: plat-static-02.png | Visible: true | Active: true | Body: true | Depth: 100
+SlotGenerator.js:362     ▓ Plat 4: x=162, y=-82, 🟣 ESTÁTICA
+SlotGenerator.js:626     🪙 Coins: 3 plat + 3 aire = 6
+SlotGenerator.js:171 📦 SLOT 0: PLATFORM_BATCH [Y: 398 a -242] (height=640)
+SlotGenerator.js:213 ✅ Slot 0 registrado: {type: 'PLATFORM_BATCH', yStart: '398.00', yEnd: '-242.00', height: '640.00', contentHeight: '640.00'}
+SlotGenerator.js:95   ...Filling initial buffer...
+SlotGenerator.js:145   ⚙️ Generating Slot 1 [PLATFORM_BATCH]...
+SlotGenerator.js:294   🎨 Patrón: zigzag_asymmetric | Transform: mirrorXY
+Platform.js:193 [Platform.spawn] ✅ Spawned at (162, -242) | Frame: plat-static-02.png | Visible: true | Active: true | Body: true | Depth: 100
+SlotGenerator.js:362     ▓ Plat 1: x=162, y=-242, 🟣 ESTÁTICA
+Platform.js:193 [Platform.spawn] ✅ Spawned at (198, -402) | Frame: plat-static-02.png | Visible: true | Active: true | Body: true | Depth: 100
+SlotGenerator.js:362     ▓ Plat 2: x=198, y=-402, 🟣 ESTÁTICA
+Platform.js:193 [Platform.spawn] ✅ Spawned at (126, -562) | Frame: plat-static-02.png | Visible: true | Active: true | Body: true | Depth: 100
+SlotGenerator.js:362     ▓ Plat 3: x=126, y=-562, 🟣 ESTÁTICA
+SlotGenerator.js:379       👹 Enemy Spawned on platform 3
+Platform.js:193 [Platform.spawn] ✅ Spawned at (234, -722) | Frame: plat-static-01.png | Visible: true | Active: true | Body: true | Depth: 100
+SlotGenerator.js:362     ▓ Plat 4: x=234, y=-722, 🟣 ESTÁTICA
+SlotGenerator.js:626     🪙 Coins: 2 plat + 4 aire = 6
+SlotGenerator.js:171 📦 SLOT 1: PLATFORM_BATCH [Y: -242 a -882] (height=640)
+SlotGenerator.js:213 ✅ Slot 1 registrado: {type: 'PLATFORM_BATCH', yStart: '-242.00', yEnd: '-882.00', height: '640.00', contentHeight: '640.00'}
+SlotGenerator.js:145   ⚙️ Generating Slot 2 [PLATFORM_BATCH]...
+SlotGenerator.js:294   🎨 Patrón: snake_tight | Transform: mirrorX
+Platform.js:193 [Platform.spawn] ✅ Spawned at (225, -882) | Frame: plat-static-02.png | Visible: true | Active: true | Body: true | Depth: 100
+SlotGenerator.js:362     ▓ Plat 1: x=225, y=-882, 🟣 ESTÁTICA
+Platform.js:193 [Platform.spawn] ✅ Spawned at (180, -1042) | Frame: plat-static-01.png | Visible: true | Active: true | Body: true | Depth: 100
+SlotGenerator.js:362     ▓ Plat 2: x=180, y=-1042, 🟣 ESTÁTICA
+SlotGenerator.js:379       👹 Enemy Spawned on platform 2
+Platform.js:193 [Platform.spawn] ✅ Spawned at (135, -1202) | Frame: plat-static-02.png | Visible: true | Active: true | Body: true | Depth: 100
+SlotGenerator.js:362     ▓ Plat 3: x=135, y=-1202, 🟣 ESTÁTICA
+SlotGenerator.js:379       👹 Enemy Spawned on platform 3
+Platform.js:193 [Platform.spawn] ✅ Spawned at (180, -1362) | Frame: plat-static-02.png | Visible: true | Active: true | Body: true | Depth: 100
+SlotGenerator.js:362     ▓ Plat 4: x=180, y=-1362, 🟣 ESTÁTICA
+SlotGenerator.js:626     🪙 Coins: 2 plat + 2 aire = 4
+SlotGenerator.js:171 📦 SLOT 2: PLATFORM_BATCH [Y: -882 a -1522] (height=640)
+SlotGenerator.js:213 ✅ Slot 2 registrado: {type: 'PLATFORM_BATCH', yStart: '-882.00', yEnd: '-1522.00', height: '640.00', contentHeight: '640.00'}
+SlotGenerator.js:105 ✅ SlotGenerator: Init Done. 3 slots generated.
+phaser.min.js:1 [Violation] 'requestAnimationFrame' handler took 74ms
+RiserManager.js:119 🔥 Lava inicializada - Jugador en Y=542, Lava en Y=578
+SlotGenerator.js:145   ⚙️ Generating Slot 3 [PLATFORM_BATCH]...
+SlotGenerator.js:294   🎨 Patrón: zigzag_center_right | Transform: mirrorXY
+Platform.js:193 [Platform.spawn] ✅ Spawned at (108, -1522) | Frame: plat-static-01.png | Visible: true | Active: true | Body: true | Depth: 100
+SlotGenerator.js:362     ▓ Plat 1: x=108, y=-1522, 🟣 ESTÁTICA
+Platform.js:193 [Platform.spawn] ✅ Spawned at (180, -1682) | Frame: plat-static-02.png | Visible: true | Active: true | Body: true | Depth: 100
+SlotGenerator.js:362     ▓ Plat 2: x=180, y=-1682, 🟣 ESTÁTICA
+Platform.js:193 [Platform.spawn] ✅ Spawned at (108, -1842) | Frame: plat-static-02.png | Visible: true | Active: true | Body: true | Depth: 100
+SlotGenerator.js:362     ▓ Plat 3: x=108, y=-1842, 🟣 ESTÁTICA
+SlotGenerator.js:379       👹 Enemy Spawned on platform 3
+Platform.js:193 [Platform.spawn] ✅ Spawned at (180, -2002) | Frame: plat-static-02.png | Visible: true | Active: true | Body: true | Depth: 100
+SlotGenerator.js:362     ▓ Plat 4: x=180, y=-2002, 🟣 ESTÁTICA
+SlotGenerator.js:626     🪙 Coins: 2 plat + 1 aire = 3
+SlotGenerator.js:171 📦 SLOT 3: PLATFORM_BATCH [Y: -1522 a -2162] (height=640)
+SlotGenerator.js:213 ✅ Slot 3 registrado: {type: 'PLATFORM_BATCH', yStart: '-1522.00', yEnd: '-2162.00', height: '640.00', contentHeight: '640.00'}
+RiserManager.js:144 🔥 Lava iniciando subida - Jugador subió 323px (requerido: 320px)
+SlotGenerator.js:145   ⚙️ Generating Slot 4 [PLATFORM_BATCH]...
+SlotGenerator.js:294   🎨 Patrón: funnel_down | Transform: none
+Platform.js:193 [Platform.spawn] ✅ Spawned at (106, -2162) | Frame: plat-static-02.png | Visible: true | Active: true | Body: true | Depth: 100
+SlotGenerator.js:362     ▓ Plat 1: x=96, y=-2162, 🟣 ESTÁTICA
+SlotGenerator.js:379       👹 Enemy Spawned on platform 1
+Platform.js:193 [Platform.spawn] ✅ Spawned at (135, -2322) | Frame: plat-static-02.png | Visible: true | Active: true | Body: true | Depth: 100
+SlotGenerator.js:362     ▓ Plat 2: x=135, y=-2322, 🟣 ESTÁTICA
+Platform.js:193 [Platform.spawn] ✅ Spawned at (225, -2482) | Frame: plat-static-02.png | Visible: true | Active: true | Body: true | Depth: 100
+SlotGenerator.js:362     ▓ Plat 3: x=225, y=-2482, 🟣 ESTÁTICA
+SlotGenerator.js:379       👹 Enemy Spawned on platform 3
+Platform.js:193 [Platform.spawn] ✅ Spawned at (180, -2642) | Frame: plat-static-02.png | Visible: true | Active: true | Body: true | Depth: 100
+SlotGenerator.js:362     ▓ Plat 4: x=180, y=-2642, 🟣 ESTÁTICA
+SlotGenerator.js:379       👹 Enemy Spawned on platform 4
+SlotGenerator.js:626     🪙 Coins: 4 plat + 2 aire = 6
+SlotGenerator.js:171 📦 SLOT 4: PLATFORM_BATCH [Y: -2162 a -2802] (height=640)
+SlotGenerator.js:213 ✅ Slot 4 registrado: {type: 'PLATFORM_BATCH', yStart: '-2162.00', yEnd: '-2802.00', height: '640.00', contentHeight: '640.00'}
+SlotGenerator.js:145   ⚙️ Generating Slot 5 [PLATFORM_BATCH]...
+SlotGenerator.js:294   🎨 Patrón: column_right | Transform: mirrorX
+Platform.js:193 [Platform.spawn] ✅ Spawned at (108, -2802) | Frame: plat-static-02.png | Visible: true | Active: true | Body: true | Depth: 100
+SlotGenerator.js:362     ▓ Plat 1: x=108, y=-2802, 🟣 ESTÁTICA
+SlotGenerator.js:379       👹 Enemy Spawned on platform 1
+Platform.js:193 [Platform.spawn] ✅ Spawned at (108, -2962) | Frame: plat-static-02.png | Visible: true | Active: true | Body: true | Depth: 100
+SlotGenerator.js:362     ▓ Plat 2: x=108, y=-2962, 🟣 ESTÁTICA
+Platform.js:193 [Platform.spawn] ✅ Spawned at (108, -3122) | Frame: plat-static-01.png | Visible: true | Active: true | Body: true | Depth: 100
+SlotGenerator.js:362     ▓ Plat 3: x=108, y=-3122, 🟣 ESTÁTICA
+SlotGenerator.js:379       👹 Enemy Spawned on platform 3
+Platform.js:193 [Platform.spawn] ✅ Spawned at (108, -3282) | Frame: plat-static-02.png | Visible: true | Active: true | Body: true | Depth: 100
+SlotGenerator.js:362     ▓ Plat 4: x=108, y=-3282, 🟣 ESTÁTICA
+SlotGenerator.js:379       👹 Enemy Spawned on platform 4
+SlotGenerator.js:626     🪙 Coins: 2 plat + 1 aire = 3 | ⚡ Powerups: 1
+SlotGenerator.js:171 📦 SLOT 5: PLATFORM_BATCH [Y: -2802 a -3442] (height=640)
+SlotGenerator.js:213 ✅ Slot 5 registrado: {type: 'PLATFORM_BATCH', yStart: '-2802.00', yEnd: '-3442.00', height: '640.00', contentHeight: '640.00'}
+SlotGenerator.js:895 🧹 Limpiando 1 slots viejos (limitY: 395.23333333333267)
+SlotGenerator.js:897   🗑️ SLOT 0 (PLATFORM_BATCH)
+CleanupManager.js:29 [CleanupManager] Despawning platform y= 398 limitY= 395.23333333333267
+Platform.js:211 [Platform.despawn] 🗑️ Despawning Platform at (198, 398)
+SlotGenerator.js:145   ⚙️ Generating Slot 6 [PLATFORM_BATCH]...
+SlotGenerator.js:294   🎨 Patrón: zigzag_center_right | Transform: mirrorX
+Platform.js:193 [Platform.spawn] ✅ Spawned at (180, -3442) | Frame: plat-static-01.png | Visible: true | Active: true | Body: true | Depth: 100
+SlotGenerator.js:362     ▓ Plat 1: x=180, y=-3442, 🟣 ESTÁTICA
+Platform.js:193 [Platform.spawn] ✅ Spawned at (108, -3602) | Frame: plat-static-02.png | Visible: true | Active: true | Body: true | Depth: 100
+SlotGenerator.js:362     ▓ Plat 2: x=108, y=-3602, 🟣 ESTÁTICA
+SlotGenerator.js:379       👹 Enemy Spawned on platform 2
+Platform.js:193 [Platform.spawn] ✅ Spawned at (180, -3762) | Frame: plat-static-02.png | Visible: true | Active: true | Body: true | Depth: 100
+SlotGenerator.js:362     ▓ Plat 3: x=180, y=-3762, 🟣 ESTÁTICA
+Platform.js:193 [Platform.spawn] ✅ Spawned at (108, -3922) | Frame: plat-static-01.png | Visible: true | Active: true | Body: true | Depth: 100
+SlotGenerator.js:362     ▓ Plat 4: x=108, y=-3922, 🟣 ESTÁTICA
+SlotGenerator.js:379       👹 Enemy Spawned on platform 4
+SlotGenerator.js:626     🪙 Coins: 0 plat + 4 aire = 4
+SlotGenerator.js:171 📦 SLOT 6: PLATFORM_BATCH [Y: -3442 a -4082] (height=640)
+SlotGenerator.js:213 ✅ Slot 6 registrado: {type: 'PLATFORM_BATCH', yStart: '-3442.00', yEnd: '-4082.00', height: '640.00', contentHeight: '640.00'}
+SlotGenerator.js:895 🧹 Limpiando 1 slots viejos (limitY: -242.1833333333343)
+SlotGenerator.js:897   🗑️ SLOT 1 (PLATFORM_BATCH)
+CleanupManager.js:29 [CleanupManager] Despawning platform y= 238 limitY= -242.1833333333343
+Platform.js:211 [Platform.despawn] 🗑️ Despawning Platform at (162, 238)
+CleanupManager.js:29 [CleanupManager] Despawning platform y= 78 limitY= -242.1833333333343
+Platform.js:211 [Platform.despawn] 🗑️ Despawning Platform at (198, 78)
+CleanupManager.js:29 [CleanupManager] Despawning platform y= -82 limitY= -242.1833333333343
+Platform.js:211 [Platform.despawn] 🗑️ Despawning Platform at (162, -82)
+CleanupManager.js:29 [CleanupManager] Despawning platform y= -242 limitY= -242.1833333333343
+Platform.js:211 [Platform.despawn] 🗑️ Despawning Platform at (162, -242)
+SlotGenerator.js:145   ⚙️ Generating Slot 7 [PLATFORM_BATCH]...
+SlotGenerator.js:294   🎨 Patrón: column_alternating | Transform: mirrorX
+Platform.js:193 [Platform.spawn] ✅ Spawned at (216, -4082) | Frame: plat-static-02.png | Visible: true | Active: true | Body: true | Depth: 100
+SlotGenerator.js:362     ▓ Plat 1: x=216, y=-4082, 🟣 ESTÁTICA
+SlotGenerator.js:379       👹 Enemy Spawned on platform 1
+Platform.js:193 [Platform.spawn] ✅ Spawned at (144, -4242) | Frame: plat-static-01.png | Visible: true | Active: true | Body: true | Depth: 100
+SlotGenerator.js:362     ▓ Plat 2: x=144, y=-4242, 🟣 ESTÁTICA
+SlotGenerator.js:379       👹 Enemy Spawned on platform 2
+Platform.js:193 [Platform.spawn] ✅ Spawned at (216, -4402) | Frame: plat-static-01.png | Visible: true | Active: true | Body: true | Depth: 100
+SlotGenerator.js:362     ▓ Plat 3: x=216, y=-4402, 🟣 ESTÁTICA
+SlotGenerator.js:379       👹 Enemy Spawned on platform 3
+Platform.js:193 [Platform.spawn] ✅ Spawned at (144, -4562) | Frame: plat-static-01.png | Visible: true | Active: true | Body: true | Depth: 100
+SlotGenerator.js:362     ▓ Plat 4: x=144, y=-4562, 🟣 ESTÁTICA
+SlotGenerator.js:626     🪙 Coins: 2 plat + 4 aire = 6
+SlotGenerator.js:171 📦 SLOT 7: PLATFORM_BATCH [Y: -4082 a -4722] (height=640)
+SlotGenerator.js:213 ✅ Slot 7 registrado: {type: 'PLATFORM_BATCH', yStart: '-4082.00', yEnd: '-4722.00', height: '640.00', contentHeight: '640.00'}
+SlotGenerator.js:895 🧹 Limpiando 1 slots viejos (limitY: -888.7833333333328)
+SlotGenerator.js:897   🗑️ SLOT 2 (PLATFORM_BATCH)
+CleanupManager.js:29 [CleanupManager] Despawning platform y= -402 limitY= -888.7833333333328
+Platform.js:211 [Platform.despawn] 🗑️ Despawning Platform at (198, -402)
+CleanupManager.js:29 [CleanupManager] Despawning platform y= -562 limitY= -888.7833333333328
+Platform.js:211 [Platform.despawn] 🗑️ Despawning Platform at (126, -562)
+CleanupManager.js:29 [CleanupManager] Despawning platform y= -722 limitY= -888.7833333333328
+Platform.js:211 [Platform.despawn] 🗑️ Despawning Platform at (234, -722)
+CleanupManager.js:29 [CleanupManager] Despawning platform y= -882 limitY= -888.7833333333328
+Platform.js:211 [Platform.despawn] 🗑️ Despawning Platform at (225, -882)
+SlotGenerator.js:145   ⚙️ Generating Slot 8 [PLATFORM_BATCH]...
+SlotGenerator.js:294   🎨 Patrón: zigzag_simple | Transform: none
+Platform.js:193 [Platform.spawn] ✅ Spawned at (108, -4722) | Frame: plat-static-01.png | Visible: true | Active: true | Body: true | Depth: 100
+SlotGenerator.js:362     ▓ Plat 1: x=108, y=-4722, 🟣 ESTÁTICA
+SlotGenerator.js:379       👹 Enemy Spawned on platform 1
+Platform.js:193 [Platform.spawn] ✅ Spawned at (252, -4882) | Frame: plat-static-01.png | Visible: true | Active: true | Body: true | Depth: 100
+SlotGenerator.js:362     ▓ Plat 2: x=252, y=-4882, 🟣 ESTÁTICA
+SlotGenerator.js:379       👹 Enemy Spawned on platform 2
+Platform.js:193 [Platform.spawn] ✅ Spawned at (108, -5042) | Frame: plat-static-02.png | Visible: true | Active: true | Body: true | Depth: 100
+SlotGenerator.js:362     ▓ Plat 3: x=108, y=-5042, 🟣 ESTÁTICA
+SlotGenerator.js:379       👹 Enemy Spawned on platform 3
+Platform.js:193 [Platform.spawn] ✅ Spawned at (252, -5202) | Frame: plat-static-01.png | Visible: true | Active: true | Body: true | Depth: 100
+SlotGenerator.js:362     ▓ Plat 4: x=252, y=-5202, 🟣 ESTÁTICA
+SlotGenerator.js:379       👹 Enemy Spawned on platform 4
+SlotGenerator.js:626     🪙 Coins: 2 plat + 4 aire = 6
+SlotGenerator.js:171 📦 SLOT 8: PLATFORM_BATCH [Y: -4722 a -5362] (height=640)
+SlotGenerator.js:213 ✅ Slot 8 registrado: {type: 'PLATFORM_BATCH', yStart: '-4722.00', yEnd: '-5362.00', height: '640.00', contentHeight: '640.00'}
+SlotGenerator.js:895 🧹 Limpiando 1 slots viejos (limitY: -1524.6466666666665)
+SlotGenerator.js:897   🗑️ SLOT 3 (PLATFORM_BATCH)
+CleanupManager.js:29 [CleanupManager] Despawning platform y= -1042 limitY= -1524.6466666666665
+Platform.js:211 [Platform.despawn] 🗑️ Despawning Platform at (180, -1042)
+CleanupManager.js:29 [CleanupManager] Despawning platform y= -1202 limitY= -1524.6466666666665
+Platform.js:211 [Platform.despawn] 🗑️ Despawning Platform at (135, -1202)
+CleanupManager.js:29 [CleanupManager] Despawning platform y= -1362 limitY= -1524.6466666666665
+Platform.js:211 [Platform.despawn] 🗑️ Despawning Platform at (180, -1362)
+CleanupManager.js:29 [CleanupManager] Despawning platform y= -1522 limitY= -1524.6466666666665
+Platform.js:211 [Platform.despawn] 🗑️ Despawning Platform at (108, -1522)
+SlotGenerator.js:145   ⚙️ Generating Slot 9 [SAFE_ZONE]...
+SlotGenerator.js:294   🎨 Patrón: stairs_left_to_right | Transform: none
+Platform.js:193 [Platform.spawn] ✅ Spawned at (106, -5362) | Frame: plat-static-01.png | Visible: true | Active: true | Body: true | Depth: 100
+SlotGenerator.js:362     ▓ Plat 1: x=96, y=-5362, 🟣 ESTÁTICA
+Platform.js:193 [Platform.spawn] ✅ Spawned at (148.5, -5522) | Frame: plat-static-01.png | Visible: true | Active: true | Body: true | Depth: 100
+SlotGenerator.js:362     ▓ Plat 2: x=148.5, y=-5522, 🟣 ESTÁTICA
+Platform.js:193 [Platform.spawn] ✅ Spawned at (211.5, -5682) | Frame: plat-static-02.png | Visible: true | Active: true | Body: true | Depth: 100
+SlotGenerator.js:362     ▓ Plat 3: x=211.5, y=-5682, 🟣 ESTÁTICA
+Platform.js:193 [Platform.spawn] ✅ Spawned at (254, -5842) | Frame: plat-static-02.png | Visible: true | Active: true | Body: true | Depth: 100
+SlotGenerator.js:362     ▓ Plat 4: x=264, y=-5842, 🟣 ESTÁTICA
+SlotGenerator.js:626     🪙 Coins: 0 plat + 1 aire = 1 | ⚡ Powerups: 1
+SlotGenerator.js:171 📦 SLOT 9: SAFE_ZONE [Y: -5362 a -6002] (height=640)
+SlotGenerator.js:213 ✅ Slot 9 registrado: {type: 'SAFE_ZONE', yStart: '-5362.00', yEnd: '-6002.00', height: '640.00', contentHeight: '640.00'}
+SlotGenerator.js:895 🧹 Limpiando 1 slots viejos (limitY: -2162.1666666666656)
+SlotGenerator.js:897   🗑️ SLOT 4 (PLATFORM_BATCH)
+CleanupManager.js:29 [CleanupManager] Despawning platform y= -1682 limitY= -2162.1666666666656
+Platform.js:211 [Platform.despawn] 🗑️ Despawning Platform at (180, -1682)
+CleanupManager.js:29 [CleanupManager] Despawning platform y= -1842 limitY= -2162.1666666666656
+Platform.js:211 [Platform.despawn] 🗑️ Despawning Platform at (108, -1842)
+CleanupManager.js:29 [CleanupManager] Despawning platform y= -2002 limitY= -2162.1666666666656
+Platform.js:211 [Platform.despawn] 🗑️ Despawning Platform at (180, -2002)
+CleanupManager.js:29 [CleanupManager] Despawning platform y= -2162 limitY= -2162.1666666666656
+Platform.js:211 [Platform.despawn] 🗑️ Despawning Platform at (106, -2162)
+SlotGenerator.js:145   ⚙️ Generating Slot 10 [MAZE]...
+SlotGenerator.js:710   🌀 Generando MAZE [6 filas] (Y: -6002 a -6962)
+SlotGenerator.js:171 📦 SLOT 10: MAZE [Y: -6002 a -6962] (height=960)
+SlotGenerator.js:213 ✅ Slot 10 registrado: {type: 'MAZE', yStart: '-6002.00', yEnd: '-6962.00', height: '960.00', contentHeight: '960.00'}
+SlotGenerator.js:895 🧹 Limpiando 1 slots viejos (limitY: -2806.6799999999985)
+SlotGenerator.js:897   🗑️ SLOT 5 (PLATFORM_BATCH)
+CleanupManager.js:29 [CleanupManager] Despawning platform y= -2322 limitY= -2806.6799999999985
+Platform.js:211 [Platform.despawn] 🗑️ Despawning Platform at (135, -2322)
+CleanupManager.js:29 [CleanupManager] Despawning platform y= -2482 limitY= -2806.6799999999985
+Platform.js:211 [Platform.despawn] 🗑️ Despawning Platform at (225, -2482)
+CleanupManager.js:29 [CleanupManager] Despawning platform y= -2642 limitY= -2806.6799999999985
+Platform.js:211 [Platform.despawn] 🗑️ Despawning Platform at (180, -2642)
+CleanupManager.js:29 [CleanupManager] Despawning platform y= -2802 limitY= -2806.6799999999985
+Platform.js:211 [Platform.despawn] 🗑️ Despawning Platform at (108, -2802)
+SlotGenerator.js:145   ⚙️ Generating Slot 11 [SAFE_ZONE]...
+SlotGenerator.js:294   🎨 Patrón: zigzag_simple | Transform: none
+Platform.js:193 [Platform.spawn] ✅ Spawned at (108, -6962) | Frame: plat-static-02.png | Visible: true | Active: true | Body: true | Depth: 100
+SlotGenerator.js:362     ▓ Plat 1: x=108, y=-6962, 🟣 ESTÁTICA
+Platform.js:193 [Platform.spawn] ✅ Spawned at (252, -7122) | Frame: plat-static-02.png | Visible: true | Active: true | Body: true | Depth: 100
+SlotGenerator.js:362     ▓ Plat 2: x=252, y=-7122, 🟣 ESTÁTICA
+Platform.js:193 [Platform.spawn] ✅ Spawned at (108, -7282) | Frame: plat-static-02.png | Visible: true | Active: true | Body: true | Depth: 100
+SlotGenerator.js:362     ▓ Plat 3: x=108, y=-7282, 🟣 ESTÁTICA
+Platform.js:193 [Platform.spawn] ✅ Spawned at (252, -7442) | Frame: plat-static-02.png | Visible: true | Active: true | Body: true | Depth: 100
+SlotGenerator.js:362     ▓ Plat 4: x=252, y=-7442, 🟣 ESTÁTICA
+SlotGenerator.js:626     🪙 Coins: 2 plat + 4 aire = 6
+SlotGenerator.js:171 📦 SLOT 11: SAFE_ZONE [Y: -6962 a -7602] (height=640)
+SlotGenerator.js:213 ✅ Slot 11 registrado: {type: 'SAFE_ZONE', yStart: '-6962.00', yEnd: '-7602.00', height: '640.00', contentHeight: '640.00'}
+SlotGenerator.js:895 🧹 Limpiando 1 slots viejos (limitY: -3448.9833333333327)
+SlotGenerator.js:897   🗑️ SLOT 6 (PLATFORM_BATCH)
+CleanupManager.js:29 [CleanupManager] Despawning platform y= -2962 limitY= -3448.9833333333327
+Platform.js:211 [Platform.despawn] 🗑️ Despawning Platform at (108, -2962)
+CleanupManager.js:29 [CleanupManager] Despawning platform y= -3122 limitY= -3448.9833333333327
+Platform.js:211 [Platform.despawn] 🗑️ Despawning Platform at (108, -3122)
+CleanupManager.js:29 [CleanupManager] Despawning platform y= -3282 limitY= -3448.9833333333327
+Platform.js:211 [Platform.despawn] 🗑️ Despawning Platform at (108, -3282)
+CleanupManager.js:29 [CleanupManager] Despawning platform y= -3442 limitY= -3448.9833333333327
+Platform.js:211 [Platform.despawn] 🗑️ Despawning Platform at (180, -3442)
+SlotGenerator.js:145   ⚙️ Generating Slot 12 [PLATFORM_BATCH]...
+SlotGenerator.js:294   🎨 Patrón: column_alternating | Transform: mirrorX
+Platform.js:193 [Platform.spawn] ✅ Spawned at (216, -7602) | Frame: plat-static-01.png | Visible: true | Active: true | Body: true | Depth: 100
+SlotGenerator.js:362     ▓ Plat 1: x=216, y=-7602, 🟣 ESTÁTICA
+SlotGenerator.js:379       👹 Enemy Spawned on platform 1
+Platform.js:193 [Platform.spawn] ✅ Spawned at (144, -7762) | Frame: plat-static-02.png | Visible: true | Active: true | Body: true | Depth: 100
+SlotGenerator.js:362     ▓ Plat 2: x=144, y=-7762, 🟣 ESTÁTICA
+Platform.js:193 [Platform.spawn] ✅ Spawned at (216, -7922) | Frame: plat-static-01.png | Visible: true | Active: true | Body: true | Depth: 100
+SlotGenerator.js:362     ▓ Plat 3: x=216, y=-7922, 🟣 ESTÁTICA
+Platform.js:193 [Platform.spawn] ✅ Spawned at (144, -8082) | Frame: plat-static-02.png | Visible: true | Active: true | Body: true | Depth: 100
+SlotGenerator.js:362     ▓ Plat 4: x=144, y=-8082, 🟣 ESTÁTICA
+SlotGenerator.js:379       👹 Enemy Spawned on platform 4
+SlotGenerator.js:626     🪙 Coins: 1 plat + 4 aire = 5
+SlotGenerator.js:171 📦 SLOT 12: PLATFORM_BATCH [Y: -7602 a -8242] (height=640)
+SlotGenerator.js:213 ✅ Slot 12 registrado: {type: 'PLATFORM_BATCH', yStart: '-7602.00', yEnd: '-8242.00', height: '640.00', contentHeight: '640.00'}
+SlotGenerator.js:895 🧹 Limpiando 1 slots viejos (limitY: -4084.466666666667)
+SlotGenerator.js:897   🗑️ SLOT 7 (PLATFORM_BATCH)
+CleanupManager.js:29 [CleanupManager] Despawning platform y= -3602 limitY= -4084.466666666667
+Platform.js:211 [Platform.despawn] 🗑️ Despawning Platform at (108, -3602)
+CleanupManager.js:29 [CleanupManager] Despawning platform y= -3762 limitY= -4084.466666666667
+Platform.js:211 [Platform.despawn] 🗑️ Despawning Platform at (180, -3762)
+CleanupManager.js:29 [CleanupManager] Despawning platform y= -3922 limitY= -4084.466666666667
+Platform.js:211 [Platform.despawn] 🗑️ Despawning Platform at (108, -3922)
+CleanupManager.js:29 [CleanupManager] Despawning platform y= -4082 limitY= -4084.466666666667
+Platform.js:211 [Platform.despawn] 🗑️ Despawning Platform at (216, -4082)
+SlotGenerator.js:145   ⚙️ Generating Slot 13 [PLATFORM_BATCH]...
+SlotGenerator.js:294   🎨 Patrón: zigzag_simple | Transform: mirrorY
+Platform.js:193 [Platform.spawn] ✅ Spawned at (252, -8242) | Frame: plat-static-02.png | Visible: true | Active: true | Body: true | Depth: 100
+SlotGenerator.js:362     ▓ Plat 1: x=252, y=-8242, 🟣 ESTÁTICA
+SlotGenerator.js:379       👹 Enemy Spawned on platform 1
+Platform.js:193 [Platform.spawn] ✅ Spawned at (108, -8402) | Frame: plat-static-01.png | Visible: true | Active: true | Body: true | Depth: 100
+SlotGenerator.js:362     ▓ Plat 2: x=108, y=-8402, 🟣 ESTÁTICA
+Platform.js:193 [Platform.spawn] ✅ Spawned at (252, -8562) | Frame: plat-static-02.png | Visible: true | Active: true | Body: true | Depth: 100
+SlotGenerator.js:362     ▓ Plat 3: x=252, y=-8562, 🟣 ESTÁTICA
+SlotGenerator.js:379       👹 Enemy Spawned on platform 3
+Platform.js:193 [Platform.spawn] ✅ Spawned at (108, -8722) | Frame: plat-static-01.png | Visible: true | Active: true | Body: true | Depth: 100
+SlotGenerator.js:362     ▓ Plat 4: x=108, y=-8722, 🟣 ESTÁTICA
+SlotGenerator.js:626     🪙 Coins: 3 plat + 4 aire = 7
+SlotGenerator.js:171 📦 SLOT 13: PLATFORM_BATCH [Y: -8242 a -8882] (height=640)
+SlotGenerator.js:213 ✅ Slot 13 registrado: {type: 'PLATFORM_BATCH', yStart: '-8242.00', yEnd: '-8882.00', height: '640.00', contentHeight: '640.00'}
+SlotGenerator.js:895 🧹 Limpiando 1 slots viejos (limitY: -4729.1133333333355)
+SlotGenerator.js:897   🗑️ SLOT 8 (PLATFORM_BATCH)
+CleanupManager.js:29 [CleanupManager] Despawning platform y= -4242 limitY= -4729.1133333333355
+Platform.js:211 [Platform.despawn] 🗑️ Despawning Platform at (144, -4242)
+CleanupManager.js:29 [CleanupManager] Despawning platform y= -4402 limitY= -4729.1133333333355
+Platform.js:211 [Platform.despawn] 🗑️ Despawning Platform at (216, -4402)
+CleanupManager.js:29 [CleanupManager] Despawning platform y= -4562 limitY= -4729.1133333333355
+Platform.js:211 [Platform.despawn] 🗑️ Despawning Platform at (144, -4562)
+CleanupManager.js:29 [CleanupManager] Despawning platform y= -4722 limitY= -4729.1133333333355
+Platform.js:211 [Platform.despawn] 🗑️ Despawning Platform at (108, -4722)
+SlotGenerator.js:145   ⚙️ Generating Slot 14 [PLATFORM_BATCH]...
+SlotGenerator.js:294   🎨 Patrón: column_left | Transform: mirrorXY
+SlotGenerator.js:296   🔵 Plataformas móviles: 1
+Platform.js:193 [Platform.spawn] ✅ Spawned at (252, -8882) | Frame: plat-static-02.png | Visible: true | Active: true | Body: true | Depth: 100
+SlotGenerator.js:362     ▓ Plat 1: x=252, y=-8882, 🟣 ESTÁTICA
+SlotGenerator.js:379       👹 Enemy Spawned on platform 1
+Platform.js:193 [Platform.spawn] ✅ Spawned at (252, -9042) | Frame: plat-move-01.png | Visible: true | Active: true | Body: true | Depth: 100
+SlotGenerator.js:362     ▓ Plat 2: x=252, y=-9042, 🔵 MÓVIL
+Platform.js:193 [Platform.spawn] ✅ Spawned at (252, -9202) | Frame: plat-static-01.png | Visible: true | Active: true | Body: true | Depth: 100
+SlotGenerator.js:362     ▓ Plat 3: x=252, y=-9202, 🟣 ESTÁTICA
+SlotGenerator.js:379       👹 Enemy Spawned on platform 3
+Platform.js:193 [Platform.spawn] ✅ Spawned at (252, -9362) | Frame: plat-static-02.png | Visible: true | Active: true | Body: true | Depth: 100
+SlotGenerator.js:362     ▓ Plat 4: x=252, y=-9362, 🟣 ESTÁTICA
+SlotGenerator.js:379       👹 Enemy Spawned on platform 4
+SlotGenerator.js:626     🪙 Coins: 0 plat + 2 aire = 2
+SlotGenerator.js:171 📦 SLOT 14: PLATFORM_BATCH [Y: -8882 a -9522] (height=640)
+SlotGenerator.js:213 ✅ Slot 14 registrado: {type: 'PLATFORM_BATCH', yStart: '-8882.00', yEnd: '-9522.00', height: '640.00', contentHeight: '640.00'}
+SlotGenerator.js:895 🧹 Limpiando 1 slots viejos (limitY: -5364.866666666668)
+SlotGenerator.js:897   🗑️ SLOT 9 (SAFE_ZONE)
+CleanupManager.js:29 [CleanupManager] Despawning platform y= -4882 limitY= -5364.866666666668
+Platform.js:211 [Platform.despawn] 🗑️ Despawning Platform at (252, -4882)
+CleanupManager.js:29 [CleanupManager] Despawning platform y= -5042 limitY= -5364.866666666668
+Platform.js:211 [Platform.despawn] 🗑️ Despawning Platform at (108, -5042)
+CleanupManager.js:29 [CleanupManager] Despawning platform y= -5202 limitY= -5364.866666666668
+Platform.js:211 [Platform.despawn] 🗑️ Despawning Platform at (252, -5202)
+CleanupManager.js:29 [CleanupManager] Despawning platform y= -5362 limitY= -5364.866666666668
+Platform.js:211 [Platform.despawn] 🗑️ Despawning Platform at (106, -5362)
+SlotGenerator.js:145   ⚙️ Generating Slot 15 [PLATFORM_BATCH]...
+SlotGenerator.js:294   🎨 Patrón: diamond | Transform: none
+SlotGenerator.js:296   🔵 Plataformas móviles: 2
+Platform.js:193 [Platform.spawn] ✅ Spawned at (180, -9522) | Frame: plat-move-01.png | Visible: true | Active: true | Body: true | Depth: 100
+SlotGenerator.js:362     ▓ Plat 1: x=180, y=-9522, 🔵 MÓVIL
+Platform.js:193 [Platform.spawn] ✅ Spawned at (108, -9682) | Frame: plat-static-01.png | Visible: true | Active: true | Body: true | Depth: 100
+SlotGenerator.js:362     ▓ Plat 2: x=108, y=-9682, 🟣 ESTÁTICA
+SlotGenerator.js:379       👹 Enemy Spawned on platform 2
+Platform.js:193 [Platform.spawn] ✅ Spawned at (252, -9842) | Frame: plat-static-02.png | Visible: true | Active: true | Body: true | Depth: 100
+SlotGenerator.js:362     ▓ Plat 3: x=252, y=-9842, 🟣 ESTÁTICA
+Platform.js:193 [Platform.spawn] ✅ Spawned at (180, -10002) | Frame: plat-move-02.png | Visible: true | Active: true | Body: true | Depth: 100
+SlotGenerator.js:362     ▓ Plat 4: x=180, y=-10002, 🔵 MÓVIL
+SlotGenerator.js:626     🪙 Coins: 1 plat + 4 aire = 5 | ⚡ Powerups: 1
+SlotGenerator.js:171 📦 SLOT 15: PLATFORM_BATCH [Y: -9522 a -10162] (height=640)
+SlotGenerator.js:213 ✅ Slot 15 registrado: {type: 'PLATFORM_BATCH', yStart: '-9522.00', yEnd: '-10162.00', height: '640.00', contentHeight: '640.00'}
+SlotGenerator.js:895 🧹 Limpiando 1 slots viejos (limitY: -6007.416666666664)
+SlotGenerator.js:897   🗑️ SLOT 10 (MAZE)
+CleanupManager.js:29 [CleanupManager] Despawning platform y= -5522 limitY= -6007.416666666664
+Platform.js:211 [Platform.despawn] 🗑️ Despawning Platform at (148.5, -5522)
+CleanupManager.js:29 [CleanupManager] Despawning platform y= -5682 limitY= -6007.416666666664
+Platform.js:211 [Platform.despawn] 🗑️ Despawning Platform at (211.5, -5682)
+CleanupManager.js:29 [CleanupManager] Despawning platform y= -5842 limitY= -6007.416666666664
+Platform.js:211 [Platform.despawn] 🗑️ Despawning Platform at (254, -5842)
+SlotGenerator.js:145   ⚙️ Generating Slot 16 [PLATFORM_BATCH]...
+SlotGenerator.js:294   🎨 Patrón: stutter_step | Transform: mirrorXY
+SlotGenerator.js:296   🔵 Plataformas móviles: 1
+Platform.js:193 [Platform.spawn] ✅ Spawned at (162, -10162) | Frame: plat-move-01.png | Visible: true | Active: true | Body: true | Depth: 100
+SlotGenerator.js:362     ▓ Plat 1: x=162, y=-10162, 🔵 MÓVIL
+Platform.js:193 [Platform.spawn] ✅ Spawned at (198, -10322) | Frame: plat-static-02.png | Visible: true | Active: true | Body: true | Depth: 100
+SlotGenerator.js:362     ▓ Plat 2: x=198, y=-10322, 🟣 ESTÁTICA
+SlotGenerator.js:379       👹 Enemy Spawned on platform 2
+Platform.js:193 [Platform.spawn] ✅ Spawned at (162, -10482) | Frame: plat-static-01.png | Visible: true | Active: true | Body: true | Depth: 100
+SlotGenerator.js:362     ▓ Plat 3: x=162, y=-10482, 🟣 ESTÁTICA
+SlotGenerator.js:379       👹 Enemy Spawned on platform 3
+Platform.js:193 [Platform.spawn] ✅ Spawned at (198, -10642) | Frame: plat-static-02.png | Visible: true | Active: true | Body: true | Depth: 100
+SlotGenerator.js:362     ▓ Plat 4: x=198, y=-10642, 🟣 ESTÁTICA
+SlotGenerator.js:626     🪙 Coins: 1 plat + 4 aire = 5
+SlotGenerator.js:171 📦 SLOT 16: PLATFORM_BATCH [Y: -10162 a -10802] (height=640)
+SlotGenerator.js:213 ✅ Slot 16 registrado: {type: 'PLATFORM_BATCH', yStart: '-10162.00', yEnd: '-10802.00', height: '640.00', contentHeight: '640.00'}

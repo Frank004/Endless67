@@ -1,70 +1,56 @@
 import EventBus, { Events } from '../core/EventBus.js';
+import { PlayerController } from '../player/PlayerController.js';
+import { PlayerVisuals } from '../player/PlayerVisuals.js';
+import { PlayerPhysics } from '../player/PlayerPhysics.js';
+import { PLAYER_CONFIG } from '../config/PlayerConfig.js';
+import { ASSETS } from '../config/AssetKeys.js';
 
 export class Player extends Phaser.Physics.Arcade.Sprite {
     constructor(scene, x, y) {
-        // Determinar qué textura usar: PNG o placeholder generado
-        // Si existe 'player_png' y el toggle está activo, usarlo; sino usar 'player'
-        const usePNG = scene.registry.get('usePlayerPNG') === true; // Debe ser explícitamente true
-        const textureKey = (usePNG && scene.textures.exists('player_png')) ? 'player_png' : 'player';
+        super(scene, x, y); // Texture is set by Visuals init
 
-        // Debug log para verificar qué textura se está usando
-        if (usePNG && scene.textures.exists('player_png')) {
-            console.log('🎨 Player: Usando PNG (player_png)');
-        } else {
-            console.log('🎨 Player: Usando placeholder generado (player)');
-        }
-
-        super(scene, x, y, textureKey);
         scene.add.existing(this);
         scene.physics.add.existing(this);
 
-        // Event listeners storage for cleanup (must be initialized before setupEventListeners)
-        this.eventListeners = [];
+        // Components
+        this.visuals = new PlayerVisuals(this);
+        this.physics = new PlayerPhysics(this);
 
-        // Setup event listeners
-        this.setupEventListeners();
+        // Initialize Components
+        this.visuals.init();
+        this.physics.init();
 
-        // Player sprite size (actualizado para 32x32px)
-        // El body de física se ajusta para evitar penetración en las paredes
-        // IMPORTANTE: El body debe ser más pequeño que el sprite y estar correctamente centrado
-        // para evitar que penetre las paredes cuando colisiona con los bounds del mundo
-        if (this.body) {
-            const spriteWidth = this.width || 32; // Ancho del sprite visual
-            const spriteHeight = this.height || 32; // Alto del sprite visual
-
-            // Ancho del body: usar el ancho completo del sprite para evitar que se meta visualmente en la pared
-            const bodyWidth = spriteWidth;
-            // Altura del body: mantener proporción o usar altura del sprite menos margen
-            const bodyHeight = Math.max(20, spriteHeight); // Usar altura completa
-
-            // Centrar horizontalmente y ajustar verticalmente
-            const offsetX = (spriteWidth - bodyWidth) / 2;
-            const offsetY = (spriteHeight - bodyHeight) / 2;
-
-            this.body.setSize(bodyWidth, bodyHeight);
-            this.body.setOffset(offsetX, offsetY);
-
-            // CRÍTICO: Asegurar que el body no pueda penetrar los bounds del mundo
-            // Esto previene que el jugador se meta dentro de las paredes
-            this.body.setCollideWorldBounds(true);
-            // Asegurar que el body respete los bounds incluso con velocidades altas
-            this.body.setBounce(0, 0);
+        // Exponer EventBus (context support)
+        if (!scene.eventBus) {
+            scene.eventBus = EventBus;
         }
 
-        this.setGravityY(1200);
-        this.setMaxVelocity(300, 1000);
-        this.setDragX(1200);
-        this.setCollideWorldBounds(true); // Use Arcade Physics for bounds
-        this.body.onWorldBounds = true;
-        this.setDepth(20);
+        // Event listeners storage
+        this.eventListeners = [];
+        this.setupEventListeners();
 
-        // State
-        this.jumps = 0;
-        this.maxJumps = 3;
-        this.lastWallTouched = null;
-        this.wallJumpConsecutive = 0;
+        // Anims defaults (can be moved to Visuals later if needed)
+        if (scene.anims.exists('player_idle')) {
+            this.play('player_idle');
+        }
+
+        // FSM/Animation controller (control único de orquestación)
+        this.controller = new PlayerController(this);
+
+        // Estado visual/auxiliar
         this.currentPlatform = null;
         this.isInvincible = false;
+        this.lastPlatformVelX = 0;  // Para rastrear la velocidad de la plataforma del frame anterior
+
+        // Ajustes base de fuerzas (usadas vía context wrappers)
+        this.baseJumpForce = PLAYER_CONFIG.FORCES.JUMP;
+        this.baseWallJumpForceX = PLAYER_CONFIG.FORCES.WALL_JUMP_X;
+        this.baseWallJumpForceY = PLAYER_CONFIG.FORCES.WALL_JUMP_Y;
+        this.baseMoveForce = PLAYER_CONFIG.FORCES.MOVE;
+    }
+
+    getPowerupJumpMultiplier() {
+        return this.isInvincible ? PLAYER_CONFIG.SPEED_MULTIPLIERS.INVINCIBLE_JUMP : 1.0;
     }
 
     /**
@@ -74,30 +60,26 @@ export class Player extends Phaser.Physics.Arcade.Sprite {
     setupEventListeners() {
         // Listen to movement events
         const moveListener = (data) => {
-            this.move(data.direction);
+            if (this.controller) {
+                this.controller.context.intent.moveX = data.direction;
+            }
         };
         EventBus.on(Events.PLAYER_MOVE, moveListener);
         this.eventListeners.push({ event: Events.PLAYER_MOVE, listener: moveListener });
 
         // Listen to stop events
         const stopListener = () => {
-            this.stop();
+            if (this.controller) {
+                this.controller.context.intent.moveX = 0;
+            }
         };
         EventBus.on(Events.PLAYER_STOP, stopListener);
         this.eventListeners.push({ event: Events.PLAYER_STOP, listener: stopListener });
 
         // Listen to jump request events (from InputManager)
-        const jumpListener = (data) => {
-            const boost = data.boost || 1.0;
-            const result = this.jump(boost);
-
-            // Emit event after successful jump (for particle effects, etc.)
-            if (result) {
-                EventBus.emit(Events.PLAYER_JUMPED, {
-                    type: result.type,
-                    x: result.x,
-                    y: result.y
-                });
+        const jumpListener = () => {
+            if (this.controller) {
+                this.controller.context.intent.jumpJustPressed = true;
             }
         };
         EventBus.on(Events.PLAYER_JUMP_REQUESTED, jumpListener);
@@ -107,7 +89,87 @@ export class Player extends Phaser.Physics.Arcade.Sprite {
     /**
      * Clean up event listeners when player is destroyed
      */
+    /**
+     * Activates invincibility powerup.
+     */
+    activateInvincibility() {
+        this.isInvincible = true;
+
+        // Reset blinking/timers if re-acquired while active
+        if (this.powerupTimer) this.powerupTimer.remove();
+        if (this.blinkTimer) this.blinkTimer.remove();
+
+        // Stop any running alpha tweens on player and reset alpha
+        this.scene.tweens.killTweensOf(this, 'alpha');
+        this.setAlpha(1);
+
+        // Start Aura
+        if (this.scene.particleManager) {
+            this.scene.particleManager.startAura();
+        }
+
+        const DURATION = 12000;
+        const BLINK_START_DELAY = DURATION - 2000; // Start blinking 2 seconds before end
+
+        // Schedule blinking
+        // Schedule blinking (Flash White)
+        this.blinkTimer = this.scene.time.addEvent({
+            delay: 150,
+            startAt: 0,
+            repeat: -1, // Infinite loop until manually stopped or destroyed
+            paused: true, // Start paused
+            callback: () => {
+                if (this.active) {
+                    if (this.isTinted) {
+                        this.clearTint();
+                    } else {
+                        this.setTintFill(0xffffff);
+                    }
+                }
+            }
+        });
+
+        // Start blinking 2 seconds before end
+        this.startBlinkTimer = this.scene.time.delayedCall(BLINK_START_DELAY, () => {
+            if (this.blinkTimer) this.blinkTimer.paused = false;
+        });
+
+        // Schedule deactivation
+        this.powerupTimer = this.scene.time.delayedCall(DURATION, () => {
+            this.deactivatePowerup();
+        });
+    }
+
+    deactivatePowerup() {
+        this.isInvincible = false;
+
+        // Stop Aura
+        if (this.scene.particleManager) {
+            this.scene.particleManager.stopAura();
+        }
+
+        // Cleanup timers
+        if (this.blinkTimer) {
+            this.blinkTimer.remove();
+            this.blinkTimer = null;
+        }
+        if (this.startBlinkTimer) {
+            this.startBlinkTimer.remove();
+            this.startBlinkTimer = null;
+        }
+
+        this.clearTint();
+
+        if (this.powerupOverlay) {
+            this.powerupOverlay.stop();
+        }
+    }
+
     destroy() {
+        if (this.powerupTimer) this.powerupTimer.remove();
+        if (this.startBlinkTimer) this.startBlinkTimer.remove();
+        if (this.blinkTimer) this.blinkTimer.remove();
+
         this.eventListeners.forEach(({ event, listener }) => {
             EventBus.off(event, listener);
         });
@@ -123,24 +185,111 @@ export class Player extends Phaser.Physics.Arcade.Sprite {
      * This method is kept for backward compatibility but will be removed in future
      */
     update(cursors = null, movePointer = null, splitX = null, isMobile = null) {
-        // World bounds now handled by Arcade Physics
+        // Reset platform reference when not touching ground
         if (!this.body.touching.down) {
             this.currentPlatform = null;
         }
 
-        // Check for wall interaction via World Bounds (blocked)
-        if (this.body.blocked.left) {
-            this.handleWallTouch('left');
-        } else if (this.body.blocked.right) {
-            this.handleWallTouch('right');
+        // Mantener overlay de powerup alineado al jugador si está visible
+        if (this.powerupOverlay && this.powerupOverlay.visible) {
+            this.powerupOverlay.updatePosition();
         }
 
-        // Movement is now handled via EventBus events
-        // This method only handles physics updates
+        // FSM placeholder: actualizar sensores y animación sin alterar físicas
+        if (this.controller) {
+            this.controller.update();
+        }
+
+        // Update visuals (flipping, etc)
+        if (this.visuals) {
+            this.visuals.update();
+        }
+
+        // Move with moving platform (only if player is NOT moving with input)
+        if (this.currentPlatform && this.currentPlatform.active && this.body.touching.down) {
+            const platform = this.currentPlatform;
+
+            // Check if platform is moving
+            if (platform.getData('isMoving') && platform.body && platform.body.velocity) {
+                // Get platform's horizontal velocity
+                const platformVelX = platform.body.velocity.x;
+
+                // Check if player is trying to move (has horizontal acceleration)
+                const isPlayerMoving = Math.abs(this.body.acceleration.x) > 0 || (this.controller && Math.abs(this.controller.context.intent.moveX) > 0);
+
+                // Store the offset from platform center (only on first contact)
+                if (this.platformOffsetX === undefined) {
+                    this.platformOffsetX = this.x - platform.x;
+                }
+
+                if (!isPlayerMoving) {
+                    // Player is NOT moving with input → move with platform (offset fijo)
+                    // Calculate new player position based on platform movement
+                    let newX = platform.x + this.platformOffsetX;
+
+                    // Clamp player position to prevent entering walls
+                    // Player body width is 24px, so half is 12px
+                    const playerHalfWidth = (this.width || 32) / 2;  // usar sprite completo para evitar que se meta en la pared
+                    const wallWidth = 32;  // WALLS.WIDTH
+                    const gameWidth = this.scene.cameras.main.width;  // 400px
+
+                    // Ensure player doesn't enter left wall (0 to 32px)
+                    const minPlayerX = wallWidth + playerHalfWidth;  // 32 + 12 = 44px
+                    // Ensure player doesn't enter right wall (368 to 400px)
+                    const maxPlayerX = gameWidth - wallWidth - playerHalfWidth;  // 400 - 32 - 12 = 356px
+
+                    // Clamp position
+                    newX = Phaser.Math.Clamp(newX, minPlayerX, maxPlayerX);
+
+                    // Update player position to move with platform
+                    this.x = newX;
+
+                    // Match platform velocity so physics interactions work correctly
+                    this.body.velocity.x = platformVelX;
+
+                    // Guardar la velocidad de la plataforma para el siguiente frame
+                    this.lastPlatformVelX = platformVelX;
+                } else {
+                    // Player IS moving with input → allow independent movement
+                    // La física calcula la velocidad del jugador basada en la aceleración
+                    // Pero esta velocidad puede incluir la velocidad de la plataforma del frame anterior
+                    // Necesitamos calcular la velocidad relativa del jugador (sin plataforma)
+                    // y luego sumar la velocidad de la plataforma actual
+
+                    // Calcular velocidad relativa: restar la velocidad de la plataforma del frame anterior
+                    const playerRelativeVelX = this.body.velocity.x - this.lastPlatformVelX;
+
+                    // La velocidad absoluta = velocidad relativa + velocidad de plataforma actual
+                    // Esto permite que el jugador se mueva en la dirección correcta del input
+                    // mientras la plataforma también se mueve
+                    this.body.velocity.x = playerRelativeVelX + platformVelX;
+
+                    // Guardar la velocidad de la plataforma para el siguiente frame
+                    this.lastPlatformVelX = platformVelX;
+
+                    // Actualizar offset basado en la posición actual
+                    // Esto asegura que cuando el jugador deje de moverse, esté en la nueva posición relativa
+                    this.platformOffsetX = this.x - platform.x;
+                }
+            } else {
+                // Not on moving platform, clear offset
+                this.platformOffsetX = undefined;
+                this.lastPlatformVelX = 0;
+            }
+        } else {
+            // Not on platform, clear offset
+            this.platformOffsetX = undefined;
+            this.lastPlatformVelX = 0;
+        }
+
+        // Wall touches are handled by colliders; no need to check world bounds
     }
 
+
+    // Helpers de física para el FSM/context
     move(direction) {
-        const force = 900;
+        const speedMult = this.isInvincible ? PLAYER_CONFIG.SPEED_MULTIPLIERS.INVINCIBLE_MOVE : 1.0;
+        const force = this.baseMoveForce * speedMult;
         this.setAccelerationX(direction * force);
     }
 
@@ -148,109 +297,21 @@ export class Player extends Phaser.Physics.Arcade.Sprite {
         this.setAccelerationX(0);
     }
 
-    jump(boost = 1.0) {
-        // Wall Jump Left (Touching wall on left or blocked by world bound on left)
-        if (this.body.touching.left || this.body.blocked.left) {
-            if (this.checkWallStamina('left')) {
-                this.setVelocity(400 * boost, -600 * boost); // Increased Y
-                this.jumps = 1;
-                return { type: 'wall_jump', x: this.x - 10, y: this.y };
-            }
-            return null;
-        }
-
-        // Wall Jump Right (Touching wall on right or blocked by world bound on right)
-        if (this.body.touching.right || this.body.blocked.right) {
-            if (this.checkWallStamina('right')) {
-                this.setVelocity(-400 * boost, -600 * boost); // Increased Y
-                this.jumps = 1;
-                return { type: 'wall_jump', x: this.x + 10, y: this.y };
-            }
-            return null;
-        }
-
-        // Normal / Double Jump
-        if (this.jumps < this.maxJumps) {
-            let type = this.jumps === 0 ? 'jump' : 'double_jump';
-            if (this.jumps > 0) this.doFrontFlip();
-
-            this.setVelocityY(-600 * boost); // Increased from -550 to reach 140px spacing
-            this.jumps++;
-            // Offset ajustado dinámicamente basado en el tamaño del sprite
-            // Para 32x32px: offset de ~16px (mitad del sprite)
-            // Para 24x24px: offset de ~12px (mitad del sprite)
-            const jumpOffsetY = (this.height || 32) * 0.5;
-            return { type: type, x: this.x, y: this.y + jumpOffsetY };
-        }
-
-        return null;
+    jumpPhysics(vx, vy) {
+        this.setVelocity(vx, vy);
     }
 
-    checkWallStamina(side) {
-        if (this.lastWallTouched !== side) {
-            this.wallJumpConsecutive = 0;
-            this.clearTint();
-        }
-        if (this.wallJumpConsecutive >= 3) return false;
-        this.lastWallTouched = side;
-        this.wallJumpConsecutive++;
-        return true;
+    setCurrentPlatform(platform) {
+        this.currentPlatform = platform || null;
     }
 
-    handleWallTouch(wallSide) {
-        // If we are moving up, don't apply wall slide friction yet, let momentum carry us
-        // unless we want to limit upward velocity? No, usually wall slide affects downward movement.
-
-        if (this.lastWallTouched === wallSide && this.wallJumpConsecutive >= 3) {
-            // Stamina depleted, slide down fast? Or just normal gravity?
-            // If we want to punish, maybe no friction.
-            // But let's keep the existing logic: if stamina depleted, maybe we slip?
-            // The original code applied friction even if stamina depleted?
-            // "if (this.body.velocity.y > 0) this.setVelocityY(400);" -> This limits falling speed (friction)
-
-            // Wait, the original code said:
-            // if (this.lastWallTouched === wallSide && this.wallJumpConsecutive >= 5) {
-            //    if (this.body.velocity.y > 0) this.setVelocityY(400); 
-            //    this.setTint(0x555555);
-            //    return;
-            // }
-            // This means even with depleted stamina, we still slide but maybe faster (400 vs 80)?
-
-            if (this.body.velocity.y > 0) this.setVelocityY(400); // Faster slide (less friction)
-            this.setTint(0x555555);
-            return;
-        }
-
-        // Normal Wall Slide Friction
-        if (this.body.velocity.y > 0) this.setVelocityY(80); // Slow slide (high friction)
-
-        if (this.lastWallTouched !== wallSide) {
-            this.jumps = 0;
-            this.clearTint();
-            this.scene.tweens.killTweensOf(this);
-            this.angle = 0;
-        }
+    // Hooks para estados de daño/muerte (delegan en el controller/FSM)
+    enterHitState(duration = 500) {
+        this.controller?.enterHit(duration);
     }
 
-    doFrontFlip() {
-        this.scene.tweens.killTweensOf(this);
-        this.angle = 0;
-        this.scene.tweens.add({
-            targets: this,
-            angle: 360,
-            duration: 400,
-            ease: 'Cubic.easeOut'
-        });
+    enterDeathState() {
+        this.controller?.enterDeath();
     }
 
-    handleLand(floor) {
-        if (this.body.touching.down) {
-            this.jumps = 0;
-            this.lastWallTouched = null;
-            this.wallJumpConsecutive = 0;
-            this.clearTint();
-            this.angle = 0;
-            this.currentPlatform = floor;
-        }
-    }
 }

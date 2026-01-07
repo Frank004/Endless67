@@ -1,9 +1,19 @@
+import { UIHelpers } from '../utils/UIHelpers.js';
+import { InputManager } from '../managers/input/InputManager.js';
+import { MenuNavigation } from '../managers/ui/MenuNavigation.js';
+import EventBus, { Events } from '../core/EventBus.js';
+import GameState from '../core/GameState.js';
+
 export class MainMenu extends Phaser.Scene {
 	constructor() {
 		super('MainMenu');
+		this.menuNavigation = null;
 	}
 
 	create() {
+		this.inputManager = new InputManager(this);
+		this.inputManager.setupInputs();
+
 		const width = this.cameras.main.width;
 		const height = this.cameras.main.height;
 
@@ -20,12 +30,40 @@ export class MainMenu extends Phaser.Scene {
 		}).setOrigin(0.5);
 
 		// --- BUTTONS ---
-		const startBtn = this.createButton(width / 2, 250, 'START GAME', '#00ff00', () => this.scene.start('Game'));
-		const leaderboardBtn = this.createButton(width / 2, 330, 'LEADERBOARD', '#00ffff', () => this.scene.start('Leaderboard'));
-		const settingsBtn = this.createButton(width / 2, 410, 'SETTINGS', '#ffffff', () => this.scene.start('Settings'));
+		this.buttons = [];
+
+		const startBtn = UIHelpers.createTextButton(this, width / 2, 250, 'START GAME', {
+			textColor: '#00ff00',
+			fontSize: '28px',
+			callback: () => this.scene.start('Game')
+		});
+		this.buttons.push(startBtn);
+
+		const leaderboardBtn = UIHelpers.createTextButton(this, width / 2, 330, 'LEADERBOARD', {
+			textColor: '#00ffff',
+			fontSize: '28px',
+			callback: () => this.scene.start('Leaderboard')
+		});
+		this.buttons.push(leaderboardBtn);
+
+		const settingsBtn = UIHelpers.createTextButton(this, width / 2, 410, 'SETTINGS', {
+			textColor: '#ffffff',
+			fontSize: '28px',
+			callback: () => this.scene.start('Settings')
+		});
+		this.buttons.push(settingsBtn);
+
+		// --- NAVIGATION ---
+		this.menuNavigation = new MenuNavigation(this, this.buttons);
+		this.menuNavigation.setup();
+
+		// Cleanup on scene shutdown
+		this.events.once('shutdown', () => {
+			if (this.menuNavigation) this.menuNavigation.cleanup();
+		});
 
 		// Version (visible text)
-		const versionText = this.add.text(width / 2, height - 30, 'v0.0.35', {
+		const versionText = this.add.text(width / 2, height - 30, 'v0.0.41', {
 			fontSize: '14px',
 			color: '#444'
 		}).setOrigin(0.5);
@@ -54,29 +92,27 @@ export class MainMenu extends Phaser.Scene {
 		});
 	}
 
+	update(time, delta) {
+		this.inputManager.update(time, delta);
+	}
+
 	showDevButton(width, height) {
-		const devBtn = this.createButton(width / 2, height - 80, '👾 DEV MODE', '#ff0000', () => this.scene.start('Playground'));
+		const devBtn = UIHelpers.createTextButton(this, width / 2, height - 80, '👾 DEV MODE', {
+			textColor: '#ff0000',
+			fontSize: '28px',
+			callback: () => this.scene.start('Playground')
+		});
+
 		this.tweens.add({
-			targets: devBtn,
+			targets: devBtn.container,
 			alpha: { from: 0, to: 1 },
 			duration: 500,
 			yoyo: true,
 			repeat: -1
 		});
-	}
 
-	createButton(x, y, text, color, onClick) {
-		const btn = this.add.text(x, y, text, {
-			fontSize: '28px',
-			color: color,
-			backgroundColor: '#333333',
-			padding: { x: 20, y: 10 }
-		}).setOrigin(0.5).setInteractive({ useHandCursor: true });
-
-		btn.on('pointerdown', onClick);
-		btn.on('pointerover', () => btn.setColor('#ffff00'));
-		btn.on('pointerout', () => btn.setColor(color));
-
-		return btn;
+		// Update Navigation
+		this.buttons.push(devBtn);
+		this.menuNavigation.updateButtons(this.buttons);
 	}
 }

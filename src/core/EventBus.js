@@ -4,7 +4,7 @@
  * Singleton pattern para un bus de eventos global.
  * Permite que diferentes partes del juego se comuniquen sin acoplamiento directo.
  * 
- * // Phaser is available globally via CDN in index.html
+ * Nota: Phaser se carga desde CDN en index.html, por lo que está disponible como variable global.
  * 
  * Uso:
  *   EventBus.emit('PLAYER_DIED', { score: 100 });
@@ -62,4 +62,16 @@ export const Events = {
     // Collectibles
     COIN_COLLECTED: 'COIN_COLLECTED',
     POWERUP_COLLECTED: 'POWERUP_COLLECTED',
+
+    // UI Navigation (Unified)
+    UI_NAV_UP: 'UI_NAV_UP',
+    UI_NAV_DOWN: 'UI_NAV_DOWN',
+    UI_NAV_LEFT: 'UI_NAV_LEFT',
+    UI_NAV_RIGHT: 'UI_NAV_RIGHT',
+    UI_SELECT: 'UI_SELECT', // Enter, Space, Gamepad A
+    UI_BACK: 'UI_BACK',     // Escape, Gamepad B/Back
+
+    // Input Device Events
+    GAMEPAD_CONNECTED: 'GAMEPAD_CONNECTED',
+    GAMEPAD_DISCONNECTED: 'GAMEPAD_DISCONNECTED'
 };

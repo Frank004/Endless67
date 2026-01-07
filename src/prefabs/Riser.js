@@ -8,23 +8,26 @@ export class Riser extends Phaser.GameObjects.TileSprite {
         scene.physics.add.existing(this);
 
         this.setOrigin(0.5, 0);
-        this.setDepth(50);
+        this.setDepth(150); // Alto depth para estar por encima de todo excepto UI (200+)
 
         // Physics setup
         this.body.allowGravity = false;
         this.body.immovable = true;
 
         // Body adjustment
+        // El body debe ser más ancho que la pantalla para cubrir completamente
         const waveOffset = 20;
         const wallWidth = WALLS.WIDTH;
         const gameWidth = scene.game.config.width;
-        const physicsWidth = gameWidth - (wallWidth * 2);
+        // Physics width: ancho completo de la pantalla (sin restar walls para que cubra todo)
+        const physicsWidth = gameWidth + (waveOffset * 2);
 
-        const bodyHeight = 10; // Thin body at top
-        const bodyOffsetY = -5; // Negative offset to align with visual top
+        const bodyHeight = 20; // Larger hit area but offset downwards
+        const bodyOffsetY = 15; // Positive offset: starts 15px BELOW the visual top edge
 
         this.body.setSize(physicsWidth, bodyHeight);
-        this.body.setOffset(waveOffset, bodyOffsetY);
+        // Offset negativo en X para centrar, offset positivo en Y para bajar la colisión
+        this.body.setOffset(-waveOffset, bodyOffsetY);
 
         // Pipeline - use the specified pipeline for this riser type
         if (scene.game.renderer.type === Phaser.WEBGL) {

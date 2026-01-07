@@ -1,0 +1,83 @@
+{
+	"textures": [
+		{
+			"image": "basketball.png",
+			"format": "RGBA8888",
+			"size": {
+				"w": 61,
+				"h": 19
+			},
+			"scale": 1,
+			"frames": [
+				{
+					"filename": "basketball 3.png",
+					"rotated": false,
+					"trimmed": true,
+					"sourceSize": {
+						"w": 32,
+						"h": 32
+					},
+					"spriteSourceSize": {
+						"x": 4,
+						"y": 7,
+						"w": 21,
+						"h": 17
+					},
+					"frame": {
+						"x": 1,
+						"y": 1,
+						"w": 21,
+						"h": 17
+					}
+				},
+				{
+					"filename": "basketball 1.png",
+					"rotated": false,
+					"trimmed": true,
+					"sourceSize": {
+						"w": 32,
+						"h": 32
+					},
+					"spriteSourceSize": {
+						"x": 6,
+						"y": 7,
+						"w": 17,
+						"h": 17
+					},
+					"frame": {
+						"x": 24,
+						"y": 1,
+						"w": 17,
+						"h": 17
+					}
+				},
+				{
+					"filename": "basketball 2.png",
+					"rotated": false,
+					"trimmed": true,
+					"sourceSize": {
+						"w": 32,
+						"h": 32
+					},
+					"spriteSourceSize": {
+						"x": 6,
+						"y": 7,
+						"w": 17,
+						"h": 17
+					},
+					"frame": {
+						"x": 43,
+						"y": 1,
+						"w": 17,
+						"h": 17
+					}
+				}
+			]
+		}
+	],
+	"meta": {
+		"app": "https://www.codeandweb.com/texturepacker",
+		"version": "3.0",
+		"smartupdate": "$TexturePacker:SmartUpdate:d76407b7c345365df5126b78571654a0:f4905f71f5c64ef89abc3063bb6ecfac:c42c7b54faabf91417666cdada321432$"
+	}
+}

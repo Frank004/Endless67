@@ -1,12 +1,11 @@
-
-import { ScoreManager } from '../../src/managers/ScoreManager.js';
+import ScoreManager from '../../src/managers/gameplay/ScoreManager.js';
 
 describe('ScoreManager', () => {
     let scoreManager;
     let mockLocalStorage;
 
     beforeEach(() => {
-        scoreManager = new ScoreManager();
+        scoreManager = ScoreManager;
         mockLocalStorage = {};
 
         Object.defineProperty(window, 'localStorage', {
@@ -57,5 +56,36 @@ describe('ScoreManager', () => {
         expect(scoreManager.isHighScore(59, 10)).toBe(false); // Height too low
         expect(scoreManager.isHighScore(100, 0)).toBe(false); // No coins
         expect(scoreManager.isHighScore(60, 1)).toBe(true); // Just enough
+    });
+
+    test('saveScore should uppercase and trim player names to 3 characters', () => {
+        scoreManager.saveScore('playerOne', 5, 10);
+        const scores = scoreManager.getTopScores();
+
+        expect(scores[0].name).toBe('PLA'); // Uppercased and trimmed
+    });
+
+    test('isHighScore should compare against a full leaderboard', () => {
+        const storedScores = [];
+        for (let i = 0; i < 10; i++) {
+            storedScores.push({ name: `P${i}`, coins: 10 - i, height: 50 + i });
+        }
+        window.localStorage.setItem(scoreManager.storageKey, JSON.stringify(storedScores));
+
+        expect(scoreManager.isHighScore(120, 1)).toBe(true); // Height beats last entry
+        expect(scoreManager.isHighScore(40, 1)).toBe(false); // Height too low vs last entry
+        expect(scoreManager.isHighScore(60, 15)).toBe(true); // More coins than top
+    });
+
+    test('getTopScores should handle storage errors gracefully', () => {
+        Object.defineProperty(window, 'localStorage', {
+            value: {
+                getItem: jest.fn(() => { throw new Error('storage failure'); }),
+                setItem: jest.fn()
+            },
+            writable: true
+        });
+
+        expect(scoreManager.getTopScores()).toEqual([]);
     });
 });

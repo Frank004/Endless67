@@ -3,37 +3,79 @@ import { PatrolBehavior } from './behaviors/PatrolBehavior.js';
 import { ShootBehavior } from './behaviors/ShootBehavior.js';
 import { JumpBehavior } from './behaviors/JumpBehavior.js';
 
+import { ENEMY_CONFIG } from '../config/EnemyConfig.js';
+import { ASSETS } from '../config/AssetKeys.js';
+
 export class PatrolEnemy extends Phaser.Physics.Arcade.Sprite {
     constructor(scene, x = 0, y = 0) {
         // Constructor puede recibir x, y o no (para pooling)
-        super(scene, x, y, 'enemy_spike');
+        super(scene, x, y, ASSETS.ENEMY_SPIKE);
         this.setDepth(20);
 
-        // Use 'bound' mode: platformRider only provides bounds, we handle movement
-        enablePlatformRider(this, { mode: 'bound', marginX: 5 });
+        // Use 'patrol' mode: platformRider takes full control of movement and bounds
+        enablePlatformRider(this, {
+            mode: 'patrol',
+            marginX: 5,
+            autoPatrol: true,
+            patrolSpeed: ENEMY_CONFIG.PATROL.SPEED
+        });
 
-        // Strategy Pattern: Usar PatrolBehavior
-        this.patrolBehavior = new PatrolBehavior(this, 60);
+        // Strategy Pattern: Usar PatrolBehavior only for extra custom logic if needed (now reduced)
+        // this.patrolBehavior = new PatrolBehavior(this, ENEMY_CONFIG.PATROL.SPEED);
+        // this.patrolConfig = null; 
+    }
+
+    setPatrolBounds(minX, maxX, speed = ENEMY_CONFIG.PATROL.SPEED) {
+        // Legacy method support - platformRider auto-calculates bounds from platform
+        // But if we wanted manual bounds, we'd override rider properties
+        this.riderPatrolSpeed = speed;
     }
 
     spawn(x, y) {
+        if (!this.scene || !this.scene.physics) {
+            console.error('❌ PatrolEnemy.spawn: scene o physics indefinido');
+            return;
+        }
         // Asegurar que está en el physics world
         if (!this.body) {
             this.scene.physics.add.existing(this);
         }
-        
+
+        // Establecer posición PRIMERO
+        this.setPosition(x, y);
+
+        // Establecer tamaño visual fijo (sin escalado)
+        this.setDisplaySize(ENEMY_CONFIG.PATROL.SIZE, ENEMY_CONFIG.PATROL.SIZE);
+        this.setScale(1);  // Asegurar que el scale sea 1
+
+        // Configurar body de física
+        if (this.body) {
+            this.body.setSize(ENEMY_CONFIG.PATROL.SIZE, ENEMY_CONFIG.PATROL.SIZE);
+            this.body.setOffset(0, 0);  // Sin offset, el body coincide con el sprite
+        }
+
+        // Configurar física
         this.body.reset(x, y);
+        // IMPORTANTE: PatrolEnemy usa platformRider para movimiento vertical
+        // allowGravity debe estar TRUE para que platformRider detecte bordes
+        // pero gravity.y = 0 para que no caiga (platformRider maneja el movimiento)
         this.body.allowGravity = true;
-        this.setGravityY(1200);
+        this.body.gravity.y = 0;  // Sin gravedad, platformRider maneja vertical
         this.body.immovable = false;
+        this.body.updateFromGameObject();  // Sincronizar body con posición del sprite
+
         this.setActive(true);
         this.setVisible(true);
         this.setDepth(20);
         this.setVelocityX(0);
+        this.setVelocityY(0);  // Sin velocidad Y inicial
 
-        // Pop-in effect
-        this.setScale(0);
-        this.scene.tweens.add({ targets: this, scale: 1, duration: 400, ease: 'Back.out' });
+        // Debug: Verificar tamaño visual (commented out)
+        // console.log(`  📏 Enemy spawn: ...`);
+
+        // Pop-in effect (comentado temporalmente para debug)
+        // this.setScale(0);
+        // this.scene.tweens.add({ targets: this, scale: 1, duration: 400, ease: 'Back.out' });
     }
 
     /**
@@ -42,17 +84,19 @@ export class PatrolEnemy extends Phaser.Physics.Arcade.Sprite {
     despawn() {
         // Detener comportamientos
         this.stopMoving();
-        
+
         // Limpiar estado
-        this.setVelocityX(0);
-        this.setVelocityY(0);
+        if (this.body) {
+            this.setVelocityX(0);
+            this.setVelocityY(0);
+        }
         this.setScale(1); // Reset scale
-        
+
         // Remover del grupo legacy si existe
         if (this.scene && this.scene.patrolEnemies) {
             this.scene.patrolEnemies.remove(this);
         }
-        
+
         // Desactivar
         this.setActive(false);
         this.setVisible(false);
@@ -61,22 +105,44 @@ export class PatrolEnemy extends Phaser.Physics.Arcade.Sprite {
     /**
      * Iniciar patrullaje (delegado a PatrolBehavior)
      */
-    patrol(minX, maxX, speed = 60) {
-        this.patrolBehavior.startPatrol(minX, maxX, speed);
+    /**
+     * Iniciar patrullaje (Legacy/Deprecated - use autoPatrol in platformRider)
+     */
+    patrol(minX, maxX, speed = ENEMY_CONFIG.PATROL.SPEED) {
+        // this.patrolBehavior.startPatrol(minX, maxX, speed);
+        this.riderPatrolSpeed = speed;
+        this.riderAutoPatrol = true;
     }
 
     /**
      * Detener movimiento (delegado a PatrolBehavior)
      */
     stopMoving() {
-        this.patrolBehavior.stopPatrol();
+        // this.patrolBehavior.stopPatrol();
+        this.riderAutoPatrol = false;
+        if (this.body) this.setVelocityX(0);
     }
 
     preUpdate(time, delta) {
         super.preUpdate(time, delta);
 
-        // Strategy Pattern: Delegar actualización a PatrolBehavior
-        this.patrolBehavior.update(time, delta);
+        // PlatformRider updates logic automatically
+        updatePlatformRider(this);
+
+        // Debug: verificar que preUpdate se esté llamando solo si debug activo
+        const debugPatrol = this.scene?.registry?.get('showPatrolLogs');
+        if (debugPatrol) {
+            if (this._preUpdateCounter === undefined) {
+                this._preUpdateCounter = 0;
+                console.log(`  ✅ PatrolEnemy.preUpdate: Llamado por primera vez, active=${this.active}`);
+            }
+            this._preUpdateCounter++;
+            if (this._preUpdateCounter % 180 === 0) {
+                console.log(`  🔄 PatrolEnemy: x=${this.x.toFixed(1)}, onPlat=${!!this.ridingPlatform}`);
+            }
+        }
+
+        // Cleanup offscreen enemies
 
         // Cleanup offscreen enemies
         if (this.y > this.scene.player.y + 900) {
@@ -99,7 +165,7 @@ export class PatrolEnemy extends Phaser.Physics.Arcade.Sprite {
 
 export class ShooterEnemy extends Phaser.Physics.Arcade.Sprite {
     constructor(scene, x, y) {
-        super(scene, x, y, 'enemy_shooter');
+        super(scene, x, y, ASSETS.ENEMY_SHOOTER);
         this.setDepth(20);
 
         // Use 'carry' mode: only follow platform, no movement
@@ -114,18 +180,23 @@ export class ShooterEnemy extends Phaser.Physics.Arcade.Sprite {
         if (!this.body) {
             this.scene.physics.add.existing(this);
         }
-        
+
         this.body.reset(x, y);
-        this.body.allowGravity = true;
-        this.setGravityY(1200);
-        this.body.immovable = false;
+        this.setDisplaySize(ENEMY_CONFIG.SHOOTER.SIZE, ENEMY_CONFIG.SHOOTER.SIZE);
+        this.setScale(1);
+        if (this.body) {
+            this.body.setSize(ENEMY_CONFIG.SHOOTER.SIZE, ENEMY_CONFIG.SHOOTER.SIZE);
+            this.body.setOffset(0, 0);
+        }
+        this.body.allowGravity = false;
+        this.setGravityY(0);
+        this.body.immovable = true;
         this.setActive(true);
         this.setVisible(true);
         this.setDepth(20);
 
-        // 6. Tweens for Dynamic Enemies: Pop-in effect
-        this.setScale(0);
-        this.scene.tweens.add({ targets: this, scale: 1, duration: 400, ease: 'Back.out' });
+        // Reset timers/behavior
+        this.stopShooting();
     }
 
     /**
@@ -134,17 +205,19 @@ export class ShooterEnemy extends Phaser.Physics.Arcade.Sprite {
     despawn() {
         // Detener disparo
         this.stopShooting();
-        
+
         // Limpiar estado
-        this.setVelocityX(0);
-        this.setVelocityY(0);
+        if (this.body) {
+            this.setVelocityX(0);
+            this.setVelocityY(0);
+        }
         this.setScale(1); // Reset scale
-        
+
         // Remover del grupo legacy si existe
         if (this.scene && this.scene.shooterEnemies) {
             this.scene.shooterEnemies.remove(this);
         }
-        
+
         // Desactivar
         this.setActive(false);
         this.setVisible(false);
@@ -155,19 +228,6 @@ export class ShooterEnemy extends Phaser.Physics.Arcade.Sprite {
      */
     startShooting(projectilesGroup, currentHeight = 0) {
         this.shootBehavior.startShooting(projectilesGroup, currentHeight);
-    }
-
-    /**
-     * Disparar (delegado a ShootBehavior)
-     * @deprecated Usar startShooting en su lugar
-     */
-    shoot(projectilesGroup, currentHeight = 0) {
-        // Mantener compatibilidad, pero delegar a behavior
-        if (!this.shootBehavior.projectilesGroup) {
-            this.shootBehavior.startShooting(projectilesGroup, currentHeight);
-        } else {
-            this.shootBehavior.shoot();
-        }
     }
 
     /**
@@ -188,10 +248,10 @@ export class ShooterEnemy extends Phaser.Physics.Arcade.Sprite {
             if (this.scene.shooterEnemyPool) {
                 this.scene.shooterEnemyPool.despawn(this);
             } else {
-            this.stopShooting();
-            this.setActive(false);
-            this.setVisible(false);
-        }
+                this.stopShooting();
+                this.setActive(false);
+                this.setVisible(false);
+            }
         }
     }
 
@@ -207,92 +267,115 @@ export class ShooterEnemy extends Phaser.Physics.Arcade.Sprite {
 }
 
 export class JumperShooterEnemy extends Phaser.Physics.Arcade.Sprite {
-    constructor(scene, x = 0, y = 0) {
-        // Constructor puede recibir x, y o no (para pooling)
-        super(scene, x, y, 'enemy_jumper_shooter');
+    constructor(scene, x, y) {
+        // Crear textura de cubo violeta sólido si no existe
+        if (!scene.textures.exists('jumper_cube')) {
+            const graphics = scene.add.graphics();
+            graphics.fillStyle(0x9B59B6, 1); // Color violeta
+            graphics.fillRect(0, 0, 32, 32);
+            graphics.generateTexture('jumper_cube', 32, 32);
+            graphics.destroy();
+        }
+
+        super(scene, x, y, 'jumper_cube');
+
+        // Agregar al sistema de física (CRÍTICO para pooling)
+        scene.physics.add.existing(this);
+
         this.setDepth(20);
 
-        // Use 'carry' mode: only follow platform, jumping is handled separately
-        enablePlatformRider(this, { mode: 'carry', marginX: 5 });
-
-        // Strategy Pattern: Usar múltiples comportamientos
-        this.jumpBehavior = new JumpBehavior(this, -400);
+        // Strategy Pattern: Jump + Shoot behaviors
+        this.jumpBehavior = new JumpBehavior(this, ENEMY_CONFIG.JUMPER.JUMP_FORCE);
         this.shootBehavior = new ShootBehavior(this);
     }
 
     spawn(x, y) {
-        // Asegurar que está en el physics world
-        if (!this.body) {
-            this.scene.physics.add.existing(this);
-        }
-        
+        // Reset physics body
         this.body.reset(x, y);
-        this.body.allowGravity = true; // Needs gravity to jump
-        this.setGravityY(1200); // Apply gravity since world gravity is 0
-        this.body.immovable = false;   // Needs to move
-        this.setCollideWorldBounds(false);
+
+        // Tamaño completo 32x32 (visual y física)
+        this.setDisplaySize(ENEMY_CONFIG.JUMPER.SIZE, ENEMY_CONFIG.JUMPER.SIZE);
+        this.setScale(1);
+
+        // Body completo 32x32
+        if (this.body) {
+            this.body.setSize(ENEMY_CONFIG.JUMPER.SIZE, ENEMY_CONFIG.JUMPER.SIZE);
+            this.body.setOffset(0, 0);
+        }
+
+
+        // La gravedad se hereda del mundo (1200)
+        // Solo necesitamos asegurar que no sea immovable
+        this.body.immovable = false;
+
         this.setActive(true);
         this.setVisible(true);
         this.setDepth(20);
         this.setVelocityX(0);
+        this.setVelocityY(0);
 
-        // 6. Tweens for Dynamic Enemies: Pop-in effect
+        // Reset behaviors
+        this.stopBehavior();
+
+        // Pop-in effect
         this.setScale(0);
         this.scene.tweens.add({ targets: this, scale: 1, duration: 400, ease: 'Back.out' });
     }
 
-    /**
-     * Método llamado cuando el objeto es devuelto al pool
-     */
     despawn() {
-        // Detener comportamientos
         this.stopBehavior();
-        
-        // Limpiar estado
-        this.setVelocityX(0);
-        this.setVelocityY(0);
-        this.setScale(1); // Reset scale
-        
-        // Remover del grupo legacy si existe
+        if (this.body) {
+            this.setVelocityX(0);
+            this.setVelocityY(0);
+        }
+        this.setScale(1);
         if (this.scene && this.scene.jumperShooterEnemies) {
             this.scene.jumperShooterEnemies.remove(this);
         }
-        
-        // Desactivar
         this.setActive(false);
         this.setVisible(false);
     }
 
-    /**
-     * Iniciar comportamientos (salto y disparo)
-     */
     startBehavior(projectilesGroup) {
         this.stopBehavior();
-
-        // Strategy Pattern: Iniciar ambos comportamientos
-        this.jumpBehavior.startJumping(1000, 2000);
+        this.jumpBehavior.startJumping(ENEMY_CONFIG.JUMPER.JUMP_INTERVAL_MIN, ENEMY_CONFIG.JUMPER.JUMP_INTERVAL_MAX);
         this.shootBehavior.startShooting(projectilesGroup, this.scene.currentHeight || 0);
     }
 
-    /**
-     * Disparar (delegado a ShootBehavior)
-     * @deprecated Usar startBehavior en su lugar
-     */
-    shoot(projectilesGroup) {
-        // Mantener compatibilidad
-        if (!this.shootBehavior.projectilesGroup) {
-            this.shootBehavior.startShooting(projectilesGroup, this.scene.currentHeight || 0);
-        } else {
-            this.shootBehavior.shoot();
-            }
-    }
-
-    /**
-     * Detener todos los comportamientos
-     */
     stopBehavior() {
         this.jumpBehavior.stopJumping();
         this.shootBehavior.stopShooting();
+    }
+
+    preUpdate(time, delta) {
+        super.preUpdate(time, delta);
+
+        // Efecto visual dinámico: squash and stretch basado en velocidad
+        if (this.body) {
+            const velocityY = this.body.velocity.y;
+
+            // Cuando sube (velocidad negativa): estirar verticalmente
+            // Cuando baja (velocidad positiva): comprimir verticalmente
+            const stretchFactor = Math.abs(velocityY) / 500; // Normalizar
+            const scaleY = 1 + (velocityY < 0 ? stretchFactor * 0.15 : -stretchFactor * 0.1);
+            const scaleX = 1 + (velocityY < 0 ? -stretchFactor * 0.1 : stretchFactor * 0.15);
+
+            // Aplicar escala suave usando lerp manual
+            const lerpX = this.scaleX + (scaleX - this.scaleX) * 0.3;
+            const lerpY = this.scaleY + (scaleY - this.scaleY) * 0.3;
+            this.setScale(lerpX, lerpY);
+        }
+
+        // Cleanup offscreen
+        if (this.y > this.scene.player.y + 900) {
+            if (this.scene.jumperShooterEnemyPool) {
+                this.scene.jumperShooterEnemyPool.despawn(this);
+            } else {
+                this.stopBehavior();
+                this.setActive(false);
+                this.setVisible(false);
+            }
+        }
     }
 
     destroy(fromScene) {
@@ -304,23 +387,5 @@ export class JumperShooterEnemy extends Phaser.Physics.Arcade.Sprite {
             this.shootBehavior.destroy();
         }
         super.destroy(fromScene);
-    }
-
-    preUpdate(time, delta) {
-        super.preUpdate(time, delta);
-
-        // Update platform rider behavior
-        updatePlatformRider(this);
-
-        // Cleanup offscreen - usar despawn si hay pool
-        if (this.y > this.scene.player.y + 900) {
-            if (this.scene.jumperShooterEnemyPool) {
-                this.scene.jumperShooterEnemyPool.despawn(this);
-            } else {
-            this.stopBehavior();
-            this.setActive(false);
-            this.setVisible(false);
-            }
-        }
     }
 }

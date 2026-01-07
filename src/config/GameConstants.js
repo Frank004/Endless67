@@ -7,10 +7,13 @@
 
 export const GAME_CONFIG = {
     TITLE: 'Endless67',
+    TILE_SIZE: 32, // Unidad base para pixel art 32x32
     // Resoluciones por dispositivo (se usan en main.js)
     RESOLUTIONS: {
-        DESKTOP: { width: 400, height: 600 },
-        MOBILE: { width: 360, height: 640 },
+        // Base vertical (9:16) para escalar en cualquier monitor/dispositivo
+        DESKTOP: { width: 360, height: 640 },
+        // Móvil un poco más “cercano” para que se vea más grande al hacer FIT
+        MOBILE: { width: 320, height: 568 },
     },
 };
 
@@ -45,13 +48,13 @@ export const PLAYER = {
 };
 
 export const PLATFORM = {
-    WIDTH: 100,
-    HEIGHT: 20,
+    WIDTH: 128,
+    HEIGHT: 32,
     SPACING: {
-        MIN_X: 50,
-        MAX_X: 200,
-        MIN_Y: 80,
-        MAX_Y: 120,
+        MIN_X: 64,
+        MAX_X: 192,
+        MIN_Y: 160,
+        MAX_Y: 192,
     },
     INITIAL_Y: 500,
 };

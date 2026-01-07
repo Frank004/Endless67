@@ -5,7 +5,23 @@
     <meta charset="UTF-8">
     <meta name="viewport"
         content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover">
-    <title>ENDLESS67 v0.0.36 - Vertical Runner</title>
+
+    <!-- Mobile Web App Meta Tags -->
+    <meta name="mobile-web-app-capable" content="yes">
+    <meta name="apple-mobile-web-app-capable" content="yes">
+    <meta name="apple-mobile-web-app-status-bar-style" content="black-fullscreen">
+    <meta name="apple-mobile-web-app-title" content="Endless67">
+    <meta name="theme-color" content="#000000">
+    <meta name="description" content="Endless vertical platformer game - Jump, climb, and survive!">
+
+    <!-- PWA Manifest -->
+    <link rel="manifest" href="/manifest.json">
+
+    <!-- Favicon -->
+    <link rel="icon" type="image/png" sizes="192x192" href="/icon-192.png">
+    <link rel="apple-touch-icon" href="/icon-192.png">
+
+    <title>ENDLESS67 v0.0.41 - Vertical Runner</title>
     <link rel="stylesheet" href="css/style.css?b=2">
     <script src="https://cdn.jsdelivr.net/npm/phaser@3.87.0/dist/phaser.min.js"></script>
 </head>
@@ -16,7 +32,7 @@
     <div id="loader">
         <div class="loader-content">
             <div class="loader-title">ENDLESS67</div>
-            <div id="loader-version" class="loader-version">v0.0.36</div>
+            <div id="loader-version" class="loader-version">v0.0.41</div>
             <div class="loader-spinner"></div>
             <div class="loader-text">Cargando<span id="loader-dots">...</span></div>
         </div>
@@ -33,29 +49,7 @@
     </div>
     <script>
         // Versión del juego (se actualiza desde build.json)
-        const GAME_VERSION = window.GAME_VERSION || 'v0.0.36';
-
-        window.onerror = function (msg, url, lineNo, columnNo, error) {
-            var log = document.getElementById('error-log');
-            log.style.display = 'block';
-            log.innerHTML += 'Error: ' + msg + ' at ' + lineNo + ':' + columnNo + '<br>';
-            return false;
-        };
-        // Capture console.error as well
-        var originalConsoleError = console.error;
-        console.error = function () {
-            var log = document.getElementById('error-log');
-            log.style.display = 'block';
-            var args = Array.from(arguments);
-            log.innerHTML += 'Console Error: ' + args.join(' ') + '<br>';
-            originalConsoleError.apply(console, arguments);
-        };
-
-        window.addEventListener('unhandledrejection', function (event) {
-            var log = document.getElementById('error-log');
-            log.style.display = 'block';
-            log.innerHTML += 'Unhandled Rejection: ' + event.reason + '<br>';
-        });
+        const GAME_VERSION = window.GAME_VERSION || 'v0.0.41';
 
         // Mostrar versión en el loader
         (function () {
@@ -79,6 +73,18 @@
     </script>
 
     <div id="game-container"></div>
+
+    <!-- Service Worker Registration for PWA/Offline Support -->
+    <script>
+        if ('serviceWorker' in navigator) {
+            window.addEventListener('load', () => {
+                navigator.serviceWorker.register('/sw.js')
+                    .then(reg => console.log('[SW] Registered:', reg.scope))
+                    .catch(err => console.error('[SW] Registration failed:', err));
+            });
+        }
+    </script>
+
     <!-- Asegurar que Phaser esté completamente cargado antes de cargar módulos -->
     <script>
         // Esperar a que Phaser esté disponible antes de cargar módulos
@@ -88,7 +94,7 @@
                 if (typeof Phaser !== 'undefined') {
                     const script = document.createElement('script');
                     script.type = 'module';
-                    script.src = 'src/main.js?b=2&t=' + Date.now(); // Cache busting - Updated: 20251129-2020
+                    script.src = 'src/main.js?v=20260108-1200';
                     document.body.appendChild(script);
                 } else {
                     console.error('Phaser no se cargó correctamente');
@@ -98,7 +104,7 @@
             // Phaser ya está disponible, cargar módulos inmediatamente
             const script = document.createElement('script');
             script.type = 'module';
-            script.src = 'src/main.js?b=2&t=' + Date.now(); // Cache busting - Updated: 20251129-2020
+            script.src = 'src/main.js?v=20260108-1200';
             document.body.appendChild(script);
         }
     </script>

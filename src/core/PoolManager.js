@@ -17,11 +17,12 @@ export class PoolManager {
      * @param {number} initialSize - Tamaño inicial del pool
      * @param {number} growSize - Cuántos objetos crear cuando el pool se vacía
      */
-    constructor(scene, name, classType, initialSize = 10, growSize = 5) {
+    constructor(scene, name, classType, initialSize = 10, growSize = 5, options = {}) {
         this.scene = scene;
         this.name = name;
         this.classType = classType;
         this.growSize = growSize;
+        this.maxSize = options.maxSize || null; // límite opcional para evitar crecimiento infinito
 
         // Pool de objetos disponibles
         this.pool = [];
@@ -70,19 +71,37 @@ export class PoolManager {
     spawn(...args) {
         let obj;
 
-        // Si no hay objetos disponibles, crear más
+        // Si no hay objetos disponibles, crear más (respetando maxSize si existe)
         if (this.pool.length === 0) {
-            this.grow(this.growSize);
+            const canGrow = this.maxSize === null || (this.getTotalCount() + this.growSize) <= this.maxSize;
+            if (canGrow) {
+                this.grow(this.growSize);
+            } else if (this.getTotalCount() < this.maxSize) {
+                // Crecer solo hasta el maxSize
+                this.grow(this.maxSize - this.getTotalCount());
+            } else {
+                // OPTIMIZATION: Only log pool warnings if debug is enabled
+                if (this.scene?.registry?.get('showSlotLogs') === true) {
+                    console.warn(`Pool ${this.name}: sin objetos disponibles y maxSize alcanzado`);
+                }
+                return null;
+            }
         }
 
         // Obtener objeto del pool
         obj = this.pool.pop();
+        if (!obj) {
+            // OPTIMIZATION: Only log pool warnings if debug is enabled
+            if (this.scene?.registry?.get('showSlotLogs') === true) {
+                console.warn(`Pool ${this.name}: no se pudo obtener objeto del pool`);
+            }
+            return null;
+        }
 
-        // Activar objeto
+        // Activate object first
         obj.setActive(true);
         obj.setVisible(true);
-
-        // Llamar método de inicialización si existe
+        // Call custom spawn logic if defined
         if (obj.spawn && typeof obj.spawn === 'function') {
             obj.spawn(...args);
         }
@@ -109,13 +128,32 @@ export class PoolManager {
             this.active.splice(index, 1);
         }
 
-        // Desactivar objeto
-        obj.setActive(false);
-        obj.setVisible(false);
-
-        // Llamar método de limpieza si existe
+        // Llamar método de limpieza ANTES de desactivar
+        // Esto asegura que el objeto y su body todavía existan cuando se limpia el estado
         if (obj.despawn && typeof obj.despawn === 'function') {
+            try {
             obj.despawn();
+            } catch (e) {
+                // OPTIMIZATION: Only log errors if debug is enabled (errors are important but can spam)
+                if (this.scene?.registry?.get('showSlotLogs') === true) {
+                    console.warn('PoolManager.despawn: Error al llamar obj.despawn():', e);
+                }
+            }
+        }
+
+        // Desactivar objeto (después de limpiar estado)
+        try {
+            if (typeof obj.setActive === 'function') {
+                obj.setActive(false);
+            }
+            if (typeof obj.setVisible === 'function') {
+                obj.setVisible(false);
+            }
+        } catch (e) {
+            // OPTIMIZATION: Only log errors if debug is enabled
+            if (this.scene?.registry?.get('showSlotLogs') === true) {
+                console.warn('PoolManager.despawn: Error al desactivar objeto:', e);
+            }
         }
 
         // Devolver al pool
@@ -171,7 +209,19 @@ export class PoolManager {
             active: this.active.length,
             available: this.pool.length,
             total: this.getTotalCount(),
+            maxSize: this.maxSize,
         };
+    }
+
+    /**
+     * Podar el pool para reducir memoria, dejando 'minAvailable' objetos en standby.
+     * Útil tras un cleanup masivo.
+     */
+    trim(minAvailable = 0) {
+        while (this.pool.length > minAvailable) {
+            const obj = this.pool.pop();
+            if (obj?.destroy) obj.destroy();
+        }
     }
 
     /**
