@@ -150,7 +150,8 @@ export class InputManager {
             const axisV = pad.getAxisValue(1); // Left Stick Vertical
 
             // Check if we should start the game (any gamepad button)
-            if (!scene.gameStarted && !scene.isPaused && typeof scene.startGame === 'function') {
+            // ONLY in Game scene when game hasn't started yet
+            if (scene.scene.key === 'Game' && !scene.gameStarted && !scene.isPaused && typeof scene.startGame === 'function') {
                 if (pad.A || pad.B || pad.X || pad.Y || pad.up || pad.down || pad.left || pad.right) {
                     scene.startGame();
                     this.lastNavTime = time;
@@ -179,7 +180,8 @@ export class InputManager {
         const cursors = scene.cursors;
 
         // Check if we should start the game (any keyboard input)
-        if (!scene.gameStarted && !scene.isPaused && typeof scene.startGame === 'function') {
+        // ONLY in Game scene when game hasn't started yet
+        if (scene.scene.key === 'Game' && !scene.gameStarted && !scene.isPaused && typeof scene.startGame === 'function') {
             if (cursors.up.isDown || cursors.down.isDown || cursors.left.isDown || cursors.right.isDown ||
                 scene.spaceKey.isDown || scene.enterKey.isDown) {
                 scene.startGame();
