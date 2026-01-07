@@ -1,11 +1,20 @@
 import ScoreManager from '../managers/gameplay/ScoreManager.js';
+import { InputManager } from '../managers/input/InputManager.js';
+import { UIHelpers } from '../utils/UIHelpers.js';
+import { MenuNavigation } from '../managers/ui/MenuNavigation.js';
+import EventBus, { Events } from '../core/EventBus.js';
 
 export class Leaderboard extends Phaser.Scene {
     constructor() {
         super('Leaderboard');
+        this.menuNavigation = null;
     }
 
     create() {
+        // --- INPUT MANAGER ---
+        this.inputManager = new InputManager(this);
+        this.inputManager.setupInputs();
+
         const width = this.cameras.main.width;
         const height = this.cameras.main.height;
 
@@ -52,18 +61,30 @@ export class Leaderboard extends Phaser.Scene {
         }
 
         // Back Button
-        const backBtn = this.add.text(width / 2, height - 60, 'BACK TO MENU', {
-            fontSize: '24px',
-            color: '#ffffff',
+        const backBtn = UIHelpers.createTextButton(this, width / 2, height - 60, 'BACK TO MENU', {
+            textColor: '#ffffff',
             backgroundColor: '#333333',
-            padding: { x: 20, y: 10 }
-        }).setOrigin(0.5).setInteractive({ useHandCursor: true });
-
-        backBtn.on('pointerdown', () => {
-            this.scene.start('MainMenu');
+            callback: () => this.scene.start('MainMenu')
         });
 
-        backBtn.on('pointerover', () => backBtn.setColor('#00ffff'));
-        backBtn.on('pointerout', () => backBtn.setColor('#ffffff'));
+        // Navigation
+        this.menuNavigation = new MenuNavigation(this, [backBtn]);
+        this.menuNavigation.setup();
+
+        // Handle specific Back action (Escape) separately if desired
+        const onBack = () => this.scene.start('MainMenu');
+        EventBus.on(Events.UI_BACK, onBack, this);
+
+        // Clean up listeners
+        this.events.once('shutdown', () => {
+            if (this.menuNavigation) this.menuNavigation.cleanup();
+            EventBus.off(Events.UI_BACK, onBack, this);
+        });
+    }
+
+    update(time, delta) {
+        if (this.inputManager) {
+            this.inputManager.update(time, delta);
+        }
     }
 }

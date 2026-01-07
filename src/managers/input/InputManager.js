@@ -10,111 +10,357 @@ export class InputManager {
 
         // SPLIT_X will be calculated in setupInputs() when cameras are available
         this.SPLIT_X = 280; // Default fallback
+
+        // Input Throttling for UI Navigation
+        this.lastNavTime = 0;
+        this.navThreshold = 200; // ms
+
+        // Scene Transition Cooldown
+        this.sceneTransitionTime = 0;
+        this.sceneTransitionCooldown = 300; // ms - prevent input bleed between scenes
+
+        // Listen for scene transitions to reset cooldown
+        scene.events.on('create', () => {
+            this.sceneTransitionTime = Date.now();
+        });
     }
+
+    /**
+     * Set an extended cooldown period (e.g., for Game Over menu)
+     * @param {number} durationMs - Cooldown duration in milliseconds
+     */
+    setExtendedCooldown(durationMs) {
+        this.sceneTransitionTime = Date.now();
+        this.sceneTransitionCooldown = durationMs;
+
+        // Reset to default after the extended period
+        setTimeout(() => {
+            this.sceneTransitionCooldown = 300; // Back to default
+        }, durationMs);
+    }
+
 
     setupInputs() {
         const scene = this.scene;
 
         // Calculate SPLIT_X dynamically based on game width (70% of width)
-        // For 360px mobile: 360 * 0.70 = 252px
-        // For 400px desktop: 400 * 0.70 = 280px
         const gameWidth = scene.cameras.main.width;
         this.SPLIT_X = Math.round(gameWidth * 0.70);
 
-        // Keyboard
+        // --- KEYBOARD ---
         scene.cursors = scene.input.keyboard.createCursorKeys();
         scene.spaceKey = scene.input.keyboard.addKey(Phaser.Input.Keyboard.KeyCodes.SPACE);
+        scene.enterKey = scene.input.keyboard.addKey(Phaser.Input.Keyboard.KeyCodes.ENTER);
+        scene.escKey = scene.input.keyboard.addKey(Phaser.Input.Keyboard.KeyCodes.ESC);
+        scene.shiftKey = scene.input.keyboard.addKey(Phaser.Input.Keyboard.KeyCodes.SHIFT);
 
-        // Touch Inputs
+        // --- TOUCH ---
         scene.input.on('pointerdown', (pointer) => {
-            if (scene.isGameOver || scene.isPausedEvent || scene.isPaused || scene.isDevMenuOpen) return;
-            if (!scene.gameStarted) { scene.startGame(); return; }
+            if (this.shouldIgnoreInput()) return;
+
+            // Prevent input bleed between scenes
+            const timeSinceSceneTransition = Date.now() - this.sceneTransitionTime;
+            if (timeSinceSceneTransition < this.sceneTransitionCooldown) {
+                return; // Still in cooldown period
+            }
+
+            // Only start game if the scene has the method (e.g., Game scene)
+            if (!scene.gameStarted && !scene.isPaused && typeof scene.startGame === 'function') {
+                scene.startGame();
+                return;
+            }
+
+            // Jump Zone (Right side)
             if (pointer.x > this.SPLIT_X) {
                 this.handleJump();
-                // Visual feedback for jump - delegate to UIManager
                 if (scene.uiManager) {
                     scene.uiManager.showJumpFeedback(pointer.x, pointer.y);
                 }
             }
         });
 
-        // Keyboard Jump
-        scene.spaceKey.on('down', () => {
-            if (scene.isGameOver || scene.isPausedEvent || scene.isPaused || scene.isDevMenuOpen) return;
-            if (!scene.gameStarted) { scene.startGame(); return; }
-            this.handleJump();
-        });
-
         // Add multi-touch support
         scene.input.addPointer(3);
+
+        // --- GAMEPAD ---
+        this.setupGamepad();
+    }
+
+    setupGamepad() {
+        const scene = this.scene;
+
+        console.log('[InputManager] 🎮 Setting up gamepad...');
+        console.log('[InputManager] scene.input.gamepad exists:', !!scene.input.gamepad);
+
+        if (!scene.input.gamepad) {
+            console.error('[InputManager] ❌ Gamepad plugin NOT available. Check Phaser config.');
+            return;
+        }
+
+        console.log('[InputManager] Gamepad enabled:', scene.input.gamepad.enabled);
+        console.log('[InputManager] Gamepad total:', scene.input.gamepad.total);
+
+        // Initialize gamepad plugin if not already started
+        if (!scene.input.gamepad.enabled) {
+            console.log('[InputManager] Starting gamepad plugin...');
+            scene.input.gamepad.start();
+            console.log('[InputManager] ✅ Gamepad plugin started');
+        }
+
+        scene.input.gamepad.on('connected', (pad) => {
+            console.log('🎮 ✅ Gamepad connected:', pad.id);
+            EventBus.emit(Events.GAMEPAD_CONNECTED, { id: pad.id });
+        });
+
+        scene.input.gamepad.on('disconnected', (pad) => {
+            console.log('🎮 ❌ Gamepad disconnected:', pad.id);
+            EventBus.emit(Events.GAMEPAD_DISCONNECTED, { id: pad.id });
+        });
+
+        // Check if any gamepads are already connected
+        const pads = scene.input.gamepad.gamepads;
+        console.log('[InputManager] Checking gamepads. Total:', scene.input.gamepad.total);
+
+        if (pads && pads.length > 0) {
+            pads.forEach((pad, index) => {
+                if (pad) {
+                    console.log(`🎮 ✅ Gamepad ${index} already connected:`, pad.id);
+                } else {
+                    console.log(`🎮 Slot ${index}: empty`);
+                }
+            });
+        } else {
+            console.log('[InputManager] ⚠️ No gamepads detected. Press a button on your controller.');
+        }
+    }
+
+    shouldIgnoreInput() {
+        const scene = this.scene;
+        return scene.isGameOver || scene.isPausedEvent || scene.isDevMenuOpen || scene.isPaused;
     }
 
     handleJump() {
         const scene = this.scene;
         // --- APLICAR SPEED BOOST ---
         let boost = scene.isInvincible ? 1.25 : 1.0; // 25% Extra Force
-
-        // Emit event for jump request (Player will listen to this)
         EventBus.emit(Events.PLAYER_JUMP_REQUESTED, { boost });
-
-        // Player now listens to PLAYER_JUMP_REQUESTED event
-        // Removed direct call to prevent double execution
-        // const result = scene.player.jump(boost); -> Handled by EventBus listener in Player.js
     }
 
-    update() {
+    update(time, delta) {
         const scene = this.scene;
-        if (scene.isGameOver || scene.isPausedEvent || scene.isPaused || !scene.gameStarted || scene.isDevMenuOpen) return;
 
-        let movePointer = null;
-        let keyboardMove = 0;
+        // 1. Dev Menu blocks everything
+        if (scene.isDevMenuOpen) return;
 
-        // Detectar movimiento por teclado
-        if (scene.cursors.left.isDown) {
-            keyboardMove = -1;
-        } else if (scene.cursors.right.isDown) {
-            keyboardMove = 1;
+        // 2. Menu Input States (GameOver, Paused, or MainMenu/NotStarted)
+        if (scene.isGameOver || scene.isPaused || scene.isPausedEvent || !scene.gameStarted) {
+            this.processMenuInputs(time);
+            return;
         }
 
-        // Detectar movimiento táctil (solo si no hay input de teclado o es móvil)
-        if (scene.isMobile || keyboardMove === 0) {
-            scene.input.manager.pointers.forEach((pointer) => {
-                if (pointer.isDown && pointer.x <= this.SPLIT_X) movePointer = pointer;
-            });
+        // 3. Gameplay Inputs
+        this.processGameInputs();
+    }
+
+    processMenuInputs(time) {
+        if (time - this.lastNavTime < this.navThreshold) return;
+
+        const scene = this.scene;
+
+        // Prevent input bleed between scenes - ignore inputs during transition cooldown
+        const timeSinceSceneTransition = Date.now() - this.sceneTransitionTime;
+        if (timeSinceSceneTransition < this.sceneTransitionCooldown) {
+            return; // Still in cooldown period
         }
 
-        if (keyboardMove !== 0) {
-            // --- MOVIMIENTO POR TECLADO ---
-            this.moveAnchorX = null;
-            // Hide joystick UI - delegate to UIManager
-            if (scene.uiManager) {
-                scene.uiManager.hideJoystick();
-            }
+        const pad = scene.input.gamepad ? scene.input.gamepad.getPad(0) : null;
+        let navAction = null;
 
-            // Emit event for player movement
-            EventBus.emit(Events.PLAYER_MOVE, { direction: keyboardMove });
+        // 1. Gamepad Navigation
+        if (pad && pad.connected) {
+            const axisH = pad.getAxisValue(0); // Left Stick Horizontal
+            const axisV = pad.getAxisValue(1); // Left Stick Vertical
 
-            // Event emitted: PLAYER_MOVE
-            // Player listens to this event in Player.js
-        } else if (movePointer) {
-            // --- USUARIO MOVIENDO (TÁCTIL) ---
-            if (this.moveAnchorX === null) {
-                this.moveAnchorX = movePointer.x;
-                this.moveAnchorY = movePointer.y;
-
-                // Show and position joystick - delegate to UIManager
-                if (scene.uiManager) {
-                    scene.uiManager.showJoystick(this.moveAnchorX, this.moveAnchorY, this.joystickVisible);
+            // Check if we should start the game (any gamepad button)
+            // ONLY in Game scene when game hasn't started yet
+            if (scene.scene.key === 'Game' && !scene.gameStarted && !scene.isPaused && typeof scene.startGame === 'function') {
+                if (pad.A || pad.B || pad.X || pad.Y || pad.up || pad.down || pad.left || pad.right) {
+                    scene.startGame();
+                    this.lastNavTime = time;
+                    return;
                 }
             }
 
-            // Calculate delta
+            if (pad.up || axisV < -0.5) navAction = Events.UI_NAV_UP;
+            else if (pad.down || axisV > 0.5) navAction = Events.UI_NAV_DOWN;
+            else if (pad.left || axisH < -0.5) navAction = Events.UI_NAV_LEFT;
+            else if (pad.right || axisH > 0.5) navAction = Events.UI_NAV_RIGHT;
+
+            if (pad.A) {
+                EventBus.emit(Events.UI_SELECT);
+                this.lastNavTime = time;
+                return;
+            }
+            if (pad.B) {
+                EventBus.emit(Events.UI_BACK);
+                this.lastNavTime = time;
+                return;
+            }
+        }
+
+        // 2. Keyboard Navigation (Fallback / Parallel)
+        const cursors = scene.cursors;
+
+        // Check if we should start the game (any keyboard input)
+        // ONLY in Game scene when game hasn't started yet
+        if (scene.scene.key === 'Game' && !scene.gameStarted && !scene.isPaused && typeof scene.startGame === 'function') {
+            if (cursors.up.isDown || cursors.down.isDown || cursors.left.isDown || cursors.right.isDown ||
+                scene.spaceKey.isDown || scene.enterKey.isDown) {
+                scene.startGame();
+                this.lastNavTime = time;
+                return;
+            }
+        }
+
+        if (cursors.up.isDown) navAction = Events.UI_NAV_UP;
+        else if (cursors.down.isDown) navAction = Events.UI_NAV_DOWN;
+        else if (cursors.left.isDown) navAction = Events.UI_NAV_LEFT;
+        else if (cursors.right.isDown) navAction = Events.UI_NAV_RIGHT;
+
+        if (scene.spaceKey.isDown || scene.enterKey.isDown) {
+            EventBus.emit(Events.UI_SELECT);
+            this.lastNavTime = time;
+            return;
+        }
+
+        if (navAction) {
+            EventBus.emit(navAction);
+            this.lastNavTime = time;
+        }
+
+        // Handle Escape for Back navigation (when not in Pause mode)
+        if (scene.escKey.isDown && !scene.isPaused) {
+            EventBus.emit(Events.UI_BACK);
+            this.lastNavTime = time;
+        }
+
+        // 3. Pause Toggle from Menu (Resume)
+        // If we are paused, allow escaping the menu
+        if (scene.isPaused && (scene.escKey.isDown || scene.shiftKey.isDown)) {
+            if (!this.pauseKey_wasDown) {
+                EventBus.emit(Events.PAUSE_TOGGLE);
+            }
+            this.pauseKey_wasDown = true;
+        } else {
+            // Only reset if we are not pressing it (handled in processGameInputs usually, but here for safety)
+            if (!scene.escKey.isDown && !scene.shiftKey.isDown) {
+                this.pauseKey_wasDown = false;
+            }
+        }
+    }
+
+    processGameInputs() {
+        const scene = this.scene;
+
+        // --- MOVEMENT ---
+        let moveDirection = 0;
+
+        // 1. Keyboard
+        if (scene.cursors.left.isDown) moveDirection = -1;
+        else if (scene.cursors.right.isDown) moveDirection = 1;
+
+        // Keyboard Jump
+        const isJumpKeyDown = scene.spaceKey.isDown || scene.cursors.up.isDown;
+        if (isJumpKeyDown && !this.jumpKey_wasDown) {
+            this.handleJump();
+        }
+        this.jumpKey_wasDown = isJumpKeyDown;
+
+        // ESC or SHIFT to Pause
+        const isPauseKeyDown = scene.escKey.isDown || scene.shiftKey.isDown;
+        if (isPauseKeyDown) {
+            if (!this.pauseKey_wasDown) {
+                EventBus.emit(Events.PAUSE_TOGGLE);
+            }
+            this.pauseKey_wasDown = true;
+        } else {
+            this.pauseKey_wasDown = false;
+        }
+
+        // 2. Gamepad
+        const pad = scene.input.gamepad ? scene.input.gamepad.getPad(0) : null;
+        if (pad && pad.connected) {
+            const axisH = pad.getAxisValue(0);
+            if (axisH < -0.3) moveDirection = -1;
+            else if (axisH > 0.3) moveDirection = 1;
+
+            if (pad.left) moveDirection = -1;
+            if (pad.right) moveDirection = 1;
+
+            if (pad.A || pad.B || pad.Y) {
+                if (!this.padA_wasDown) {
+                    this.handleJump();
+                }
+                this.padA_wasDown = true;
+            } else {
+                this.padA_wasDown = false;
+            }
+            if (pad.buttons[9] && pad.buttons[9].pressed) {
+                if (!this.padStart_wasDown) {
+                    EventBus.emit(Events.PAUSE_TOGGLE);
+                }
+                this.padStart_wasDown = true;
+            } else {
+                this.padStart_wasDown = false;
+            }
+        }
+
+        // 3. Touch / Virtual Stick
+        if (this.moveAnchorX !== null) {
+            // Logic handles touch movement below
+        }
+
+        // --- EXECUTE MOVEMENT ---
+
+        // Priority: Keyboard/Gamepad > Touch
+        if (moveDirection !== 0) {
+            // Hide Touch UI
+            if (scene.uiManager) scene.uiManager.hideJoystick();
+            this.moveAnchorX = null;
+
+            EventBus.emit(Events.PLAYER_MOVE, { direction: moveDirection });
+        } else {
+            // Fallback to Touch Logic
+            this.handleTouchMovement();
+        }
+
+        // --- EXECUTE JUMP ---
+        // Jump is handled via event emission (PLAYER_JUMP_REQUESTED) in Keyboard/Gamepad sections above.
+        // No further logic needed here for jump initiation, as it delegates to Player class via EventBus.
+
+    }
+
+    handleTouchMovement() {
+        const scene = this.scene;
+        let movePointer = null;
+
+        // Check active pointers
+        scene.input.manager.pointers.forEach((pointer) => {
+            if (pointer.isDown && pointer.x <= this.SPLIT_X) movePointer = pointer;
+        });
+
+        if (movePointer) {
+            if (this.moveAnchorX === null) {
+                this.moveAnchorX = movePointer.x;
+                this.moveAnchorY = movePointer.y;
+                if (scene.uiManager) scene.uiManager.showJoystick(this.moveAnchorX, this.moveAnchorY, this.joystickVisible);
+            }
+
             const dx = movePointer.x - this.moveAnchorX;
             const dy = movePointer.y - this.moveAnchorY;
             const dist = Math.sqrt(dx * dx + dy * dy);
-            const maxDist = 40; // Max joystick radius
+            const maxDist = 40;
 
-            // Update joystick knob position - delegate to UIManager
             if (scene.uiManager) {
                 const knobX = dist > maxDist
                     ? this.moveAnchorX + Math.cos(Math.atan2(dy, dx)) * maxDist
@@ -125,51 +371,28 @@ export class InputManager {
                 scene.uiManager.updateJoystickKnob(knobX, knobY);
             }
 
-            // Move player if threshold passed
             if (Math.abs(dx) > 10) {
                 const direction = dx > 0 ? 1 : -1;
-
-                // Emit event for player movement
                 EventBus.emit(Events.PLAYER_MOVE, { direction });
-
-                // Event emitted: PLAYER_MOVE
-                // Player listens to this event in Player.js
             } else {
-                // Emit event for player stop
                 EventBus.emit(Events.PLAYER_STOP);
-
-                // Event emitted: PLAYER_STOP
-                // Player listens to this event in Player.js
             }
         } else {
             this.moveAnchorX = null;
-            // Hide joystick UI - delegate to UIManager
-            if (scene.uiManager) {
-                scene.uiManager.hideJoystick();
-            }
-
-            // Emit event for player stop
+            if (scene.uiManager) scene.uiManager.hideJoystick();
             EventBus.emit(Events.PLAYER_STOP);
-
-            // Event emitted: PLAYER_STOP
-            // Player listens to this event in Player.js
         }
     }
 
     toggleJoystickVisual() {
-        // Read current state from registry and toggle it
+        // ... (rest of method unchanged, just keeping context)
         const currentState = this.scene.registry.get('showJoystick') !== false;
         this.joystickVisible = !currentState;
         const scene = this.scene;
-
-        // Persist state in registry
         scene.registry.set('showJoystick', this.joystickVisible);
-
-        // Update button text if it exists (in pause menu or settings)
         if (scene.joystickToggleText) {
             scene.joystickToggleText.setText(this.joystickVisible ? 'JOYSTICK: ON' : 'JOYSTICK: OFF');
         }
-        // For Settings scene
         if (scene.joystickText) {
             scene.joystickText.setText(this.joystickVisible ? 'JOYSTICK: ON' : 'JOYSTICK: OFF');
         }

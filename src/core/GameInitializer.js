@@ -242,6 +242,23 @@ export class GameInitializer {
         };
         EventBus.on(Events.GAME_RESUMED, resumeListener);
         scene._resumeListener = resumeListener;
+
+        const gameOverListener = () => {
+            scene.physics.pause();
+            scene.isGameOver = true;
+            scene.isPaused = true;
+        };
+        EventBus.on(Events.GAME_OVER, gameOverListener);
+        scene._gameOverListener = gameOverListener;
+
+        const gameStartListener = () => {
+            scene.physics.resume();
+            scene.isGameOver = false;
+            scene.isPaused = false;
+            scene.gameStarted = true;
+        };
+        EventBus.on(Events.GAME_STARTED, gameStartListener);
+        scene._gameStartListener = gameStartListener;
     }
 
     setupShutdownCleanup() {
@@ -254,6 +271,8 @@ export class GameInitializer {
             // Cleanup event listeners
             if (scene._pauseListener) EventBus.off(Events.GAME_PAUSED, scene._pauseListener);
             if (scene._resumeListener) EventBus.off(Events.GAME_RESUMED, scene._resumeListener);
+            if (scene._gameOverListener) EventBus.off(Events.GAME_OVER, scene._gameOverListener);
+            if (scene._gameStartListener) EventBus.off(Events.GAME_STARTED, scene._gameStartListener);
 
             // Clean global listeners
             const handlers = scene._orientationHandlers;

@@ -1,11 +1,19 @@
 import { UIHelpers } from '../utils/UIHelpers.js';
+import { InputManager } from '../managers/input/InputManager.js';
+import { MenuNavigation } from '../managers/ui/MenuNavigation.js';
+import EventBus, { Events } from '../core/EventBus.js';
+import GameState from '../core/GameState.js';
 
 export class MainMenu extends Phaser.Scene {
 	constructor() {
 		super('MainMenu');
+		this.menuNavigation = null;
 	}
 
 	create() {
+		this.inputManager = new InputManager(this);
+		this.inputManager.setupInputs();
+
 		const width = this.cameras.main.width;
 		const height = this.cameras.main.height;
 
@@ -22,36 +30,40 @@ export class MainMenu extends Phaser.Scene {
 		}).setOrigin(0.5);
 
 		// --- BUTTONS ---
-        const startBtn = this.createButton(width / 2, 250, 'START GAME', '#00ff00', () => this.scene.start('Game'));
-        const leaderboardBtn = this.createButton(width / 2, 330, 'LEADERBOARD', '#00ffff', () => this.scene.start('Leaderboard'));
-        const settingsBtn = this.createButton(width / 2, 410, 'SETTINGS', '#ffffff', () => this.scene.start('Settings'));
+		this.buttons = [];
 
-		// Keyboard Navigation Setup
-		this.menuButtons = [startBtn, leaderboardBtn, settingsBtn];
-		this.selectedButtonIndex = 0;
-		this.updateButtonSelection();
-
-		// Keyboard Controls
-		this.input.keyboard.on('keydown-UP', () => {
-			this.selectedButtonIndex = (this.selectedButtonIndex - 1 + this.menuButtons.length) % this.menuButtons.length;
-			this.updateButtonSelection();
+		const startBtn = UIHelpers.createTextButton(this, width / 2, 250, 'START GAME', {
+			textColor: '#00ff00',
+			fontSize: '28px',
+			callback: () => this.scene.start('Game')
 		});
+		this.buttons.push(startBtn);
 
-		this.input.keyboard.on('keydown-DOWN', () => {
-			this.selectedButtonIndex = (this.selectedButtonIndex + 1) % this.menuButtons.length;
-			this.updateButtonSelection();
+		const leaderboardBtn = UIHelpers.createTextButton(this, width / 2, 330, 'LEADERBOARD', {
+			textColor: '#00ffff',
+			fontSize: '28px',
+			callback: () => this.scene.start('Leaderboard')
 		});
+		this.buttons.push(leaderboardBtn);
 
-		this.input.keyboard.on('keydown-SPACE', () => {
-			this.activateSelectedButton();
+		const settingsBtn = UIHelpers.createTextButton(this, width / 2, 410, 'SETTINGS', {
+			textColor: '#ffffff',
+			fontSize: '28px',
+			callback: () => this.scene.start('Settings')
 		});
+		this.buttons.push(settingsBtn);
 
-		this.input.keyboard.on('keydown-ENTER', () => {
-			this.activateSelectedButton();
+		// --- NAVIGATION ---
+		this.menuNavigation = new MenuNavigation(this, this.buttons);
+		this.menuNavigation.setup();
+
+		// Cleanup on scene shutdown
+		this.events.once('shutdown', () => {
+			if (this.menuNavigation) this.menuNavigation.cleanup();
 		});
 
 		// Version (visible text)
-		const versionText = this.add.text(width / 2, height - 30, 'v0.0.40', {
+		const versionText = this.add.text(width / 2, height - 30, 'v0.0.41', {
 			fontSize: '14px',
 			color: '#444'
 		}).setOrigin(0.5);
@@ -80,57 +92,27 @@ export class MainMenu extends Phaser.Scene {
 		});
 	}
 
-	updateButtonSelection() {
-        // Reset all buttons to default state
-        this.menuButtons.forEach((btn, index) => {
-            const label = btn.label || btn.list?.find?.(c => c.style);
-            const originalColor = btn.getData('originalColor') || '#ffffff';
-            if (index === this.selectedButtonIndex) {
-                if (label?.setColor) label.setColor('#ffff00');
-                btn.setScale(1.1);
-            } else {
-                if (label?.setColor) label.setColor(originalColor);
-                btn.setScale(1.0);
-            }
-        });
+	update(time, delta) {
+		this.inputManager.update(time, delta);
 	}
 
-	activateSelectedButton() {
-        const selectedButton = this.menuButtons[this.selectedButtonIndex];
-        if (selectedButton && selectedButton.getData('onClick')) {
-            selectedButton.getData('onClick')();
-        }
-    }
-
 	showDevButton(width, height) {
-        const devBtn = this.createButton(width / 2, height - 80, '👾 DEV MODE', '#ff0000', () => this.scene.start('Playground'));
-        this.tweens.add({
-            targets: devBtn,
+		const devBtn = UIHelpers.createTextButton(this, width / 2, height - 80, '👾 DEV MODE', {
+			textColor: '#ff0000',
+			fontSize: '28px',
+			callback: () => this.scene.start('Playground')
+		});
+
+		this.tweens.add({
+			targets: devBtn.container,
 			alpha: { from: 0, to: 1 },
 			duration: 500,
 			yoyo: true,
 			repeat: -1
 		});
+
+		// Update Navigation
+		this.buttons.push(devBtn);
+		this.menuNavigation.updateButtons(this.buttons);
 	}
-
-    createButton(x, y, text, color, onClick) {
-        const { container, text: label } = UIHelpers.createTextButton(this, x, y, text, {
-            textColor: color,
-            hoverColor: '#ffff00',
-            fontSize: '28px'
-        });
-
-        container.setData('originalColor', color);
-        container.setData('onClick', onClick);
-        container.label = label;
-
-        container.off('pointerdown');
-        container.on('pointerdown', onClick);
-
-        // Propagate hover to ensure consistent color handling with selection
-        container.on('pointerover', () => label.setColor('#ffff00'));
-        container.on('pointerout', () => label.setColor(container.getData('originalColor')));
-
-        return container;
-    }
 }

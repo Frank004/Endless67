@@ -1,4 +1,5 @@
 import { UIHelpers } from '../../../utils/UIHelpers.js';
+import { MenuNavigation } from '../MenuNavigation.js';
 import GameState from '../../../core/GameState.js';
 import EventBus, { Events } from '../../../core/EventBus.js';
 
@@ -9,6 +10,7 @@ export class PauseMenu {
         this.buttons = {};
         this.pauseButton = null;
         this.pauseButtonBg = null;
+        this.menuNavigation = null;
     }
 
     create() {
@@ -49,7 +51,7 @@ export class PauseMenu {
             fontSize: '48px', color: '#ffd700', fontStyle: 'bold'
         }).setOrigin(0.5).setScrollFactor(0).setDepth(201).setVisible(false);
 
-        this.versionText = scene.add.text(centerX, 220, 'v0.0.40', {
+        this.versionText = scene.add.text(centerX, 220, 'v0.0.41', {
             fontSize: '14px', color: '#888888'
         }).setOrigin(0.5).setScrollFactor(0).setDepth(201).setVisible(false);
 
@@ -58,12 +60,11 @@ export class PauseMenu {
         let buttonY = 280;
 
         // Continue Button
-        const continueBtn = UIHelpers.createTextButton(scene, centerX, buttonY, 'CONTINUE', {
+        this.buttons.continue = UIHelpers.createTextButton(scene, centerX, buttonY, 'CONTINUE', {
             textColor: '#00ff00',
-            hoverColor: '#00ffff',
+            // hoverColor defaults to yellow now via UIHelpers
             callback: () => this.toggle()
         });
-        this.buttons.continue = continueBtn;
         this.buttons.continue.container.setVisible(false);
         buttonY += buttonSpacing;
 
@@ -72,10 +73,16 @@ export class PauseMenu {
         const soundTextStr = soundEnabled ? 'SOUND: ON' : 'SOUND: OFF';
         const soundIconFrame = soundEnabled ? 'volume-up' : 'volume-mute';
 
-        const soundButton = UIHelpers.createIconButton(scene, centerX, buttonY, soundIconFrame, soundTextStr, {
-            callback: () => scene.toggleSound()
+        this.buttons.sound = UIHelpers.createIconButton(scene, centerX, buttonY, soundIconFrame, soundTextStr, {
+            callback: () => {
+                scene.toggleSound();
+                // Update text immediately for visual feedback loop if needed
+                // But show() handles it mostly. 
+                // We should probably update it here too?
+                // Visual update happens in updateMenuState usually.
+                this.updateMenuState();
+            }
         });
-        this.buttons.sound = soundButton;
         this.buttons.sound.container.setVisible(false);
         buttonY += buttonSpacing;
 
@@ -83,35 +90,36 @@ export class PauseMenu {
         const showJoystick = scene.registry.get('showJoystick') !== false;
         const joystickTextStr = showJoystick ? 'JOYSTICK: ON' : 'JOYSTICK: OFF';
 
-        const joystickButton = UIHelpers.createIconButton(scene, centerX, buttonY, 'gamepad', joystickTextStr, {
-            callback: () => scene.inputManager.toggleJoystickVisual()
+        this.buttons.joystick = UIHelpers.createIconButton(scene, centerX, buttonY, 'gamepad', joystickTextStr, {
+            callback: () => {
+                scene.inputManager.toggleJoystickVisual();
+                this.updateMenuState();
+            }
         });
-        this.buttons.joystick = joystickButton;
         this.buttons.joystick.container.setVisible(false);
         buttonY += buttonSpacing;
 
         // Exit Button
-        const exitButton = UIHelpers.createIconButton(scene, centerX, buttonY, 'door', 'EXIT TO MENU', {
+        this.buttons.exit = UIHelpers.createIconButton(scene, centerX, buttonY, 'door', 'EXIT TO MENU', {
             textColor: '#ff6666',
             hoverColor: '#ff0000',
             iconTint: 0xff6666,
             callback: () => scene.scene.start('MainMenu')
         });
-        this.buttons.exit = exitButton;
         this.buttons.exit.container.setVisible(false);
 
-        // Aliases for scene access if needed (or refactor UIManager to use this class properties)
+        // Aliases for compatibility
         scene.pauseMenuBg = this.bg;
         scene.pauseMenuTitle = this.title;
         scene.versionText = this.versionText;
-        scene.continueButton = this.buttons.continue.container;
-        scene.soundToggleContainer = this.buttons.sound.container;
-        scene.soundToggleText = this.buttons.sound.text;
-        scene.soundToggleIcon = this.buttons.sound.icon;
-        scene.joystickToggleContainer = this.buttons.joystick.container;
-        scene.joystickToggleText = this.buttons.joystick.text;
-        scene.joystickToggleIcon = this.buttons.joystick.icon;
-        scene.exitButtonContainer = this.buttons.exit.container;
+
+        // Setup Navigation Manager
+        this.menuNavigation = new MenuNavigation(scene, [
+            this.buttons.continue,
+            this.buttons.sound,
+            this.buttons.joystick,
+            this.buttons.exit
+        ]);
     }
 
     toggle() {
@@ -133,34 +141,18 @@ export class PauseMenu {
 
     show() {
         const scene = this.scene;
-
-        // Update button icons and text
-        const soundEnabled = GameState.soundEnabled;
-        const soundTextStr = soundEnabled ? 'SOUND: ON' : 'SOUND: OFF';
-        const soundIcon = soundEnabled ? 'volume-up' : 'volume-mute';
-
-        if (this.buttons.sound) {
-            this.buttons.sound.text.setText(soundTextStr);
-            this.buttons.sound.icon.setFrame(soundIcon);
-        }
-
-        const showJoystick = scene.registry.get('showJoystick') !== false;
-        const joystickTextStr = showJoystick ? 'JOYSTICK: ON' : 'JOYSTICK: OFF';
-
-        if (this.buttons.joystick) {
-            this.buttons.joystick.text.setText(joystickTextStr);
-            this.buttons.joystick.icon.setAlpha(showJoystick ? 1 : 0.5);
-        }
+        this.updateMenuState();
 
         this.bg.setVisible(true);
         this.title.setVisible(true);
         this.versionText.setVisible(true);
-        this.buttons.continue.container.setVisible(true);
-        this.buttons.sound.container.setVisible(true);
-        this.buttons.joystick.container.setVisible(true);
-        this.buttons.exit.container.setVisible(true);
+        // Buttons visibility
+        Object.values(this.buttons).forEach(btn => btn.container.setVisible(true));
+
         this.pauseButton.setFrame('play'); // Play icon
-        scene.tweens.pauseAll();
+        // Removed pauseAll to prevent UI tween lockup
+
+        this.menuNavigation.setup();
     }
 
     hide() {
@@ -168,12 +160,38 @@ export class PauseMenu {
         this.bg.setVisible(false);
         this.title.setVisible(false);
         this.versionText.setVisible(false);
-        this.buttons.continue.container.setVisible(false);
-        this.buttons.sound.container.setVisible(false);
-        this.buttons.joystick.container.setVisible(false);
-        this.buttons.exit.container.setVisible(false);
+        // Buttons visibility
+        Object.values(this.buttons).forEach(btn => btn.container.setVisible(false));
+
         this.pauseButton.setFrame('pause'); // Pause icon
-        scene.tweens.resumeAll();
+        // Removed resumeAll
+
+        this.menuNavigation.cleanup();
     }
 
+    updateMenuState() {
+        const scene = this.scene;
+
+        // Update button icons and text
+        const soundEnabled = GameState.soundEnabled;
+        const soundTextStr = soundEnabled ? 'SOUND: ON' : 'SOUND: OFF';
+        const soundIcon = soundEnabled ? 'volume-up' : 'volume-mute';
+
+        if (this.buttons.sound && this.buttons.sound.text && this.buttons.sound.text.scene) {
+            this.buttons.sound.text.setText(soundTextStr);
+            if (this.buttons.sound.icon && this.buttons.sound.icon.scene) {
+                this.buttons.sound.icon.setFrame(soundIcon);
+            }
+        }
+
+        const showJoystick = scene.registry.get('showJoystick') !== false;
+        const joystickTextStr = showJoystick ? 'JOYSTICK: ON' : 'JOYSTICK: OFF';
+
+        if (this.buttons.joystick && this.buttons.joystick.text && this.buttons.joystick.text.scene) {
+            this.buttons.joystick.text.setText(joystickTextStr);
+            if (this.buttons.joystick.icon && this.buttons.joystick.icon.scene) {
+                this.buttons.joystick.icon.setAlpha(showJoystick ? 1 : 0.5);
+            }
+        }
+    }
 }

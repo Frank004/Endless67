@@ -10,11 +10,32 @@ body {
     font-family: 'Courier New', monospace;
     user-select: none;
     -webkit-user-select: none;
+    -moz-user-select: none;
+    -ms-user-select: none;
     position: fixed;
     width: 100%;
     top: 0;
     left: 0;
+    
+    /* Safe area para notch de iPhone */
+    padding: env(safe-area-inset-top) env(safe-area-inset-right) env(safe-area-inset-bottom) env(safe-area-inset-left);
+    
+    /* Prevenir pull-to-refresh en Chrome mobile */
+    overscroll-behavior-y: contain;
+    overscroll-behavior-x: none;
 }
+
+/* Prevenir tap highlight en todos los elementos */
+* {
+    -webkit-tap-highlight-color: transparent;
+    -webkit-touch-callout: none;
+}
+
+/* Prevenir zoom en inputs (si se agregan en el futuro) */
+input, textarea, select {
+    font-size: 16px; /* iOS no hace zoom si es >= 16px */
+}
+
 
 /* Mobile-first: Sin glow/aura en móvil */
 canvas {

@@ -1,5 +1,6 @@
 import EventBus, { Events } from '../../core/EventBus.js';
 import GameState from '../../core/GameState.js';
+import ScoreManager from '../gameplay/ScoreManager.js';
 import { HUDManager } from './hud/HUDManager.js';
 import { PauseMenu } from './menus/PauseMenu.js';
 import { ControlsUI } from './controls/ControlsUI.js';
@@ -122,7 +123,19 @@ export class UIManager {
 
         // Listen to game over
         const gameOverListener = (data) => {
+            console.log('[UIManager] Game Over Event Received:', data);
             this.showGameOver(data);
+
+            // Check for High Score
+            // Note: GameState emits { score, height }. ScoreManager expects isHighScore(height, coins).
+            // Assuming data.score represents coins/points collected.
+            if (ScoreManager.isHighScore(data.height, data.score)) {
+                console.log('[UIManager] High Score detected! Showing Name Input.');
+                this.showNameInput(ScoreManager);
+            } else {
+                console.log('[UIManager] No High Score. Showing Options.');
+                this.showPostGameOptions();
+            }
         };
         EventBus.on(Events.GAME_OVER, gameOverListener);
         this.eventListeners.push({ event: Events.GAME_OVER, listener: gameOverListener });
