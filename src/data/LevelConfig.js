@@ -136,7 +136,7 @@ export const LEVEL_CONFIG = {
                     distribution: { patrol: 100, shooter: 0, jumper: 0 }
                 },
                 maze: { enabled: true, chance: 25, patterns: 'medium', allowEnemies: true },
-                lava: { speed: -85 }, // Increased from -65
+                lava: { speed: -83 }, // Reduced from -85
                 mechanics: { powerups: true, powerupChance: 8 }
             },
             // 10. Shooter Introduction
@@ -152,7 +152,7 @@ export const LEVEL_CONFIG = {
                     projectiles: { count: 1, speed: 'normal' }
                 },
                 maze: { enabled: true, chance: 30, patterns: 'medium', allowEnemies: true },
-                lava: { speed: -90 }, // Increased from -70
+                lava: { speed: -88 }, // Reduced from -90
                 mechanics: { powerups: true, powerupChance: 8 }
             },
             // 11. More Shooters
@@ -168,7 +168,7 @@ export const LEVEL_CONFIG = {
                     projectiles: { count: 2, speed: 'fast' }
                 },
                 maze: { enabled: true, chance: 30, patterns: 'medium', allowEnemies: true },
-                lava: { speed: -95 }, // Increased from -75
+                lava: { speed: -92 }, // Reduced from -95
                 mechanics: { powerups: true, powerupChance: 8 }
             },
             // 12. Shooter + Patrol
@@ -183,7 +183,7 @@ export const LEVEL_CONFIG = {
                     distribution: { patrol: 50, shooter: 50, jumper: 0 }
                 },
                 maze: { enabled: true, chance: 30, patterns: 'medium', allowEnemies: true },
-                lava: { speed: -100 }, // Increased from -78
+                lava: { speed: -96 }, // Reduced from -100
                 mechanics: { powerups: true, powerupChance: 8 }
             },
             // 13. Jumper Introduction
@@ -198,7 +198,7 @@ export const LEVEL_CONFIG = {
                     distribution: { patrol: 0, shooter: 0, jumper: 100 } // Exclusive
                 },
                 maze: { enabled: true, chance: 35, patterns: 'hard', allowEnemies: true },
-                lava: { speed: -105 }, // Increased from -80
+                lava: { speed: -100 }, // Reduced from -105
                 mechanics: { powerups: true, powerupChance: 8 }
             },
             // 14. More Jumpers
@@ -213,7 +213,7 @@ export const LEVEL_CONFIG = {
                     distribution: { patrol: 0, shooter: 0, jumper: 100 }
                 },
                 maze: { enabled: true, chance: 35, patterns: 'hard', allowEnemies: true },
-                lava: { speed: -110 }, // Increased from -82
+                lava: { speed: -102 }, // Reduced from -110
                 mechanics: { powerups: true, powerupChance: 8 }
             },
             // 15. Jumper + Patrol
@@ -228,7 +228,7 @@ export const LEVEL_CONFIG = {
                     distribution: { patrol: 50, shooter: 0, jumper: 50 }
                 },
                 maze: { enabled: true, chance: 35, patterns: 'hard', allowEnemies: true },
-                lava: { speed: -115 }, // Increased from -85
+                lava: { speed: -104 }, // Reduced from -115
                 mechanics: { powerups: true, powerupChance: 8 }
             },
             // 16. Jumper + Shooter
@@ -244,7 +244,7 @@ export const LEVEL_CONFIG = {
                     projectiles: { count: 2, speed: 'fast' }
                 },
                 maze: { enabled: true, chance: 35, patterns: 'hard', allowEnemies: true },
-                lava: { speed: -120 }, // Increased from -88
+                lava: { speed: -105 }, // Reduced from -120
                 mechanics: { powerups: true, powerupChance: 8 }
             },
             // 17. Chaos (All)
@@ -260,7 +260,7 @@ export const LEVEL_CONFIG = {
                     projectiles: { count: 3, speed: 'extreme' }
                 },
                 maze: { enabled: true, chance: 40, patterns: 'hard', allowEnemies: true },
-                lava: { speed: -130 }, // Increased from -95
+                lava: { speed: -110 }, // Reduced from -130
                 mechanics: { powerups: true, powerupChance: 5 }
             }
         ]

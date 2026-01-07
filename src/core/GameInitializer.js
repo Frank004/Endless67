@@ -19,6 +19,7 @@ import EventBus, { Events } from './EventBus.js';
 import { getDeviceInfo, applyDeviceClasses } from '../utils/DeviceDetection.js';
 import { ASSETS } from '../config/AssetKeys.js';
 import { LAYOUT_CONFIG } from '../config/LayoutConfig.js';
+import { RISER_TYPES } from '../config/RiserConfig.js';
 
 export class GameInitializer {
     constructor(scene) {
@@ -109,10 +110,16 @@ export class GameInitializer {
 
         scene.particleManager = new ParticleManager(scene);
         scene.particleManager.createParticles();
-        scene.riserManager = new RiserManager(scene);
+
+        // Randomize Riser Type for this session
+        const riserTypes = Object.values(RISER_TYPES);
+        const randomType = riserTypes[Phaser.Math.Between(0, riserTypes.length - 1)];
+        console.log(`🎲 Game Initializer: Selected Riser Type: ${randomType}`);
+
+        scene.riserManager = new RiserManager(scene, randomType);
         scene.debugManager = new DebugManager(scene);
         scene.wallDecorator = new WallDecorator(scene);
-        
+
         // OPTIMIZATION: Pre-initialize wall patterns and segments immediately
         // This ensures walls are visible from the start and reduces first-frame load
         if (scene.textures.exists('walls')) {
@@ -268,11 +275,11 @@ export class GameInitializer {
         const isMobile = scene.isMobile || false;
         const isFirstUpdate = scene._wallUpdateFrame === undefined;
         const gameJustStarted = scene.gameStarted && (scene._wallJustStarted === undefined || scene._wallJustStarted);
-        
+
         if (gameJustStarted) {
             scene._wallJustStarted = false; // Mark that we've handled the start
         }
-        
+
         // Always update on first call or when game just started
         if (isFirstUpdate || gameJustStarted) {
             scene._wallUpdateFrame = (scene._wallUpdateFrame || 0) + 1;
@@ -284,7 +291,7 @@ export class GameInitializer {
                 return; // Skip this update
             }
         }
-        
+
         const wallYOffset = WALLS.Y_OFFSET;
         const gameWidth = scene.cameras.main.width;
         const wallWidth = WALLS.WIDTH;

@@ -36,21 +36,21 @@ export class RiserConfiguration {
                 break;
             case RISER_TYPES.WATER:
                 this.texture = 'water_texture';
-                this.soundKey = 'water_ambient';
+                this.soundKey = 'lava_ambient'; // Fallback
                 this.speedConfig = new RiserSpeedConfig(-40, -150, 0.01);
                 this.displayName = 'WATER';
                 this.color = '#3399ff'; // Blue
                 break;
             case RISER_TYPES.ACID:
                 this.texture = 'acid_texture';
-                this.soundKey = 'acid_ambient';
+                this.soundKey = 'lava_ambient'; // Fallback
                 this.speedConfig = new RiserSpeedConfig(-60, -200, 0.03);
                 this.displayName = 'ACID';
                 this.color = '#66ff33'; // Acid green
                 break;
             case RISER_TYPES.FIRE:
                 this.texture = 'fire_texture';
-                this.soundKey = 'fire_ambient';
+                this.soundKey = 'lava_ambient'; // Fallback
                 this.speedConfig = new RiserSpeedConfig(-70, -220, 0.04);
                 this.displayName = 'FIRE';
                 this.color = '#ffaa00'; // Bright orange
