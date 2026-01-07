@@ -7,6 +7,7 @@ export class GameOverMenu {
         this.scene = scene;
         this.blinkInterval = null;
         this.navListeners = null;
+        this.currentState = null; // 'NAME_INPUT' | 'POST_GAME_OPTIONS' | null
 
         // Ensure cleanup on scene shutdown to prevent EventBus leaks
         scene.events.once('shutdown', () => this.cleanup());
@@ -20,9 +21,17 @@ export class GameOverMenu {
             this.blinkInterval.remove();
             this.blinkInterval = null;
         }
+        this.currentState = null;
     }
 
     showNameInput(scoreManager) {
+        // Prevent showing name input if already in a state
+        if (this.currentState !== null) {
+            console.warn('[GameOverMenu] Already in state:', this.currentState);
+            return;
+        }
+        this.currentState = 'NAME_INPUT';
+
         const scene = this.scene;
         // Temporarily hide generic Game Over text handled by HUDManager if possible
         if (scene.uiText) scene.uiText.setVisible(false);
@@ -172,11 +181,21 @@ export class GameOverMenu {
         // Clean up input UI
         elementsToDestroy.forEach(el => el.destroy());
 
+        // Transition state
+        this.currentState = null;
+
         // Show Options
         this.showPostGameOptions();
     }
 
     showPostGameOptions() {
+        // Prevent showing options if already in a state
+        if (this.currentState !== null) {
+            console.warn('[GameOverMenu] Already in state:', this.currentState);
+            return;
+        }
+        this.currentState = 'POST_GAME_OPTIONS';
+
         const scene = this.scene;
 
         // Ensure Game Over text is visible via scene helper if available (compatibility)

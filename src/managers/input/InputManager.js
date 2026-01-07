@@ -56,17 +56,38 @@ export class InputManager {
     }
 
     setupGamepad() {
-        if (!this.scene.input.gamepad) return;
+        const scene = this.scene;
 
-        this.scene.input.gamepad.on('connected', (pad) => {
-            console.log('Gamepad connected:', pad.id);
+        // Initialize gamepad plugin if not already started
+        if (scene.input.gamepad && !scene.input.gamepad.enabled) {
+            scene.input.gamepad.start();
+            console.log('[InputManager] Gamepad plugin started');
+        }
+
+        if (!scene.input.gamepad) {
+            console.warn('[InputManager] Gamepad plugin not available');
+            return;
+        }
+
+        scene.input.gamepad.on('connected', (pad) => {
+            console.log('🎮 Gamepad connected:', pad.id);
             EventBus.emit(Events.GAMEPAD_CONNECTED, { id: pad.id });
         });
 
-        this.scene.input.gamepad.on('disconnected', (pad) => {
-            console.log('Gamepad disconnected:', pad.id);
+        scene.input.gamepad.on('disconnected', (pad) => {
+            console.log('🎮 Gamepad disconnected:', pad.id);
             EventBus.emit(Events.GAMEPAD_DISCONNECTED, { id: pad.id });
         });
+
+        // Check if any gamepads are already connected
+        const pads = scene.input.gamepad.gamepads;
+        if (pads && pads.length > 0) {
+            pads.forEach((pad, index) => {
+                if (pad) {
+                    console.log(`🎮 Gamepad ${index} already connected:`, pad.id);
+                }
+            });
+        }
     }
 
     shouldIgnoreInput() {
