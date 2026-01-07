@@ -39,6 +39,7 @@ export const ASSETS = {
     SHOE_BRAKE: 'shoe_brake',
     TRASHCAN_HIT: 'trashcan_hit',
     TIRE_BOUNCE: 'tire_bounce',
+    WALL_SLIDE: 'wall_slide',
 
     // Audio Arrays (Prefixes)
     COIN_SFX_PREFIX: 'coin_sfx_',

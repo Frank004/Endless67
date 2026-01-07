@@ -33,7 +33,7 @@ export class Game extends Phaser.Scene {
         // CONFIRM UPDATE (only log if debug is enabled)
         // OPTIMIZATION: Disable version log by default to reduce console noise
         if (this.registry?.get('showSlotLogs') === true) {
-            console.log('🚀 GAME VERSION: LOOKAHEAD-FIX-' + Date.now());
+            console.log('🚀 GAME VERSION: ROCKET-ITEMS-REFACTOR-' + Date.now());
         }
 
         // --- CLEANUP FROM PREVIOUS GAME (if restarting) ---

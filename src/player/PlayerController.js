@@ -53,7 +53,7 @@ export class PlayerController {
         // Aplicar movimiento horizontal simple según intent (sin lógica duplicada en eventos)
         this.applyHorizontalMovement();
 
-        this.fsm.update();
+        this.fsm.update(delta);
         // Suavizar slide en pared cuando el jugador se está pegando a ella
         this.applyWallSlideDamp();
         // Reset edge trigger se maneja vía buffer al consumirlo

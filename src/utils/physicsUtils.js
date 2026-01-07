@@ -25,8 +25,8 @@ export function launchItem(scene, item, targetX, floorCollider) {
     item.body.setAllowGravity(true);
     item.body.setImmovable(false);
     item.body.setBounce(0.5); // Rebote moderado
-    item.body.setCollideWorldBounds(false);
-    item.body.setDragX(85); // Fricción suave (permite resbalar un poco)
+    item.body.setCollideWorldBounds(true); // Evita que salga de la pantalla (Safety net)
+    item.body.setDragX(50); // Fricción suave (permite resbalar un poco)
 
     // 2. Calcular dirección hacia el objetivo
     const direction = (targetX < item.x) ? -1 : 1;

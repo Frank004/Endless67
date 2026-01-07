@@ -222,7 +222,15 @@ export class PlayerHandler {
 
             // Launch item
             const obstacles = [scene.stageFloor, scene.leftWall, scene.rightWall];
-            launchItem(scene, item, player.x, obstacles);
+
+            // SMART TARGETING: If player is standing on/near the trashcan, Launch towards center of screen
+            // to avoid shooting the item into a nearby wall.
+            let targetX = player.x;
+            if (Math.abs(player.x - trashcan.x) < 50) {
+                targetX = scene.scale.width / 2;
+            }
+
+            launchItem(scene, item, targetX, obstacles);
 
             // Enable pickup after delay
             scene.time.delayedCall(600, () => {

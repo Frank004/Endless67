@@ -12,6 +12,8 @@ export class PlayerStateMachine {
         this.runStopping = false;
         this.hitPlaying = false;
         this.runStopSoundPlayed = false;
+        this.wallSlideTimer = 0;
+        this.wallSlideSoundPlayed = false;
     }
 
     /**
@@ -51,10 +53,13 @@ export class PlayerStateMachine {
 
     transition(next) {
         if (next === this.state || !next) return;
+        if (this.state === 'WALL_SLIDE') {
+            this.ctx?.sprite?.scene?.audioManager?.stopWallSlide?.();
+        }
         this.state = next;
     }
 
-    update() {
+    update(delta = 16) {
         const { sensors, flags, intent } = this.ctx;
         const jumpBuffered = this.ctx.hasJumpBuffered();
 
@@ -172,6 +177,8 @@ export class PlayerStateMachine {
                     this.anim.resolve('WALL_SLIDE', 'start'),
                     this.anim.resolve('WALL_SLIDE', 'loop')
                 );
+                // Play sound immediately
+                this.ctx?.sprite?.scene?.audioManager?.playWallSlide?.();
             }
             return;
         }
@@ -194,7 +201,7 @@ export class PlayerStateMachine {
             }
         } else {
             // falling
-            if ((jumpBuffered || intent.jumpJustPressed) && flags.canDoubleJump && !flags.inputLocked) {
+            if ((jumpBuffered || intent.jumpJustPressed) && flags.canDoubleJump && !flags.inputLocked && this.ctx.jumpsUsed < 2) {
                 this.ctx.consumeJumpBuffer();
                 this.ctx.setAirStyleFromInput();
                 if (Math.abs(intent.moveX) <= 0.1) this.ctx.flags.airStyle = 'UP';

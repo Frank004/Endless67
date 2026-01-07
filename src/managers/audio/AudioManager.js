@@ -15,6 +15,7 @@ export class AudioManager {
         this.lavaSound = null;
         this.soundEnabled = true;
         this.shoeBrakeInstance = null;
+        this.wallSlideSound = null;
     }
 
     setScene(scene) {
@@ -83,34 +84,40 @@ export class AudioManager {
         try {
             // Check if audio context is suspended
             if (scene.sound && scene.sound.context && scene.sound.context.state === 'suspended') {
-                // Don't try to play audio if context is suspended
-                // It will be resumed on next user interaction via setupAudioContextResume
-                return;
+                // Just log, don't return. We still need to instantiate sound objects.
+                console.log('🔇 AudioContext suspended on init - creating sounds anyway but they may wait for interaction.');
             }
 
             if (scene.sound && scene.cache.audio.exists(ASSETS.LAVA_AMBIENT)) {
                 // Stop any existing lava sound to prevent duplicates
                 if (this.lavaSound) {
                     this.lavaSound.stop();
+                    this.lavaSound.destroy(); // Ensure it's destroyed
                 }
 
                 this.lavaSound = scene.sound.add(ASSETS.LAVA_AMBIENT, { loop: true, volume: 0 });
 
-                // Try to play silently - don't show errors to user
-                try {
-                    const playPromise = this.lavaSound.play();
-                    if (playPromise && typeof playPromise.catch === 'function') {
-                        playPromise.catch(() => {
-                            // Silently fail - audio will resume on next interaction
-                        });
-                    }
-                } catch (e) {
-                    // Silently fail
+                // Try to play ONLY if context is running
+                if (scene.sound.context.state === 'running') {
+                    try {
+                        this.lavaSound.play();
+                    } catch (e) { console.warn('Lava play failed', e); }
+                } else {
+                    console.log('🌋 Lava sound created but waiting for interaction (Context suspended)');
                 }
+            }
+
+            // Init Wall Slide Sound
+            if (scene.sound && scene.cache.audio.exists(ASSETS.WALL_SLIDE)) {
+                console.log('🔊 AudioManager: Wall slide asset found, creating sound instance.');
+                this.wallSlideSound = scene.sound.add(ASSETS.WALL_SLIDE, { loop: true, volume: 0.5 });
+            } else {
+                console.warn('⚠️ AudioManager: Wall slide asset NOT found in cache:', ASSETS.WALL_SLIDE);
             }
 
             // Ensure audio stops when scene shuts down (e.g. on restart)
             scene.events.once('shutdown', this.stopAudio, this);
+            console.log('✅ AudioManager: setupAudio completed successfully');
         } catch (error) {
             // Silently handle any audio errors - don't show to user
         }
@@ -403,6 +410,27 @@ export class AudioManager {
             }
         } catch (error) {
             console.warn('Error playing tire sound:', error);
+        }
+    }
+
+    /**
+     * Play wall slide sound (looping)
+     */
+    playWallSlide() {
+        if (this.wallSlideSound && !this.wallSlideSound.isPlaying) {
+            console.log('🔊 AudioManager: Playing wall slide sound');
+            this.wallSlideSound.play();
+        } else if (!this.wallSlideSound) {
+            console.warn('⚠️ AudioManager: Cannot play wall slide, sound instance is null');
+        }
+    }
+
+    /**
+     * Stop wall slide sound
+     */
+    stopWallSlide() {
+        if (this.wallSlideSound && this.wallSlideSound.isPlaying) {
+            this.wallSlideSound.stop();
         }
     }
 

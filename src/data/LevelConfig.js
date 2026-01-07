@@ -61,7 +61,7 @@ export const LEVEL_CONFIG = {
                     distribution: { patrol: 100, shooter: 0, jumper: 0 }
                 },
                 maze: { enabled: false },
-                lava: { speed: -46 },
+                lava: { speed: -55 }, // Increased from -46
                 mechanics: { powerups: true, powerupChance: 10 }
             },
             // 5. Safe Zone / Slow Riser Phase
@@ -91,7 +91,7 @@ export const LEVEL_CONFIG = {
                     distribution: { patrol: 100, shooter: 0, jumper: 0 }
                 },
                 maze: { enabled: true, chance: 15, patterns: 'easy', allowEnemies: false },
-                lava: { speed: -50 },
+                lava: { speed: -60 }, // Increased from -50
                 mechanics: { powerups: true, powerupChance: 10 }
             },
             // 7. Full Pool (Moving + Maze + Patrols)
@@ -106,7 +106,7 @@ export const LEVEL_CONFIG = {
                     distribution: { patrol: 100, shooter: 0, jumper: 0 }
                 },
                 maze: { enabled: true, chance: 20, patterns: 'easy', allowEnemies: false },
-                lava: { speed: -55 },
+                lava: { speed: -70 }, // Increased from -55
                 mechanics: { powerups: true, powerupChance: 10 }
             },
             // 8. Maze Enemies Enabled
@@ -121,7 +121,7 @@ export const LEVEL_CONFIG = {
                     distribution: { patrol: 100, shooter: 0, jumper: 0 }
                 },
                 maze: { enabled: true, chance: 25, patterns: 'medium', allowEnemies: true },
-                lava: { speed: -60 },
+                lava: { speed: -80 }, // Increased from -60
                 mechanics: { powerups: true, powerupChance: 10 }
             },
             // 9. More Patrols
@@ -136,7 +136,7 @@ export const LEVEL_CONFIG = {
                     distribution: { patrol: 100, shooter: 0, jumper: 0 }
                 },
                 maze: { enabled: true, chance: 25, patterns: 'medium', allowEnemies: true },
-                lava: { speed: -65 },
+                lava: { speed: -85 }, // Increased from -65
                 mechanics: { powerups: true, powerupChance: 8 }
             },
             // 10. Shooter Introduction
@@ -152,7 +152,7 @@ export const LEVEL_CONFIG = {
                     projectiles: { count: 1, speed: 'normal' }
                 },
                 maze: { enabled: true, chance: 30, patterns: 'medium', allowEnemies: true },
-                lava: { speed: -70 },
+                lava: { speed: -90 }, // Increased from -70
                 mechanics: { powerups: true, powerupChance: 8 }
             },
             // 11. More Shooters
@@ -168,7 +168,7 @@ export const LEVEL_CONFIG = {
                     projectiles: { count: 2, speed: 'fast' }
                 },
                 maze: { enabled: true, chance: 30, patterns: 'medium', allowEnemies: true },
-                lava: { speed: -75 },
+                lava: { speed: -95 }, // Increased from -75
                 mechanics: { powerups: true, powerupChance: 8 }
             },
             // 12. Shooter + Patrol
@@ -183,7 +183,7 @@ export const LEVEL_CONFIG = {
                     distribution: { patrol: 50, shooter: 50, jumper: 0 }
                 },
                 maze: { enabled: true, chance: 30, patterns: 'medium', allowEnemies: true },
-                lava: { speed: -78 },
+                lava: { speed: -100 }, // Increased from -78
                 mechanics: { powerups: true, powerupChance: 8 }
             },
             // 13. Jumper Introduction
@@ -198,7 +198,7 @@ export const LEVEL_CONFIG = {
                     distribution: { patrol: 0, shooter: 0, jumper: 100 } // Exclusive
                 },
                 maze: { enabled: true, chance: 35, patterns: 'hard', allowEnemies: true },
-                lava: { speed: -80 },
+                lava: { speed: -105 }, // Increased from -80
                 mechanics: { powerups: true, powerupChance: 8 }
             },
             // 14. More Jumpers
@@ -213,7 +213,7 @@ export const LEVEL_CONFIG = {
                     distribution: { patrol: 0, shooter: 0, jumper: 100 }
                 },
                 maze: { enabled: true, chance: 35, patterns: 'hard', allowEnemies: true },
-                lava: { speed: -82 },
+                lava: { speed: -110 }, // Increased from -82
                 mechanics: { powerups: true, powerupChance: 8 }
             },
             // 15. Jumper + Patrol
@@ -228,7 +228,7 @@ export const LEVEL_CONFIG = {
                     distribution: { patrol: 50, shooter: 0, jumper: 50 }
                 },
                 maze: { enabled: true, chance: 35, patterns: 'hard', allowEnemies: true },
-                lava: { speed: -85 },
+                lava: { speed: -115 }, // Increased from -85
                 mechanics: { powerups: true, powerupChance: 8 }
             },
             // 16. Jumper + Shooter
@@ -244,7 +244,7 @@ export const LEVEL_CONFIG = {
                     projectiles: { count: 2, speed: 'fast' }
                 },
                 maze: { enabled: true, chance: 35, patterns: 'hard', allowEnemies: true },
-                lava: { speed: -88 },
+                lava: { speed: -120 }, // Increased from -88
                 mechanics: { powerups: true, powerupChance: 8 }
             },
             // 17. Chaos (All)
@@ -260,7 +260,7 @@ export const LEVEL_CONFIG = {
                     projectiles: { count: 3, speed: 'extreme' }
                 },
                 maze: { enabled: true, chance: 40, patterns: 'hard', allowEnemies: true },
-                lava: { speed: -95 },
+                lava: { speed: -130 }, // Increased from -95
                 mechanics: { powerups: true, powerupChance: 5 }
             }
         ]

@@ -15,6 +15,9 @@ export class RiserManager {
         this.isRising = false;
         this.enabled = true;
         this.riserHeight = null; // Se calculará dinámicamente en createRiser()
+        this.lastChanceActive = false;
+        this.lastChanceTimer = 0;
+        this.lastChanceCooldown = 0;
     }
 
     setEnabled(enabled) {
@@ -156,11 +159,46 @@ export class RiserManager {
 
         let targetSpeed = difficultySpeed;
 
+        // Last Chance "Breather" Logic
+        // If lava is very close (< 150px) and cooldown is ready, slow it down significantly
+        // This gives the player a "last chance" to escape
+
+        let inLastChance = false;
+
+        if (this.lastChanceActive) {
+            inLastChance = true;
+            this.lastChanceTimer -= (1 / 60);
+            if (this.lastChanceTimer <= 0) {
+                this.lastChanceActive = false;
+                this.lastChanceCooldown = 15; // 15s cooldown
+            } else {
+                // FORCE slow speed during breather
+                targetSpeed = -20;
+            }
+        } else {
+            // Cooldown handling
+            if (this.lastChanceCooldown > 0) {
+                this.lastChanceCooldown -= (1 / 60);
+            }
+
+            // Trigger condition: Close distance + No Cooldown + Moving Up
+            if (distanceToRiser > -150 && distanceToRiser < 0 && this.lastChanceCooldown <= 0) {
+                this.lastChanceActive = true;
+                this.lastChanceTimer = 2.0; // 2 seconds of relief
+                // console.log("😰 Last Chance Activated!");
+            }
+        }
+
         // Catch-up logic (if player is too far ahead, riser speeds up)
-        if (distanceToRiser < -800) {
-            targetSpeed = this.config.speedConfig.maxSpeed;
-        } else if (distanceToRiser < -600) {
-            targetSpeed = this.config.speedConfig.maxSpeed * 0.7;
+        // Only apply catch-up if NOT in last chance mode
+        if (!inLastChance) {
+            if (distanceToRiser < -800) {
+                targetSpeed = this.config.speedConfig.maxSpeed * 1.5; // Super fast catchup
+            } else if (distanceToRiser < -500) {
+                targetSpeed = this.config.speedConfig.maxSpeed; // Full speed
+            } else if (distanceToRiser < -300) {
+                targetSpeed = this.config.speedConfig.maxSpeed * 0.7; // Moderate catchup
+            }
         }
 
         this.currentSpeed = Phaser.Math.Linear(this.currentSpeed, targetSpeed, this.config.speedConfig.acceleration);

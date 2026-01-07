@@ -72,6 +72,7 @@ export class Preloader extends Phaser.Scene {
         this.load.audio(ASSETS.SHOE_BRAKE, 'assets/audio/shoes/shoe-brake.mp3');
         this.load.audio(ASSETS.TRASHCAN_HIT, 'assets/audio/trashcan/trashcan.mp3');
         this.load.audio(ASSETS.TIRE_BOUNCE, 'assets/audio/tire bounce/tirebounce.mp3');
+        this.load.audio(ASSETS.WALL_SLIDE, 'assets/audio/slide/slide.MP3');
 
         // --- ASSETS LOADING ---
         this.load.atlas(ASSETS.UI_ICONS, 'assets/ui/icons.png', 'assets/ui/icons.json');

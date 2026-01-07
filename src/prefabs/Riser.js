@@ -22,11 +22,11 @@ export class Riser extends Phaser.GameObjects.TileSprite {
         // Physics width: ancho completo de la pantalla (sin restar walls para que cubra todo)
         const physicsWidth = gameWidth + (waveOffset * 2);
 
-        const bodyHeight = 10; // Thin body at top
-        const bodyOffsetY = -5; // Negative offset to align with visual top
+        const bodyHeight = 20; // Larger hit area but offset downwards
+        const bodyOffsetY = 15; // Positive offset: starts 15px BELOW the visual top edge
 
         this.body.setSize(physicsWidth, bodyHeight);
-        // Offset negativo para centrar el body más ancho
+        // Offset negativo en X para centrar, offset positivo en Y para bajar la colisión
         this.body.setOffset(-waveOffset, bodyOffsetY);
 
         // Pipeline - use the specified pipeline for this riser type
