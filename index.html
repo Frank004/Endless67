@@ -15,11 +15,11 @@
     <meta name="description" content="Endless vertical platformer game - Jump, climb, and survive!">
 
     <!-- PWA Manifest -->
-    <link rel="manifest" href="/manifest.json">
+    <link rel="manifest" href="./manifest.json">
 
     <!-- Favicon -->
-    <link rel="icon" type="image/png" sizes="192x192" href="/icon-192.png">
-    <link rel="apple-touch-icon" href="/icon-192.png">
+    <link rel="icon" type="image/png" sizes="192x192" href="./icon-192.png">
+    <link rel="apple-touch-icon" href="./icon-192.png">
 
     <title>ENDLESS67 v0.0.41 - Vertical Runner</title>
     <link rel="stylesheet" href="css/style.css?b=2">
@@ -78,7 +78,7 @@
     <script>
         if ('serviceWorker' in navigator) {
             window.addEventListener('load', () => {
-                navigator.serviceWorker.register('/sw.js')
+                navigator.serviceWorker.register('./sw.js')
                     .then(reg => console.log('[SW] Registered:', reg.scope))
                     .catch(err => console.error('[SW] Registration failed:', err));
             });
@@ -94,7 +94,7 @@
                 if (typeof Phaser !== 'undefined') {
                     const script = document.createElement('script');
                     script.type = 'module';
-                    script.src = 'src/main.js?v=20260108-1200';
+                    script.src = 'src/main.js?v=20260107-1320';
                     document.body.appendChild(script);
                 } else {
                     console.error('Phaser no se cargó correctamente');
@@ -104,7 +104,7 @@
             // Phaser ya está disponible, cargar módulos inmediatamente
             const script = document.createElement('script');
             script.type = 'module';
-            script.src = 'src/main.js?v=20260108-1200';
+            script.src = 'src/main.js?v=20260107-1320';
             document.body.appendChild(script);
         }
     </script>

@@ -1,9 +1,9 @@
 const CACHE_NAME = 'endless67-v1';
 const urlsToCache = [
-    '/',
-    '/index.html',
-    '/css/style.css',
-    '/manifest.json'
+    './',
+    './index.html',
+    './css/style.css',
+    './manifest.json'
 ];
 
 // Install event - cache assets
