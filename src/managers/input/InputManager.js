@@ -25,6 +25,21 @@ export class InputManager {
         });
     }
 
+    /**
+     * Set an extended cooldown period (e.g., for Game Over menu)
+     * @param {number} durationMs - Cooldown duration in milliseconds
+     */
+    setExtendedCooldown(durationMs) {
+        this.sceneTransitionTime = Date.now();
+        this.sceneTransitionCooldown = durationMs;
+
+        // Reset to default after the extended period
+        setTimeout(() => {
+            this.sceneTransitionCooldown = 300; // Back to default
+        }, durationMs);
+    }
+
+
     setupInputs() {
         const scene = this.scene;
 

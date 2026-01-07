@@ -198,6 +198,11 @@ export class GameOverMenu {
 
         const scene = this.scene;
 
+        // Set extended cooldown to prevent accidental restart
+        if (scene.inputManager) {
+            scene.inputManager.setExtendedCooldown(800); // 800ms cooldown for Game Over
+        }
+
         // Ensure Game Over text is visible via scene helper if available (compatibility)
         if (scene.uiText) {
             scene.uiText.setVisible(true);
