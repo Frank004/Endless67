@@ -1,3 +1,4 @@
+import EventBus, { Events } from '../core/EventBus.js';
 import { Player } from '../prefabs/Player.js';
 import { GameInitializer } from '../core/GameInitializer.js';
 import { updatePlatformRider } from '../utils/platformRider.js';
@@ -140,6 +141,17 @@ export class Game extends Phaser.Scene {
         this.inputManager.setupInputs();
         this.collisionManager.setupCollisions();
 
+        // Listen for Pause Toggle
+        const onPauseToggle = () => {
+            if (this.uiManager && this.uiManager.pauseMenu) {
+                this.uiManager.pauseMenu.toggle();
+            }
+        };
+        EventBus.on(Events.PAUSE_TOGGLE, onPauseToggle, this);
+        this.events.once('shutdown', () => {
+            EventBus.off(Events.PAUSE_TOGGLE, onPauseToggle, this);
+        });
+
         // --- CAMERA FOLLOW ---
         // Offset the camera to keep the player in the lower half and reveal upcoming platforms
         this.cameras.main.startFollow(this.player, true, 0, 0.25, 0, 140);
@@ -199,6 +211,12 @@ export class Game extends Phaser.Scene {
             return;
         }
 
+        // --- INPUT UPDATE ---
+        // CRITICAL: Must be updated before pause/gameover checks to handle menu navigation
+        if (this.inputManager) {
+            this.inputManager.update(this.time.now, this.game.loop.delta);
+        }
+
         // Game Over Logic
         if (this.isGameOver) {
             if (this.riserManager) {
@@ -227,7 +245,6 @@ export class Game extends Phaser.Scene {
             this.difficultyManager.update(this.currentHeight);
         }
 
-        if (this.inputManager) this.inputManager.update();
         if (this.slotGenerator) this.slotGenerator.update();
         if (this.riserManager) this.riserManager.update(this.player.y, this.currentHeight, false);
         if (this.backgroundManager) this.backgroundManager.update(this.cameras.main.scrollY);

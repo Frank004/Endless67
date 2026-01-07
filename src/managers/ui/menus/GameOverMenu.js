@@ -1,7 +1,25 @@
+import EventBus, { Events } from '../../../core/EventBus.js';
+import { UIHelpers } from '../../../utils/UIHelpers.js';
+import { MenuNavigation } from '../MenuNavigation.js';
+
 export class GameOverMenu {
     constructor(scene) {
         this.scene = scene;
         this.blinkInterval = null;
+        this.navListeners = null;
+
+        // Ensure cleanup on scene shutdown to prevent EventBus leaks
+        scene.events.once('shutdown', () => this.cleanup());
+    }
+
+    cleanup() {
+        if (this.menuNavigation) {
+            this.menuNavigation.cleanup();
+        }
+        if (this.blinkInterval) {
+            this.blinkInterval.remove();
+            this.blinkInterval = null;
+        }
     }
 
     showNameInput(scoreManager) {
@@ -117,10 +135,9 @@ export class GameOverMenu {
                     }
                 },
                 onEnter: () => {
-                    if (name.length > 0) { // Changed condition to match logic: submit if > 0
-                        if (this.blinkInterval) this.blinkInterval.remove();
-                        this.confirmScore(scoreManager, name, keyListener, [bg, title, prompt, nameText, confirmBtn], htmlInput);
-                    }
+                    // Submit name
+                    if (this.blinkInterval) this.blinkInterval.remove();
+                    this.confirmScore(scoreManager, name, keyListener, [bg, title, prompt, nameText, confirmBtn], htmlInput);
                 },
                 onKeyPress: (key) => {
                     if (name.length < 3 && /[a-zA-Z0-9]/.test(key)) {
@@ -131,18 +148,10 @@ export class GameOverMenu {
             });
         }
 
+        // Pointer support for confirm button
         confirmBtn.on('pointerdown', () => {
-            if (name.length > 0) {
-                // Get final name from HTML input if mobile
-                if (isMobile && htmlInput) {
-                    name = htmlInput.value.toUpperCase().substring(0, 3);
-                }
-
-                // Stop blinking
-                if (this.blinkInterval) this.blinkInterval.remove();
-
-                this.confirmScore(scoreManager, name, keyListener, [bg, title, prompt, nameText, confirmBtn], htmlInput);
-            }
+            if (this.blinkInterval) this.blinkInterval.remove();
+            this.confirmScore(scoreManager, name, keyListener, [bg, title, prompt, nameText, confirmBtn], htmlInput);
         });
     }
 
@@ -181,41 +190,30 @@ export class GameOverMenu {
         const spacing = 60;
 
         // Restart Button
-        const restartBtn = scene.add.text(centerX, startY, '🔄 RESTART', {
-            fontSize: '24px', color: '#00ff00', backgroundColor: '#333', padding: { x: 20, y: 10 }
-        }).setOrigin(0.5).setDepth(301).setScrollFactor(0).setInteractive({ useHandCursor: true });
-
-        restartBtn.on('pointerdown', () => {
-            scene.audioManager.stopAudio();
-            scene.scene.restart();
+        const restartBtn = UIHelpers.createTextButton(scene, centerX, startY, '🔄 RESTART', {
+            textColor: '#00ff00',
+            callback: () => {
+                scene.audioManager.stopAudio();
+                scene.scene.restart();
+            }
         });
 
         // Leaderboard Button
-        const leaderboardBtn = scene.add.text(centerX, startY + spacing, '🏆 LEADERBOARD', {
-            fontSize: '24px', color: '#00ffff', backgroundColor: '#333', padding: { x: 20, y: 10 }
-        }).setOrigin(0.5).setDepth(301).setScrollFactor(0).setInteractive({ useHandCursor: true });
-
-        leaderboardBtn.on('pointerdown', () => {
-            scene.scene.start('Leaderboard');
+        const leaderboardBtn = UIHelpers.createTextButton(scene, centerX, startY + spacing, '🏆 LEADERBOARD', {
+            textColor: '#00ffff',
+            callback: () => scene.scene.start('Leaderboard')
         });
 
         // Menu Button
-        const menuBtn = scene.add.text(centerX, startY + spacing * 2, '🏠 MAIN MENU', {
-            fontSize: '24px', color: '#ffffff', backgroundColor: '#333', padding: { x: 20, y: 10 }
-        }).setOrigin(0.5).setDepth(301).setScrollFactor(0).setInteractive({ useHandCursor: true });
-
-        menuBtn.on('pointerdown', () => {
-            scene.scene.start('MainMenu');
+        const menuBtn = UIHelpers.createTextButton(scene, centerX, startY + spacing * 2, '🏠 MAIN MENU', {
+            textColor: '#ffffff',
+            callback: () => scene.scene.start('MainMenu')
         });
 
-        // Hover effects
-        [restartBtn, leaderboardBtn, menuBtn].forEach(btn => {
-            btn.on('pointerover', () => btn.setColor('#ffff00'));
-            btn.on('pointerout', () => {
-                if (btn === restartBtn) btn.setColor('#00ff00');
-                else if (btn === leaderboardBtn) btn.setColor('#00ffff');
-                else btn.setColor('#ffffff');
-            });
-        });
+        // Setup centralized navigation
+        if (this.menuNavigation) this.menuNavigation.cleanup();
+
+        this.menuNavigation = new MenuNavigation(scene, [restartBtn, leaderboardBtn, menuBtn]);
+        this.menuNavigation.setup();
     }
 }

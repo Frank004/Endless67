@@ -11,8 +11,10 @@ export class PhaserMock {
                 DOWN: 40,
                 W: 87,
                 A: 65,
-                S: 83,
-                D: 68
+                D: 68,
+                SHIFT: 16,
+                ENTER: 13,
+                ESC: 27
             }
         }
     };
@@ -279,7 +281,10 @@ export class PhaserMock {
                     })),
                     addKey: jest.fn(() => ({ isDown: false }))
                 },
-                on: jest.fn()
+                on: jest.fn(),
+                manager: {
+                    pointers: []
+                }
             };
             this.time = {
                 delayedCall: jest.fn(),

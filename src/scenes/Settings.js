@@ -1,5 +1,8 @@
 import GameState from '../core/GameState.js';
 import { UIHelpers } from '../utils/UIHelpers.js';
+import { InputManager } from '../managers/input/InputManager.js';
+import EventBus, { Events } from '../core/EventBus.js';
+import { MenuNavigation } from '../managers/ui/MenuNavigation.js';
 
 export class Settings extends Phaser.Scene {
     constructor() {
@@ -7,6 +10,9 @@ export class Settings extends Phaser.Scene {
     }
 
     create() {
+        this.inputManager = new InputManager(this);
+        this.inputManager.setupInputs();
+
         const width = this.cameras.main.width;
         const height = this.cameras.main.height;
         let buttonY = height / 2 - 50;
@@ -41,13 +47,11 @@ export class Settings extends Phaser.Scene {
                 this.sound.mute = !newState;
 
                 // 4. Update UI
-                this.soundText.setText(newState ? 'SOUND: ON' : 'SOUND: OFF');
-                this.soundIcon.setFrame(newState ? 'volume-up' : 'volume-mute');
+                soundButton.text.setText(newState ? 'SOUND: ON' : 'SOUND: OFF');
+                soundButton.icon.setFrame(newState ? 'volume-up' : 'volume-mute');
             }
         });
-        this.soundContainer = soundButton.container;
-        this.soundText = soundButton.text;
-        this.soundIcon = soundButton.icon;
+
         buttonY += buttonSpacing;
 
         // --- JOYSTICK TOGGLE ---
@@ -58,18 +62,38 @@ export class Settings extends Phaser.Scene {
             callback: () => {
                 const newState = !this.registry.get('showJoystick');
                 this.registry.set('showJoystick', newState);
-                this.joystickText.setText(newState ? 'JOYSTICK: ON' : 'JOYSTICK: OFF');
+                joystickButton.text.setText(newState ? 'JOYSTICK: ON' : 'JOYSTICK: OFF');
             }
         });
-        this.joystickContainer = joystickButton.container;
-        this.joystickText = joystickButton.text;
-        this.joystickIcon = joystickButton.icon;
+
         buttonY += buttonSpacing;
 
         // Back Button
+        const backCallback = () => this.scene.start('MainMenu');
         const backBtn = UIHelpers.createTextButton(this, width / 2, buttonY, 'BACK TO MENU', {
-            callback: () => this.scene.start('MainMenu')
+            callback: backCallback
         });
-        this.backButton = backBtn.container;
+
+        // --- MENU NAVIGATION ---
+        this.menuNavigation = new MenuNavigation(this, [
+            soundButton,
+            joystickButton,
+            backBtn
+        ]);
+        this.menuNavigation.setup();
+
+        // --- UNIFIED INPUT LISTENING ---
+        // Explicit Back handler
+        EventBus.on(Events.UI_BACK, backCallback, this);
+
+        // Cleanup on shutdown
+        this.events.once('shutdown', () => {
+            if (this.menuNavigation) this.menuNavigation.cleanup();
+            EventBus.off(Events.UI_BACK, backCallback, this);
+        });
+    }
+
+    update(time, delta) {
+        this.inputManager.update(time, delta);
     }
 }
