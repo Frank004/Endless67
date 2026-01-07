@@ -53,7 +53,10 @@ const config = {
         width: GAME_WIDTH,
         height: GAME_HEIGHT
     },
-    input: { activePointers: 3 },
+    input: {
+        activePointers: 3,
+        gamepad: true  // Enable gamepad plugin
+    },
     physics: { default: 'arcade', arcade: { gravity: { y: 1200 }, debug: false } },
     scene: [Boot, Preloader, MainMenu, Game, Leaderboard, Settings, Playground]
 };

@@ -58,35 +58,48 @@ export class InputManager {
     setupGamepad() {
         const scene = this.scene;
 
-        // Initialize gamepad plugin if not already started
-        if (scene.input.gamepad && !scene.input.gamepad.enabled) {
-            scene.input.gamepad.start();
-            console.log('[InputManager] Gamepad plugin started');
-        }
+        console.log('[InputManager] 🎮 Setting up gamepad...');
+        console.log('[InputManager] scene.input.gamepad exists:', !!scene.input.gamepad);
 
         if (!scene.input.gamepad) {
-            console.warn('[InputManager] Gamepad plugin not available');
+            console.error('[InputManager] ❌ Gamepad plugin NOT available. Check Phaser config.');
             return;
         }
 
+        console.log('[InputManager] Gamepad enabled:', scene.input.gamepad.enabled);
+        console.log('[InputManager] Gamepad total:', scene.input.gamepad.total);
+
+        // Initialize gamepad plugin if not already started
+        if (!scene.input.gamepad.enabled) {
+            console.log('[InputManager] Starting gamepad plugin...');
+            scene.input.gamepad.start();
+            console.log('[InputManager] ✅ Gamepad plugin started');
+        }
+
         scene.input.gamepad.on('connected', (pad) => {
-            console.log('🎮 Gamepad connected:', pad.id);
+            console.log('🎮 ✅ Gamepad connected:', pad.id);
             EventBus.emit(Events.GAMEPAD_CONNECTED, { id: pad.id });
         });
 
         scene.input.gamepad.on('disconnected', (pad) => {
-            console.log('🎮 Gamepad disconnected:', pad.id);
+            console.log('🎮 ❌ Gamepad disconnected:', pad.id);
             EventBus.emit(Events.GAMEPAD_DISCONNECTED, { id: pad.id });
         });
 
         // Check if any gamepads are already connected
         const pads = scene.input.gamepad.gamepads;
+        console.log('[InputManager] Checking gamepads. Total:', scene.input.gamepad.total);
+
         if (pads && pads.length > 0) {
             pads.forEach((pad, index) => {
                 if (pad) {
-                    console.log(`🎮 Gamepad ${index} already connected:`, pad.id);
+                    console.log(`🎮 ✅ Gamepad ${index} already connected:`, pad.id);
+                } else {
+                    console.log(`🎮 Slot ${index}: empty`);
                 }
             });
+        } else {
+            console.log('[InputManager] ⚠️ No gamepads detected. Press a button on your controller.');
         }
     }
 
