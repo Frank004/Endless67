@@ -14,6 +14,15 @@ export class InputManager {
         // Input Throttling for UI Navigation
         this.lastNavTime = 0;
         this.navThreshold = 200; // ms
+
+        // Scene Transition Cooldown
+        this.sceneTransitionTime = 0;
+        this.sceneTransitionCooldown = 300; // ms - prevent input bleed between scenes
+
+        // Listen for scene transitions to reset cooldown
+        scene.events.on('create', () => {
+            this.sceneTransitionTime = Date.now();
+        });
     }
 
     setupInputs() {
@@ -33,6 +42,13 @@ export class InputManager {
         // --- TOUCH ---
         scene.input.on('pointerdown', (pointer) => {
             if (this.shouldIgnoreInput()) return;
+
+            // Prevent input bleed between scenes
+            const timeSinceSceneTransition = Date.now() - this.sceneTransitionTime;
+            if (timeSinceSceneTransition < this.sceneTransitionCooldown) {
+                return; // Still in cooldown period
+            }
+
             // Only start game if the scene has the method (e.g., Game scene)
             if (!scene.gameStarted && !scene.isPaused && typeof scene.startGame === 'function') {
                 scene.startGame();
@@ -136,9 +152,10 @@ export class InputManager {
 
         const scene = this.scene;
 
-        // DEBUG: Log when in Game Over state
-        if (scene.isGameOver) {
-            console.log('[InputManager] 🎮 Processing inputs in GAME OVER state');
+        // Prevent input bleed between scenes - ignore inputs during transition cooldown
+        const timeSinceSceneTransition = Date.now() - this.sceneTransitionTime;
+        if (timeSinceSceneTransition < this.sceneTransitionCooldown) {
+            return; // Still in cooldown period
         }
 
         const pad = scene.input.gamepad ? scene.input.gamepad.getPad(0) : null;
