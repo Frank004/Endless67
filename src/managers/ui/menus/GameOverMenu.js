@@ -30,12 +30,23 @@ export class GameOverMenu {
     }
 
     showNameInput(scoreManager) {
-        // Prevent showing name input if already in a state
-        if (this.currentState !== null) {
-            console.warn('[GameOverMenu] Already in state:', this.currentState);
-            return;
+        console.log('[GameOverMenu] showNameInput called. CurrentState:', this.currentState);
+
+        // Ensure any previous navigation is killed
+        if (this.menuNavigation) {
+            console.log('[GameOverMenu] Cleaning up leftover MenuNavigation');
+            this.menuNavigation.cleanup();
+            this.menuNavigation = null;
         }
+
+        // Force reset state to allow name input
+        if (this.currentState !== null) {
+            console.warn('[GameOverMenu] Forcing state reset from:', this.currentState);
+            this.currentState = null;
+        }
+
         this.currentState = 'NAME_INPUT';
+        console.log('[GameOverMenu] State set to NAME_INPUT');
 
         const scene = this.scene;
         // Temporarily hide generic Game Over text handled by HUDManager if possible

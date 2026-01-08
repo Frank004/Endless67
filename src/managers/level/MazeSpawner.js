@@ -292,21 +292,28 @@ export class MazeSpawner {
                         const enemyY = platformTop - enemyHalfHeight;
 
                         // Weighted Random Selection based on Tier Distribution
+                        // CRITICAL: Disable jumpers in mazes (they need vertical space to jump)
                         const dist = tierEnemyConfig.distribution || { patrol: 100, shooter: 0, jumper: 0 };
-                        const totalWeight = (dist.patrol || 0) + (dist.shooter || 0) + (dist.jumper || 0);
+                        const mazeDistribution = {
+                            patrol: dist.patrol || 0,
+                            shooter: dist.shooter || 0,
+                            jumper: 0 // Always 0 in mazes - jumpers need vertical space
+                        };
+
+                        const totalWeight = mazeDistribution.patrol + mazeDistribution.shooter + mazeDistribution.jumper;
                         const r = Phaser.Math.Between(0, totalWeight);
 
                         let selectedType = 'patrol';
-                        let cumulative = dist.patrol || 0;
+                        let cumulative = mazeDistribution.patrol;
 
                         if (r <= cumulative) {
                             selectedType = 'patrol';
                         } else {
-                            cumulative += (dist.shooter || 0);
+                            cumulative += mazeDistribution.shooter;
                             if (r <= cumulative) {
                                 selectedType = 'shooter';
                             } else {
-                                selectedType = 'jumper';
+                                selectedType = 'jumper'; // Will never happen since jumper = 0
                             }
                         }
 

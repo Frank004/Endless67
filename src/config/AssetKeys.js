@@ -7,6 +7,7 @@ export const ASSETS = {
     WALLS: 'walls',
     FLOOR: 'floor',
     PROPS: 'props',
+    EFFECTS: 'effects',
     UI_ICONS: 'ui_icons',
 
     // Generated Textures

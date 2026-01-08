@@ -6,6 +6,7 @@ import { PauseMenu } from './menus/PauseMenu.js';
 import { ControlsUI } from './controls/ControlsUI.js';
 import { NotificationsUI } from './notifications/NotificationsUI.js';
 import { GameOverMenu } from './menus/GameOverMenu.js';
+import { MilestoneIndicatorManager } from './hud/MilestoneIndicatorManager.js';
 
 export class UIManager {
     constructor(scene) {
@@ -18,12 +19,19 @@ export class UIManager {
         this.controls = new ControlsUI(scene);
         this.notifications = new NotificationsUI(scene);
         this.gameOverMenu = new GameOverMenu(scene);
+        this.milestoneIndicators = new MilestoneIndicatorManager(scene);
     }
 
     createUI() {
         this.hud.create();
         this.pauseMenu.create();
         this.controls.create();
+
+        // Initialize milestones
+        if (this.milestoneIndicators) {
+            this.milestoneIndicators.createParticleEmitter();
+            this.milestoneIndicators.loadMilestones();
+        }
     }
 
     setGameStartUI() {
@@ -88,6 +96,14 @@ export class UIManager {
         this.gameOverMenu.showPostGameOptions();
     }
 
+    // Proxy methods for Milestone Indicators
+    updateMilestones(playerHeight) {
+        this.milestoneIndicators.update(playerHeight);
+    }
+
+    refreshMilestones() {
+        this.milestoneIndicators.refresh();
+    }
 
     /**
      * Setup EventBus listeners for UI updates
@@ -156,5 +172,10 @@ export class UIManager {
             EventBus.off(event, listener);
         });
         this.eventListeners = [];
+
+        // Clean up milestone indicators
+        if (this.milestoneIndicators) {
+            this.milestoneIndicators.destroy();
+        }
     }
 }

@@ -9,6 +9,9 @@ class ScoreManager {
 
         this.storageKey = 'endless67_scores';
         this.maxScores = 10;
+
+        // DEBUG: Seed scores on init as requested (Uncomment to reset leaderboard)
+        this.seedDebugScores();
     }
 
     getTopScores() {
@@ -21,21 +24,22 @@ class ScoreManager {
         }
     }
 
-    saveScore(name, coins, height) {
+    saveScore(name, coins, height, worldY = 0) {
         const scores = this.getTopScores();
         const newScore = {
             name: name.substring(0, 3).toUpperCase(),
             coins: coins,
             height: height,
+            worldY: worldY,
             date: new Date().toISOString()
         };
 
         scores.push(newScore);
 
-        // Sort by coins descending, then height descending
+        // Sort by height descending, then coins descending
         scores.sort((a, b) => {
-            if (b.coins !== a.coins) return b.coins - a.coins;
-            return b.height - a.height;
+            if (b.height !== a.height) return b.height - a.height;
+            return b.coins - a.coins;
         });
 
         // Keep top 10
@@ -50,6 +54,40 @@ class ScoreManager {
         }
 
         return scores;
+    }
+
+    /**
+     * DEBUG: Seed leaderboard with test data
+     * Positions 1-10 spaced by 200m
+     */
+    seedDebugScores() {
+        console.log('🌱 [ScoreManager] Seeding debug scores...');
+        const scores = [];
+        const baseSpawnY = 750; // Approximated spawn Y
+
+        for (let i = 0; i < 10; i++) {
+            const rank = i + 1;
+            const height = (11 - rank) * 200; // Rank 1 = 2000m, Rank 10 = 200m
+            const worldY = baseSpawnY - (height * 10);
+
+            scores.push({
+                name: `CPU${rank}`,
+                coins: 1, // Minimum coins so player can beat them easily with height
+                height: height,
+                worldY: worldY,
+                date: new Date().toISOString()
+            });
+        }
+
+        // Sort by height descending
+        scores.sort((a, b) => b.height - a.height);
+
+        try {
+            localStorage.setItem(this.storageKey, JSON.stringify(scores));
+            console.log('✅ [ScoreManager] Debug scores seeded!');
+        } catch (e) {
+            console.warn('Error seeding scores:', e);
+        }
     }
 
     isHighScore(height, coins) {
@@ -71,8 +109,11 @@ class ScoreManager {
         }
 
         const lastScore = scores[scores.length - 1];
-        if (coins > lastScore.coins) return true;
-        if (coins === lastScore.coins && height > lastScore.height) return true;
+
+        // Check Height first
+        if (height > lastScore.height) return true;
+        // If tied on height, check Coins
+        if (height === lastScore.height && coins > lastScore.coins) return true;
 
         return false;
     }

@@ -63,7 +63,7 @@ export class MainMenu extends Phaser.Scene {
 		});
 
 		// Version (visible text)
-		const versionText = this.add.text(width / 2, height - 30, 'v0.0.41', {
+		const versionText = this.add.text(width / 2, height - 30, 'v0.0.42', {
 			fontSize: '14px',
 			color: '#444'
 		}).setOrigin(0.5);

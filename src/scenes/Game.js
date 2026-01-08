@@ -249,6 +249,11 @@ export class Game extends Phaser.Scene {
         if (this.riserManager) this.riserManager.update(this.player.y, this.currentHeight, false);
         if (this.backgroundManager) this.backgroundManager.update(this.cameras.main.scrollY);
 
+        // Update milestone indicators with current player height
+        if (this.uiManager) {
+            this.uiManager.updateMilestones(this.player.y);
+        }
+
         // Throttle audio updates on mobile (every 3 frames = ~20fps updates)
         if (this.audioManager) {
             if (!isMobile || (this._audioUpdateFrame = (this._audioUpdateFrame || 0) + 1) % 3 === 0) {

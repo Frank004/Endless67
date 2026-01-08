@@ -83,6 +83,8 @@ export class Preloader extends Phaser.Scene {
         this.load.multiatlas('platform', 'assets/spritesheets/platform.json', 'assets/spritesheets');
         this.load.multiatlas(ASSETS.PROPS, 'assets/spritesheets/props.json', 'assets/spritesheets');
         this.load.multiatlas(ASSETS.PLAYER, 'assets/spritesheets/player.json', 'assets/spritesheets');
+        this.load.atlas(ASSETS.EFFECTS, 'assets/spritesheets/effects.png', 'assets/spritesheets/effects.json');
+
     }
 
     create() {
@@ -99,6 +101,12 @@ export class Preloader extends Phaser.Scene {
             g.strokeRoundedRect(0, 0, PLAYER_SIZE, PLAYER_SIZE, 8);
             g.generateTexture(ASSETS.PLAYER_PLACEHOLDER, PLAYER_SIZE, PLAYER_SIZE);
         }
+
+        // Particle texture for milestone celebrations
+        g.clear();
+        g.fillStyle(0xffffff, 1);
+        g.fillCircle(4, 4, 4);
+        g.generateTexture('particle', 8, 8);
 
         // --- ANIMATIONS ---
         if (atlasLoaded && this.anims) {
@@ -135,6 +143,27 @@ export class Preloader extends Phaser.Scene {
             makeAnim('player_wall_slide_start', ['wallslide-01.png', 'wallslide-02.png', 'wallslide-03.png', 'wallslide-04.png', 'wallslide-05.png'], 12, 0);
             makeAnim('player_wall_slide_loop', ['wallslide-06.png', 'wallslide-07.png', 'wallslide-08.png'], 12, -1);
             makeAnim('player_hit', ['hit-01.png', 'hit-02.png'], 10, 0);
+
+            // Effects Animations
+            if (this.textures.exists(ASSETS.EFFECTS)) {
+                // Ensure sorting correct 1-14
+                const fxFrames = [];
+                for (let i = 1; i <= 14; i++) {
+                    fxFrames.push({ key: ASSETS.EFFECTS, frame: `explotion${i}.png` });
+                }
+
+                this.anims.create({
+                    key: 'explosion',
+                    frames: fxFrames,
+                    frameRate: 24,
+                    hideOnComplete: true,
+                    repeat: 0
+                });
+                console.log(`[Preloader] ✅ Created 'explosion' animation with ${fxFrames.length} frames.`);
+            } else {
+                console.error('[Preloader] ❌ EFFECTS texture not found!');
+            }
+
 
             // Powerup Animation
             const powerFrameOrder = [

@@ -92,6 +92,73 @@ export class PhaserMock {
         }
     };
 
+    static GameObjects = {
+        Container: class {
+            constructor(scene, x, y) {
+                this.scene = scene;
+                this.x = x || 0;
+                this.y = y || 0;
+                this.list = [];
+                this.active = true;
+                this.visible = true;
+                this.depth = 0;
+                this.alpha = 1;
+                this.scrollFactorX = 1;
+                this.scrollFactorY = 1;
+            }
+
+            add(child) {
+                this.list.push(child);
+                return this;
+            }
+
+            remove(child) {
+                const index = this.list.indexOf(child);
+                if (index !== -1) {
+                    this.list.splice(index, 1);
+                }
+                return this;
+            }
+
+            setDepth(depth) {
+                this.depth = depth;
+                return this;
+            }
+
+            setScrollFactor(x, y) {
+                this.scrollFactorX = x;
+                this.scrollFactorY = y || x;
+                return this;
+            }
+
+            setAlpha(alpha) {
+                this.alpha = alpha;
+                return this;
+            }
+
+            setVisible(visible) {
+                this.visible = visible;
+                return this;
+            }
+
+            setPosition(x, y) {
+                this.x = x;
+                this.y = y;
+                return this;
+            }
+
+            destroy() {
+                this.list.forEach(child => {
+                    if (child && child.destroy) {
+                        child.destroy();
+                    }
+                });
+                this.list = [];
+                this.active = false;
+            }
+        }
+    };
+
     static Physics = {
         Arcade: {
             Sprite: class {
@@ -267,6 +334,14 @@ export class PhaserMock {
                         setPosition: jest.fn(),
                         explode: jest.fn()
                     }))
+                })),
+                line: jest.fn(() => ({
+                    setOrigin: jest.fn().mockReturnThis(),
+                    setAlpha: jest.fn().mockReturnThis(),
+                    setLineWidth: jest.fn().mockReturnThis(),
+                    setScrollFactor: jest.fn().mockReturnThis(),
+                    setDepth: jest.fn().mockReturnThis(),
+                    destroy: jest.fn()
                 }))
             };
             this.input = {
