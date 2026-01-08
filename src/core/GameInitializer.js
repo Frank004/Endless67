@@ -256,6 +256,10 @@ export class GameInitializer {
             scene.isGameOver = false;
             scene.isPaused = false;
             scene.gameStarted = true;
+            // Ensure music starts if not already playing (e.g. keyboard start)
+            if (scene.audioManager) {
+                scene.audioManager.startMusic();
+            }
         };
         EventBus.on(Events.GAME_STARTED, gameStartListener);
         scene._gameStartListener = gameStartListener;

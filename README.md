@@ -11,7 +11,7 @@ Un juego de plataformas vertical infinito desarrollado con Phaser.js. Escapa de 
 - **Lava dinámica**: La lava acelera progresivamente, aumentando la tensión
 
 ### 🏃 Mecánicas de Movimiento
-- **Triple salto**: Combina saltos normales, dobles y triples
+- **Doble salto**: Combina saltos normales y dobles para alcanzar mayores alturas
 - **Wall jump**: Salta contra las paredes laterales con sistema de stamina (máximo 5 consecutivos)
 - **Plataformas móviles**: Plataformas que se desplazan horizontalmente
 - **Plataformas en zigzag**: Patrones de plataformas que desafían tu precisión
@@ -48,10 +48,13 @@ Un juego de plataformas vertical infinito desarrollado con Phaser.js. Escapa de 
 - **Joystick virtual**: Opcional, configurable en Settings
 
 ### 💻 Computadora
-- **Flechas ← → / A D**: Mover al personaje izquierda/derecha
-- **SPACE**: Saltar
-- **Wall Jump**: Salta contra las paredes laterales (máximo 5 consecutivos)
-- **Soporte para Xbox Controller**: Compatible con gamepads
+- **Teclado**:
+  - **Flechas ← → / A D**: Mover al personaje izquierda/derecha
+  - **SPACE**: Saltar
+  - **Wall Jump**: Salta contra las paredes laterales (máximo 5 consecutivos)
+- **Gamepad**: Compatible con Xbox Controller y otros gamepads estándar
+  - **Stick izquierdo / D-Pad**: Mover al personaje
+  - **A / X**: Saltar
 
 ## 🚀 Cómo Jugar
 
@@ -95,7 +98,7 @@ O visita el repositorio: [https://github.com/Frank004/Endless67](https://github.
 
 ## 📝 Licencia
 
-Este proyecto es de código abierto y está disponible bajo la licencia MIT.
+Este es un proyecto privado. Todos los derechos reservados.
 
 ## 🎨 Características Técnicas
 

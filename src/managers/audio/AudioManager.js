@@ -41,7 +41,13 @@ export class AudioManager {
         // Resume audio context when user interacts with the page
         const resumeAudio = () => {
             if (scene.sound && scene.sound.context) {
-                scene.sound.context.resume().catch(err => {
+                scene.sound.context.resume().then(() => {
+                    // Force restart music if it should be playing but isn't
+                    if (this.soundEnabled && this.bgMusic && !this.bgMusic.isPlaying) {
+                        console.log('🔊 Audio Context Resumed: Restarting Music');
+                        this.bgMusic.play();
+                    }
+                }).catch(err => {
                     console.warn('Could not resume audio context:', err);
                 });
             }
@@ -147,8 +153,8 @@ export class AudioManager {
         try {
             // Check if audio context is suspended
             if (scene.sound && scene.sound.context && scene.sound.context.state === 'suspended') {
-                // Don't try to play if suspended - will resume on interaction
-                return;
+                console.log('🔇 AudioContext suspended - attempting to create/play music anyway (will wait for resume)');
+                // Don't return, let it try to create the sound object so it's ready when resumed
             }
 
             // Check if music exists but stopped
@@ -160,22 +166,23 @@ export class AudioManager {
             }
 
             if (scene.sound && scene.cache.audio.exists(ASSETS.BG_MUSIC) && !this.bgMusic) {
+                console.log('🎵 AudioManager: Creating new background music instance');
                 this.bgMusic = scene.sound.add(ASSETS.BG_MUSIC, { loop: true, volume: 0.80 });
 
                 // Try to play silently
                 try {
                     const playPromise = this.bgMusic.play();
                     if (playPromise && typeof playPromise.catch === 'function') {
-                        playPromise.catch(() => {
-                            // Silently fail - will resume on interaction
+                        playPromise.catch((e) => {
+                            console.warn('⚠️ Background music autoplay prevented by browser policy. Waiting for interaction.', e);
                         });
                     }
                 } catch (e) {
-                    // Silently fail
+                    console.warn('⚠️ Background music play failed:', e);
                 }
             }
         } catch (error) {
-            // Silently handle errors
+            console.error('❌ AudioManager: startMusic fatal error:', error);
         }
     }
 

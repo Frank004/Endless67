@@ -34,25 +34,30 @@ export default class MilestoneIndicator extends Phaser.GameObjects.Container {
         const gameWidth = this.scene.scale.width;
 
         // Left indicator background (colored rectangle)
-        this.leftBg = this.scene.add.rectangle(
+        // Left indicator background (Sprite)
+        // Using 'indicador.png' from effects atlas
+        // Mirror on left side
+        this.leftBg = this.scene.add.sprite(
             edgeOffset + indicatorWidth / 2,
             0,
-            indicatorWidth,
-            indicatorHeight,
-            this.color
+            ASSETS.EFFECTS,
+            'indicador.png'
         );
         this.leftBg.setOrigin(0.5);
+        this.leftBg.setFlipX(true); // Point inward/outward correctly
+        this.leftBg.setTint(this.color);
         this.add(this.leftBg);
 
-        // Right indicator background (colored rectangle)
-        this.rightBg = this.scene.add.rectangle(
+        // Right indicator background (Sprite)
+        this.rightBg = this.scene.add.sprite(
             gameWidth - edgeOffset - indicatorWidth / 2,
             0,
-            indicatorWidth,
-            indicatorHeight,
-            this.color
+            ASSETS.EFFECTS,
+            'indicador.png'
         );
         this.rightBg.setOrigin(0.5);
+        this.rightBg.setFlipX(false);
+        this.rightBg.setTint(this.color);
         this.add(this.rightBg);
 
         // Position text (left side)
