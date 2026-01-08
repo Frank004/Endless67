@@ -86,28 +86,14 @@
     </script>
 
     <!-- Asegurar que Phaser esté completamente cargado antes de cargar módulos -->
+    <!-- Phaser Loading Check & Game Entry -->
     <script>
-        // Esperar a que Phaser esté disponible antes de cargar módulos
+        // Ensure Phaser is loaded before game starts
         if (typeof Phaser === 'undefined') {
-            window.addEventListener('load', function () {
-                // Phaser debería estar cargado ahora
-                if (typeof Phaser !== 'undefined') {
-                    const script = document.createElement('script');
-                    script.type = 'module';
-                    script.src = 'src/main.js?v=20260107-1320';
-                    document.body.appendChild(script);
-                } else {
-                    console.error('Phaser no se cargó correctamente');
-                }
-            });
-        } else {
-            // Phaser ya está disponible, cargar módulos inmediatamente
-            const script = document.createElement('script');
-            script.type = 'module';
-            script.src = 'src/main.js?v=20260107-1320';
-            document.body.appendChild(script);
+            console.error('Phaser CDN failed to load.');
         }
     </script>
+    <script type="module" src="/src/main.js"></script>
 </body>
 
 </html>

@@ -11,7 +11,7 @@ class ScoreManager {
         this.maxScores = 10;
 
         // DEBUG: Seed scores on init as requested (Uncomment to reset leaderboard)
-        this.seedDebugScores();
+        // this.seedDebugScores();
     }
 
     getTopScores() {
