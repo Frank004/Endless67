@@ -53,10 +53,22 @@ class ScoreManager {
     }
 
     isHighScore(height, coins) {
-        // Requirements: minimum 1 coin AND minimum 60m height
-        if (coins < 1 || height < 60) return false;
         const scores = this.getTopScores();
-        if (scores.length < this.maxScores) return true;
+
+        console.log('🏆 [ScoreManager] isHighScore check:', { height, coins, currentScores: scores.length, maxScores: this.maxScores });
+
+        // If leaderboard is not full, always allow entry (no minimum requirements)
+        if (scores.length < this.maxScores) {
+            console.log('✅ [ScoreManager] Leaderboard not full, allowing entry');
+            return true;
+        }
+
+        // Leaderboard is full - check if score beats the lowest entry
+        // Requirements: minimum 1 coin AND minimum 60m height
+        if (coins < 1 || height < 60) {
+            console.log('❌ [ScoreManager] Does not meet minimum requirements (1 coin, 60m)');
+            return false;
+        }
 
         const lastScore = scores[scores.length - 1];
         if (coins > lastScore.coins) return true;

@@ -123,19 +123,26 @@ export class UIManager {
 
         // Listen to game over
         const gameOverListener = (data) => {
-            console.log('[UIManager] Game Over Event Received:', data);
+            console.log('🎮 [UIManager] Game Over Event Received:', data);
+            console.log('🎮 [UIManager] Checking high score with height:', data.height, 'score:', data.score);
             this.showGameOver(data);
 
-            // Check for High Score
-            // Note: GameState emits { score, height }. ScoreManager expects isHighScore(height, coins).
-            // Assuming data.score represents coins/points collected.
-            if (ScoreManager.isHighScore(data.height, data.score)) {
-                console.log('[UIManager] High Score detected! Showing Name Input.');
-                this.showNameInput(ScoreManager);
-            } else {
-                console.log('[UIManager] No High Score. Showing Options.');
-                this.showPostGameOptions();
-            }
+            // Delay before showing UI to allow game over animation to play
+            this.scene.time.delayedCall(1000, () => {
+                // Check for High Score
+                // Note: GameState emits { score, height }. ScoreManager expects isHighScore(height, coins).
+                // Assuming data.score represents coins/points collected.
+                const isHigh = ScoreManager.isHighScore(data.height, data.score);
+                console.log('🎮 [UIManager] isHighScore result:', isHigh);
+
+                if (isHigh) {
+                    console.log('✅ [UIManager] High Score detected! Showing Name Input.');
+                    this.showNameInput(ScoreManager);
+                } else {
+                    console.log('❌ [UIManager] No High Score. Showing Options.');
+                    this.showPostGameOptions();
+                }
+            });
         };
         EventBus.on(Events.GAME_OVER, gameOverListener);
         this.eventListeners.push({ event: Events.GAME_OVER, listener: gameOverListener });

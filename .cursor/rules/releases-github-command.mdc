@@ -1,0 +1,8 @@
+Para futuras versiones
+Cuando actualices la versión:
+Incluye un commit del cambio de versión
+Ejecuta: node scripts/create-releases.js
+Ejecuta: ./scripts/publish-releases.sh
+---
+alwaysApply: true
+---

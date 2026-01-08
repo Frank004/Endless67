@@ -549,6 +549,10 @@ export class Game extends Phaser.Scene {
 
         // Clean up UI Manager listeners
         try {
+            // Reset GameOverMenu state BEFORE destroying to allow name input on next high score
+            if (this.uiManager && this.uiManager.gameOverMenu && typeof this.uiManager.gameOverMenu.reset === 'function') {
+                this.uiManager.gameOverMenu.reset();
+            }
             if (this.uiManager && typeof this.uiManager.destroy === 'function') {
                 this.uiManager.destroy();
             }

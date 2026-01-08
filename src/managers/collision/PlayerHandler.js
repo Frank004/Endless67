@@ -145,16 +145,9 @@ export class PlayerHandler {
         scene.uiText.setDepth(200);
         scene.scoreText.setDepth(200);
 
-        scene.time.delayedCall(1000, () => {
-            // Check for high score - only show name input if score qualifies for top 10
-            if (ScoreManager.isHighScore(scene.currentHeight, scene.totalScore)) {
-                // Show Input for Name - this score will enter the leaderboard
-                scene.uiManager.showNameInput(ScoreManager);
-            } else {
-                // Score doesn't qualify for top 10 - show options directly
-                scene.uiManager.showPostGameOptions();
-            }
-        });
+        // Note: High score check and UI display is now handled by UIManager
+        // through the GAME_OVER event (see UIManager.setupEventListeners)
+        // This prevents duplicate calls to showNameInput()
     }
 
     /**

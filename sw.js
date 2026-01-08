@@ -38,6 +38,12 @@ self.addEventListener('activate', event => {
 
 // Fetch event - serve from cache, fallback to network
 self.addEventListener('fetch', event => {
+    // Ignore requests from chrome extensions and other unsupported schemes
+    const url = new URL(event.request.url);
+    if (url.protocol !== 'http:' && url.protocol !== 'https:') {
+        return;
+    }
+
     event.respondWith(
         caches.match(event.request)
             .then(response => {
@@ -61,6 +67,10 @@ self.addEventListener('fetch', event => {
                     caches.open(CACHE_NAME)
                         .then(cache => {
                             cache.put(event.request, responseToCache);
+                        })
+                        .catch(err => {
+                            // Silently ignore cache errors (e.g., quota exceeded)
+                            console.warn('[SW] Cache put failed:', err);
                         });
 
                     return response;

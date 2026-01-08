@@ -24,6 +24,11 @@ export class GameOverMenu {
         this.currentState = null;
     }
 
+    reset() {
+        this.cleanup();
+        this.currentState = null;
+    }
+
     showNameInput(scoreManager) {
         // Prevent showing name input if already in a state
         if (this.currentState !== null) {
@@ -132,30 +137,29 @@ export class GameOverMenu {
             });
         }
 
-        // Use InputManager to handle keyboard input for desktop
+        // Use InputManager to handle keyboard input (enabled for both mobile and desktop)
         let keyListener = null;
 
-        if (!isMobile) {
-            keyListener = scene.inputManager.createTextInputListener({
-                onBackspace: () => {
-                    if (name.length > 0) {
-                        name = name.slice(0, -1);
-                        updateNameTextDisplay();
-                    }
-                },
-                onEnter: () => {
-                    // Submit name
-                    if (this.blinkInterval) this.blinkInterval.remove();
-                    this.confirmScore(scoreManager, name, keyListener, [bg, title, prompt, nameText, confirmBtn], htmlInput);
-                },
-                onKeyPress: (key) => {
-                    if (name.length < 3 && /[a-zA-Z0-9]/.test(key)) {
-                        name += key.toUpperCase();
-                        updateNameTextDisplay();
-                    }
+        // Always enable keyboard input for better compatibility
+        keyListener = scene.inputManager.createTextInputListener({
+            onBackspace: () => {
+                if (name.length > 0) {
+                    name = name.slice(0, -1);
+                    updateNameTextDisplay();
                 }
-            });
-        }
+            },
+            onEnter: () => {
+                // Submit name
+                if (this.blinkInterval) this.blinkInterval.remove();
+                this.confirmScore(scoreManager, name, keyListener, [bg, title, prompt, nameText, confirmBtn], htmlInput);
+            },
+            onKeyPress: (key) => {
+                if (name.length < 3 && /[a-zA-Z0-9]/.test(key)) {
+                    name += key.toUpperCase();
+                    updateNameTextDisplay();
+                }
+            }
+        });
 
         // Pointer support for confirm button
         confirmBtn.on('pointerdown', () => {
@@ -168,8 +172,8 @@ export class GameOverMenu {
         const scene = this.scene;
         scoreManager.saveScore(name || 'UNK', scene.totalScore, scene.currentHeight);
 
-        // Remove keyboard listener if desktop (using InputManager method)
-        if (keyListener && !scene.isMobile) {
+        // Remove keyboard listener (always created now)
+        if (keyListener) {
             scene.inputManager.removeTextInputListener(keyListener);
         }
 
@@ -217,21 +221,44 @@ export class GameOverMenu {
         const restartBtn = UIHelpers.createTextButton(scene, centerX, startY, '🔄 RESTART', {
             textColor: '#00ff00',
             callback: () => {
+                // Reset InputManager before restart
+                if (scene.inputManager) {
+                    scene.inputManager.setExtendedCooldown(1000);
+                }
                 scene.audioManager.stopAudio();
-                scene.scene.restart();
+                scene.time.delayedCall(100, () => {
+                    scene.scene.restart();
+                });
             }
         });
 
         // Leaderboard Button
         const leaderboardBtn = UIHelpers.createTextButton(scene, centerX, startY + spacing, '🏆 LEADERBOARD', {
             textColor: '#00ffff',
-            callback: () => scene.scene.start('Leaderboard')
+            callback: () => {
+                // Reset InputManager before scene transition
+                if (scene.inputManager) {
+                    scene.inputManager.setExtendedCooldown(1000);
+                }
+                scene.time.delayedCall(100, () => {
+                    scene.scene.start('Leaderboard');
+                });
+            }
         });
 
         // Menu Button
         const menuBtn = UIHelpers.createTextButton(scene, centerX, startY + spacing * 2, '🏠 MAIN MENU', {
             textColor: '#ffffff',
-            callback: () => scene.scene.start('MainMenu')
+            callback: () => {
+                // Reset InputManager to prevent inputs from carrying over to MainMenu
+                if (scene.inputManager) {
+                    scene.inputManager.setExtendedCooldown(1500); // Long cooldown
+                }
+                // Small delay to ensure cooldown is set before scene transition
+                scene.time.delayedCall(100, () => {
+                    scene.scene.start('MainMenu');
+                });
+            }
         });
 
         // Setup centralized navigation
