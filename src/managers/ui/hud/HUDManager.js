@@ -28,9 +28,7 @@ export class HUDManager {
         this.heightText = scene.add.text(scoreX + 8, scoreY, 'HEIGHT: ' + (scene.currentHeight || 0) + 'm', {
             fontSize: '20px',
             color: '#ffffff', // White
-            fontStyle: 'bold', // Restore bold for standard font visibility
-            stroke: '#000000',
-            strokeThickness: 4
+            fontStyle: 'bold' // Restore bold for standard font visibility
         }).setScrollFactor(0).setDepth(201);
 
         // --- SECONDARY: COINS (Currency) ---
@@ -40,9 +38,7 @@ export class HUDManager {
         this.scoreText = scene.add.text(scoreX + 8, scoreY + 30, 'COINS: 0', {
             fontSize: '14px',
             color: '#ffd700', // Gold
-            fontStyle: 'bold', // Restore bold
-            stroke: '#000000',
-            strokeThickness: 4
+            fontStyle: 'bold' // Restore bold
         }).setScrollFactor(0).setDepth(201);
 
         // UI text también debe estar 50px más abajo
@@ -50,9 +46,7 @@ export class HUDManager {
             fontSize: '18px',
             color: '#00ffff',
             align: 'center',
-            fontStyle: 'bold',
-            stroke: '#000000',
-            strokeThickness: 6
+            fontStyle: 'bold'
         }).setOrigin(0.5).setScrollFactor(0).setDepth(100);
 
         // Alias scene properties for compatibility
