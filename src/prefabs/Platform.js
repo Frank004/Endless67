@@ -9,7 +9,6 @@
  * para trabajar con PoolManager.
  */
 import { WALLS } from '../config/GameConstants.js';
-import { ASSETS } from '../config/AssetKeys.js';
 
 // 🔴 CONSTANTES DE DIMENSIONES
 export const PLATFORM_HEIGHT = 32;
@@ -20,14 +19,71 @@ class PlatformTextureCache {
     constructor() {
         this.cache = new Map();
         this.initialized = false;
-        this.atlasKey = 'floor'; // Nuevo atlas
     }
 
+    /**
+     * Inicializa el cache con las referencias a los frames
+     * @param {Phaser.Scene} scene - La escena del juego
+     */
     initialize(scene) {
-        if (this.initialized || !scene || !scene.textures.exists(this.atlasKey)) {
+        if (this.initialized || !scene || !scene.textures.exists('platform')) {
             return;
         }
+
+        const texture = scene.textures.get('platform');
+        if (!texture) {
+            return;
+        }
+
+        // Cachear referencias a los frames más usados
+        const frameNames = [
+            'plat-static-01.png',
+            'plat-static-02.png',
+            'plat-move-01.png',
+            'plat-move-02.png'
+        ];
+
+        frameNames.forEach(frameName => {
+            if (texture.has(frameName)) {
+                const frame = texture.get(frameName);
+                this.cache.set(frameName, frame);
+            }
+        });
+
         this.initialized = true;
+    }
+
+    /**
+     * Obtiene un frame del cache o lo busca si no está cacheado
+     * @param {Phaser.Scene} scene - La escena del juego
+     * @param {string} frameName - Nombre del frame
+     * @returns {Phaser.Textures.Frame|null} El frame o null si no existe
+     */
+    getFrame(scene, frameName) {
+        // Si está en cache, retornarlo directamente
+        if (this.cache.has(frameName)) {
+            return this.cache.get(frameName);
+        }
+
+        // Si no está en cache, buscarlo y cachearlo
+        if (scene && scene.textures.exists('platform')) {
+            const texture = scene.textures.get('platform');
+            if (texture && texture.has(frameName)) {
+                const frame = texture.get(frameName);
+                this.cache.set(frameName, frame);
+                return frame;
+            }
+        }
+
+        return null;
+    }
+
+    /**
+     * Limpia el cache (útil para reset entre partidas)
+     */
+    clear() {
+        this.cache.clear();
+        this.initialized = false;
     }
 }
 
@@ -51,8 +107,8 @@ export class Platform extends Phaser.GameObjects.TileSprite {
         }
 
         // TileSprite requiere width y height en el constructor
-        // Usar textura por defecto del atlas floor
-        super(scene, 0, 0, PLATFORM_WIDTH, PLATFORM_HEIGHT, 'floor', 'beam.png');
+        // Usar textura por defecto, se cambiará en spawn()
+        super(scene, 0, 0, PLATFORM_WIDTH, PLATFORM_HEIGHT, 'platform', 'plat-static-01.png');
 
         // Guardar referencia explícita a la escena (por si Phaser la pierde)
         this._sceneRef = scene;
@@ -60,10 +116,6 @@ export class Platform extends Phaser.GameObjects.TileSprite {
         // Agregar a la escena y al physics world
         scene.add.existing(this);
         scene.physics.add.existing(this);
-
-        // Joints (Visual attachments)
-        this.leftJoint = null;
-        this.rightJoint = null;
 
         // Configurar física básica (se ajustará en spawn())
         if (this.body) {
@@ -91,25 +143,6 @@ export class Platform extends Phaser.GameObjects.TileSprite {
         }
         // Fallback a la referencia guardada
         return this._sceneRef;
-    }
-
-    /**
-     * Crea o recupera los joints visuals.
-     */
-    ensureJoints() {
-        const scene = this.getScene();
-        if (!scene) return;
-
-        if (!this.leftJoint) {
-            this.leftJoint = scene.add.image(0, 0, 'floor', 'beam-joint-l-01.png');
-            this.leftJoint.setOrigin(1, 0.5); // Pivot on right edge (to attach to left of platform)
-            this.leftJoint.setDepth(101); // Same or slightly above platform
-        }
-        if (!this.rightJoint) {
-            this.rightJoint = scene.add.image(0, 0, 'floor', 'beam-joint-r-01.png');
-            this.rightJoint.setOrigin(0, 0.5); // Pivot on left edge (to attach to right of platform)
-            this.rightJoint.setDepth(101);
-        }
     }
 
     /**
@@ -146,30 +179,26 @@ export class Platform extends Phaser.GameObjects.TileSprite {
             platformTextureCache.initialize(scene);
         }
 
-        // 🎨 TEXTURE SELECTION LOGIC
-        // 50% beam.png
-        // 25% beam-deco (01-11)
-        // 25% beam-broken (01-03)
-        const r = Math.random();
-        let frameName = 'beam.png';
+        // 🎨 Usar texturas del atlas 'platform' con variación aleatoria
+        // OPTIMIZATION: Pre-calcular frame names para evitar concatenaciones repetidas
+        const variant = Phaser.Math.Between(1, 2); // 01 o 02
+        const frameName = isMoving
+            ? `plat-move-0${variant}.png`
+            : `plat-static-0${variant}.png`;
 
-        if (r < 0.5) {
-            frameName = 'beam.png';
-        } else if (r < 0.75) {
-            const idx = Phaser.Math.Between(1, 11);
-            frameName = `beam-deco-${idx.toString().padStart(2, '0')}.png`;
-        } else {
-            const idx = Phaser.Math.Between(1, 3);
-            frameName = `beam-broken-${idx.toString().padStart(2, '0')}.png`;
+        // 🚀 OPTIMIZATION: Verificar cache primero antes de verificar textures.exists()
+        // El cache ya valida que el atlas existe durante la inicialización
+        if (!platformTextureCache.initialized) {
+            // Si el cache no está inicializado, verificar manualmente
+            if (!scene.textures.exists('platform')) {
+                console.error('Platform.spawn: Atlas "platform" not loaded!');
+                return;
+            }
         }
 
-        // fallback if frame missing check
-        if (!scene.textures.get('floor').has(frameName)) {
-            console.warn(`Platform frame missing: ${frameName}, using beam.png`);
-            frameName = 'beam.png';
-        }
-
-        this.setTexture('floor', frameName);
+        // 🚀 OPTIMIZATION: setTexture es más rápido cuando el cache está inicializado
+        // porque Phaser puede usar las referencias pre-calculadas
+        this.setTexture('platform', frameName);
 
         // Posición PRIMERO
         this.setPosition(x, y);
@@ -178,32 +207,6 @@ export class Platform extends Phaser.GameObjects.TileSprite {
 
         // Configurar tamaño del TileSprite (esto repite el tile, no lo estira)
         this.setSize(width, PLATFORM_HEIGHT);
-
-        // --- JOINTS SETUP ---
-        this.ensureJoints();
-
-        // Randomize Left Joint
-        if (this.leftJoint) {
-            const lIdx = Phaser.Math.Between(1, 3);
-            const lFrame = `beam-joint-l-${lIdx.toString().padStart(2, '0')}.png`;
-            if (scene.textures.get('floor').has(lFrame)) {
-                this.leftJoint.setTexture('floor', lFrame);
-            }
-            this.leftJoint.setActive(true).setVisible(true);
-            this.leftJoint.setPosition(x - width / 2, y);
-        }
-
-        // Randomize Right Joint
-        if (this.rightJoint) {
-            const rIdx = Phaser.Math.Between(1, 3);
-            const rFrame = `beam-joint-r-${rIdx.toString().padStart(2, '0')}.png`;
-            if (scene.textures.get('floor').has(rFrame)) {
-                this.rightJoint.setTexture('floor', rFrame);
-            }
-            this.rightJoint.setActive(true).setVisible(true);
-            this.rightJoint.setPosition(x + width / 2, y);
-        }
-
 
         // El tile se repite automáticamente para llenar el ancho de 128px
 
@@ -227,10 +230,7 @@ export class Platform extends Phaser.GameObjects.TileSprite {
             // body.moves se configura según si es móvil o no (ver más abajo)
         }
 
-        this.setDepth(100);
-        // Ensure joints have consistent depth
-        if (this.leftJoint) this.leftJoint.setDepth(100);
-        if (this.rightJoint) this.rightJoint.setDepth(100);
+        this.setDepth(100); // 🔴 ULTRA HIGH DEPTH FOR DEBUG
 
         // Configurar física básica
         if (this.body) {
@@ -282,6 +282,11 @@ export class Platform extends Phaser.GameObjects.TileSprite {
             scene.sys.displayList.add(this);
         }
 
+        // FINAL VERIFICATION LOG (solo si debug está activo)
+        if (scene?.registry?.get('showSlotLogs') === true) {
+            console.log(`[Platform.spawn] ✅ Spawned at (${x}, ${y}) | Frame: ${frameName} | Visible: ${this.visible} | Active: ${this.active} | Body: ${!!this.body} | Depth: ${this.depth}`);
+        }
+
         // Double check texture
         if (this.texture.key === '__MISSING') {
             console.error('[Platform.spawn] ❌ TEXTURE MISSING even after setTexture!');
@@ -297,15 +302,13 @@ export class Platform extends Phaser.GameObjects.TileSprite {
             return;
         }
 
+        // Log removido para reducir ruido en consola
+
         // Destruir debug text si existe
         if (this.debugText) {
             this.debugText.destroy();
             this.debugText = null;
         }
-
-        // HIDE JOINTS
-        if (this.leftJoint) this.leftJoint.setActive(false).setVisible(false);
-        if (this.rightJoint) this.rightJoint.setActive(false).setVisible(false);
 
         // Limpiar estado de movimiento
         try {
@@ -366,14 +369,6 @@ export class Platform extends Phaser.GameObjects.TileSprite {
         const scene = this.getScene();
         if (!scene) {
             return;
-        }
-
-        // SYNC JOINTS POSITION
-        if (this.leftJoint && this.leftJoint.active) {
-            this.leftJoint.setPosition(this.x - PLATFORM_WIDTH / 2 + 2, this.y); // +2 pixel overlap fix
-        }
-        if (this.rightJoint && this.rightJoint.active) {
-            this.rightJoint.setPosition(this.x + PLATFORM_WIDTH / 2 - 2, this.y); // -2 pixel overlap fix
         }
 
         // PROTECCIÓN UNIVERSAL: Restaurar posición Y si se desvía (para todas las plataformas)

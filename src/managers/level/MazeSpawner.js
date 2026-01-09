@@ -24,9 +24,29 @@ export class MazeSpawner {
     createMazeFloorVisual(x, y, width, height, originX = 0) {
         const scene = this.scene;
         if (!scene?.add?.tileSprite) return null;
-        // Updated to use single 'beam.png' tile (42x32)
-        // Note: The frame in JSON has a leading space: " beam.png"
-        const frame = ' beam.png';
+
+        // Randomly select beam texture for the FLOOR SURFACE
+        // 50% beam.png
+        // 25% beam-deco-01..11
+        // 25% beam-broken-01..03
+        const r = Math.random();
+        let frame = 'beam.png';
+
+        if (r < 0.5) {
+            frame = 'beam.png';
+        } else if (r < 0.75) {
+            const idx = Phaser.Math.Between(1, 11);
+            frame = `beam-deco-${idx.toString().padStart(2, '0')}.png`;
+        } else {
+            const idx = Phaser.Math.Between(1, 3);
+            frame = `beam-broken-${idx.toString().padStart(2, '0')}.png`;
+        }
+
+        // Fallback check
+        if (!scene.textures.get(ASSETS.FLOOR).has(frame)) {
+            frame = 'beam.png'; // fallback
+        }
+
         const visualCenter = scene.add.tileSprite(x, y, width, height, ASSETS.FLOOR, frame);
         visualCenter.setOrigin(originX, 0.5);
         visualCenter.setDepth(12);
@@ -67,15 +87,39 @@ export class MazeSpawner {
         const leftX = leftPlayable;
         const rightX = rightPlayable;
 
-        // Helper to add joint
+        // Helper to add joint with randomization
         // Joint is 30x54, Beam is 42h.
         // Align bottom: Joint bottom at y + rowHeight/2
         // Position X: On the wall seam.
         const addJoint = (x, isLeft) => {
             if (!scene?.add?.image) return;
             const jointY = y + (rowHeight / 2);
-            // 'beam joint.png' from floor atlas
-            const joint = scene.add.image(x, jointY, ASSETS.FLOOR, 'beam joint.png');
+
+            // Randomly select joint texture
+            // 50% 01
+            // 25% 02
+            // 25% 03
+            const r = Math.random();
+            let num = 1;
+
+            if (r < 0.5) num = 1;
+            else if (r < 0.75) num = 2;
+            else num = 3;
+
+            const sideChar = isLeft ? 'l' : 'r';
+            const frame = `beam-joint-${sideChar}-0${num}.png`;
+
+            // Fallback check
+            let finalFrame = frame;
+            if (!scene.textures.get(ASSETS.FLOOR).has(frame)) {
+                // If specific variant missing, try fallback to 01
+                finalFrame = `beam-joint-${sideChar}-01.png`;
+                if (!scene.textures.get(ASSETS.FLOOR).has(finalFrame)) {
+                    return; // No joints available
+                }
+            }
+
+            const joint = scene.add.image(x, jointY, ASSETS.FLOOR, finalFrame);
 
             // User requested joint to be "al borde de beam" (at the edge of the beam).
             // Currently centered (0.5), which straddles.
@@ -84,7 +128,14 @@ export class MazeSpawner {
             // Right (x=368): Origin 0 (Left align) -> Draws 368..398 (On Wall).
             joint.setOrigin(isLeft ? 1 : 0, 1);
 
-            joint.setFlipX(!isLeft); // Flip for right side
+            // Wait, joint texture might be pre-flipped in atlas?
+            // "beam-joint-l" implies it's designed for left. "r" for right.
+            // If they are specific textures, we DON'T need setFlipX unless the asset is reused.
+            // Assuming "l" and "r" are unique assets:
+            // Remove setFlipX if using specific 'r' assets which likely already face correct way.
+            // But let's check: previously I used FlipX for right side.
+            // If assets are explicit 'l' and 'r', we trust the artist.
+
             joint.setDepth(13); // Above beam (12)
         };
 
