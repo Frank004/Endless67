@@ -21,13 +21,8 @@ export class MainMenu extends Phaser.Scene {
 		this.add.rectangle(width / 2, height / 2, width, height, 0x050505);
 
 		// Title
-		this.add.text(width / 2, 120, 'ENDLESS 67', {
-			fontSize: '48px',
-			color: '#ffd700',
-			fontStyle: 'bold',
-			stroke: '#8B4500',
-			strokeThickness: 6
-		}).setOrigin(0.5);
+		// Title
+		this.add.image(width / 2, 120, 'game_logo').setScale(0.5);
 
 		// --- BUTTONS ---
 		this.buttons = [];

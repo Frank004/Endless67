@@ -78,6 +78,7 @@ export class Preloader extends Phaser.Scene {
         this.load.audio(ASSETS.WALL_SLIDE, 'assets/audio/slide/slide.MP3');
 
         // --- ASSETS LOADING ---
+        this.load.image('game_logo', 'assets/ui/logo.png');
         this.load.atlas(ASSETS.UI_ICONS, 'assets/ui/icons.png', 'assets/ui/icons.json');
         this.load.multiatlas(ASSETS.COINS, 'assets/spritesheets/coins.json', 'assets/spritesheets');
         this.load.multiatlas('basketball', 'assets/spritesheets/basketball.json', 'assets/spritesheets');
