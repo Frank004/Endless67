@@ -2,7 +2,7 @@
     "name": "Endless67",
     "short_name": "Endless67",
     "description": "Endless vertical platformer game - Jump, climb, and survive!",
-    "start_url": "/",
+    "start_url": "./",
     "display": "fullscreen",
     "orientation": "portrait",
     "background_color": "#000000",
