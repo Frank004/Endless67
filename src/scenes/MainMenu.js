@@ -22,7 +22,7 @@ export class MainMenu extends Phaser.Scene {
 
 		// Title
 		// Title
-		this.add.image(width / 2, 120, 'game_logo').setScale(0.5);
+		this.add.image(width / 2, 120, 'game_logo').setScale(0.35);
 
 		// --- BUTTONS ---
 		this.buttons = [];
