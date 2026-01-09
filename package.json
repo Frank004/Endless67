@@ -2,7 +2,7 @@
 	"scripts": {
 		"67go": "vite",
 		"dev": "vite",
-		"build": "vite build && cp -R assets dist/ && cp -R css dist/ && cp sw.js dist/ && cp manifest.json dist/ && cp icon-*.png dist/",
+		"build": "vite build",
 		"preview": "vite preview",
 		"test": "jest"
 	},
