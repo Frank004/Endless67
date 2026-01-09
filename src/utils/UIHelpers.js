@@ -99,7 +99,8 @@ export class UIHelpers {
 
         // Text
         const buttonText = scene.add.text(15, 0, text, {
-            fontSize: fontSize, color: textColor, fontStyle: 'bold', fontFamily: 'Pixelify Sans'
+            fontSize: fontSize, color: textColor, fontStyle: 'bold', fontFamily: 'Pixelify Sans',
+            stroke: '#000000', strokeThickness: 4
         }).setOrigin(0.5);
 
         // Icon
@@ -144,7 +145,8 @@ export class UIHelpers {
 
         const container = scene.add.container(x, y).setDepth(depth).setScrollFactor(0);
         const buttonText = scene.add.text(0, 0, text, {
-            fontSize: fontSize, color: textColor, fontStyle: 'bold', fontFamily: 'Pixelify Sans'
+            fontSize: fontSize, color: textColor, fontStyle: 'bold', fontFamily: 'Pixelify Sans',
+            stroke: '#000000', strokeThickness: 4
         }).setOrigin(0.5);
 
         const naturalWidth = buttonText.width + padding.x * 2;
