@@ -9,6 +9,9 @@ export class Preloader extends Phaser.Scene {
     }
 
     preload() {
+        // Establecer ruta base relativa para asegurar carga en GitHub Pages / Netlify / Capacitor
+        this.load.setBaseURL('./');
+
         // --- LOADING BAR UI ---
         const width = this.cameras.main.width;
         const height = this.cameras.main.height;
