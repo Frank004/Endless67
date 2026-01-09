@@ -60,7 +60,8 @@ export class MainMenu extends Phaser.Scene {
 		// Version (visible text)
 		const versionText = this.add.text(width / 2, height - 30, 'v0.0.42', {
 			fontSize: '14px',
-			color: '#444'
+			color: '#444',
+			fontFamily: 'Pixelify Sans'
 		}).setOrigin(0.5);
 
 		// Invisible larger touch area for easier mobile activation (increased size)

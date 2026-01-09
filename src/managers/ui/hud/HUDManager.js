@@ -29,7 +29,8 @@ export class HUDManager {
         this.scoreText = scene.add.text(scoreX + 8, scoreY, 'SCORE: 0', {
             fontSize: '20px',
             color: '#ffd700',
-            fontStyle: 'bold'
+            fontStyle: 'bold',
+            fontFamily: 'Pixelify Sans'
         }).setScrollFactor(0).setDepth(201);
 
         // Semi-transparent background for height
@@ -38,7 +39,8 @@ export class HUDManager {
 
         this.heightText = scene.add.text(scoreX + 8, scoreY + 30, 'HEIGHT: ' + scene.currentHeight + 'm', {
             fontSize: '14px',
-            color: '#fff'
+            color: '#fff',
+            fontFamily: 'Pixelify Sans'
         }).setScrollFactor(0).setDepth(201);
 
         // UI text también debe estar 50px más abajo
@@ -46,7 +48,8 @@ export class HUDManager {
             fontSize: '18px',
             color: '#00ffff',
             align: 'center',
-            fontStyle: 'bold'
+            fontStyle: 'bold',
+            fontFamily: 'Pixelify Sans'
         }).setOrigin(0.5).setScrollFactor(0).setDepth(100);
 
         // Alias scene properties for compatibility
