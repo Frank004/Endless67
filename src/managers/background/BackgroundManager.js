@@ -19,7 +19,7 @@ export class BackgroundManager {
 
         // Parallax settings
         this.parallaxFactor = 0.5; // Moves at half the speed of the camera
-        this.baseTint = 0x1a1a1a; // Almost black/grey
+        this.baseTint = 0x333333; // Slightly lighter dark overlay (was 0x1a1a1a)
 
         // Pooling logic
         this.segments = []; // Active segments
@@ -175,7 +175,7 @@ export class BackgroundManager {
 
             sprite.setTexture('walls', frame);
             sprite.setPosition(posX, posY);
-            sprite.setDepth(-15);
+            sprite.setDepth(-17); // BEHIND CABLES (Cables are -16)
             sprite.setTint(this.baseTint); // Match base layer tint
             sprite.setActive(true).setVisible(true);
 
