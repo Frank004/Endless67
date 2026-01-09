@@ -22,26 +22,26 @@ export class MainMenu extends Phaser.Scene {
 
 		// Title
 		// Title
-		this.add.image(width / 2, 120, 'game_logo').setScale(0.35);
+		this.add.image(width / 2, 120, 'game_logo').setScale(0.28);
 
 		// --- BUTTONS ---
 		this.buttons = [];
 
-		const startBtn = UIHelpers.createTextButton(this, width / 2, 250, 'START GAME', {
+		const startBtn = UIHelpers.createTextButton(this, width / 2, height / 2, 'START GAME', {
 			textColor: '#00ff00',
 			fontSize: '28px',
 			callback: () => this.scene.start('Game')
 		});
 		this.buttons.push(startBtn);
 
-		const leaderboardBtn = UIHelpers.createTextButton(this, width / 2, 330, 'LEADERBOARD', {
+		const leaderboardBtn = UIHelpers.createTextButton(this, width / 2, height / 2 + 80, 'LEADERBOARD', {
 			textColor: '#00ffff',
 			fontSize: '28px',
 			callback: () => this.scene.start('Leaderboard')
 		});
 		this.buttons.push(leaderboardBtn);
 
-		const settingsBtn = UIHelpers.createTextButton(this, width / 2, 410, 'SETTINGS', {
+		const settingsBtn = UIHelpers.createTextButton(this, width / 2, height / 2 + 160, 'SETTINGS', {
 			textColor: '#ffffff',
 			fontSize: '28px',
 			callback: () => this.scene.start('Settings')
