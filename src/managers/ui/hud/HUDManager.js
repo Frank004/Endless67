@@ -21,28 +21,26 @@ export class HUDManager {
         const scoreY = (isMobile ? 20 : 10) + adBannerHeight; // 50px debajo del ad banner
         const centerX = scene.cameras.main.centerX;
 
-        // Semi-transparent background for score
-        // Depth 200 para estar por encima de la lava (150) pero debajo de menus (300+)
-        this.scoreTextBg = scene.add.rectangle(scoreX, scoreY + 12, 130, 28, 0x000000, 0.5)
+        // --- PRIMARY: HEIGHT (Main metric for leaderboard) ---
+        this.heightTextBg = scene.add.rectangle(scoreX, scoreY + 12, 140, 28, 0x000000, 0.5)
             .setOrigin(0, 0.5).setScrollFactor(0).setDepth(200);
 
-        this.scoreText = scene.add.text(scoreX + 8, scoreY, 'SCORE: 0', {
+        this.heightText = scene.add.text(scoreX + 8, scoreY, 'HEIGHT: ' + (scene.currentHeight || 0) + 'm', {
             fontSize: '20px',
-            color: '#ffd700',
-            fontStyle: 'bold',
-            fontFamily: 'Pixelify Sans',
+            color: '#ffffff', // White
+            fontStyle: 'bold', // Restore bold for standard font visibility
             stroke: '#000000',
             strokeThickness: 4
         }).setScrollFactor(0).setDepth(201);
 
-        // Semi-transparent background for height
-        this.heightTextBg = scene.add.rectangle(scoreX, scoreY + 42, 110, 22, 0x000000, 0.5)
+        // --- SECONDARY: COINS (Currency) ---
+        this.scoreTextBg = scene.add.rectangle(scoreX, scoreY + 42, 110, 22, 0x000000, 0.5)
             .setOrigin(0, 0.5).setScrollFactor(0).setDepth(200);
 
-        this.heightText = scene.add.text(scoreX + 8, scoreY + 30, 'HEIGHT: ' + scene.currentHeight + 'm', {
+        this.scoreText = scene.add.text(scoreX + 8, scoreY + 30, 'COINS: 0', {
             fontSize: '14px',
-            color: '#fff',
-            fontFamily: 'Pixelify Sans',
+            color: '#ffd700', // Gold
+            fontStyle: 'bold', // Restore bold
             stroke: '#000000',
             strokeThickness: 4
         }).setScrollFactor(0).setDepth(201);
@@ -53,7 +51,6 @@ export class HUDManager {
             color: '#00ffff',
             align: 'center',
             fontStyle: 'bold',
-            fontFamily: 'Pixelify Sans',
             stroke: '#000000',
             strokeThickness: 6
         }).setOrigin(0.5).setScrollFactor(0).setDepth(100);
@@ -66,7 +63,7 @@ export class HUDManager {
 
     updateScore(score) {
         if (this.scoreText) {
-            this.scoreText.setText('SCORE: ' + score);
+            this.scoreText.setText('COINS: ' + score);
         }
     }
 
@@ -79,7 +76,7 @@ export class HUDManager {
     showGameOver(data) {
         if (this.uiText) {
             this.uiText.setVisible(true);
-            this.uiText.setText(`GAME OVER\nScore: ${data.score}`);
+            this.uiText.setText(`GAME OVER\nHeight: ${data.height}m`);
         }
     }
 
