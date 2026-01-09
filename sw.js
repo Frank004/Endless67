@@ -1,4 +1,4 @@
-const CACHE_NAME = 'endless67-v1';
+const CACHE_NAME = 'endless67-v20260108-2035';
 const urlsToCache = [
     './',
     './index.html',

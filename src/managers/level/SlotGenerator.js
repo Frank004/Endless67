@@ -252,6 +252,7 @@ export class SlotGenerator {
             return 'PLATFORM_BATCH';
         }
 
+
         const mazeConfig = difficulty.getMazeConfig();
         const r = Math.random();
 

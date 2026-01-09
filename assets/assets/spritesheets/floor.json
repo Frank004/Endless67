@@ -4,11 +4,32 @@
 			"image": "floor.png",
 			"format": "RGBA8888",
 			"size": {
-				"w": 374,
-				"h": 34
+				"w": 34,
+				"h": 474
 			},
 			"scale": 1,
 			"frames": [
+				{
+					"filename": " beam.png",
+					"rotated": false,
+					"trimmed": false,
+					"sourceSize": {
+						"w": 32,
+						"h": 42
+					},
+					"spriteSourceSize": {
+						"x": 0,
+						"y": 0,
+						"w": 32,
+						"h": 42
+					},
+					"frame": {
+						"x": 1,
+						"y": 1,
+						"w": 32,
+						"h": 42
+					}
+				},
 				{
 					"filename": "floor-botton- right.png",
 					"rotated": false,
@@ -25,7 +46,7 @@
 					},
 					"frame": {
 						"x": 1,
-						"y": 1,
+						"y": 45,
 						"w": 32,
 						"h": 32
 					}
@@ -45,8 +66,8 @@
 						"h": 32
 					},
 					"frame": {
-						"x": 35,
-						"y": 1,
+						"x": 1,
+						"y": 79,
 						"w": 32,
 						"h": 32
 					}
@@ -66,8 +87,8 @@
 						"h": 32
 					},
 					"frame": {
-						"x": 69,
-						"y": 1,
+						"x": 1,
+						"y": 113,
 						"w": 32,
 						"h": 32
 					}
@@ -87,8 +108,8 @@
 						"h": 32
 					},
 					"frame": {
-						"x": 103,
-						"y": 1,
+						"x": 1,
+						"y": 147,
 						"w": 32,
 						"h": 32
 					}
@@ -108,8 +129,8 @@
 						"h": 32
 					},
 					"frame": {
-						"x": 137,
-						"y": 1,
+						"x": 1,
+						"y": 181,
 						"w": 32,
 						"h": 32
 					}
@@ -129,8 +150,8 @@
 						"h": 32
 					},
 					"frame": {
-						"x": 171,
-						"y": 1,
+						"x": 1,
+						"y": 215,
 						"w": 32,
 						"h": 32
 					}
@@ -150,8 +171,8 @@
 						"h": 32
 					},
 					"frame": {
-						"x": 205,
-						"y": 1,
+						"x": 1,
+						"y": 249,
 						"w": 32,
 						"h": 32
 					}
@@ -171,8 +192,8 @@
 						"h": 32
 					},
 					"frame": {
-						"x": 239,
-						"y": 1,
+						"x": 1,
+						"y": 283,
 						"w": 32,
 						"h": 32
 					}
@@ -192,8 +213,8 @@
 						"h": 32
 					},
 					"frame": {
-						"x": 273,
-						"y": 1,
+						"x": 1,
+						"y": 317,
 						"w": 32,
 						"h": 32
 					}
@@ -213,8 +234,8 @@
 						"h": 32
 					},
 					"frame": {
-						"x": 307,
-						"y": 1,
+						"x": 1,
+						"y": 351,
 						"w": 32,
 						"h": 32
 					}
@@ -234,10 +255,31 @@
 						"h": 32
 					},
 					"frame": {
-						"x": 341,
-						"y": 1,
+						"x": 1,
+						"y": 385,
 						"w": 32,
 						"h": 32
+					}
+				},
+				{
+					"filename": "beam joint.png",
+					"rotated": false,
+					"trimmed": false,
+					"sourceSize": {
+						"w": 30,
+						"h": 54
+					},
+					"spriteSourceSize": {
+						"x": 0,
+						"y": 0,
+						"w": 30,
+						"h": 54
+					},
+					"frame": {
+						"x": 1,
+						"y": 419,
+						"w": 30,
+						"h": 54
 					}
 				}
 			]
@@ -246,6 +288,6 @@
 	"meta": {
 		"app": "https://www.codeandweb.com/texturepacker",
 		"version": "3.0",
-		"smartupdate": "$TexturePacker:SmartUpdate:8143e16c2d8255dbe92992c0ddaa9f0e:686d1ac89e6b39e6894e6542b2957f6d:983c4ec08eeb1e3b230a24f8892bde6f$"
+		"smartupdate": "$TexturePacker:SmartUpdate:9f93a0585ca0d9fdcc40a0ed6c640d8a:9d6b5dd824bfcd78526ac956d4f65e79:983c4ec08eeb1e3b230a24f8892bde6f$"
 	}
 }

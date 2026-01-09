@@ -3,7 +3,7 @@
 // Gap estándar: 120px central (entrada/salida)
 
 // Dimensiones base para mazes
-export const MAZE_ROW_HEIGHT = 64; // altura de cada bloque
+export const MAZE_ROW_HEIGHT = 42; // altura de cada bloque (nuevo beam.png)
 export const MAZE_ROW_GAP = 100;   // separación vertical entre filas
 export const MAZE_ROW_COUNT = 6;   // filas por maze por defecto
 

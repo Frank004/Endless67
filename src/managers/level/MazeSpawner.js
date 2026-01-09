@@ -24,8 +24,9 @@ export class MazeSpawner {
     createMazeFloorVisual(x, y, width, height, originX = 0) {
         const scene = this.scene;
         if (!scene?.add?.tileSprite) return null;
-        const centerFrames = ['floor-center-01.png', 'floor-center-02.png', 'floor-center-03.png', 'floor-center-04.png'];
-        const frame = centerFrames[Math.floor(Math.random() * centerFrames.length)];
+        // Updated to use single 'beam.png' tile (42x32)
+        // Note: The frame in JSON has a leading space: " beam.png"
+        const frame = ' beam.png';
         const visualCenter = scene.add.tileSprite(x, y, width, height, ASSETS.FLOOR, frame);
         visualCenter.setOrigin(originX, 0.5);
         visualCenter.setDepth(12);
@@ -66,6 +67,27 @@ export class MazeSpawner {
         const leftX = leftPlayable;
         const rightX = rightPlayable;
 
+        // Helper to add joint
+        // Joint is 30x54, Beam is 42h.
+        // Align bottom: Joint bottom at y + rowHeight/2
+        // Position X: On the wall seam.
+        const addJoint = (x, isLeft) => {
+            if (!scene?.add?.image) return;
+            const jointY = y + (rowHeight / 2);
+            // 'beam joint.png' from floor atlas
+            const joint = scene.add.image(x, jointY, ASSETS.FLOOR, 'beam joint.png');
+
+            // User requested joint to be "al borde de beam" (at the edge of the beam).
+            // Currently centered (0.5), which straddles.
+            // Moving to sit ON THE WALL (Outside playable area), flush with beam.
+            // Left (x=32): Origin 1 (Right align) -> Draws 2..32 (On Wall).
+            // Right (x=368): Origin 0 (Left align) -> Draws 368..398 (On Wall).
+            joint.setOrigin(isLeft ? 1 : 0, 1);
+
+            joint.setFlipX(!isLeft); // Flip for right side
+            joint.setDepth(13); // Above beam (12)
+        };
+
         let w1Eff = w1;
         let w2Eff = w2;
 
@@ -89,32 +111,38 @@ export class MazeSpawner {
             w1 = snap(Math.min(w1, maxCenter));
         }
 
-        // Spawn Walls
+        // Spawn Walls & Joints
         if (type === 'left') {
             const maxWidth = snap(Math.max(TILE, playableWidth - MIN_GAP));
             w1Eff = Math.min(w1Eff, maxWidth);
             let block = scene.mazeWalls.create(leftX, y, ASSETS.MAZE_BLOCK);
             block.setOrigin(0, 0.5).setDisplaySize(w1Eff, rowHeight).refreshBody().setDepth(10).setVisible(false);
             block.visual = this.createMazeFloorVisual(leftX, y, w1Eff, rowHeight, 0);
+            addJoint(leftX, true); // Left Joint
         } else if (type === 'right') {
             const maxWidth = snap(Math.max(TILE, playableWidth - MIN_GAP));
             w1Eff = Math.min(w1Eff, maxWidth);
             let block = scene.mazeWalls.create(rightX, y, ASSETS.MAZE_BLOCK);
             block.setOrigin(1, 0.5).setDisplaySize(w1Eff, rowHeight).refreshBody().setDepth(10).setVisible(false);
             block.visual = this.createMazeFloorVisual(rightX, y, w1Eff, rowHeight, 1);
+            addJoint(rightX, false); // Right Joint
         } else if (type === 'split') {
             let b1 = scene.mazeWalls.create(leftX, y, ASSETS.MAZE_BLOCK);
             b1.setOrigin(0, 0.5).setDisplaySize(w1Eff, rowHeight).refreshBody().setDepth(10).setVisible(false);
             b1.visual = this.createMazeFloorVisual(leftX, y, w1Eff, rowHeight, 0);
+            addJoint(leftX, true); // Left Joint
+
             let b2 = scene.mazeWalls.create(rightX, y, ASSETS.MAZE_BLOCK);
             b2.setOrigin(1, 0.5).setDisplaySize(w2Eff, rowHeight).refreshBody().setDepth(10).setVisible(false);
             b2.visual = this.createMazeFloorVisual(rightX, y, w2Eff, rowHeight, 1);
+            addJoint(rightX, false); // Right Joint
         } else if (type === 'center') {
             const maxCenter = snap(Math.max(TILE, playableWidth - MIN_GAP));
             w1 = snap(Math.min(w1, maxCenter));
             let block = scene.mazeWalls.create(centerX, y, ASSETS.MAZE_BLOCK);
             block.setOrigin(0.5, 0.5).setDisplaySize(w1, rowHeight).refreshBody().setDepth(10).setVisible(false);
             block.visual = this.createMazeFloorVisual(centerX, y, w1, rowHeight, 0.5);
+            // No joints for center (floating)
         }
 
         // Wall Segments for logic
