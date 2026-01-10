@@ -36,7 +36,7 @@ class PlatformTextureCache {
             return;
         }
 
-        // Cachear referencias a los frames más usados (Beams)
+        // Cachear referencias a los frames más usados
         // Nota: Los nombres en el atlas tienen espacio al inicio
         const frameNames = [
             ' beam.png',
@@ -44,7 +44,10 @@ class PlatformTextureCache {
             ' beam-deco-02.png',
             ' beam-deco-03.png',
             ' beam-deco-04.png',
-            ' beam-deco-05.png'
+            ' beam-deco-05.png',
+            ' beam-broken-01.png',
+            ' beam-broken-02.png',
+            ' beam-broken-03.png'
         ];
 
         frameNames.forEach(frameName => {
@@ -183,19 +186,26 @@ export class Platform extends Phaser.GameObjects.TileSprite {
             platformTextureCache.initialize(scene);
         }
 
-        // 🎨 Usar texturas del atlas 'floor' (BEAMS en lugar de joints/platform statics)
-        // Randomizar entre beam simple y deco
+        // 🎨 Usar texturas del atlas 'floor'
+        // Randomizar: 50% Clean, 30% Deco, 20% Broken
+        const r = Math.random();
         let frameName = ' beam.png';
 
-        // 40% chance of deco variant for visual variety
-        if (Math.random() < 0.4) {
-            const variant = Phaser.Math.Between(1, 5);
-            frameName = ` beam-deco-0${variant}.png`; // Note leading space
+        if (r < 0.5) {
+            frameName = ' beam.png';
+        } else if (r < 0.8) {
+            const variant = Phaser.Math.Between(1, 11);
+            frameName = ` beam-deco-${variant.toString().padStart(2, '0')}.png`;
+        } else {
+            const variant = Phaser.Math.Between(1, 3);
+            frameName = ` beam-broken-${variant.toString().padStart(2, '0')}.png`;
         }
 
-        if (isMoving) {
-            // Si es móvil, quizás queramos un estilo específico, pero por ahora usamos beams
-            // para mantener consistencia con lo que pidió el usuario
+        // Fallback for missing frames (due to leading spaces sometimes being stripped or varied)
+        if (!scene.textures.get(ASSETS.FLOOR).has(frameName)) {
+            if (scene.textures.get(ASSETS.FLOOR).has(frameName.trim())) {
+                frameName = frameName.trim();
+            }
         }
 
         // 🚀 OPTIMIZATION: Verificar cache primero antes de verificar textures.exists()
