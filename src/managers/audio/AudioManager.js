@@ -249,9 +249,9 @@ export class AudioManager {
             let riserTargetVolume = 0;
             if (riserVisible) {
                 if (distanceToRiser < 100) {
-                    riserTargetVolume = 1.0;
+                    riserTargetVolume = 0.85; // Reduced from 1.0
                 } else if (distanceToRiser < 200) {
-                    riserTargetVolume = 1.0 * (1 - (distanceToRiser - 100) / 100);
+                    riserTargetVolume = 0.85 * (1 - (distanceToRiser - 100) / 100); // Reduced from 1.0
                 }
             }
             const currentRiserVolume = this.riserAmbientSound.volume;
@@ -463,7 +463,8 @@ export class AudioManager {
         if (!scene || !soundKey) return;
         try {
             if (scene.sound && scene.cache.audio.exists(soundKey)) {
-                scene.sound.play(soundKey, { volume: 0.7 });
+                // Reduced volume by ~15% (from 0.7 to 0.6)
+                scene.sound.play(soundKey, { volume: 0.6 });
             }
         } catch (error) {
             console.warn('Error playing riser drop sound:', error);
