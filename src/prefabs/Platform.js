@@ -13,7 +13,7 @@ import { ASSETS } from '../config/AssetKeys.js';
 
 // 🔴 CONSTANTES DE DIMENSIONES
 export const PLATFORM_HEIGHT = 32;
-export const PLATFORM_WIDTH = 128; // Ancho ÚNICO para todas las plataformas
+export const PLATFORM_WIDTH = 128; // Ancho ÚNICO para todas las plataformas (4 tiles de 32px)
 
 // 🚀 OPTIMIZATION: Cache de frames de plataformas para evitar búsquedas repetidas
 class PlatformTextureCache {
@@ -38,8 +38,16 @@ class PlatformTextureCache {
 
         // Cachear referencias a los frames más usados
         const frameNames = [
-            'plat-static-01.png',
-            'plat-static-02.png'
+            'platforms-static-01.png',
+            'platforms-static-02.png',
+            'platforms-static-03.png',
+            'platforms-static-04.png',
+            'platforms-static-05.png',
+            'platforms-static-06.png',
+            'plat-move-01.png',
+            'plat-move-02.png',
+            'plat-move-03.png',
+            'plat-move-04.png'
         ];
 
         frameNames.forEach(frameName => {
@@ -107,7 +115,7 @@ export class Platform extends Phaser.GameObjects.TileSprite {
 
         // TileSprite requiere width y height en el constructor
         // Usar textura por defecto, se cambiará en spawn()
-        super(scene, 0, 0, PLATFORM_WIDTH, PLATFORM_HEIGHT, ASSETS.PLATFORM, 'plat-static-01.png');
+        super(scene, 0, 0, PLATFORM_WIDTH, PLATFORM_HEIGHT, ASSETS.PLATFORM, 'platforms-static-01.png');
 
         // Guardar referencia explícita a la escena (por si Phaser la pierde)
         this._sceneRef = scene;
@@ -178,13 +186,15 @@ export class Platform extends Phaser.GameObjects.TileSprite {
             platformTextureCache.initialize(scene);
         }
 
-        // 🎨 Usar texturas del atlas 'platform' con variación aleatoria
-        // OPTIMIZATION: Pre-calcular frame names para evitar concatenaciones repetidas
-        const variant = Phaser.Math.Between(1, 2); // 01 o 02
-        let frameName = `plat-static-0${variant}.png`;
+        // 🎨 Usar texturas del atlas 'platform'
+        let frameName;
 
         if (isMoving) {
+            const variant = Phaser.Math.Between(1, 4);
             frameName = `plat-move-0${variant}.png`;
+        } else {
+            // Static: Force use of platforms-static-01 for now
+            frameName = 'platforms-static-01.png';
         }
 
         // 🚀 OPTIMIZATION: Verificar cache primero antes de verificar textures.exists()
