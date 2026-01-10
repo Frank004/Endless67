@@ -249,9 +249,9 @@ export class AudioManager {
             let riserTargetVolume = 0;
             if (riserVisible) {
                 if (distanceToRiser < 100) {
-                    riserTargetVolume = 0.85; // Reduced from 1.0
+                    riserTargetVolume = 0.55; // Reduced from 0.85 for more subtle sound
                 } else if (distanceToRiser < 200) {
-                    riserTargetVolume = 0.85 * (1 - (distanceToRiser - 100) / 100); // Reduced from 1.0
+                    riserTargetVolume = 0.55 * (1 - (distanceToRiser - 100) / 100); // Reduced from 0.85
                 }
             }
             const currentRiserVolume = this.riserAmbientSound.volume;
