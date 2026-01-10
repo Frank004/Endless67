@@ -53,6 +53,19 @@ export class MazeSpawner {
         return [visualCenter];
     }
 
+    spawnPattern(startY, pattern) {
+        if (!pattern || !pattern.rows) return;
+
+        let currentY = startY;
+        // Use the imported constant
+        const rowHeight = MAZE_ROW_HEIGHT;
+
+        pattern.rows.forEach((rowConfig, index) => {
+            this.spawnMazeRowFromConfig(currentY, rowConfig, true, true, index, pattern);
+            currentY -= rowHeight; // Stack upwards
+        });
+    }
+
     spawnMazeRowFromConfig(y, config, allowMoving, allowSpikes, rowIndex = null, pattern = null, tintColor = null, enemyBudget = null, coinBudget = null) {
         const scene = this.scene;
         const bounds = getPlayableBounds(scene, MAZE_ROW_HEIGHT);

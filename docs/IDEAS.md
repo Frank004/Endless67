@@ -443,3 +443,13 @@ Zona corta de pared que es resbaladiza, el jugador no puede hacer wall jump y re
 - Probar cada mecánica individualmente antes de combinarlas
 - Mantener consistencia con el estilo visual actual
 
+
+
+
+otras ideas:
+- Particcle pooling. 
+- Edge detection animation.
+- shader warmup
+- scene sceneless transition (from home to game)
+- ideas for ray cast triggered events
+- 

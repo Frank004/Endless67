@@ -2,6 +2,7 @@ import { ASSETS } from '../config/AssetKeys.js';
 import { Leaderboard } from './Leaderboard.js';
 import { Settings } from './Settings.js';
 import { Playground } from './Playground.js';
+import { WarmupManager } from '../managers/system/WarmupManager.js';
 
 export class Preloader extends Phaser.Scene {
     constructor() {
@@ -67,7 +68,7 @@ export class Preloader extends Phaser.Scene {
         this.load.audio(ASSETS.DAMAGE_SFX_PREFIX + '4', 'assets/audio/take-damage/Retro Game Low Take Damage 4.mp3');
         this.load.audio(ASSETS.DAMAGE_SFX_PREFIX + '5', 'assets/audio/take-damage/Retro Game Low Take Damage 5.mp3');
         this.load.audio(ASSETS.LAVA_AMBIENT, 'assets/audio/lava/Lava.mp3');
-        this.load.audio(ASSETS.BG_MUSIC, 'assets/audio/bg-music/retro-game-music/Retro hiphop.mp3');
+        this.load.audio(ASSETS.BG_MUSIC, 'assets/audio/bg-music/retro-game-music/Retro_hiphop.mp3');
         this.load.audio(ASSETS.LAVA_DROP, 'assets/audio/lava-drop/lava-drop-in.mp3');
         this.load.audio(ASSETS.JUMP_SFX, 'assets/audio/jumps/jumping.mp3');
         this.load.audio(ASSETS.DESTROY_SFX, 'assets/audio/destroy/destroy.mp3');
@@ -75,7 +76,7 @@ export class Preloader extends Phaser.Scene {
         this.load.audio(ASSETS.SHOE_BRAKE, 'assets/audio/shoes/shoe-brake.mp3');
         this.load.audio(ASSETS.TRASHCAN_HIT, 'assets/audio/trashcan/trashcan.mp3');
         this.load.audio(ASSETS.TIRE_BOUNCE, 'assets/audio/tire bounce/tirebounce.mp3');
-        this.load.audio(ASSETS.WALL_SLIDE, 'assets/audio/slide/slide.MP3');
+        this.load.audio(ASSETS.WALL_SLIDE, 'assets/audio/slide/slide.mp3');
 
         // --- ASSETS LOADING ---
         this.load.image('game_logo', 'assets/logo.png');
@@ -231,7 +232,8 @@ export class Preloader extends Phaser.Scene {
         g.fillStyle(0xeeffaa, 0.4); for (let i = 0; i < 50; i++) g.fillCircle(Phaser.Math.Between(0, riserTextureWidth), Phaser.Math.Between(0, riserTextureHeight), Phaser.Math.Between(1, 4));
         g.generateTexture(ASSETS.ACID_TEXTURE, riserTextureWidth, riserTextureHeight);
 
-        // Fire
+        // Fire (Procedural disabled to use Sprite)
+        /*
         g.clear();
         const pixelSize = 8;
         const flameHeight = riserTextureHeight;
@@ -255,6 +257,37 @@ export class Preloader extends Phaser.Scene {
         }
         g.fillStyle(0xffff00, 0.8); for (let i = 0; i < 50; i++) g.fillRect(Phaser.Math.Between(0, riserTextureWidth), Phaser.Math.Between(0, flameHeight), pixelSize / 2, pixelSize / 2);
         g.fillStyle(0xff4400, 0.7); for (let i = 0; i < 30; i++) g.fillRect(Phaser.Math.Between(0, riserTextureWidth), Phaser.Math.Between(0, flameHeight * 0.5), pixelSize / 3, pixelSize / 3);
+        g.generateTexture(ASSETS.FIRE_TEXTURE, riserTextureWidth, riserTextureHeight);
+        */
+
+        // Fallback: Create a simple red texture if sprite fails or for solid body fill under the wave
+        // Fire Gradient Texture
+        g.clear();
+        // Draw Gradient
+        // Top: Hex #FFD700 (Gold/Yellow)
+        // Middle: Hex #FF8C00 (Dark Orange)
+        // Bottom: Hex #FF0000 (Red)
+
+        // We can draw small rects to simulate gradient or use fillGradientStyle if this was a GameObject, 
+        // but for generating a texture using Graphics, we have to draw lines or rects.
+        // Let's draw 1px high rects interpolating color.
+
+        for (let y = 0; y < riserTextureHeight; y++) {
+            const ratio = y / riserTextureHeight;
+            let r, gr, b;
+
+            // Interpolate colors: Red (Top) -> Orange (Bottom)
+            // Top: Red (255, 0, 0)
+            // Bottom: Orange (255, 140, 0)
+
+            r = 255;
+            // Green goes from 0 to 140
+            gr = Math.floor(ratio * 140);
+            b = 0;
+
+            g.fillStyle(Phaser.Display.Color.GetColor(r, gr, b), 1);
+            g.fillRect(0, y, riserTextureWidth, 1);
+        }
         g.generateTexture(ASSETS.FIRE_TEXTURE, riserTextureWidth, riserTextureHeight);
 
         // UI & FX
@@ -281,6 +314,10 @@ export class Preloader extends Phaser.Scene {
         if (!this.scene.get('Settings')) this.scene.add('Settings', Settings, false);
         if (!this.scene.get('Playground')) this.scene.add('Playground', Playground, false);
 
-        this.scene.start('MainMenu');
+        // Warmup Shaders & Particles
+        const warmup = new WarmupManager(this);
+        warmup.warmup().then(() => {
+            this.scene.start('MainMenu');
+        });
     }
 }

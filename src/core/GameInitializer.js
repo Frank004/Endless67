@@ -112,9 +112,9 @@ export class GameInitializer {
         scene.particleManager.createParticles();
 
         // Randomize Riser Type for this session
-        const riserTypes = Object.values(RISER_TYPES);
-        const randomType = riserTypes[Phaser.Math.Between(0, riserTypes.length - 1)];
-        console.log(`🎲 Game Initializer: Selected Riser Type: ${randomType}`);
+        // Forcing FIRE riser for development per user request
+        const randomType = RISER_TYPES.FIRE;
+        console.log(`🔥 Game Initializer: FORCED Riser Type: ${randomType}`);
 
         scene.riserManager = new RiserManager(scene, randomType);
         scene.debugManager = new DebugManager(scene);
