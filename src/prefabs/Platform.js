@@ -9,6 +9,7 @@
  * para trabajar con PoolManager.
  */
 import { WALLS } from '../config/GameConstants.js';
+import { ASSETS } from '../config/AssetKeys.js';
 
 // 🔴 CONSTANTES DE DIMENSIONES
 export const PLATFORM_HEIGHT = 32;
@@ -26,21 +27,24 @@ class PlatformTextureCache {
      * @param {Phaser.Scene} scene - La escena del juego
      */
     initialize(scene) {
-        if (this.initialized || !scene || !scene.textures.exists('platform')) {
+        if (this.initialized || !scene || !scene.textures.exists(ASSETS.FLOOR)) {
             return;
         }
 
-        const texture = scene.textures.get('platform');
+        const texture = scene.textures.get(ASSETS.FLOOR);
         if (!texture) {
             return;
         }
 
-        // Cachear referencias a los frames más usados
+        // Cachear referencias a los frames más usados (Beams)
+        // Nota: Los nombres en el atlas tienen espacio al inicio
         const frameNames = [
-            'plat-static-01.png',
-            'plat-static-02.png',
-            'plat-move-01.png',
-            'plat-move-02.png'
+            ' beam.png',
+            ' beam-deco-01.png',
+            ' beam-deco-02.png',
+            ' beam-deco-03.png',
+            ' beam-deco-04.png',
+            ' beam-deco-05.png'
         ];
 
         frameNames.forEach(frameName => {
@@ -66,8 +70,8 @@ class PlatformTextureCache {
         }
 
         // Si no está en cache, buscarlo y cachearlo
-        if (scene && scene.textures.exists('platform')) {
-            const texture = scene.textures.get('platform');
+        if (scene && scene.textures.exists(ASSETS.FLOOR)) {
+            const texture = scene.textures.get(ASSETS.FLOOR);
             if (texture && texture.has(frameName)) {
                 const frame = texture.get(frameName);
                 this.cache.set(frameName, frame);
@@ -107,8 +111,8 @@ export class Platform extends Phaser.GameObjects.TileSprite {
         }
 
         // TileSprite requiere width y height en el constructor
-        // Usar textura por defecto, se cambiará en spawn()
-        super(scene, 0, 0, PLATFORM_WIDTH, PLATFORM_HEIGHT, 'platform', 'plat-static-01.png');
+        // Usar textura por defecto del atlas FLOOR
+        super(scene, 0, 0, PLATFORM_WIDTH, PLATFORM_HEIGHT, ASSETS.FLOOR, ' beam.png');
 
         // Guardar referencia explícita a la escena (por si Phaser la pierde)
         this._sceneRef = scene;
@@ -179,26 +183,34 @@ export class Platform extends Phaser.GameObjects.TileSprite {
             platformTextureCache.initialize(scene);
         }
 
-        // 🎨 Usar texturas del atlas 'platform' con variación aleatoria
-        // OPTIMIZATION: Pre-calcular frame names para evitar concatenaciones repetidas
-        const variant = Phaser.Math.Between(1, 2); // 01 o 02
-        const frameName = isMoving
-            ? `plat-move-0${variant}.png`
-            : `plat-static-0${variant}.png`;
+        // 🎨 Usar texturas del atlas 'floor' (BEAMS en lugar de joints/platform statics)
+        // Randomizar entre beam simple y deco
+        let frameName = ' beam.png';
+
+        // 40% chance of deco variant for visual variety
+        if (Math.random() < 0.4) {
+            const variant = Phaser.Math.Between(1, 5);
+            frameName = ` beam-deco-0${variant}.png`; // Note leading space
+        }
+
+        if (isMoving) {
+            // Si es móvil, quizás queramos un estilo específico, pero por ahora usamos beams
+            // para mantener consistencia con lo que pidió el usuario
+        }
 
         // 🚀 OPTIMIZATION: Verificar cache primero antes de verificar textures.exists()
         // El cache ya valida que el atlas existe durante la inicialización
         if (!platformTextureCache.initialized) {
             // Si el cache no está inicializado, verificar manualmente
-            if (!scene.textures.exists('platform')) {
-                console.error('Platform.spawn: Atlas "platform" not loaded!');
+            if (!scene.textures.exists(ASSETS.FLOOR)) {
+                console.error('Platform.spawn: Atlas "floor" not loaded!');
                 return;
             }
         }
 
         // 🚀 OPTIMIZATION: setTexture es más rápido cuando el cache está inicializado
         // porque Phaser puede usar las referencias pre-calculadas
-        this.setTexture('platform', frameName);
+        this.setTexture(ASSETS.FLOOR, frameName);
 
         // Posición PRIMERO
         this.setPosition(x, y);
