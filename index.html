@@ -83,12 +83,26 @@
     <div id="game-container"></div>
 
     <!-- Service Worker Registration for PWA/Offline Support -->
+    <!-- DISABLED IN DEVELOPMENT: Uncomment for production builds -->
+    <!--
     <script>
         if ('serviceWorker' in navigator) {
             window.addEventListener('load', () => {
                 navigator.serviceWorker.register('./sw.js')
                     .then(reg => console.log('[SW] Registered:', reg.scope))
                     .catch(err => console.error('[SW] Registration failed:', err));
+            });
+        }
+    </script>
+    -->
+    <script>
+        // Development: Unregister any existing service workers
+        if ('serviceWorker' in navigator && window.location.hostname === 'localhost') {
+            navigator.serviceWorker.getRegistrations().then(registrations => {
+                registrations.forEach(reg => {
+                    reg.unregister();
+                    console.log('[SW] Unregistered for development');
+                });
             });
         }
     </script>
@@ -101,7 +115,7 @@
             console.error('Phaser CDN failed to load.');
         }
     </script>
-    <script type="module" src="src/main.js?v=20260109-2338"> </script>
+    <script type="module" src="src/main.js?v=20260110-0252"> </script>
 </body>
 
 </html>
