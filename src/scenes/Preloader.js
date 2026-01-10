@@ -71,12 +71,12 @@ export class Preloader extends Phaser.Scene {
         // Riser Sounds
         this.load.audio(ASSETS.LAVA_AMBIENT, 'assets/audio/riser/lava.mp3');
         this.load.audio(ASSETS.LAVA_DROP, 'assets/audio/riser/lava-drop.mp3');
-        this.load.audio(ASSETS.ACID_AMBIENT, 'assets/audio/riser/acid.MP3');
-        this.load.audio(ASSETS.ACID_DROP, 'assets/audio/riser/acid-drop.MP3');
-        this.load.audio(ASSETS.FIRE_AMBIENT, 'assets/audio/riser/fire.MP3');
+        this.load.audio(ASSETS.ACID_AMBIENT, 'assets/audio/riser/acid.mp3');
+        this.load.audio(ASSETS.ACID_DROP, 'assets/audio/riser/acid-drop.mp3');
+        this.load.audio(ASSETS.FIRE_AMBIENT, 'assets/audio/riser/fire.mp3');
         this.load.audio(ASSETS.FIRE_DROP, 'assets/audio/riser/fire-drop.mp3');
-        this.load.audio(ASSETS.WATER_AMBIENT, 'assets/audio/riser/water.MP3');
-        this.load.audio(ASSETS.WATER_DROP, 'assets/audio/riser/water-drop.MP3');
+        this.load.audio(ASSETS.WATER_AMBIENT, 'assets/audio/riser/water.mp3');
+        this.load.audio(ASSETS.WATER_DROP, 'assets/audio/riser/water-drop.mp3');
 
         this.load.audio(ASSETS.BG_MUSIC, 'assets/audio/bg-music/retro-game-music/Retro_hiphop.mp3');
         this.load.audio(ASSETS.JUMP_SFX, 'assets/audio/jumps/jumping.mp3');
