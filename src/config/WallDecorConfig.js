@@ -50,12 +50,18 @@ export const WALL_DECOR_CONFIG = {
     minVerticalGap: 160, // px
 
     // ─────────────────────────────────────────────────────────────
-    // DEPTH / Z-INDEX
+    // DEPTH / Z-INDEX LAYERING
     // ─────────────────────────────────────────────────────────────
 
-    // Profundidad de renderizado (arriba de cables, debajo de plataformas)
+    // Profundidad de renderizado (cerca del background, muy atrás)
+    // Depth 0: Background base
+    // Depth 1: Big lightboxes (más atrás, cerca del background)
+    // Depth 2: Regular lightboxes (un poco adelante de big)
+    // Depth 3: Cables
+    // Depth 10+: Platforms, Player, Enemies
     depth: {
-        base: 5, // Cables están en depth 3, así que 5 los pone arriba
+        lightboxBig: 1,     // Lightboxes grandes - muy atrás, cerca del background
+        lightboxRegular: 2, // Lightboxes regulares - adelante de big, atrás de cables
     },
 
     // ─────────────────────────────────────────────────────────────
@@ -66,6 +72,7 @@ export const WALL_DECOR_CONFIG = {
         LIGHTBOX: {
             name: 'LIGHTBOX',
             atlas: ASSETS.PROPS,
+            depth: 2, // Depth específico para lightboxes regulares (atrás de cables)
 
             // Frames disponibles por lado
             frames: {
@@ -92,7 +99,36 @@ export const WALL_DECOR_CONFIG = {
             tint: 0xffffff,
 
             // Escala (si necesitas ajustar el tamaño)
-            scale: 1.0
+            scale: 1.0,
+
+            // Peso de spawn (para distribución entre tipos)
+            spawnWeight: 0.7 // 70% de probabilidad vs lightboxBig
+        },
+
+        LIGHTBOX_BIG: {
+            name: 'LIGHTBOX_BIG',
+            atlas: ASSETS.PROPS,
+            depth: 1, // Más atrás que lightboxes regulares, cerca del background
+
+            // Frames disponibles por lado
+            frames: {
+                left: [
+                    'lightboxBig-l-01.png'
+                ],
+                right: [
+                    'lightboxBig-r-01.png'
+                ]
+            },
+
+            // Propiedades visuales
+            alpha: 1.0,
+            tint: 0xffffff,
+
+            // Escala
+            scale: 1.0,
+
+            // Peso de spawn (para distribución entre tipos)
+            spawnWeight: 0.3 // 30% de probabilidad vs lightbox regular
         }
 
         // Aquí puedes agregar más tipos en el futuro:
@@ -103,7 +139,43 @@ export const WALL_DECOR_CONFIG = {
 };
 
 /**
+ * Selecciona un tipo de decoración aleatorio basado en pesos
+ * @returns {Object} Tipo de decoración seleccionado
+ */
+export function getRandomDecorationType() {
+    const types = Object.values(WALL_DECOR_CONFIG.types);
+
+    // Calcular peso total
+    const totalWeight = types.reduce((sum, type) => sum + (type.spawnWeight || 1), 0);
+
+    // Seleccionar aleatoriamente basado en pesos
+    let random = Math.random() * totalWeight;
+
+    for (const type of types) {
+        random -= (type.spawnWeight || 1);
+        if (random <= 0) {
+            return type;
+        }
+    }
+
+    // Fallback al primer tipo
+    return types[0];
+}
+
+/**
+ * Obtiene un frame aleatorio para el tipo y lado especificado
+ * @param {Object} decorType - Tipo de decoración
+ * @param {string} side - 'left' o 'right'
+ * @returns {string} Frame name
+ */
+export function getRandomFrameForType(decorType, side) {
+    const frames = decorType.frames[side];
+    return Phaser.Utils.Array.GetRandom(frames);
+}
+
+/**
  * Obtiene un frame aleatorio de lightbox para el lado especificado
+ * @deprecated Use getRandomFrameForType instead
  * @param {string} side - 'left' o 'right'
  * @returns {string} Frame name
  */

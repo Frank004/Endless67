@@ -1,4 +1,4 @@
-import { WALL_DECOR_CONFIG, getRandomLightboxFrame, getWallInsetX } from '../../config/WallDecorConfig.js';
+import { WALL_DECOR_CONFIG, getRandomDecorationType, getRandomFrameForType, getWallInsetX } from '../../config/WallDecorConfig.js';
 
 /**
  * WallDecorManager.js
@@ -47,6 +47,9 @@ export class WallDecorManager {
      * @param {number} total - Total de decoraciones en el slot
      */
     spawnDecoration(slotY, slotHeight, index, total) {
+        // Seleccionar tipo de decoración aleatoriamente (con pesos)
+        const decorType = getRandomDecorationType();
+
         // Determinar lado (left o right)
         let side;
         if (total === 1) {
@@ -70,16 +73,16 @@ export class WallDecorManager {
         // Calcular posición X en el wall inset
         const x = getWallInsetX(side, this.gameWidth);
 
-        // Seleccionar frame aleatorio
-        const frame = getRandomLightboxFrame(side);
+        // Seleccionar frame aleatorio del tipo
+        const frame = getRandomFrameForType(decorType, side);
 
         // Crear sprite
-        const decor = this.scene.add.image(x, y, WALL_DECOR_CONFIG.types.LIGHTBOX.atlas, frame);
+        const decor = this.scene.add.image(x, y, decorType.atlas, frame);
 
-        // Configurar propiedades
-        decor.setDepth(WALL_DECOR_CONFIG.depth.base);
-        decor.setAlpha(WALL_DECOR_CONFIG.types.LIGHTBOX.alpha);
-        decor.setScale(WALL_DECOR_CONFIG.types.LIGHTBOX.scale);
+        // Configurar propiedades usando el depth específico del tipo
+        decor.setDepth(decorType.depth);
+        decor.setAlpha(decorType.alpha);
+        decor.setScale(decorType.scale);
 
         // Ajustar origin según el lado
         if (side === 'left') {
@@ -92,7 +95,8 @@ export class WallDecorManager {
         this.decorations.push({
             sprite: decor,
             y: y,
-            side: side
+            side: side,
+            type: decorType.name
         });
     }
 
