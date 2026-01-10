@@ -4,7 +4,7 @@
 
 // Dimensiones base para mazes
 export const MAZE_ROW_HEIGHT = 42; // altura de cada bloque (nuevo beam.png)
-export const MAZE_ROW_GAP = 160;   // separación vertical entre filas (ajustado a 160px)
+export const MAZE_ROW_GAP = 125;   // separación vertical entre filas (ajustado a 125px)
 export const MAZE_ROW_COUNT = 6;   // filas por maze por defecto
 
 // MAZE 1: Zig-Zag Simple (Izquierda-Derecha)

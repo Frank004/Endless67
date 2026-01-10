@@ -66,7 +66,7 @@ export const SLOT_CONFIG = {
 
         MAZE: {
             name: 'MAZE',
-            height: 1280,                   // Increased to 1280 to fit 160px gaps
+            height: 960,                    // Adjusted to fit 125px gaps (6 rows × 42px + 5 gaps × 125px ≈ 877px, rounded to 960)
             rowHeight: MAZE_ROW_HEIGHT,     // Altura de cada bloque de muro (2 tiles de 32px)
             rowGap: MAZE_ROW_GAP,           // Separación vertical entre filas
             rowCount: MAZE_ROW_COUNT,       // Número de filas del maze (alto dinámico)
