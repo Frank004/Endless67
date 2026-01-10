@@ -26,25 +26,30 @@ export class MazeSpawner {
         if (!scene?.add?.tileSprite) return null;
 
         // Randomly select beam texture for the FLOOR SURFACE
-        // 50% beam.png
-        // 25% beam-deco-01..11
-        // 25% beam-broken-01..03
+        // REQ: "Los pisos de los maze deben usar beam-0x y beam-deco-0x"
+        // Note: Atlas frames have a leading space: " beam.png", " beam-deco-01.png"
         const r = Math.random();
-        let frame = 'beam.png';
+        let frame = ' beam.png'; // Default clean beam (leading space intentional)
 
-        if (r < 0.5) {
-            frame = 'beam.png';
-        } else if (r < 0.75) {
+        // 40% Chance for deco
+        if (r < 0.4) {
+            // deco 01 to 11
             const idx = Phaser.Math.Between(1, 11);
-            frame = `beam-deco-${idx.toString().padStart(2, '0')}.png`;
-        } else {
-            const idx = Phaser.Math.Between(1, 3);
-            frame = `beam-broken-${idx.toString().padStart(2, '0')}.png`;
+            frame = ` beam-deco-${idx.toString().padStart(2, '0')}.png`;
         }
 
-        // Fallback check
-        if (!scene.textures.get(ASSETS.FLOOR).has(frame)) {
-            frame = 'beam.png'; // fallback
+        // Fallback/Safety check for frame names
+        if (scene.textures.exists(ASSETS.FLOOR)) {
+            const floorTex = scene.textures.get(ASSETS.FLOOR);
+            // Verify if frame exists, otherwise handle potential space/trim discrepancy
+            if (!floorTex.has(frame)) {
+                if (floorTex.has(frame.trim())) {
+                    frame = frame.trim();
+                } else {
+                    // Ultimate fallback
+                    frame = floorTex.has(' beam.png') ? ' beam.png' : 'beam.png';
+                }
+            }
         }
 
         const visualCenter = scene.add.tileSprite(x, y, width, height, ASSETS.FLOOR, frame);
