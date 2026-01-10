@@ -117,6 +117,12 @@ export class GameInitializer {
         console.log(`🔥 Game Initializer: FORCED Riser Type: ${randomType}`);
 
         scene.riserManager = new RiserManager(scene, randomType);
+
+        // Setup specific ambient sound for the selected riser
+        if (scene.riserManager.config && scene.riserManager.config.soundKey) {
+            scene.audioManager.setupRiserSound(scene.riserManager.config.soundKey);
+        }
+
         scene.debugManager = new DebugManager(scene);
         scene.wallDecorator = new WallDecorator(scene);
 

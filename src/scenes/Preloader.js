@@ -67,9 +67,18 @@ export class Preloader extends Phaser.Scene {
         this.load.audio(ASSETS.DAMAGE_SFX_PREFIX + '3', 'assets/audio/take-damage/Retro Game Low Take Damage 3.mp3');
         this.load.audio(ASSETS.DAMAGE_SFX_PREFIX + '4', 'assets/audio/take-damage/Retro Game Low Take Damage 4.mp3');
         this.load.audio(ASSETS.DAMAGE_SFX_PREFIX + '5', 'assets/audio/take-damage/Retro Game Low Take Damage 5.mp3');
-        this.load.audio(ASSETS.LAVA_AMBIENT, 'assets/audio/lava/Lava.mp3');
+
+        // Riser Sounds
+        this.load.audio(ASSETS.LAVA_AMBIENT, 'assets/audio/riser/Lava.mp3');
+        this.load.audio(ASSETS.LAVA_DROP, 'assets/audio/riser/lava-drop.mp3');
+        this.load.audio(ASSETS.ACID_AMBIENT, 'assets/audio/riser/acid.MP3');
+        this.load.audio(ASSETS.ACID_DROP, 'assets/audio/riser/acid-drop.MP3');
+        this.load.audio(ASSETS.FIRE_AMBIENT, 'assets/audio/riser/fire.mp3');
+        this.load.audio(ASSETS.FIRE_DROP, 'assets/audio/riser/fire-drop.mp3');
+        this.load.audio(ASSETS.WATER_AMBIENT, 'assets/audio/riser/water.MP3');
+        this.load.audio(ASSETS.WATER_DROP, 'assets/audio/riser/water-drop.MP3');
+
         this.load.audio(ASSETS.BG_MUSIC, 'assets/audio/bg-music/retro-game-music/Retro_hiphop.mp3');
-        this.load.audio(ASSETS.LAVA_DROP, 'assets/audio/lava-drop/lava-drop-in.mp3');
         this.load.audio(ASSETS.JUMP_SFX, 'assets/audio/jumps/jumping.mp3');
         this.load.audio(ASSETS.DESTROY_SFX, 'assets/audio/destroy/destroy.mp3');
         this.load.audio(ASSETS.CELEBRATION_SFX, 'assets/audio/celebration/67.mp3');
