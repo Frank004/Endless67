@@ -119,15 +119,14 @@ export class PlayerHandler {
 
         // No invencible: entrar a estado de muerte en FSM y luego ejecutar flujo de game over
         player.enterDeathState?.();
-        // Play riser drop sound
+        // NOTIFICAR AL ESTADO GLOBAL PARA PARAR AUDIO Y BLOQUEAR PAUSA
+        GameState.gameOver();
+
+        // Play riser drop sound AFTER stopping other audio (GameState.gameOver triggers stopAll)
         const riserConfig = scene.riserManager.config;
         if (riserConfig && riserConfig.dropSoundKey) {
             AudioManager.playRiserDrop(riserConfig.dropSoundKey);
         }
-
-        // NOTIFICAR AL ESTADO GLOBAL PARA PARAR AUDIO Y BLOQUEAR PAUSA
-        // NOTIFICAR AL ESTADO GLOBAL PARA PARAR AUDIO Y BLOQUEAR PAUSA
-        GameState.gameOver();
 
         scene.isGameOver = true;
         scene.burnEmitter.emitParticleAt(player.x, player.y, 50);
