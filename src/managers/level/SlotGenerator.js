@@ -16,6 +16,8 @@ import { POWERUP_BASE_SIZE } from '../../prefabs/Powerup.js';
 import { EnemySpawnStrategy } from './EnemySpawnStrategy.js';
 // Pure layout logic
 import { GridGenerator } from './GridGenerator.js';
+// Wall decorations (lightboxes, signs, etc.)
+import { WallDecorManager } from '../visuals/WallDecorManager.js';
 
 export class SlotGenerator {
     constructor(scene) {
@@ -49,6 +51,9 @@ export class SlotGenerator {
 
         // Estrategia de spawn de enemigos
         this.enemySpawnStrategy = new EnemySpawnStrategy(scene);
+
+        // Manager de decoraciones de pared (lightboxes, signs, etc.)
+        this.wallDecorManager = new WallDecorManager(scene);
 
         // Flag para prevenir múltiples generaciones en el mismo frame
         this.isGenerating = false;
@@ -709,6 +714,11 @@ export class SlotGenerator {
             }
         }
 
+        // ─────────────────────────────────────────────────────────────
+        // PASO 3: Generar DECORACIONES DE PARED (lightboxes, signs, etc.)
+        // ─────────────────────────────────────────────────────────────
+        this.wallDecorManager.generateForSlot(yStart, height);
+
         return {
             patternName: basePatternName,
             transform,
@@ -804,6 +814,11 @@ export class SlotGenerator {
                 coinBudget
             );
         }
+
+        // ─────────────────────────────────────────────────────────────
+        // Generar DECORACIONES DE PARED (lightboxes, signs, etc.)
+        // ─────────────────────────────────────────────────────────────
+        this.wallDecorManager.generateForSlot(yStart, height);
 
         return {
             rowCount,
@@ -927,6 +942,9 @@ export class SlotGenerator {
         // 2. Below the riser (lava has passed, player can't go back)
         const limitY = Math.max(playerLimitY, riserLimitY);
         this.cleanupOldSlots(limitY);
+
+        // Cleanup wall decorations (lightboxes, signs, etc.)
+        this.wallDecorManager.cleanup(playerY, this.cleanupDistance);
 
         // Safety: enforce original position for platforms to avoid drift (opt-in via enablePlatformLock)
         if (this.scene.registry?.get('enablePlatformLock')) {
