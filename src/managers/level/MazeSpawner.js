@@ -26,16 +26,21 @@ export class MazeSpawner {
         if (!scene?.add?.tileSprite) return null;
 
         // Randomly select beam texture for the FLOOR SURFACE
-        // REQ: "Los pisos de los maze deben usar beam-0x y beam-deco-0x"
-        // Note: Atlas frames have a leading space: " beam.png", " beam-deco-01.png"
+        // REQ: "add beam-broken to the random selection", "don't use beam-joint in de selection on maze flooer"
         const r = Math.random();
         let frame = ' beam.png'; // Default clean beam (leading space intentional)
 
-        // 40% Chance for deco
-        if (r < 0.4) {
-            // deco 01 to 11
+        if (r < 0.5) {
+            // 50% Clean Beam
+            frame = ' beam.png';
+        } else if (r < 0.8) {
+            // 30% Deco (01 to 11)
             const idx = Phaser.Math.Between(1, 11);
             frame = ` beam-deco-${idx.toString().padStart(2, '0')}.png`;
+        } else {
+            // 20% Broken (01 to 03)
+            const idx = Phaser.Math.Between(1, 3);
+            frame = ` beam-broken-${idx.toString().padStart(2, '0')}.png`;
         }
 
         // Fallback/Safety check for frame names
