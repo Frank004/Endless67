@@ -9,7 +9,17 @@ export class RiserManager {
     constructor(scene, riserType = RISER_TYPES.LAVA) {
         this.scene = scene;
         this.riser = null;
-        this.config = new RiserConfiguration(riserType);
+
+        // RANDOMIZE RISER TYPE
+        // RANDOMIZE RISER TYPE
+        const types = Object.values(RISER_TYPES);
+        const randomType = types[Math.floor(Math.random() * types.length)];
+
+        // Use random type unless specific override provided (checking if default param was used)
+        // Note: constructor param `riserType` is currently ignored in favor of random.
+        // If you want to support manual override: `this.config = new RiserConfiguration(riserType || randomType);`
+        // But per instructions: "randomize riser type by default".
+        this.config = new RiserConfiguration(randomType);
 
         this.currentSpeed = this.config.speedConfig.baseSpeed;
         this.isRising = false;
