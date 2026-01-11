@@ -48,7 +48,7 @@ export const WALL_DECOR_CONFIG = {
     spawnChance: 0.6, // 60% de probabilidad de que un slot tenga decoraciones
 
     // Delay de inicio - no spawnar decoraciones hasta después de esta distancia desde el stage floor
-    spawnStartDelay: 1000, // px (100m) - decoraciones empiezan después de 1000px del stage floor
+    spawnStartDelay: 150, // px - Start shortly after floor to avoid clutter but appear early
 
     // Distribución entre paredes (cuando solo hay 1 decoración)
     wallDistribution: {
@@ -165,7 +165,7 @@ export const WALL_DECOR_CONFIG = {
             isComposite: true, // Flag para indicar que requiere renderizado especial
 
             // Delay de inicio específico para pipes (son grandes, aparecen más tarde)
-            spawnStartDelay: 3000, // px (300m) - pipes empiezan después de 3000px del stage floor
+            spawnStartDelay: 400, // px - Start a bit later than signs
 
             // Patrones de altura (cantidad de segmentos mid)
             patterns: [

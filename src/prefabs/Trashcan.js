@@ -10,7 +10,7 @@ export class Trashcan extends Phaser.Physics.Arcade.Sprite {
         scene.physics.add.existing(this, true); // static body
 
         this.setOrigin(0.5, 1);
-        this.setDepth(25);
+        this.setDepth(30); // Foreground (Above Player 20)
 
         if (this.body) {
             this.body.setSize(23, 32);

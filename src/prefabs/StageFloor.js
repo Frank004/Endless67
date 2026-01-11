@@ -44,6 +44,41 @@ export class StageFloor extends Phaser.GameObjects.TileSprite {
 
         scene.add.existing(this);
         scene.physics.add.existing(this, true);
-        this.setDepth(10);
+        this.setDepth(30); // Foreground: 30 (Above Player 20, Below Cables 40)
+
+        this.addStreetlight(scene);
+    }
+
+    addStreetlight(scene) {
+        if (!scene.textures.exists(ASSETS.PROPS)) return;
+
+        const frames = ['streetlight.png', 'streetlight-damage.png'];
+        const frame = Phaser.Utils.Array.GetRandom(frames);
+
+        const prop = scene.add.image(0, 0, ASSETS.PROPS, frame);
+        prop.setOrigin(0.5, 1); // Anchor Bottom-Center
+
+        // Floor Top Y
+        const floorTop = this.y - (this.height / 2);
+        prop.y = floorTop + 6; // Embed slightly (6px) for solid look
+
+        // Side Logic
+        // Default Sprite assumed to look Good on Right Wall (Facing Left?)
+        // User requested Mirror on Left.
+        const isLeft = Math.random() > 0.5;
+        const wallWidth = WALLS.WIDTH || 32;
+        const offset = 24; // Offset into gameplay ("un poco de offset para dentro")
+
+        if (isLeft) {
+            prop.setFlipX(true); // Mirror for Left
+            // Position: Wall Edge + Offset
+            prop.x = wallWidth + offset;
+        } else {
+            prop.setFlipX(false);
+            // Position: Screen Right - Wall Edge - Offset
+            prop.x = scene.scale.width - wallWidth - offset;
+        }
+
+        prop.setDepth(5); // Background (Behind Player)
     }
 }
