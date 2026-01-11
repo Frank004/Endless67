@@ -25,7 +25,7 @@ const VERSIONS = [
     { version: 'v0.0.40', commit: '01f6e0b', description: 'Chore(version): update version to v0.0.40' },
     { version: 'v0.0.41', commit: '072fa40', description: 'Chore(version): update version to v0.0.41' },
     { version: 'v0.0.42', commit: '7194386', description: 'Feat(ui): add milestone indicator system and update version to v0.0.42' },
-    { version: 'v0.0.43', commit: 'ddf818a', description: 'Chore(version): update version to v0.0.43' },
+    { version: 'v0.0.43', commit: '976b269', description: 'Chore(version): update version to v0.0.43 and increment build number' },
 ];
 
 function getCommitsBetweenVersions(fromVersion, toVersion) {
