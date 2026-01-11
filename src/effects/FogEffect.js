@@ -108,6 +108,7 @@ export class FogEffect {
         const { width, height } = this;
         const spawnWidth = FOG_CONFIG.particleSpawnWidth;
 
+        // Optimized: Added maxParticles limit and bounds culling
         this.leftEmitter = this.scene.add.particles(0, 0, this.particleKey, {
             lifespan: FOG_CONFIG.particleLifespan,
             speedX: FOG_CONFIG.particleSpeedX,
@@ -117,6 +118,7 @@ export class FogEffect {
             tint: FOG_CONFIG.particleTint,
             frequency: FOG_CONFIG.particleFrequency,
             quantity: 1,
+            maxParticles: FOG_CONFIG.maxParticles, // Optimized: Limit particle accumulation
             emitZone: {
                 type: 'random',
                 source: new Phaser.Geom.Rectangle(0, 0, spawnWidth, height)
@@ -125,6 +127,8 @@ export class FogEffect {
         this.leftEmitter.setScrollFactor(0);
         this.leftEmitter.setDepth(FOG_CONFIG.depth);
         this.leftEmitter.setBlendMode(Phaser.BlendModes.SCREEN);
+        // Optimized: Enable bounds culling to skip off-screen particles
+        this.leftEmitter.setBounds(0, 0, width, height);
 
         this.rightEmitter = this.scene.add.particles(0, 0, this.particleKey, {
             lifespan: FOG_CONFIG.particleLifespan,
@@ -135,6 +139,7 @@ export class FogEffect {
             tint: FOG_CONFIG.particleTint,
             frequency: FOG_CONFIG.particleFrequency,
             quantity: 1,
+            maxParticles: FOG_CONFIG.maxParticles, // Optimized: Limit particle accumulation
             emitZone: {
                 type: 'random',
                 source: new Phaser.Geom.Rectangle(width - spawnWidth, 0, spawnWidth, height)
@@ -143,6 +148,8 @@ export class FogEffect {
         this.rightEmitter.setScrollFactor(0);
         this.rightEmitter.setDepth(FOG_CONFIG.depth);
         this.rightEmitter.setBlendMode(Phaser.BlendModes.SCREEN);
+        // Optimized: Enable bounds culling to skip off-screen particles
+        this.rightEmitter.setBounds(0, 0, width, height);
     }
 
     destroy() {
