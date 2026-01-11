@@ -1,5 +1,7 @@
 import { enablePlatformRider, updatePlatformRider } from '../utils/platformRider.js';
+import StateMachine from '../utils/StateMachine.js'; // Import StateMachine
 import { PatrolBehavior } from './behaviors/PatrolBehavior.js';
+
 import { ShootBehavior } from './behaviors/ShootBehavior.js';
 import { JumpBehavior } from './behaviors/JumpBehavior.js';
 
@@ -9,8 +11,9 @@ import { ASSETS } from '../config/AssetKeys.js';
 export class PatrolEnemy extends Phaser.Physics.Arcade.Sprite {
     constructor(scene, x = 0, y = 0) {
         // Constructor puede recibir x, y o no (para pooling)
-        super(scene, x, y, ASSETS.ENEMY_SPIKE);
+        super(scene, x, y, ASSETS.ENEMY_ATLAS, 'patrol-idle1.png');
         this.setDepth(20);
+
 
         // Use 'patrol' mode: platformRider takes full control of movement and bounds
         enablePlatformRider(this, {
@@ -23,7 +26,30 @@ export class PatrolEnemy extends Phaser.Physics.Arcade.Sprite {
         // Strategy Pattern: Usar PatrolBehavior only for extra custom logic if needed (now reduced)
         // this.patrolBehavior = new PatrolBehavior(this, ENEMY_CONFIG.PATROL.SPEED);
         // this.patrolConfig = null; 
+
+        // Initialize State Machine
+        this.fsm = new StateMachine('idle', this);
+
+        this.fsm.addState('idle', {
+            onEnter: () => this.play('enemy_idle', true),
+            onUpdate: () => {
+                if (this.riderAutoPatrol && this.ridingPlatform) {
+                    this.fsm.setState('walk');
+                }
+            }
+        })
+            .addState('walk', {
+                onEnter: () => this.play('enemy_walk', true),
+                onUpdate: () => {
+                    if (!this.riderAutoPatrol || !this.ridingPlatform) {
+                        this.fsm.setState('idle');
+                    }
+                }
+            });
+
+        this.fsm.start();
     }
+
 
     setPatrolBounds(minX, maxX, speed = ENEMY_CONFIG.PATROL.SPEED) {
         // Legacy method support - platformRider auto-calculates bounds from platform
@@ -128,6 +154,12 @@ export class PatrolEnemy extends Phaser.Physics.Arcade.Sprite {
 
         // PlatformRider updates logic automatically
         updatePlatformRider(this);
+
+        // Update State Machine
+        if (this.fsm) {
+            this.fsm.update(time, delta);
+        }
+
 
         // Debug: verificar que preUpdate se esté llamando solo si debug activo
         const debugPatrol = this.scene?.registry?.get('showPatrolLogs');

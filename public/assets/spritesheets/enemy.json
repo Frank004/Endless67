@@ -1,0 +1,104 @@
+{
+	"textures": [
+		{
+			"image": "enemy.png",
+			"format": "RGBA8888",
+			"size": {
+				"w": 21,
+				"h": 69
+			},
+			"scale": 1,
+			"frames": [
+				{
+					"filename": "patrol-idle1.png",
+					"rotated": false,
+					"trimmed": false,
+					"sourceSize": {
+						"w": 19,
+						"h": 16
+					},
+					"spriteSourceSize": {
+						"x": 0,
+						"y": 0,
+						"w": 19,
+						"h": 16
+					},
+					"frame": {
+						"x": 1,
+						"y": 1,
+						"w": 19,
+						"h": 16
+					}
+				},
+				{
+					"filename": "patrol-idle2.png",
+					"rotated": false,
+					"trimmed": false,
+					"sourceSize": {
+						"w": 19,
+						"h": 16
+					},
+					"spriteSourceSize": {
+						"x": 0,
+						"y": 0,
+						"w": 19,
+						"h": 16
+					},
+					"frame": {
+						"x": 1,
+						"y": 19,
+						"w": 19,
+						"h": 16
+					}
+				},
+				{
+					"filename": "patrol-idle3.png",
+					"rotated": false,
+					"trimmed": true,
+					"sourceSize": {
+						"w": 19,
+						"h": 16
+					},
+					"spriteSourceSize": {
+						"x": 0,
+						"y": 1,
+						"w": 19,
+						"h": 15
+					},
+					"frame": {
+						"x": 1,
+						"y": 37,
+						"w": 19,
+						"h": 15
+					}
+				},
+				{
+					"filename": "patrol-idle4.png",
+					"rotated": false,
+					"trimmed": true,
+					"sourceSize": {
+						"w": 19,
+						"h": 16
+					},
+					"spriteSourceSize": {
+						"x": 0,
+						"y": 2,
+						"w": 19,
+						"h": 14
+					},
+					"frame": {
+						"x": 1,
+						"y": 54,
+						"w": 19,
+						"h": 14
+					}
+				}
+			]
+		}
+	],
+	"meta": {
+		"app": "https://www.codeandweb.com/texturepacker",
+		"version": "3.0",
+		"smartupdate": "$TexturePacker:SmartUpdate:b4c0c7feb4b3570f18faa07162a9ad61:b84824692df8ea77feff8f979f58f2aa:a99356c10d69482e9bee53d25c3d05e1$"
+	}
+}

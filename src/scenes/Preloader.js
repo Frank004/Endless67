@@ -3,6 +3,8 @@ import { Leaderboard } from './Leaderboard.js';
 import { Settings } from './Settings.js';
 import { Playground } from './Playground.js';
 import { WarmupManager } from '../managers/system/WarmupManager.js';
+import { registerEnemyAnimations } from '../utils/animations.js';
+
 
 export class Preloader extends Phaser.Scene {
     constructor() {
@@ -97,7 +99,9 @@ export class Preloader extends Phaser.Scene {
         this.load.multiatlas('platform', 'assets/spritesheets/platform.json', 'assets/spritesheets');
         this.load.multiatlas(ASSETS.PROPS, 'assets/spritesheets/props.json', 'assets/spritesheets');
         this.load.multiatlas(ASSETS.PLAYER, 'assets/spritesheets/player.json', 'assets/spritesheets');
+        this.load.atlas(ASSETS.ENEMY_ATLAS, 'assets/spritesheets/enemy.png', 'assets/spritesheets/enemy.json');
         this.load.atlas(ASSETS.EFFECTS, 'assets/spritesheets/effects.png', 'assets/spritesheets/effects.json');
+
 
     }
 
@@ -196,6 +200,9 @@ export class Preloader extends Phaser.Scene {
                 this.anims.create({ key: 'player_powerup', frames: powerFrames, frameRate: 10, repeat: 0 });
             }
         }
+
+        registerEnemyAnimations(this);
+
 
         // --- PROCEDURAL TEXTURES ---
         // Platform

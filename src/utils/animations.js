@@ -1,4 +1,6 @@
+import { ASSETS } from '../config/AssetKeys.js';
 /**
+
  * Registro centralizado de animaciones.
  * Define animaciones solo si no existen para evitar duplicados.
  */
@@ -105,3 +107,37 @@ export function registerTireAnimation(scene) {
         repeat: 0
     });
 }
+
+
+export function registerEnemyAnimations(scene) {
+    const anims = scene.anims;
+    if (!anims) return;
+    if (anims.exists('enemy_idle')) return;
+    if (!scene.textures.exists(ASSETS.ENEMY_ATLAS)) return;
+
+    anims.create({
+        key: 'enemy_idle',
+        frames: anims.generateFrameNames(ASSETS.ENEMY_ATLAS, {
+            prefix: 'patrol-idle',
+            start: 1,
+            end: 4,
+            suffix: '.png'
+        }),
+        frameRate: 8,
+        repeat: -1
+    });
+
+    // Reuse idle for walk as requested
+    anims.create({
+        key: 'enemy_walk',
+        frames: anims.generateFrameNames(ASSETS.ENEMY_ATLAS, {
+            prefix: 'patrol-idle',
+            start: 1,
+            end: 4,
+            suffix: '.png'
+        }),
+        frameRate: 8,
+        repeat: -1
+    });
+}
+

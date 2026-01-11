@@ -21,7 +21,7 @@ export class BackgroundManager {
 
         // Parallax settings
         this.parallaxFactor = 0.5; // Moves at half the speed of the camera
-        this.baseTint = 0x2b2b2b; // Slightly lighter dark overlay (was 0x1a1a1a)
+        this.baseTint = 0x004d4d; // Teal tone for brick background
 
         // Pooling logic
         this.segments = []; // Active segments

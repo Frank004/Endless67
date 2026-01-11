@@ -9,6 +9,8 @@ export const ASSETS = {
     PROPS: 'props',
     EFFECTS: 'effects',
     UI_ICONS: 'ui_icons',
+    ENEMY_ATLAS: 'enemy_atlas',
+
 
     // Generated Textures
     WALL_PLACEHOLDER: 'wall_placeholder',
