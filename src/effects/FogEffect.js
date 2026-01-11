@@ -127,8 +127,6 @@ export class FogEffect {
         this.leftEmitter.setScrollFactor(0);
         this.leftEmitter.setDepth(FOG_CONFIG.depth);
         this.leftEmitter.setBlendMode(Phaser.BlendModes.SCREEN);
-        // Optimized: Enable bounds culling to skip off-screen particles
-        this.leftEmitter.setBounds(0, 0, width, height);
 
         this.rightEmitter = this.scene.add.particles(0, 0, this.particleKey, {
             lifespan: FOG_CONFIG.particleLifespan,
@@ -148,8 +146,6 @@ export class FogEffect {
         this.rightEmitter.setScrollFactor(0);
         this.rightEmitter.setDepth(FOG_CONFIG.depth);
         this.rightEmitter.setBlendMode(Phaser.BlendModes.SCREEN);
-        // Optimized: Enable bounds culling to skip off-screen particles
-        this.rightEmitter.setBounds(0, 0, width, height);
     }
 
     destroy() {
