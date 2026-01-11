@@ -24,6 +24,15 @@ export class WallDecorManager {
      * @param {number} slotHeight - Altura del slot
      */
     generateForSlot(slotY, slotHeight) {
+        // Verificar si estamos dentro del delay de inicio
+        // slotY es negativo (sube hacia arriba), así que verificamos si está por encima del delay
+        const stageFloorY = this.scene.scale.height - 32; // Floor Y position
+        const distanceFromFloor = stageFloorY - slotY; // Distancia positiva hacia arriba
+
+        if (distanceFromFloor < WALL_DECOR_CONFIG.spawnStartDelay) {
+            return; // No generar decoraciones aún (muy cerca del floor)
+        }
+
         // Verificar probabilidad de spawn
         if (Math.random() > WALL_DECOR_CONFIG.spawnChance) {
             return; // No generar decoraciones en este slot
@@ -91,12 +100,66 @@ export class WallDecorManager {
             decor.setOrigin(1, 0.5); // Origen a la derecha, centrado verticalmente
         }
 
-        // Guardar referencia
+        // Guardar referencia con posición inicial para parallax
         this.decorations.push({
             sprite: decor,
             y: y,
+            initialY: y, // Guardar Y inicial para parallax
             side: side,
-            type: decorType.name
+            type: decorType.name,
+            depth: decorType.depth,
+            parallaxFactor: this.getParallaxFactor(decorType.depth)
+        });
+    }
+
+    /**
+     * Calcula el factor de parallax basado en el depth
+     * Más profundo (depth menor) = parallax más lento
+     * @param {number} depth - Depth del objeto
+     * @returns {number} Factor de parallax (0-1)
+     */
+    getParallaxFactor(depth) {
+        // Mapear depth a factor de parallax según el layering completo:
+        // depth 0 (background) -> 0.1 (casi estático)
+        // depth 1 (buildings big) -> 0.2 (muy lento)
+        // depth 2 (buildings small) -> 0.3 (lento)
+        // depth 3 (big lightboxes) -> 0.4 (medio-lento)
+        // depth 4 (regular lightboxes) -> 0.5 (medio)
+        // depth 5 (cables blancos) -> 0.6 (medio-rápido)
+        // depth 20+ (gameplay) -> 1.0 (sin parallax, se mueve con la cámara)
+
+        if (depth === 0) return 0.1;  // Background - casi estático
+        if (depth === 1) return 0.2;  // Buildings big - muy lento
+        if (depth === 2) return 0.3;  // Buildings small - lento
+        if (depth === 3) return 0.4;  // Big lightboxes - medio-lento
+        if (depth === 4) return 0.5;  // Regular lightboxes - medio
+        if (depth === 5) return 0.6;  // Cables blancos - medio-rápido
+        if (depth === 40) return 0.6; // Cables negros - medio-rápido
+        return 1.0; // Gameplay y adelante - sin parallax
+    }
+
+    /**
+     * Actualiza el parallax de todas las decoraciones
+     * Debe llamarse en el update loop de la escena
+     * @param {number} cameraY - Posición Y de la cámara
+     */
+    updateParallax(cameraY) {
+        // Usar la posición inicial de la cámara como referencia
+        if (this.initialCameraY === undefined) {
+            this.initialCameraY = cameraY;
+        }
+
+        // Calcular desplazamiento de la cámara
+        const cameraDelta = cameraY - this.initialCameraY;
+
+        // Aplicar parallax a cada decoración
+        this.decorations.forEach(decor => {
+            // Nueva posición Y = posición inicial + (desplazamiento de cámara * factor parallax)
+            const newY = decor.initialY + (cameraDelta * decor.parallaxFactor);
+            decor.sprite.y = newY;
+
+            // Actualizar Y para cleanup (usar la posición real en pantalla)
+            decor.y = newY;
         });
     }
 

@@ -946,6 +946,10 @@ export class SlotGenerator {
         // Cleanup wall decorations (lightboxes, signs, etc.)
         this.wallDecorManager.cleanup(playerY, this.cleanupDistance);
 
+        // Update parallax for wall decorations (depth effect)
+        const cameraY = this.scene.cameras.main.scrollY;
+        this.wallDecorManager.updateParallax(cameraY);
+
         // Safety: enforce original position for platforms to avoid drift (opt-in via enablePlatformLock)
         if (this.scene.registry?.get('enablePlatformLock')) {
             this.restorePlatformPositions();

@@ -33,12 +33,15 @@ export const WALL_DECOR_CONFIG = {
 
     // Cantidad de decoraciones por slot
     perSlot: {
-        min: 1,
-        max: 2
+        min: 3,  // Mínimo 3 decoraciones
+        max: 5   // Máximo 5 decoraciones
     },
 
     // Probabilidad de spawn por slot (0-1)
     spawnChance: 0.6, // 60% de probabilidad de que un slot tenga decoraciones
+
+    // Delay de inicio - no spawnar decoraciones hasta después de esta distancia desde el stage floor
+    spawnStartDelay: 100, // px - decoraciones empiezan después de 100px del stage floor
 
     // Distribución entre paredes (cuando solo hay 1 decoración)
     wallDistribution: {
@@ -50,18 +53,25 @@ export const WALL_DECOR_CONFIG = {
     minVerticalGap: 160, // px
 
     // ─────────────────────────────────────────────────────────────
-    // DEPTH / Z-INDEX LAYERING
+    // DEPTH / Z-INDEX LAYERING (Complete Game Architecture)
     // ─────────────────────────────────────────────────────────────
 
-    // Profundidad de renderizado (cerca del background, muy atrás)
-    // Depth 0: Background base
-    // Depth 1: Big lightboxes (más atrás, cerca del background)
-    // Depth 2: Regular lightboxes (un poco adelante de big)
-    // Depth 3: Cables
-    // Depth 10+: Platforms, Player, Enemies
+    // Profundidad de renderizado completa del juego:
+    // 0: Background (parallax)
+    // 1: Buildings deco (futuro, parallax)
+    // 2: Smaller Building deco (futuro, parallax)
+    // 3: Big lightboxes (parallax)
+    // 4: Regular lightboxes (parallax)
+    // 5: Cables blancos (parallax, ya implementado)
+    // 20+: Gameplay (player, enemies, platforms, items, powerups, walls)
+    // 40: Cables negros (parallax, ya implementado)
+    // 100: Risers
+    // 120: Menus y overlay
     depth: {
-        lightboxBig: 1,     // Lightboxes grandes - muy atrás, cerca del background
-        lightboxRegular: 2, // Lightboxes regulares - adelante de big, atrás de cables
+        buildingsBig: 1,        // Buildings grandes (futuro)
+        buildingsSmall: 2,      // Buildings pequeños (futuro)
+        lightboxBig: 3,         // Lightboxes grandes
+        lightboxRegular: 4,     // Lightboxes regulares
     },
 
     // ─────────────────────────────────────────────────────────────
@@ -72,7 +82,7 @@ export const WALL_DECOR_CONFIG = {
         LIGHTBOX: {
             name: 'LIGHTBOX',
             atlas: ASSETS.PROPS,
-            depth: 2, // Depth específico para lightboxes regulares (atrás de cables)
+            depth: 4, // Regular lightboxes - detrás de cables blancos (5), adelante de gameplay (20+)
 
             // Frames disponibles por lado
             frames: {
@@ -108,7 +118,7 @@ export const WALL_DECOR_CONFIG = {
         LIGHTBOX_BIG: {
             name: 'LIGHTBOX_BIG',
             atlas: ASSETS.PROPS,
-            depth: 1, // Más atrás que lightboxes regulares, cerca del background
+            depth: 3, // Big lightboxes - más atrás que regular, detrás de cables blancos (5)
 
             // Frames disponibles por lado
             frames: {
