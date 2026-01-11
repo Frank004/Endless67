@@ -8,6 +8,7 @@ import { ParticleManager } from '../managers/gameplay/ParticleManager.js';
 import { RiserManager } from '../managers/gameplay/RiserManager.js';
 import { DebugManager } from '../managers/debug/DebugManager.js';
 import { WallDecorator } from '../managers/level/WallDecorator.js';
+import { InteractableManager } from '../managers/gameplay/InteractableManager.js';
 import PoolManager, { poolRegistry } from './PoolManager.js';
 import { Platform, PLATFORM_WIDTH, PLATFORM_HEIGHT, initializePlatformTextureCache } from '../prefabs/Platform.js';
 import { Coin } from '../prefabs/Coin.js';
@@ -125,6 +126,9 @@ export class GameInitializer {
 
         scene.debugManager = new DebugManager(scene);
         scene.wallDecorator = new WallDecorator(scene);
+        
+        // Crear InteractableManager
+        scene.interactableManager = new InteractableManager(scene);
 
         // OPTIMIZATION: Pre-initialize wall patterns and segments immediately
         // This ensures walls are visible from the start and reduces first-frame load
@@ -277,6 +281,7 @@ export class GameInitializer {
             if (scene.audioManager) scene.audioManager.stopAudio();
             if (scene.uiManager) scene.uiManager.destroy();
             if (scene.particleManager) scene.particleManager.destroy();
+            if (scene.interactableManager) scene.interactableManager.destroy();
             if (scene.wallDecorator) scene.wallDecorator.destroy(); // Fix: Clean up wall decoration pools
 
             // Failsafe: Clear static pools from WallDecorFactory

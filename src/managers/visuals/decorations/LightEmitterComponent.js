@@ -109,16 +109,22 @@ export class LightEmitterComponent {
                 const emitOffset = resolveOffset(this.side, emitZone.offset, this.config.emitter?.mirrorX);
                 const zoneX = emitZone.useEmitterOffset ? baseX + emitOffset.x : this.baseOffset.x + emitOffset.x;
                 const zoneY = emitZone.useEmitterOffset ? baseY + emitOffset.y : this.baseOffset.y + emitOffset.y;
-                const emitter = this.scene.add.particles(0, 0, this.config.particle.key, {
+                
+                // scene.add.particles() con configuración devuelve un ParticleEmitterManager
+                // que automáticamente crea un emitter. El manager tiene un array 'emitters' con los emitters
+                const particleManager = this.scene.add.particles(0, 0, this.config.particle.key, {
                     ...group,
                     emitZone: {
                         type: 'random',
                         source: new Phaser.Geom.Circle(zoneX, zoneY, emitZone.radius || 10)
                     }
                 });
-                emitter.setBlendMode(resolveBlendMode(group.blendMode));
-                parent.add(emitter);
-                this.emitters.push(emitter);
+                
+                particleManager.setBlendMode(resolveBlendMode(group.blendMode));
+                parent.add(particleManager);
+                
+                // Guardar el manager (que contiene los emitters en particleManager.emitters)
+                this.emitters.push(particleManager);
             });
         }
     }

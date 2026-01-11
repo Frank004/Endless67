@@ -2,6 +2,7 @@ import { LAYOUT_CONFIG } from '../../config/LayoutConfig.js';
 import { WALLS } from '../../config/GameConstants.js';
 import { Tires } from '../../prefabs/Tires.js';
 import { Trashcan } from '../../prefabs/Trashcan.js';
+import { TrashcanInteractable } from '../gameplay/interactables/TrashcanInteractable.js';
 
 /**
  * StageProps
@@ -39,12 +40,23 @@ export class StageProps {
         const rightPropX = gameWidth - wallWidth - 1;
         this.trashcan = new Trashcan(this.scene, rightPropX, floorTopY + 3);
         this.rightProp = this.trashcan; // legacy alias
+
+        // Register trashcan as interactable
+        if (this.scene.interactableManager) {
+            const trashcanInteractable = new TrashcanInteractable(this.scene, this.trashcan);
+            this.scene.interactableManager.register('trashcan', trashcanInteractable);
+        }
     }
 
     /**
      * Destroys the props
      */
     destroy() {
+        // Unregister interactables
+        if (this.scene.interactableManager) {
+            this.scene.interactableManager.unregister('trashcan');
+        }
+
         if (this.tires && typeof this.tires.destroy === 'function') {
             this.tires.destroy();
         } else if (this.leftProp && typeof this.leftProp.destroy === 'function') {

@@ -3,6 +3,7 @@ import { ASSETS } from '../config/AssetKeys.js';
 import { WALLS } from '../config/GameConstants.js';
 import { getLightEmitterConfig } from '../config/LightEmitterConfig.js';
 import { LightEmitterComponent } from '../managers/visuals/decorations/LightEmitterComponent.js';
+import { LightBugInteractable } from '../managers/gameplay/interactables/LightBugInteractable.js';
 
 /**
  * StageFloor
@@ -97,5 +98,22 @@ export class StageFloor extends Phaser.GameObjects.TileSprite {
         const lightEmitter = new LightEmitterComponent(scene, lightEmitterConfig);
         lightEmitter.create(container, 'left', { x: 0, y: 0 });
         container.bringToTop(prop);
+
+        // Register streetlight as interactable for bug particle behavior
+        if (scene.interactableManager) {
+            // Crear objeto wrapper similar a LampDecoration para compatibilidad
+            const streetlightWrapper = {
+                lightEmitter: lightEmitter,
+                container: container,
+                visualObject: container,
+                x: container.x,
+                y: container.y
+            };
+            
+            const streetlightId = `streetlight_${container.x}_${container.y}_${Date.now()}`;
+            const lightBugInteractable = new LightBugInteractable(scene, streetlightWrapper);
+            scene.interactableManager.register(streetlightId, lightBugInteractable);
+            streetlightWrapper.interactableId = streetlightId;
+        }
     }
 }

@@ -40,12 +40,12 @@ export const WALL_DECOR_CONFIG = {
 
     // Cantidad de decoraciones por slot
     perSlot: {
-        min: 3,  // Mínimo 3 decoraciones
+        min: 2,  // Mínimo 2 decoraciones
         max: 5   // Máximo 5 decoraciones
     },
 
     // Probabilidad de spawn por slot (0-1)
-    spawnChance: 0.6, // 60% de probabilidad de que un slot tenga decoraciones
+    spawnChance: 1.0, // 100% de probabilidad - siempre hay decoraciones (mínimo 2)
 
     // Delay de inicio - no spawnar decoraciones hasta después de esta distancia desde el stage floor
     spawnStartDelay: 150, // px - Start shortly after floor to avoid clutter but appear early

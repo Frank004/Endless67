@@ -47,6 +47,7 @@ export class LampDecoration extends BaseWallDecoration {
         super.reset(config, x, y, side);
         this.frame = frame;
         this.tint = tint;
+        this.interactableId = null; // Reset interactable ID
 
         const container = this.visualObject;
         container.setPosition(x, y);

@@ -1,6 +1,7 @@
 import { WALL_DECOR_CONFIG, getRandomDecorationType, getRandomFrameForType, getWallInsetX } from '../../config/WallDecorConfig.js';
 import { WallDecorFactory } from './decorations/WallDecorFactory.js';
 import { DecorRules } from './rules/DecorRules.js';
+import { LightBugInteractable } from '../gameplay/interactables/LightBugInteractable.js';
 
 /**
  * WallDecorManager.js
@@ -218,6 +219,14 @@ export class WallDecorManager {
 
             this.decorations.push(decoration);
             slotDecorations.push(decoration);
+
+            // Register lamp as interactable if it's a lamp and not already registered
+            if (decorType.name === 'LAMP' && this.scene.interactableManager && decoration && !decoration.interactableId) {
+                const lampId = `lamp_${x}_${y}_${this.decorations.length}_${Date.now()}`;
+                const lightBugInteractable = new LightBugInteractable(this.scene, decoration);
+                this.scene.interactableManager.register(lampId, lightBugInteractable);
+                decoration.interactableId = lampId;
+            }
         }
     }
 
@@ -265,6 +274,10 @@ export class WallDecorManager {
         // Filtrar y destruir decoraciones fuera de rango
         this.decorations = this.decorations.filter(decor => {
             if (decor.shouldCleanup(limitY)) {
+                // Unregister interactable if it's a lamp
+                if (this.scene.interactableManager && decor.interactableId) {
+                    this.scene.interactableManager.unregister(decor.interactableId);
+                }
                 WallDecorFactory.release(decor);
                 return false; // Remover del array
             }
