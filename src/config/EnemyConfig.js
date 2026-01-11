@@ -1,6 +1,7 @@
 export const ENEMY_CONFIG = {
     PATROL: {
-        SIZE: 32,
+        SIZE: 20,
+
         GRAVITY: 1200,
         SPEED: 60,
         BOUNDS_MARGIN: 2  // Margen reducido para más espacio de patrullaje

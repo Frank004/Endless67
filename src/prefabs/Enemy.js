@@ -77,8 +77,12 @@ export class PatrolEnemy extends Phaser.Physics.Arcade.Sprite {
         // Configurar body de física
         if (this.body) {
             this.body.setSize(ENEMY_CONFIG.PATROL.SIZE, ENEMY_CONFIG.PATROL.SIZE);
-            this.body.setOffset(0, 0);  // Sin offset, el body coincide con el sprite
+            // Sprite is 19x16, Body is 20x20.
+            // Align bottom: Offset Y = SpriteHeight (16) - BodyHeight (20) = -4
+            // Center X: (19 - 20) / 2 = -0.5
+            this.body.setOffset(-0.5, -4);
         }
+
 
         // Configurar física
         this.body.reset(x, y);
