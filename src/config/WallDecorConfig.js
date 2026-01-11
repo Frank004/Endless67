@@ -16,6 +16,13 @@ import { WALLS } from './GameConstants.js';
  */
 
 export const WALL_DECOR_CONFIG = {
+    // NOTE: Global parallax for wall decorations.
+    // Use a subtle value (< 1) and clamp offset to avoid drift over long climbs.
+    // Set to null to use per-depth values in WallDecorManager.
+    // Set to 1 for no parallax.
+    globalParallaxFactor: 0.9,
+    maxParallaxOffset: 140,
+    parallaxSmoothing: 0.18,
     // ─────────────────────────────────────────────────────────────
     // POSICIONAMIENTO
     // ─────────────────────────────────────────────────────────────
@@ -41,7 +48,7 @@ export const WALL_DECOR_CONFIG = {
     spawnChance: 0.6, // 60% de probabilidad de que un slot tenga decoraciones
 
     // Delay de inicio - no spawnar decoraciones hasta después de esta distancia desde el stage floor
-    spawnStartDelay: 100, // px - decoraciones empiezan después de 100px del stage floor
+    spawnStartDelay: 1000, // px (100m) - decoraciones empiezan después de 1000px del stage floor
 
     // Distribución entre paredes (cuando solo hay 1 decoración)
     wallDistribution: {
@@ -60,6 +67,7 @@ export const WALL_DECOR_CONFIG = {
     // 0: Background (parallax)
     // 1: Buildings deco (futuro, parallax)
     // 2: Smaller Building deco (futuro, parallax)
+    // 2.5: Pipes (parallax) - entre buildings y lightboxes
     // 3: Big lightboxes (parallax)
     // 4: Regular lightboxes (parallax)
     // 5: Cables blancos (parallax, ya implementado)
@@ -70,6 +78,7 @@ export const WALL_DECOR_CONFIG = {
     depth: {
         buildingsBig: 1,        // Buildings grandes (futuro)
         buildingsSmall: 2,      // Buildings pequeños (futuro)
+        pipes: 2.5,             // Pipes verticales - entre buildings y lightboxes
         lightboxBig: 3,         // Lightboxes grandes
         lightboxRegular: 4,     // Lightboxes regulares
     },
@@ -106,7 +115,7 @@ export const WALL_DECOR_CONFIG = {
 
             // Propiedades visuales
             alpha: 1.0,
-            tint: 0xffffff,
+            tint: 0x666666,
 
             // Escala (si necesitas ajustar el tamaño)
             scale: 1.0,
@@ -123,22 +132,64 @@ export const WALL_DECOR_CONFIG = {
             // Frames disponibles por lado
             frames: {
                 left: [
-                    'lightboxBig-l-01.png'
+                    'lightboxBig-l-01.png',
+                    'lightboxBig-l-03.png',
+                    'lightboxBig-l-04.png',
+                    'lightboxBig-l-05.png'
                 ],
                 right: [
-                    'lightboxBig-r-01.png'
+                    'lightboxBig-r-01.png',
+                    'lightboxBig-r-03.png',
+                    'lightboxBig-r-04.png',
+                    'lightboxBig-r-05.png'
                 ]
             },
 
             // Propiedades visuales
             alpha: 1.0,
-            tint: 0xffffff,
+            tint: 0x666666,
 
             // Escala
             scale: 1.0,
 
             // Peso de spawn (para distribución entre tipos)
             spawnWeight: 0.3 // 30% de probabilidad vs lightbox regular
+        },
+
+        PIPE: {
+            name: 'PIPE',
+            atlas: ASSETS.PROPS,
+            depth: 2.5, // Pipes - más atrás que lightboxes, adelante de buildings
+
+            // Pipes son especiales: se construyen con múltiples sprites
+            isComposite: true, // Flag para indicar que requiere renderizado especial
+
+            // Delay de inicio específico para pipes (son grandes, aparecen más tarde)
+            spawnStartDelay: 3000, // px (300m) - pipes empiezan después de 3000px del stage floor
+
+            // Patrones de altura (cantidad de segmentos mid)
+            patterns: [
+                { midCount: 1, height: 96 },  // Patrón 1: top + 1 mid + bottom
+                { midCount: 2, height: 128 }, // Patrón 2: top + 2 mid + bottom
+                { midCount: 3, height: 160 }, // Patrón 3: top + 3 mid + bottom
+                { midCount: 4, height: 192 }, // Patrón 4: top + 4 mid + bottom
+                { midCount: 5, height: 224 }  // Patrón 5: top + 5 mid + bottom
+            ],
+
+            // Sprites componentes
+            sprites: {
+                top: 'pipe-top-deco.png',
+                mid: 'pipe-mid-deco.png',
+                bottom: 'pipe-bottom-deco.png'
+            },
+
+            // Propiedades visuales
+            alpha: 1.0,
+            tint: 0x555555,
+            scale: 1.0,
+
+            // Peso de spawn (para distribución entre tipos)
+            spawnWeight: 0.4 // 40% de probabilidad
         }
 
         // Aquí puedes agregar más tipos en el futuro:

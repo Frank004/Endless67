@@ -1,4 +1,6 @@
 import { WALL_DECOR_CONFIG, getRandomDecorationType, getRandomFrameForType, getWallInsetX } from '../../config/WallDecorConfig.js';
+import { WallDecorFactory } from './decorations/WallDecorFactory.js';
+import { DecorRules } from './rules/DecorRules.js';
 
 /**
  * WallDecorManager.js
@@ -14,7 +16,7 @@ import { WALL_DECOR_CONFIG, getRandomDecorationType, getRandomFrameForType, getW
 export class WallDecorManager {
     constructor(scene) {
         this.scene = scene;
-        this.decorations = []; // Array de todas las decoraciones activas
+        this.decorations = []; // Array de todas las decoraciones activas (BaseWallDecoration)
         this.gameWidth = scene.game.config.width;
     }
 
@@ -48,7 +50,7 @@ export class WallDecorManager {
 
         // Generar decoraciones
         for (let i = 0; i < count; i++) {
-            this.spawnDecoration(slotY, slotHeight, i, count, slotDecorations, usedFrames);
+            this.spawnDecoration(slotY, slotHeight, i, count, slotDecorations, usedFrames, distanceFromFloor);
         }
     }
 
@@ -60,14 +62,13 @@ export class WallDecorManager {
      * @param {number} total - Total de decoraciones en el slot
      * @param {Array} slotDecorations - Decoraciones ya generadas en este slot
      * @param {Set} usedFrames - Frames ya usados en este slot
+     * @param {number} distanceFromFloor - Distancia desde el stage floor
      */
-    spawnDecoration(slotY, slotHeight, index, total, slotDecorations, usedFrames) {
-        const MIN_DISTANCE_SAME_TYPE = 100; // Mínimo 100px entre decoraciones del mismo tipo
-
+    spawnDecoration(slotY, slotHeight, index, total, slotDecorations, usedFrames, distanceFromFloor) {
         // Seleccionar tipo de decoración aleatoriamente (con pesos)
         const decorType = getRandomDecorationType();
 
-        // Determinar lado (left o right)
+        // Determinar lado (left o right) before calculating Y
         let side;
         if (total === 1) {
             // Solo 1 decoración: elegir lado aleatoriamente
@@ -82,90 +83,103 @@ export class WallDecorManager {
         const usableHeight = slotHeight - (minGap * (total - 1));
         const segmentHeight = usableHeight / total;
 
-        // Posición Y base
+        // Posición Y base y final
         let baseY = slotY + (index * (segmentHeight + minGap)) + (segmentHeight / 2);
         const randomOffset = Phaser.Math.Between(-30, 30); // Variación de ±30px
         let y = baseY + randomOffset;
 
-        // Verificar separación mínima con decoraciones del mismo tipo
-        let attempts = 0;
-        const maxAttempts = 10;
+        // Verificar altura mínima (Global Global + Tipo Específico)
+        // Usamos la posición Y real calculada para mayor precisión
+        const stageFloorY = this.scene.scale.height - 32;
+        const actualDistanceFromFloor = stageFloorY - y;
 
-        while (attempts < maxAttempts) {
-            let tooClose = false;
+        // Usamos el mayor de los dos delays: el global (1000m) o el del tipo
+        const globalDelay = WALL_DECOR_CONFIG.spawnStartDelay || 1000;
+        const typeDelay = decorType.spawnStartDelay || 0;
+        const minHeight = Math.max(globalDelay, typeDelay);
 
-            for (const existing of slotDecorations) {
-                // Solo verificar separación si es del mismo tipo
-                if (existing.type === decorType.name) {
-                    const distance = Math.abs(y - existing.y);
-                    if (distance < MIN_DISTANCE_SAME_TYPE) {
-                        tooClose = true;
+        if (!DecorRules.hasEnoughHeight(actualDistanceFromFloor, minHeight)) {
+            return; // Aún no alcanzamos la altura necesaria
+        }
+
+        // ═══════════════════════════════════════════════════════════════
+        // REGLAS: Spacing & Overlap (Usando DecorRules)
+        // ═══════════════════════════════════════════════════════════════
+
+        // 1. Spacing Check (Mismo Tipo)
+        if (decorType.name !== 'PIPE') {
+            const MIN_DISTANCE = 100;
+            if (DecorRules.isTooCloseToSameType(y, decorType.name, slotDecorations, MIN_DISTANCE)) {
+                // Intentar ajustar posición
+                let attempts = 0;
+                let validFound = false;
+                while (attempts < 5) {
+                    const tempY = baseY + Phaser.Math.Between(-50, 50);
+                    if (!DecorRules.isTooCloseToSameType(tempY, decorType.name, slotDecorations, MIN_DISTANCE)) {
+                        y = tempY;
+                        validFound = true;
                         break;
                     }
+                    attempts++;
                 }
+                if (!validFound) return;
             }
-
-            if (!tooClose) {
-                break; // Posición válida encontrada
-            }
-
-            // Intentar nueva posición
-            y = baseY + Phaser.Math.Between(-50, 50);
-            attempts++;
         }
 
-        // Si después de intentos sigue muy cerca, saltar esta decoración
-        if (attempts >= maxAttempts) {
-            return;
-        }
+        // ═══════════════════════════════════════════════════════════════
+        // INSTANCIACIÓN DE DECORACIÓN
+        // ═══════════════════════════════════════════════════════════════
 
-        // Calcular posición X en el wall inset
+        let decoration = null;
         const x = getWallInsetX(side, this.gameWidth);
 
-        // Seleccionar frame aleatorio del tipo que NO haya sido usado
-        let frame;
-        const availableFrames = decorType.frames[side].filter(f => !usedFrames.has(f));
+        if (decorType.name === 'PIPE') {
+            // PIPE: Verificar overlap y crear
+            const pattern = Phaser.Utils.Array.GetRandom(decorType.patterns);
 
-        if (availableFrames.length === 0) {
-            // Si no hay frames disponibles, usar cualquiera (fallback)
-            frame = getRandomFrameForType(decorType, side);
+            // Margen vertical (50px) para evitar solapamiento visual
+            const PIPE_MARGIN = 50;
+            if (DecorRules.checkVerticalOverlap(y, pattern.height, side, 'PIPE', slotDecorations, PIPE_MARGIN)) {
+                return; // Overlap detectado
+            }
+
+            decoration = WallDecorFactory.getPipe(this.scene, decorType, x, y, side, pattern);
+
         } else {
-            // Seleccionar de los frames disponibles
-            frame = Phaser.Utils.Array.GetRandom(availableFrames);
+            // SIGN/LIGHTBOX: Seleccionar frame y crear
+            // Filtrar frames validos
+            const availableFrames = decorType.frames[side].filter(f => !usedFrames.has(f));
+            let frame;
+
+            if (availableFrames.length > 0) {
+                frame = Phaser.Utils.Array.GetRandom(availableFrames);
+            } else {
+                frame = getRandomFrameForType(decorType, side);
+            }
+            usedFrames.add(frame);
+
+            decoration = WallDecorFactory.getSign(this.scene, decorType, x, y, side, frame);
         }
 
-        // Marcar frame como usado
-        usedFrames.add(frame);
+        // 3. Registrar y activar Parallax
+        if (decoration) {
+            // Apply immediate parallax update to prevent 1-frame jump
+            const parallaxFactor = this.getParallaxFactor(decorType.depth);
+            decoration.initParallax(
+                parallaxFactor,
+                WALL_DECOR_CONFIG.maxParallaxOffset,
+                WALL_DECOR_CONFIG.parallaxSmoothing
+            );
 
-        // Crear sprite
-        const decor = this.scene.add.image(x, y, decorType.atlas, frame);
+            // Force an immediate update with current camera scroll
+            // This ensures the visual position is correct before the first render
+            if (this.scene.cameras.main) {
+                decoration.update(this.scene.cameras.main.scrollY);
+            }
 
-        // Configurar propiedades usando el depth específico del tipo
-        decor.setDepth(decorType.depth);
-        decor.setAlpha(decorType.alpha);
-        decor.setScale(decorType.scale);
-
-        // Ajustar origin según el lado
-        if (side === 'left') {
-            decor.setOrigin(0, 0.5); // Origen a la izquierda, centrado verticalmente
-        } else {
-            decor.setOrigin(1, 0.5); // Origen a la derecha, centrado verticalmente
+            this.decorations.push(decoration);
+            slotDecorations.push(decoration);
         }
-
-        // Guardar referencia con posición inicial para parallax
-        const decorData = {
-            sprite: decor,
-            y: y,
-            initialY: y, // Guardar Y inicial para parallax
-            side: side,
-            type: decorType.name,
-            depth: decorType.depth,
-            parallaxFactor: this.getParallaxFactor(decorType.depth),
-            frame: frame
-        };
-
-        this.decorations.push(decorData);
-        slotDecorations.push(decorData);
     }
 
     /**
@@ -175,18 +189,15 @@ export class WallDecorManager {
      * @returns {number} Factor de parallax (0-1)
      */
     getParallaxFactor(depth) {
-        // Mapear depth a factor de parallax según el layering completo:
-        // depth 0 (background) -> 0.1 (casi estático)
-        // depth 1 (buildings big) -> 0.2 (muy lento)
-        // depth 2 (buildings small) -> 0.3 (lento)
-        // depth 3 (big lightboxes) -> 0.4 (medio-lento)
-        // depth 4 (regular lightboxes) -> 0.5 (medio)
-        // depth 5 (cables blancos) -> 0.6 (medio-rápido)
-        // depth 20+ (gameplay) -> 1.0 (sin parallax, se mueve con la cámara)
-
+        // Global override: use a single subtle parallax factor for all wall decorations.
+        const globalFactor = WALL_DECOR_CONFIG.globalParallaxFactor;
+        if (globalFactor !== null && globalFactor !== undefined) {
+            return Phaser.Math.Clamp(globalFactor, 0, 1);
+        }
         if (depth === 0) return 0.1;  // Background - casi estático
         if (depth === 1) return 0.2;  // Buildings big - muy lento
         if (depth === 2) return 0.3;  // Buildings small - lento
+        if (depth === 2.5) return 0.35; // Pipes - lento-medio
         if (depth === 3) return 0.4;  // Big lightboxes - medio-lento
         if (depth === 4) return 0.5;  // Regular lightboxes - medio
         if (depth === 5) return 0.6;  // Cables blancos - medio-rápido
@@ -200,23 +211,8 @@ export class WallDecorManager {
      * @param {number} cameraY - Posición Y de la cámara
      */
     updateParallax(cameraY) {
-        // Usar la posición inicial de la cámara como referencia
-        if (this.initialCameraY === undefined) {
-            this.initialCameraY = cameraY;
-        }
-
-        // Calcular desplazamiento de la cámara
-        const cameraDelta = cameraY - this.initialCameraY;
-
-        // Aplicar parallax a cada decoración
-        this.decorations.forEach(decor => {
-            // Nueva posición Y = posición inicial + (desplazamiento de cámara * factor parallax)
-            const newY = decor.initialY + (cameraDelta * decor.parallaxFactor);
-            decor.sprite.y = newY;
-
-            // Actualizar Y para cleanup (usar la posición real en pantalla)
-            decor.y = newY;
-        });
+        // Delegar actualización a cada instancia de decoración
+        this.decorations.forEach(decor => decor.update(cameraY));
     }
 
     /**
@@ -225,11 +221,12 @@ export class WallDecorManager {
      * @param {number} cleanupDistance - Distancia de limpieza (default: 1800)
      */
     cleanup(playerY, cleanupDistance = 1800) {
-        // Filtrar decoraciones que están muy abajo
+        const limitY = playerY + cleanupDistance;
+
+        // Filtrar y destruir decoraciones fuera de rango
         this.decorations = this.decorations.filter(decor => {
-            if (decor.y > playerY + cleanupDistance) {
-                // Destruir sprite
-                decor.sprite.destroy();
+            if (decor.shouldCleanup(limitY)) {
+                WallDecorFactory.release(decor);
                 return false; // Remover del array
             }
             return true; // Mantener en el array
@@ -237,15 +234,41 @@ export class WallDecorManager {
     }
 
     /**
+     * Calcula un tinte basado en la profundidad para simular perspectiva atmosférica.
+     * Objetos más lejanos (menor depth) son más oscuros y menos saturados.
+     * @param {number} depth 
+     * @returns {number} Color hex
+     */
+    getDepthTint(depth) {
+        // Rango de Depth: ~2.5 (Pipes) a ~5 (Foreground Deco)
+        // Gameplay es 20+, esos no se tintan aquí.
+
+        const minDepth = 2.0;
+        const maxDepth = 5.0;
+        const normalized = Phaser.Math.Clamp((depth - minDepth) / (maxDepth - minDepth), 0, 1);
+
+        // Brillo mucho más agresivo para empujar hacia atrás
+        // Depth 2.5 (Pipes) -> ~0.3 (Muy oscuro)
+        // Depth 5.0 (Cables) -> ~0.7 (Algo oscuro pero visible)
+        const brightness = 0.15 + (0.55 * normalized);
+
+        // Convertir a color (Scale Grayish Blue)
+        // Reducimos R y G para dar un tono frío y "alejar" visualmente
+        const c = Math.floor(255 * brightness);
+        const r = Math.floor(c * 0.75); // Menos rojo
+        const g = Math.floor(c * 0.85); // Menos verde
+        const b = Math.floor(c * 1.0);  // Mantener azul relativo (cool tint)
+
+        return Phaser.Display.Color.GetColor(r, g, b);
+    }
+
+    /**
      * Destruye todas las decoraciones
      */
     destroy() {
-        this.decorations.forEach(decor => {
-            if (decor.sprite) {
-                decor.sprite.destroy();
-            }
-        });
+        this.decorations.forEach(decor => WallDecorFactory.release(decor));
         this.decorations = [];
+        WallDecorFactory.clearPools();
     }
 
     /**

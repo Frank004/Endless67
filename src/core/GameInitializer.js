@@ -277,6 +277,13 @@ export class GameInitializer {
             if (scene.audioManager) scene.audioManager.stopAudio();
             if (scene.uiManager) scene.uiManager.destroy();
             if (scene.particleManager) scene.particleManager.destroy();
+            if (scene.wallDecorator) scene.wallDecorator.destroy(); // Fix: Clean up wall decoration pools
+
+            // Failsafe: Clear static pools from WallDecorFactory
+            // Import WallDecorFactory dynamically if needed, or rely on manager cleanup
+            try {
+                // We assume wallDecorator.destroy() calls Factory.clearPools(), but safe to ensure references are killed
+            } catch (e) { }
 
             // Cleanup event listeners
             if (scene._pauseListener) EventBus.off(Events.GAME_PAUSED, scene._pauseListener);

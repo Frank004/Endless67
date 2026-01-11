@@ -14,6 +14,12 @@ import { ASSETS } from '../config/AssetKeys.js';
 // 🔴 CONSTANTES DE DIMENSIONES
 export const PLATFORM_HEIGHT = 32;
 export const PLATFORM_WIDTH = 128; // Ancho ÚNICO para todas las plataformas (4 tiles de 32px)
+const STATIC_PLATFORM_FRAMES = [
+    'platforms-static-01.png',
+    'platforms-static-02.png',
+    'platforms-static-03.png',
+    'platforms-static-04.png'
+];
 
 // 🚀 OPTIMIZATION: Cache de frames de plataformas para evitar búsquedas repetidas
 class PlatformTextureCache {
@@ -193,8 +199,7 @@ export class Platform extends Phaser.GameObjects.TileSprite {
             const variant = Phaser.Math.Between(1, 4);
             frameName = `plat-move-0${variant}.png`;
         } else {
-            // Static: Force use of platforms-static-01 for now
-            frameName = 'platforms-static-01.png';
+            frameName = Phaser.Utils.Array.GetRandom(STATIC_PLATFORM_FRAMES);
         }
 
         // 🚀 OPTIMIZATION: Verificar cache primero antes de verificar textures.exists()

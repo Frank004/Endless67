@@ -45,25 +45,25 @@ export class WallDecorator {
         this.tilesPerSegment = this.rowsPerSegment;
         this.maxTiles = this.tilesPerSegment * this.segmentsPerSide * 2; // dos lados
         this.patternsVersion = this._computeFrameVersion();
-        
+
         // OPTIMIZATION: Pre-initialize patterns immediately if texture is ready
         // This avoids delay on first update
         this._patternsInitialized = false;
         this._initialSegmentsCreated = false;
     }
-    
+
     /**
      * Pre-initialize patterns and initial segments for immediate rendering
      * Call this in Game.create() after textures are loaded
      */
     preInitialize(scrollY = 0) {
         if (this._patternsInitialized && this._initialSegmentsCreated) return;
-        
+
         // Pre-generate patterns if texture exists
         if (this.scene.textures.exists('walls')) {
             this.ensurePatterns();
             this._patternsInitialized = true;
-            
+
             // Pre-create initial segments for immediate visibility
             if (!this._initialSegmentsCreated) {
                 this.initSegments('L', scrollY);
@@ -110,7 +110,7 @@ export class WallDecorator {
 
     acquireTile(frame) {
         if (!this.scene.textures.exists('walls')) return null;
-        
+
         // OPTIMIZATION: Use a more efficient pool lookup
         // Instead of find(), iterate with early exit
         let tile = null;
@@ -120,14 +120,14 @@ export class WallDecorator {
                 break;
             }
         }
-        
+
         if (!tile && this.tilePool.length < this.maxTiles) {
             tile = this.scene.add.image(0, 0, 'walls', frame);
             tile.setOrigin(0.5, 0.5);
             tile.setDepth(0);
             this.tilePool.push(tile);
         }
-        
+
         if (tile) {
             tile.setTexture('walls', frame);
             tile.setVisible(true).setActive(true);
@@ -140,7 +140,7 @@ export class WallDecorator {
         // OPTIMIZATION: Cache pattern selection to avoid repeated random calls
         const patternIndex = Phaser.Math.Between(0, this.patterns.length - 1);
         const pattern = this.patterns[patternIndex];
-        
+
         // OPTIMIZATION: Batch tile creation for better performance
         for (let r = 0; r < this.rowsPerSegment; r++) {
             const frame = pattern[r];
@@ -182,7 +182,7 @@ export class WallDecorator {
 
     recycle(list, side, top, bottom) {
         if (list.length === 0) return;
-        
+
         // 🚀 OPTIMIZATION: Use simple loops instead of map() and forEach()
         // Calculate maxY and minY in a single pass
         let maxY = list[0].yStart;
@@ -192,7 +192,7 @@ export class WallDecorator {
             if (y > maxY) maxY = y;
             if (y < minY) minY = y;
         }
-        
+
         // Process segments with simple loop
         for (let i = 0; i < list.length; i++) {
             const seg = list[i];
@@ -223,13 +223,13 @@ export class WallDecorator {
 
     update(scrollY = 0) {
         if (!this.scene.textures.exists('walls')) return;
-        
+
         // OPTIMIZATION: Use pre-initialized patterns if available
         if (!this._patternsInitialized) {
             this.ensurePatterns();
             this._patternsInitialized = true;
         }
-        
+
         const cam = this.scene.cameras.main;
         const bufferPx = this.bufferTiles * this.tileSize;
         const top = scrollY - bufferPx;
@@ -265,5 +265,19 @@ export class WallDecorator {
                 break;
             }
         }
+    }
+
+    destroy() {
+        this.tilePool.forEach(tile => {
+            if (tile && tile.destroy) {
+                tile.destroy();
+            }
+        });
+        this.tilePool = [];
+        this.leftSegments = [];
+        this.rightSegments = [];
+        this.patterns = [];
+        this._patternsInitialized = false;
+        this._initialSegmentsCreated = false;
     }
 }

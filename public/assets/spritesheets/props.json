@@ -4,8 +4,8 @@
 			"image": "props.png",
 			"format": "RGBA8888",
 			"size": {
-				"w": 1444,
-				"h": 665
+				"w": 1455,
+				"h": 669
 			},
 			"scale": 1,
 			"frames": [
@@ -45,8 +45,8 @@
 						"h": 213
 					},
 					"frame": {
-						"x": 723,
-						"y": 1,
+						"x": 1,
+						"y": 224,
 						"w": 720,
 						"h": 213
 					}
@@ -67,30 +67,9 @@
 					},
 					"frame": {
 						"x": 723,
-						"y": 216,
+						"y": 1,
 						"w": 720,
 						"h": 213
-					}
-				},
-				{
-					"filename": "lightboxBig-l-01.png",
-					"rotated": false,
-					"trimmed": true,
-					"sourceSize": {
-						"w": 45,
-						"h": 96
-					},
-					"spriteSourceSize": {
-						"x": 0,
-						"y": 5,
-						"w": 45,
-						"h": 91
-					},
-					"frame": {
-						"x": 1,
-						"y": 224,
-						"w": 45,
-						"h": 91
 					}
 				},
 				{
@@ -109,7 +88,7 @@
 					},
 					"frame": {
 						"x": 1,
-						"y": 317,
+						"y": 439,
 						"w": 720,
 						"h": 90
 					}
@@ -129,8 +108,8 @@
 						"h": 76
 					},
 					"frame": {
-						"x": 1,
-						"y": 409,
+						"x": 723,
+						"y": 216,
 						"w": 720,
 						"h": 76
 					}
@@ -150,8 +129,8 @@
 						"h": 74
 					},
 					"frame": {
-						"x": 723,
-						"y": 431,
+						"x": 1,
+						"y": 531,
 						"w": 720,
 						"h": 74
 					}
@@ -171,8 +150,8 @@
 						"h": 71
 					},
 					"frame": {
-						"x": 1,
-						"y": 487,
+						"x": 723,
+						"y": 294,
 						"w": 720,
 						"h": 71
 					}
@@ -193,7 +172,7 @@
 					},
 					"frame": {
 						"x": 723,
-						"y": 507,
+						"y": 367,
 						"w": 720,
 						"h": 65
 					}
@@ -214,7 +193,7 @@
 					},
 					"frame": {
 						"x": 1,
-						"y": 560,
+						"y": 607,
 						"w": 720,
 						"h": 58
 					}
@@ -235,7 +214,7 @@
 					},
 					"frame": {
 						"x": 723,
-						"y": 574,
+						"y": 434,
 						"w": 720,
 						"h": 56
 					}
@@ -255,73 +234,430 @@
 						"h": 44
 					},
 					"frame": {
-						"x": 1,
-						"y": 620,
+						"x": 723,
+						"y": 492,
 						"w": 720,
 						"h": 44
 					}
 				},
 				{
-					"filename": "lightboxBig-r-01.png",
+					"filename": "lightboxBig-r-03.png",
 					"rotated": false,
 					"trimmed": true,
 					"sourceSize": {
-						"w": 45,
+						"w": 54,
+						"h": 107
+					},
+					"spriteSourceSize": {
+						"x": 5,
+						"y": 4,
+						"w": 49,
+						"h": 97
+					},
+					"frame": {
+						"x": 723,
+						"y": 538,
+						"w": 49,
+						"h": 97
+					}
+				},
+				{
+					"filename": "lightboxBig-l-04.png",
+					"rotated": false,
+					"trimmed": false,
+					"sourceSize": {
+						"w": 49,
 						"h": 96
 					},
 					"spriteSourceSize": {
 						"x": 0,
-						"y": 5,
-						"w": 45,
-						"h": 91
+						"y": 0,
+						"w": 49,
+						"h": 96
 					},
 					"frame": {
-						"x": 48,
-						"y": 224,
-						"w": 45,
-						"h": 91
+						"x": 774,
+						"y": 538,
+						"w": 49,
+						"h": 96
 					}
 				},
 				{
-					"filename": "tire-bounce4.png",
+					"filename": "lightboxBig-r-04.png",
 					"rotated": false,
-					"trimmed": true,
+					"trimmed": false,
 					"sourceSize": {
-						"w": 32,
-						"h": 32
+						"w": 49,
+						"h": 96
 					},
 					"spriteSourceSize": {
 						"x": 0,
-						"y": 4,
-						"w": 32,
-						"h": 27
+						"y": 0,
+						"w": 49,
+						"h": 96
 					},
 					"frame": {
-						"x": 95,
-						"y": 224,
-						"w": 32,
-						"h": 27
+						"x": 825,
+						"y": 538,
+						"w": 49,
+						"h": 96
 					}
 				},
 				{
-					"filename": "tire-bounce5.png",
+					"filename": "lightboxBig-l-03.png",
 					"rotated": false,
-					"trimmed": true,
+					"trimmed": false,
 					"sourceSize": {
-						"w": 32,
-						"h": 32
+						"w": 48,
+						"h": 95
 					},
 					"spriteSourceSize": {
 						"x": 0,
-						"y": 4,
-						"w": 32,
-						"h": 27
+						"y": 0,
+						"w": 48,
+						"h": 95
 					},
 					"frame": {
-						"x": 129,
-						"y": 224,
-						"w": 32,
-						"h": 27
+						"x": 876,
+						"y": 538,
+						"w": 48,
+						"h": 95
+					}
+				},
+				{
+					"filename": "lightboxBig-l-05.png",
+					"rotated": false,
+					"trimmed": false,
+					"sourceSize": {
+						"w": 48,
+						"h": 94
+					},
+					"spriteSourceSize": {
+						"x": 0,
+						"y": 0,
+						"w": 48,
+						"h": 94
+					},
+					"frame": {
+						"x": 926,
+						"y": 538,
+						"w": 48,
+						"h": 94
+					}
+				},
+				{
+					"filename": "lightboxBig-r-05.png",
+					"rotated": false,
+					"trimmed": false,
+					"sourceSize": {
+						"w": 48,
+						"h": 94
+					},
+					"spriteSourceSize": {
+						"x": 0,
+						"y": 0,
+						"w": 48,
+						"h": 94
+					},
+					"frame": {
+						"x": 976,
+						"y": 538,
+						"w": 48,
+						"h": 94
+					}
+				},
+				{
+					"filename": "lightboxBig-l-01.png",
+					"rotated": false,
+					"trimmed": false,
+					"sourceSize": {
+						"w": 45,
+						"h": 90
+					},
+					"spriteSourceSize": {
+						"x": 0,
+						"y": 0,
+						"w": 45,
+						"h": 90
+					},
+					"frame": {
+						"x": 1026,
+						"y": 538,
+						"w": 45,
+						"h": 90
+					}
+				},
+				{
+					"filename": "lightboxBig-r-01.png",
+					"rotated": false,
+					"trimmed": false,
+					"sourceSize": {
+						"w": 45,
+						"h": 90
+					},
+					"spriteSourceSize": {
+						"x": 0,
+						"y": 0,
+						"w": 45,
+						"h": 90
+					},
+					"frame": {
+						"x": 1073,
+						"y": 538,
+						"w": 45,
+						"h": 90
+					}
+				},
+				{
+					"filename": "lightbox-l-05.png",
+					"rotated": false,
+					"trimmed": false,
+					"sourceSize": {
+						"w": 64,
+						"h": 38
+					},
+					"spriteSourceSize": {
+						"x": 0,
+						"y": 0,
+						"w": 64,
+						"h": 38
+					},
+					"frame": {
+						"x": 1026,
+						"y": 630,
+						"w": 64,
+						"h": 38
+					}
+				},
+				{
+					"filename": "lightbox-r-05.png",
+					"rotated": false,
+					"trimmed": false,
+					"sourceSize": {
+						"w": 64,
+						"h": 38
+					},
+					"spriteSourceSize": {
+						"x": 0,
+						"y": 0,
+						"w": 64,
+						"h": 38
+					},
+					"frame": {
+						"x": 1092,
+						"y": 630,
+						"w": 64,
+						"h": 38
+					}
+				},
+				{
+					"filename": "lightbox-l-01.png",
+					"rotated": false,
+					"trimmed": false,
+					"sourceSize": {
+						"w": 45,
+						"h": 64
+					},
+					"spriteSourceSize": {
+						"x": 0,
+						"y": 0,
+						"w": 45,
+						"h": 64
+					},
+					"frame": {
+						"x": 1120,
+						"y": 538,
+						"w": 45,
+						"h": 64
+					}
+				},
+				{
+					"filename": "lightbox-r-01.png",
+					"rotated": false,
+					"trimmed": false,
+					"sourceSize": {
+						"w": 45,
+						"h": 64
+					},
+					"spriteSourceSize": {
+						"x": 0,
+						"y": 0,
+						"w": 45,
+						"h": 64
+					},
+					"frame": {
+						"x": 1167,
+						"y": 538,
+						"w": 45,
+						"h": 64
+					}
+				},
+				{
+					"filename": "lightbox-l-02.png",
+					"rotated": false,
+					"trimmed": false,
+					"sourceSize": {
+						"w": 44,
+						"h": 64
+					},
+					"spriteSourceSize": {
+						"x": 0,
+						"y": 0,
+						"w": 44,
+						"h": 64
+					},
+					"frame": {
+						"x": 1158,
+						"y": 604,
+						"w": 44,
+						"h": 64
+					}
+				},
+				{
+					"filename": "lightbox-l-03.png",
+					"rotated": false,
+					"trimmed": false,
+					"sourceSize": {
+						"w": 44,
+						"h": 64
+					},
+					"spriteSourceSize": {
+						"x": 0,
+						"y": 0,
+						"w": 44,
+						"h": 64
+					},
+					"frame": {
+						"x": 1204,
+						"y": 604,
+						"w": 44,
+						"h": 64
+					}
+				},
+				{
+					"filename": "lightbox-r-02.png",
+					"rotated": false,
+					"trimmed": false,
+					"sourceSize": {
+						"w": 44,
+						"h": 64
+					},
+					"spriteSourceSize": {
+						"x": 0,
+						"y": 0,
+						"w": 44,
+						"h": 64
+					},
+					"frame": {
+						"x": 1214,
+						"y": 538,
+						"w": 44,
+						"h": 64
+					}
+				},
+				{
+					"filename": "lightbox-r-03.png",
+					"rotated": false,
+					"trimmed": false,
+					"sourceSize": {
+						"w": 44,
+						"h": 64
+					},
+					"spriteSourceSize": {
+						"x": 0,
+						"y": 0,
+						"w": 44,
+						"h": 64
+					},
+					"frame": {
+						"x": 1250,
+						"y": 604,
+						"w": 44,
+						"h": 64
+					}
+				},
+				{
+					"filename": "lightbox-l-06.png",
+					"rotated": false,
+					"trimmed": false,
+					"sourceSize": {
+						"w": 37,
+						"h": 64
+					},
+					"spriteSourceSize": {
+						"x": 0,
+						"y": 0,
+						"w": 37,
+						"h": 64
+					},
+					"frame": {
+						"x": 1260,
+						"y": 538,
+						"w": 37,
+						"h": 64
+					}
+				},
+				{
+					"filename": "lightbox-l-04.png",
+					"rotated": false,
+					"trimmed": false,
+					"sourceSize": {
+						"w": 64,
+						"h": 44
+					},
+					"spriteSourceSize": {
+						"x": 0,
+						"y": 0,
+						"w": 64,
+						"h": 44
+					},
+					"frame": {
+						"x": 1299,
+						"y": 538,
+						"w": 64,
+						"h": 44
+					}
+				},
+				{
+					"filename": "lightbox-r-04.png",
+					"rotated": false,
+					"trimmed": false,
+					"sourceSize": {
+						"w": 64,
+						"h": 44
+					},
+					"spriteSourceSize": {
+						"x": 0,
+						"y": 0,
+						"w": 64,
+						"h": 44
+					},
+					"frame": {
+						"x": 1365,
+						"y": 538,
+						"w": 64,
+						"h": 44
+					}
+				},
+				{
+					"filename": "lightbox-r-06.png",
+					"rotated": false,
+					"trimmed": false,
+					"sourceSize": {
+						"w": 37,
+						"h": 64
+					},
+					"spriteSourceSize": {
+						"x": 0,
+						"y": 0,
+						"w": 37,
+						"h": 64
+					},
+					"frame": {
+						"x": 1296,
+						"y": 604,
+						"w": 37,
+						"h": 64
 					}
 				},
 				{
@@ -339,14 +675,98 @@
 						"h": 24
 					},
 					"frame": {
-						"x": 163,
-						"y": 224,
+						"x": 1120,
+						"y": 604,
 						"w": 32,
 						"h": 24
 					}
 				},
 				{
-					"filename": "tire-bounce2.png",
+					"filename": "transcan.png",
+					"rotated": false,
+					"trimmed": true,
+					"sourceSize": {
+						"w": 32,
+						"h": 32
+					},
+					"spriteSourceSize": {
+						"x": 4,
+						"y": 0,
+						"w": 23,
+						"h": 32
+					},
+					"frame": {
+						"x": 1431,
+						"y": 538,
+						"w": 23,
+						"h": 32
+					}
+				},
+				{
+					"filename": "pipe-bottom-deco.png",
+					"rotated": false,
+					"trimmed": false,
+					"sourceSize": {
+						"w": 32,
+						"h": 32
+					},
+					"spriteSourceSize": {
+						"x": 0,
+						"y": 0,
+						"w": 32,
+						"h": 32
+					},
+					"frame": {
+						"x": 774,
+						"y": 636,
+						"w": 32,
+						"h": 32
+					}
+				},
+				{
+					"filename": "pipe-top-deco.png",
+					"rotated": false,
+					"trimmed": false,
+					"sourceSize": {
+						"w": 32,
+						"h": 32
+					},
+					"spriteSourceSize": {
+						"x": 0,
+						"y": 0,
+						"w": 32,
+						"h": 32
+					},
+					"frame": {
+						"x": 808,
+						"y": 636,
+						"w": 32,
+						"h": 32
+					}
+				},
+				{
+					"filename": "pipe-mid-deco.png",
+					"rotated": false,
+					"trimmed": false,
+					"sourceSize": {
+						"w": 13,
+						"h": 32
+					},
+					"spriteSourceSize": {
+						"x": 0,
+						"y": 0,
+						"w": 13,
+						"h": 32
+					},
+					"frame": {
+						"x": 842,
+						"y": 636,
+						"w": 13,
+						"h": 32
+					}
+				},
+				{
+					"filename": "tire-bounce4.png",
 					"rotated": false,
 					"trimmed": true,
 					"sourceSize": {
@@ -355,141 +775,15 @@
 					},
 					"spriteSourceSize": {
 						"x": 0,
-						"y": 9,
+						"y": 4,
 						"w": 32,
-						"h": 22
+						"h": 27
 					},
 					"frame": {
-						"x": 197,
-						"y": 224,
+						"x": 723,
+						"y": 637,
 						"w": 32,
-						"h": 22
-					}
-				},
-				{
-					"filename": "lightbox-l-04.png",
-					"rotated": false,
-					"trimmed": true,
-					"sourceSize": {
-						"w": 32,
-						"h": 32
-					},
-					"spriteSourceSize": {
-						"x": 0,
-						"y": 1,
-						"w": 32,
-						"h": 21
-					},
-					"frame": {
-						"x": 231,
-						"y": 224,
-						"w": 32,
-						"h": 21
-					}
-				},
-				{
-					"filename": "lightbox-l-05.png",
-					"rotated": false,
-					"trimmed": true,
-					"sourceSize": {
-						"w": 32,
-						"h": 32
-					},
-					"spriteSourceSize": {
-						"x": 0,
-						"y": 1,
-						"w": 32,
-						"h": 21
-					},
-					"frame": {
-						"x": 265,
-						"y": 224,
-						"w": 32,
-						"h": 21
-					}
-				},
-				{
-					"filename": "lightbox-r-04.png",
-					"rotated": false,
-					"trimmed": true,
-					"sourceSize": {
-						"w": 32,
-						"h": 32
-					},
-					"spriteSourceSize": {
-						"x": 0,
-						"y": 1,
-						"w": 32,
-						"h": 21
-					},
-					"frame": {
-						"x": 299,
-						"y": 224,
-						"w": 32,
-						"h": 21
-					}
-				},
-				{
-					"filename": "lightbox-r-05.png",
-					"rotated": false,
-					"trimmed": true,
-					"sourceSize": {
-						"w": 32,
-						"h": 32
-					},
-					"spriteSourceSize": {
-						"x": 0,
-						"y": 1,
-						"w": 32,
-						"h": 21
-					},
-					"frame": {
-						"x": 333,
-						"y": 224,
-						"w": 32,
-						"h": 21
-					}
-				},
-				{
-					"filename": "tire-bounce3.png",
-					"rotated": false,
-					"trimmed": true,
-					"sourceSize": {
-						"w": 32,
-						"h": 32
-					},
-					"spriteSourceSize": {
-						"x": 0,
-						"y": 17,
-						"w": 32,
-						"h": 14
-					},
-					"frame": {
-						"x": 367,
-						"y": 224,
-						"w": 32,
-						"h": 14
-					}
-				},
-				{
-					"filename": "tires.png",
-					"rotated": false,
-					"trimmed": true,
-					"sourceSize": {
-						"w": 32,
-						"h": 32
-					},
-					"spriteSourceSize": {
-						"x": 3,
-						"y": 7,
-						"w": 29,
-						"h": 23
-					},
-					"frame": {
-						"x": 401,
-						"y": 224,
-						"w": 29,
-						"h": 23
+						"h": 27
 					}
 				},
 				{
@@ -507,8 +801,8 @@
 						"h": 34
 					},
 					"frame": {
-						"x": 367,
-						"y": 240,
+						"x": 926,
+						"y": 634,
 						"w": 28,
 						"h": 34
 					}
@@ -528,8 +822,8 @@
 						"h": 34
 					},
 					"frame": {
-						"x": 231,
-						"y": 247,
+						"x": 956,
+						"y": 634,
 						"w": 28,
 						"h": 34
 					}
@@ -549,10 +843,52 @@
 						"h": 34
 					},
 					"frame": {
-						"x": 197,
-						"y": 248,
+						"x": 986,
+						"y": 634,
 						"w": 28,
 						"h": 34
+					}
+				},
+				{
+					"filename": "transcan_animation-04.png",
+					"rotated": false,
+					"trimmed": true,
+					"sourceSize": {
+						"w": 32,
+						"h": 64
+					},
+					"spriteSourceSize": {
+						"x": 4,
+						"y": 31,
+						"w": 25,
+						"h": 33
+					},
+					"frame": {
+						"x": 876,
+						"y": 635,
+						"w": 25,
+						"h": 33
+					}
+				},
+				{
+					"filename": "tire-bounce3.png",
+					"rotated": false,
+					"trimmed": true,
+					"sourceSize": {
+						"w": 32,
+						"h": 32
+					},
+					"spriteSourceSize": {
+						"x": 0,
+						"y": 17,
+						"w": 32,
+						"h": 14
+					},
+					"frame": {
+						"x": 1299,
+						"y": 584,
+						"w": 32,
+						"h": 14
 					}
 				},
 				{
@@ -570,8 +906,8 @@
 						"h": 34
 					},
 					"frame": {
-						"x": 163,
-						"y": 250,
+						"x": 1335,
+						"y": 584,
 						"w": 28,
 						"h": 34
 					}
@@ -591,8 +927,8 @@
 						"h": 34
 					},
 					"frame": {
-						"x": 95,
-						"y": 253,
+						"x": 1335,
+						"y": 620,
 						"w": 28,
 						"h": 34
 					}
@@ -612,14 +948,14 @@
 						"h": 34
 					},
 					"frame": {
-						"x": 125,
-						"y": 253,
+						"x": 1365,
+						"y": 584,
 						"w": 28,
 						"h": 34
 					}
 				},
 				{
-					"filename": "tire-bounce1.png",
+					"filename": "tire-bounce5.png",
 					"rotated": false,
 					"trimmed": true,
 					"sourceSize": {
@@ -627,16 +963,16 @@
 						"h": 32
 					},
 					"spriteSourceSize": {
-						"x": 3,
-						"y": 7,
-						"w": 27,
-						"h": 24
+						"x": 0,
+						"y": 4,
+						"w": 32,
+						"h": 27
 					},
 					"frame": {
-						"x": 261,
-						"y": 247,
-						"w": 27,
-						"h": 24
+						"x": 1395,
+						"y": 584,
+						"w": 32,
+						"h": 27
 					}
 				},
 				{
@@ -654,73 +990,10 @@
 						"h": 34
 					},
 					"frame": {
-						"x": 290,
-						"y": 247,
+						"x": 1429,
+						"y": 584,
 						"w": 25,
 						"h": 34
-					}
-				},
-				{
-					"filename": "transcan_animation-04.png",
-					"rotated": false,
-					"trimmed": true,
-					"sourceSize": {
-						"w": 32,
-						"h": 64
-					},
-					"spriteSourceSize": {
-						"x": 4,
-						"y": 31,
-						"w": 25,
-						"h": 33
-					},
-					"frame": {
-						"x": 261,
-						"y": 273,
-						"w": 25,
-						"h": 33
-					}
-				},
-				{
-					"filename": "lightbox-l-02.png",
-					"rotated": false,
-					"trimmed": true,
-					"sourceSize": {
-						"w": 32,
-						"h": 32
-					},
-					"spriteSourceSize": {
-						"x": 0,
-						"y": 0,
-						"w": 24,
-						"h": 32
-					},
-					"frame": {
-						"x": 227,
-						"y": 283,
-						"w": 24,
-						"h": 32
-					}
-				},
-				{
-					"filename": "lightbox-l-06.png",
-					"rotated": false,
-					"trimmed": false,
-					"sourceSize": {
-						"w": 20,
-						"h": 31
-					},
-					"spriteSourceSize": {
-						"x": 0,
-						"y": 0,
-						"w": 20,
-						"h": 31
-					},
-					"frame": {
-						"x": 193,
-						"y": 284,
-						"w": 20,
-						"h": 31
 					}
 				},
 				{
@@ -738,8 +1011,8 @@
 						"h": 33
 					},
 					"frame": {
-						"x": 317,
-						"y": 247,
+						"x": 1365,
+						"y": 620,
 						"w": 24,
 						"h": 33
 					}
@@ -759,35 +1032,14 @@
 						"h": 33
 					},
 					"frame": {
-						"x": 317,
-						"y": 247,
+						"x": 1365,
+						"y": 620,
 						"w": 24,
 						"h": 33
 					}
 				},
 				{
-					"filename": "lightbox-l-01.png",
-					"rotated": false,
-					"trimmed": false,
-					"sourceSize": {
-						"w": 22,
-						"h": 32
-					},
-					"spriteSourceSize": {
-						"x": 0,
-						"y": 0,
-						"w": 22,
-						"h": 32
-					},
-					"frame": {
-						"x": 343,
-						"y": 247,
-						"w": 22,
-						"h": 32
-					}
-				},
-				{
-					"filename": "lightbox-l-03.png",
+					"filename": "tire-bounce2.png",
 					"rotated": false,
 					"trimmed": true,
 					"sourceSize": {
@@ -796,19 +1048,19 @@
 					},
 					"spriteSourceSize": {
 						"x": 0,
-						"y": 0,
-						"w": 24,
-						"h": 32
+						"y": 9,
+						"w": 32,
+						"h": 22
 					},
 					"frame": {
-						"x": 432,
-						"y": 224,
-						"w": 24,
-						"h": 32
+						"x": 1395,
+						"y": 613,
+						"w": 32,
+						"h": 22
 					}
 				},
 				{
-					"filename": "transcan.png",
+					"filename": "tires.png",
 					"rotated": false,
 					"trimmed": true,
 					"sourceSize": {
@@ -816,100 +1068,37 @@
 						"h": 32
 					},
 					"spriteSourceSize": {
-						"x": 4,
-						"y": 0,
-						"w": 23,
-						"h": 32
+						"x": 3,
+						"y": 7,
+						"w": 29,
+						"h": 23
 					},
 					"frame": {
-						"x": 397,
-						"y": 249,
-						"w": 23,
-						"h": 32
+						"x": 1391,
+						"y": 637,
+						"w": 29,
+						"h": 23
 					}
 				},
 				{
-					"filename": "lightbox-r-01.png",
+					"filename": "tire-bounce1.png",
 					"rotated": false,
-					"trimmed": false,
+					"trimmed": true,
 					"sourceSize": {
-						"w": 22,
+						"w": 32,
 						"h": 32
 					},
 					"spriteSourceSize": {
-						"x": 0,
-						"y": 0,
-						"w": 22,
-						"h": 32
+						"x": 3,
+						"y": 7,
+						"w": 27,
+						"h": 24
 					},
 					"frame": {
-						"x": 367,
-						"y": 276,
-						"w": 22,
-						"h": 32
-					}
-				},
-				{
-					"filename": "lightbox-r-02.png",
-					"rotated": false,
-					"trimmed": false,
-					"sourceSize": {
-						"w": 22,
-						"h": 32
-					},
-					"spriteSourceSize": {
-						"x": 0,
-						"y": 0,
-						"w": 22,
-						"h": 32
-					},
-					"frame": {
-						"x": 343,
-						"y": 281,
-						"w": 22,
-						"h": 32
-					}
-				},
-				{
-					"filename": "lightbox-r-03.png",
-					"rotated": false,
-					"trimmed": false,
-					"sourceSize": {
-						"w": 22,
-						"h": 32
-					},
-					"spriteSourceSize": {
-						"x": 0,
-						"y": 0,
-						"w": 22,
-						"h": 32
-					},
-					"frame": {
-						"x": 317,
-						"y": 282,
-						"w": 22,
-						"h": 32
-					}
-				},
-				{
-					"filename": "lightbox-r-06.png",
-					"rotated": false,
-					"trimmed": false,
-					"sourceSize": {
-						"w": 20,
-						"h": 31
-					},
-					"spriteSourceSize": {
-						"x": 0,
-						"y": 0,
-						"w": 20,
-						"h": 31
-					},
-					"frame": {
-						"x": 288,
-						"y": 283,
-						"w": 20,
-						"h": 31
+						"x": 1422,
+						"y": 637,
+						"w": 27,
+						"h": 24
 					}
 				}
 			]
@@ -918,6 +1107,6 @@
 	"meta": {
 		"app": "https://www.codeandweb.com/texturepacker",
 		"version": "3.0",
-		"smartupdate": "$TexturePacker:SmartUpdate:021fc43b6d7d136da62d240cb8a13603:a70ff8aad389540e12eadc5286fd1267:f4c39b94f5b79b4c461da96ae5609d50$"
+		"smartupdate": "$TexturePacker:SmartUpdate:cb38a89c7df22e2c9ef6bbbad6ce5cfe:1fd5080a056839071adc3ab5eefbd5ea:f4c39b94f5b79b4c461da96ae5609d50$"
 	}
 }

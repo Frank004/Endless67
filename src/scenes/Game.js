@@ -3,6 +3,7 @@ import { Player } from '../prefabs/Player.js';
 import { GameInitializer } from '../core/GameInitializer.js';
 import { updatePlatformRider } from '../utils/platformRider.js';
 import { BackgroundManager } from '../managers/background/BackgroundManager.js';
+import { FogEffect } from '../effects/FogEffect.js';
 import GameState from '../core/GameState.js';
 import { PLATFORM_WIDTH, PLATFORM_HEIGHT } from '../prefabs/Platform.js';
 import { SLOT_CONFIG } from '../config/SlotConfig.js';
@@ -48,6 +49,7 @@ export class Game extends Phaser.Scene {
         // Initialize first to ensure it's at the very back (Z-index -20)
         this.backgroundManager = new BackgroundManager(this);
         this.backgroundManager.create();
+        this.fogEffect = new FogEffect(this);
 
         // --- INITIALIZER ---
         // Handles setup of camera, devices, groups, pools, managers, and events
@@ -58,6 +60,10 @@ export class Game extends Phaser.Scene {
         this.events.once('shutdown', () => {
             if (this.uiManager) {
                 this.uiManager.destroy();
+            }
+            if (this.fogEffect) {
+                this.fogEffect.destroy();
+                this.fogEffect = null;
             }
         });
 
@@ -337,9 +343,9 @@ export class Game extends Phaser.Scene {
         this.audioManager.startMusic();
 
         // Activar lava cuando el juego comienza
-        if (this.riserManager) {
-            this.riserManager.setEnabled(true);
-        }
+        // if (this.riserManager) {
+        //     this.riserManager.setEnabled(true);
+        // }
 
         if (this.player?.controller?.resetState) {
             this.player.controller.resetState();
@@ -581,6 +587,15 @@ export class Game extends Phaser.Scene {
             }
         } catch (e) {
             // Silently ignore props cleanup errors
+        }
+
+        // Clean up fog effect
+        try {
+            if (this.fogEffect && typeof this.fogEffect.destroy === 'function') {
+                this.fogEffect.destroy();
+            }
+        } catch (e) {
+            // Silently ignore fog cleanup errors
         }
     }
 }

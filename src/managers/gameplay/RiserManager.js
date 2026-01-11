@@ -23,7 +23,7 @@ export class RiserManager {
 
         this.currentSpeed = this.config.speedConfig.baseSpeed;
         this.isRising = false;
-        this.enabled = true;
+        this.enabled = false;
         this.riserHeight = null; // Se calculará dinámicamente en createRiser()
         this.lastChanceActive = false;
         this.lastChanceTimer = 0;

@@ -1058,6 +1058,16 @@ export class SlotGenerator {
         }
         this.slots = [];
         this.currentSlotIndex = 0;
+        this.slots = [];
+        this.consecutiveMazes = 0;
+        this.mazeCooldown = 0;
+        this.isGenerating = false;
+
+        // Clean up Wall Decor (Release pools)
+        if (this.wallDecorManager) {
+            this.wallDecorManager.destroy();
+        }
+
         // this.colorIndex = 0;  // Comentado: colores debug desactivados
     }
 

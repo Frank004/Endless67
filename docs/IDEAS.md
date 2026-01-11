@@ -452,4 +452,11 @@ otras ideas:
 - shader warmup
 - scene sceneless transition (from home to game)
 - ideas for ray cast triggered events
-- 
+- DataManager
+- SceneSwapManager
+- InteractableManager
+- LightManager
+- EnviormentManager
+  - PortalManager
+  - HazardsManager
+-  
