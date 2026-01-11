@@ -1,6 +1,6 @@
-
 import { PipeDecoration } from './PipeDecoration.js';
 import { SignDecoration } from './SignDecoration.js';
+import { LampDecoration } from './LampDecoration.js';
 
 /**
  * WallDecorFactory
@@ -10,7 +10,8 @@ import { SignDecoration } from './SignDecoration.js';
 export class WallDecorFactory {
     static pools = {
         PIPE: [],
-        SIGN: []
+        SIGN: [],
+        LAMP: []
     };
 
     /**
@@ -40,15 +41,30 @@ export class WallDecorFactory {
         const pool = this.pools.SIGN;
         if (pool.length > 0) {
             const decoration = pool.pop();
-            // Validar que la decoración pertenezca a la escena actual
             if (decoration.scene !== scene) {
-                // Decoración de una escena anterior destruida, intentar con la siguiente
                 return this.getSign(scene, config, x, y, side, frame, tint);
             }
             decoration.reset(config, x, y, side, frame, tint);
             return decoration;
         }
         return new SignDecoration(scene, config, x, y, side, frame, tint);
+    }
+
+    /**
+     * Obtiene una LampDecoration del pool o crea una nueva.
+     * @returns {LampDecoration}
+     */
+    static getLamp(scene, config, x, y, side, frame, tint = 0xffffff) {
+        const pool = this.pools.LAMP;
+        if (pool.length > 0) {
+            const decoration = pool.pop();
+            if (decoration.scene !== scene) {
+                return this.getLamp(scene, config, x, y, side, frame, tint);
+            }
+            decoration.reset(config, x, y, side, frame, tint);
+            return decoration;
+        }
+        return new LampDecoration(scene, config, x, y, side, frame, tint);
     }
 
     /**
@@ -64,6 +80,8 @@ export class WallDecorFactory {
             this.pools.PIPE.push(decoration);
         } else if (decoration instanceof SignDecoration) {
             this.pools.SIGN.push(decoration);
+        } else if (decoration instanceof LampDecoration) {
+            this.pools.LAMP.push(decoration);
         } else {
             // Si es un tipo desconocido, destruir
             decoration.destroy();
@@ -76,7 +94,9 @@ export class WallDecorFactory {
     static clearPools() {
         this.pools.PIPE.forEach(d => d.destroy());
         this.pools.SIGN.forEach(d => d.destroy());
+        this.pools.LAMP.forEach(d => d.destroy());
         this.pools.PIPE = [];
         this.pools.SIGN = [];
+        this.pools.LAMP = [];
     }
 }

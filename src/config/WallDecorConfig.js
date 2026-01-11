@@ -185,11 +185,27 @@ export const WALL_DECOR_CONFIG = {
 
             // Propiedades visuales
             alpha: 1.0,
-            tint: 0x555555,
+            tint: 0x888888,
             scale: 1.0,
 
             // Peso de spawn (para distribución entre tipos)
             spawnWeight: 0.4 // 40% de probabilidad
+        },
+
+        LAMP: {
+            name: 'LAMP',
+            atlas: ASSETS.PROPS,
+            depth: 4.1, // Slightly in front of Lightboxes? Or same? 4 is regular.
+            frames: {
+                left: ['lamp.png'],
+                right: ['lamp.png']
+            },
+            spawnStartDelay: 100, // Starts nearly immediately
+            alpha: 1.0,
+            tint: 0xffffff, // Lamps usually bright? User said "dales un dime" to signs, maybe lamps stick to white or slight warm? 
+            // "Lamp" implies light source. I'll keep it near white or 0xeeeeee.
+            scale: 1.0,
+            spawnWeight: 0.4 // Higher chance to see them spawn
         }
 
         // Aquí puedes agregar más tipos en el futuro:

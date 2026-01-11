@@ -95,8 +95,10 @@ export class WallDecorManager {
 
         // Usamos el mayor de los dos delays: el global (1000m) o el del tipo
         const globalDelay = WALL_DECOR_CONFIG.spawnStartDelay || 1000;
-        const typeDelay = decorType.spawnStartDelay || 0;
-        const minHeight = Math.max(globalDelay, typeDelay);
+        // Prioritize type-specific delay if set (e.g., LAMPS at 100), otherwise use Global (1000)
+        const minHeight = (decorType.spawnStartDelay !== undefined)
+            ? decorType.spawnStartDelay
+            : globalDelay;
 
         if (!DecorRules.hasEnoughHeight(actualDistanceFromFloor, minHeight)) {
             return; // Aún no alcanzamos la altura necesaria
@@ -145,6 +147,24 @@ export class WallDecorManager {
 
             decoration = WallDecorFactory.getPipe(this.scene, decorType, x, y, side, pattern);
 
+        } else if (decorType.name === 'LAMP') {
+            // Force Lamp to be roughly centered in the slot to avoid bunching at edges
+            y = slotY + (slotHeight / 2) + Phaser.Math.Between(-15, 15);
+
+            // LAMP: Unique rule "Max 1 per side per slot"
+            const hasLampOnSide = slotDecorations.some(d => d.config.name === 'LAMP' && d.side === side);
+
+            // Check for overlap with other decorations in this slot since we forced centering
+            const overlap = slotDecorations.some(d => Math.abs(d.y - y) < 80 && d.side === side);
+
+            if (hasLampOnSide || overlap) {
+                // Ya hay una lámpara o colisión
+                return;
+            }
+
+            const frame = getRandomFrameForType(decorType, side);
+            decoration = WallDecorFactory.getLamp(this.scene, decorType, x, y, side, frame);
+
         } else {
             // SIGN/LIGHTBOX: Seleccionar frame y crear
             // Filtrar frames validos
@@ -164,7 +184,26 @@ export class WallDecorManager {
         // 3. Registrar y activar Parallax
         if (decoration) {
             // Apply immediate parallax update to prevent 1-frame jump
-            const parallaxFactor = this.getParallaxFactor(decorType.depth);
+            let parallaxFactor = this.getParallaxFactor(decorType.depth);
+
+            // Override for LAMP: Static on wall (No parallax shift relative to wall)
+            // Ideally '1.0' means lock to camera scroll (static in screen).
+            // '0.0' means lock to world (static in world).
+            // If WallDecorManager updates Y as `initialY - scrollY * factor`.
+            // If factor is 1, `y = initial - scroll`. As scroll increases (player goes UP), Y decreases. 
+            // This is standard "Move with world" behavior (Static in World).
+            // If factor is 0, `y = initial`. Static on Screen (HUD).
+            // User said "Estatica". Lamps are attached to walls. Walls scroll.
+            // So Lamps should scroll WITH walls.
+            // Our walls scroll with factor 1.0 (they are part of world).
+            // If `getParallaxFactor` returns 0.5, decoration moves SLOWER than wall (Depth effect).
+            // To make it "Estatica" (on the wall), it must have factor 1.0?
+            // Wait. `getParallaxFactor` says "1.0 // Gameplay y adelante - sin parallax".
+            // So YES, 1.0 means "No Parallax Effect" (Moves with World).
+            if (decorType.name === 'LAMP') {
+                parallaxFactor = 1.0;
+            }
+
             decoration.initParallax(
                 parallaxFactor,
                 WALL_DECOR_CONFIG.maxParallaxOffset,

@@ -14,11 +14,16 @@ export default class FluidPipeline extends Phaser.Renderer.WebGL.Pipelines.PostF
                 void main() {
                     vec2 uv = outTexCoord;
                     
-                    // Wave effect: distort X based on Y and Time, and Y based on X and Time
-                    float waveX = sin(uv.y * 20.0 + uTime * 2.0) * 0.005;
-                    float waveY = cos(uv.x * 20.0 + uTime * 3.0) * 0.005;
+                    // PIXELATION
+                    float pixelSize = 4.0;
+                    // Snap UV to grid
+                    vec2 pixelUV = floor(uv * uResolution / pixelSize) * pixelSize / uResolution;
                     
-                    vec2 distortedUV = uv + vec2(waveX, waveY);
+                    // Wave effect using Pixel UV
+                    float waveX = sin(pixelUV.y * 20.0 + uTime * 2.0) * 0.005;
+                    float waveY = cos(pixelUV.x * 20.0 + uTime * 3.0) * 0.005;
+                    
+                    vec2 distortedUV = pixelUV + vec2(waveX, waveY);
                     
                     gl_FragColor = texture2D(uMainSampler, distortedUV);
                 }

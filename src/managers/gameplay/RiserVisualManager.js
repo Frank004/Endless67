@@ -1,6 +1,6 @@
 import { ASSETS } from '../../config/AssetKeys.js';
 import { FireRiserEffect } from '../../effects/FireRiserEffect.js';
-import { WaterRiserEffect } from '../../effects/WaterRiserEffect.js';
+import { LiquidRiserEffect } from '../../effects/LiquidRiserEffect.js';
 
 /**
  * RiserVisualManager
@@ -25,15 +25,33 @@ export class RiserVisualManager {
             return new FireRiserEffect(scene, riser);
         }
 
+        // 2. Water (Liquid Effect)
         if (textureKey === ASSETS.WATER_TEXTURE) {
-            // Apply pipeline (distortion) AND Particle Effect
             if (pipelineName && scene.game.renderer.type === Phaser.WEBGL) {
                 riser.setPostPipeline(pipelineName);
             }
-            return new WaterRiserEffect(scene, riser);
+            return new LiquidRiserEffect(scene, riser, {
+                tint: 0xffffff,
+                density: 8
+            });
         }
 
-        // 2. Standard Pipelines (Post-Processing Shaders)
+        // 3. Acid (Liquid Effect)
+        // Note: ASSETS.ACID_TEXTURE often maps to 'acid_texture'
+        if (textureKey === 'acid_texture' || textureKey === ASSETS.ACID_TEXTURE) {
+            if (pipelineName && scene.game.renderer.type === Phaser.WEBGL) {
+                riser.setPostPipeline(pipelineName);
+            }
+            return new LiquidRiserEffect(scene, riser, {
+                tint: 0xccff66, // Toxic Green
+                density: 10,
+                speedY: { min: -20, max: -50 }, // Faster fumes
+                scale: { start: 0.8, end: 1.4 },
+                blendMode: 'ADD'
+            });
+        }
+
+        // 4. Standard Pipelines (Post-Processing Shaders) e.g. LAVA
         // Only apply if no specialized effect took over and WebGL is available
         if (pipelineName && scene.game.renderer.type === Phaser.WEBGL) {
             riser.setPostPipeline(pipelineName);

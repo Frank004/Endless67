@@ -129,18 +129,23 @@ export class BackgroundManager {
     }
 
     createCenterDarken(width, height) {
-        const textureName = 'bg_center_darken_v2';
+        const textureName = 'bg_center_darken_pixel_v2';
+        const scale = 12; // Increased Pixelation
+
         if (!this.scene.textures.exists(textureName)) {
-            const canvas = this.scene.textures.createCanvas(textureName, width, height);
+            const smallW = Math.ceil(width / scale);
+            const smallH = Math.ceil(height / scale);
+
+            const canvas = this.scene.textures.createCanvas(textureName, smallW, smallH);
             const ctx = canvas.context;
-            const radius = Math.max(width, height) * 0.9;
+            const radius = Math.max(smallW, smallH) * 0.9;
 
             const gradient = ctx.createRadialGradient(
-                width / 2,
-                height / 2,
+                smallW / 2,
+                smallH / 2,
                 0,
-                width / 2,
-                height / 2,
+                smallW / 2,
+                smallH / 2,
                 radius
             );
             gradient.addColorStop(0, 'rgba(0, 0, 0, 0.95)');
@@ -148,14 +153,16 @@ export class BackgroundManager {
             gradient.addColorStop(1, 'rgba(0, 0, 0, 0)');
 
             ctx.fillStyle = gradient;
-            ctx.fillRect(0, 0, width, height);
+            ctx.fillRect(0, 0, smallW, smallH);
 
             canvas.refresh();
+            this.scene.textures.get(textureName).setFilter(Phaser.Textures.FilterMode.NEAREST);
         }
 
         const centerDarken = this.scene.add.image(width / 2, height / 2, textureName);
         centerDarken.setScrollFactor(0);
         centerDarken.setDepth(-12);
+        centerDarken.setScale(scale); // Scale up to pixelate
         centerDarken.setBlendMode(Phaser.BlendModes.MULTIPLY);
     }
 

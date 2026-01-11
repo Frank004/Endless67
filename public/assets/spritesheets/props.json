@@ -1081,6 +1081,90 @@
 					}
 				},
 				{
+					"filename": "lamp.png",
+					"rotated": false,
+					"trimmed": true,
+					"sourceSize": {
+						"w": 32,
+						"h": 32
+					},
+					"spriteSourceSize": {
+						"x": 8,
+						"y": 4,
+						"w": 24,
+						"h": 21
+					},
+					"frame": {
+						"x": 1429,
+						"y": 620,
+						"w": 24,
+						"h": 21
+					}
+				},
+				{
+					"filename": "lamp1.png",
+					"rotated": false,
+					"trimmed": true,
+					"sourceSize": {
+						"w": 32,
+						"h": 32
+					},
+					"spriteSourceSize": {
+						"x": 8,
+						"y": 4,
+						"w": 24,
+						"h": 21
+					},
+					"frame": {
+						"x": 1429,
+						"y": 620,
+						"w": 24,
+						"h": 21
+					}
+				},
+				{
+					"filename": "lamp2.png",
+					"rotated": false,
+					"trimmed": true,
+					"sourceSize": {
+						"w": 32,
+						"h": 32
+					},
+					"spriteSourceSize": {
+						"x": 8,
+						"y": 4,
+						"w": 24,
+						"h": 21
+					},
+					"frame": {
+						"x": 1429,
+						"y": 620,
+						"w": 24,
+						"h": 21
+					}
+				},
+				{
+					"filename": "lamp3.png",
+					"rotated": false,
+					"trimmed": true,
+					"sourceSize": {
+						"w": 32,
+						"h": 32
+					},
+					"spriteSourceSize": {
+						"x": 8,
+						"y": 4,
+						"w": 24,
+						"h": 21
+					},
+					"frame": {
+						"x": 1429,
+						"y": 620,
+						"w": 24,
+						"h": 21
+					}
+				},
+				{
 					"filename": "tire-bounce1.png",
 					"rotated": false,
 					"trimmed": true,
@@ -1096,7 +1180,7 @@
 					},
 					"frame": {
 						"x": 1422,
-						"y": 637,
+						"y": 643,
 						"w": 27,
 						"h": 24
 					}
@@ -1107,6 +1191,6 @@
 	"meta": {
 		"app": "https://www.codeandweb.com/texturepacker",
 		"version": "3.0",
-		"smartupdate": "$TexturePacker:SmartUpdate:cb38a89c7df22e2c9ef6bbbad6ce5cfe:1fd5080a056839071adc3ab5eefbd5ea:f4c39b94f5b79b4c461da96ae5609d50$"
+		"smartupdate": "$TexturePacker:SmartUpdate:f3a6f9997b2bbf0575921a165e8ab1a9:f069977b53e597e9177d69cb379e3d16:f4c39b94f5b79b4c461da96ae5609d50$"
 	}
 }
