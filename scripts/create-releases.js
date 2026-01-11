@@ -26,6 +26,7 @@ const VERSIONS = [
     { version: 'v0.0.41', commit: '072fa40', description: 'Chore(version): update version to v0.0.41' },
     { version: 'v0.0.42', commit: '7194386', description: 'Feat(ui): add milestone indicator system and update version to v0.0.42' },
     { version: 'v0.0.43', commit: 'd22a17a', description: 'Chore(version): update version to v0.0.43 with fog performance optimizations' },
+    { version: 'v0.0.44', commit: 'e5412a4', description: 'Feat(interaction): refactor InteractableManager system and optimize LightBugInteractable' },
 ];
 
 function getCommitsBetweenVersions(fromVersion, toVersion) {
