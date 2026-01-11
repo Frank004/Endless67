@@ -200,6 +200,9 @@ export const WALL_DECOR_CONFIG = {
                 left: ['lamp.png'],
                 right: ['lamp.png']
             },
+            // Light emitter presets and overrides for glow + particles
+            lightEmitterPreset: 'lampWarm',
+            lightEmitterOverrides: null,
             spawnStartDelay: 100, // Starts nearly immediately
             alpha: 1.0,
             tint: 0xffffff, // Lamps usually bright? User said "dales un dime" to signs, maybe lamps stick to white or slight warm? 

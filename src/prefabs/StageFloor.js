@@ -1,6 +1,8 @@
 import { LAYOUT_CONFIG } from '../config/LayoutConfig.js';
 import { ASSETS } from '../config/AssetKeys.js';
 import { WALLS } from '../config/GameConstants.js';
+import { getLightEmitterConfig } from '../config/LightEmitterConfig.js';
+import { LightEmitterComponent } from '../managers/visuals/decorations/LightEmitterComponent.js';
 
 /**
  * StageFloor
@@ -55,12 +57,14 @@ export class StageFloor extends Phaser.GameObjects.TileSprite {
         const frames = ['streetlight.png', 'streetlight-damage.png'];
         const frame = Phaser.Utils.Array.GetRandom(frames);
 
+        const container = scene.add.container(0, 0);
         const prop = scene.add.image(0, 0, ASSETS.PROPS, frame);
         prop.setOrigin(0.5, 1); // Anchor Bottom-Center
+        container.add(prop);
 
         // Floor Top Y
         const floorTop = this.y - (this.height / 2);
-        prop.y = floorTop + 6; // Embed slightly (6px) for solid look
+        container.y = floorTop + 6; // Embed slightly (6px) for solid look
 
         // Side Logic
         // Default Sprite assumed to look Good on Right Wall (Facing Left?)
@@ -72,13 +76,26 @@ export class StageFloor extends Phaser.GameObjects.TileSprite {
         if (isLeft) {
             prop.setFlipX(true); // Mirror for Left
             // Position: Wall Edge + Offset
-            prop.x = wallWidth + offset;
+            container.x = wallWidth + offset;
         } else {
             prop.setFlipX(false);
             // Position: Screen Right - Wall Edge - Offset
-            prop.x = scene.scale.width - wallWidth - offset;
+            container.x = scene.scale.width - wallWidth - offset;
         }
 
-        prop.setDepth(5); // Background (Behind Player)
+        container.setDepth(5); // Background (Behind Player)
+
+        const offsetX = (-prop.displayWidth / 2) + 6;
+        const offsetY = (-prop.displayHeight) + 8;
+        const emitterOffsetX = isLeft ? -offsetX : offsetX;
+        const lightEmitterConfig = getLightEmitterConfig('streetlightSmall', {
+            emitter: {
+                offset: { x: emitterOffsetX, y: offsetY },
+                mirrorX: false
+            }
+        });
+        const lightEmitter = new LightEmitterComponent(scene, lightEmitterConfig);
+        lightEmitter.create(container, 'left', { x: 0, y: 0 });
+        container.bringToTop(prop);
     }
 }
