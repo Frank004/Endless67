@@ -42,9 +42,13 @@ export class WallDecorManager {
         const { min, max } = WALL_DECOR_CONFIG.perSlot;
         const count = Phaser.Math.Between(min, max);
 
+        // Tracking para este slot
+        const slotDecorations = [];
+        const usedFrames = new Set(); // Para evitar repetir frames
+
         // Generar decoraciones
         for (let i = 0; i < count; i++) {
-            this.spawnDecoration(slotY, slotHeight, i, count);
+            this.spawnDecoration(slotY, slotHeight, i, count, slotDecorations, usedFrames);
         }
     }
 
@@ -54,8 +58,12 @@ export class WallDecorManager {
      * @param {number} slotHeight - Altura del slot
      * @param {number} index - Índice de la decoración en el slot
      * @param {number} total - Total de decoraciones en el slot
+     * @param {Array} slotDecorations - Decoraciones ya generadas en este slot
+     * @param {Set} usedFrames - Frames ya usados en este slot
      */
-    spawnDecoration(slotY, slotHeight, index, total) {
+    spawnDecoration(slotY, slotHeight, index, total, slotDecorations, usedFrames) {
+        const MIN_DISTANCE_SAME_TYPE = 100; // Mínimo 100px entre decoraciones del mismo tipo
+
         // Seleccionar tipo de decoración aleatoriamente (con pesos)
         const decorType = getRandomDecorationType();
 
@@ -74,16 +82,60 @@ export class WallDecorManager {
         const usableHeight = slotHeight - (minGap * (total - 1));
         const segmentHeight = usableHeight / total;
 
-        // Posición Y con algo de variación aleatoria
-        const baseY = slotY + (index * (segmentHeight + minGap)) + (segmentHeight / 2);
+        // Posición Y base
+        let baseY = slotY + (index * (segmentHeight + minGap)) + (segmentHeight / 2);
         const randomOffset = Phaser.Math.Between(-30, 30); // Variación de ±30px
-        const y = baseY + randomOffset;
+        let y = baseY + randomOffset;
+
+        // Verificar separación mínima con decoraciones del mismo tipo
+        let attempts = 0;
+        const maxAttempts = 10;
+
+        while (attempts < maxAttempts) {
+            let tooClose = false;
+
+            for (const existing of slotDecorations) {
+                // Solo verificar separación si es del mismo tipo
+                if (existing.type === decorType.name) {
+                    const distance = Math.abs(y - existing.y);
+                    if (distance < MIN_DISTANCE_SAME_TYPE) {
+                        tooClose = true;
+                        break;
+                    }
+                }
+            }
+
+            if (!tooClose) {
+                break; // Posición válida encontrada
+            }
+
+            // Intentar nueva posición
+            y = baseY + Phaser.Math.Between(-50, 50);
+            attempts++;
+        }
+
+        // Si después de intentos sigue muy cerca, saltar esta decoración
+        if (attempts >= maxAttempts) {
+            return;
+        }
 
         // Calcular posición X en el wall inset
         const x = getWallInsetX(side, this.gameWidth);
 
-        // Seleccionar frame aleatorio del tipo
-        const frame = getRandomFrameForType(decorType, side);
+        // Seleccionar frame aleatorio del tipo que NO haya sido usado
+        let frame;
+        const availableFrames = decorType.frames[side].filter(f => !usedFrames.has(f));
+
+        if (availableFrames.length === 0) {
+            // Si no hay frames disponibles, usar cualquiera (fallback)
+            frame = getRandomFrameForType(decorType, side);
+        } else {
+            // Seleccionar de los frames disponibles
+            frame = Phaser.Utils.Array.GetRandom(availableFrames);
+        }
+
+        // Marcar frame como usado
+        usedFrames.add(frame);
 
         // Crear sprite
         const decor = this.scene.add.image(x, y, decorType.atlas, frame);
@@ -101,15 +153,19 @@ export class WallDecorManager {
         }
 
         // Guardar referencia con posición inicial para parallax
-        this.decorations.push({
+        const decorData = {
             sprite: decor,
             y: y,
             initialY: y, // Guardar Y inicial para parallax
             side: side,
             type: decorType.name,
             depth: decorType.depth,
-            parallaxFactor: this.getParallaxFactor(decorType.depth)
-        });
+            parallaxFactor: this.getParallaxFactor(decorType.depth),
+            frame: frame
+        };
+
+        this.decorations.push(decorData);
+        slotDecorations.push(decorData);
     }
 
     /**
