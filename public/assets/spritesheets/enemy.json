@@ -4,71 +4,281 @@
 			"image": "enemy.png",
 			"format": "RGBA8888",
 			"size": {
-				"w": 21,
-				"h": 69
+				"w": 56,
+				"h": 158
 			},
 			"scale": 1,
 			"frames": [
 				{
-					"filename": "patrol-idle1.png",
-					"rotated": false,
-					"trimmed": false,
-					"sourceSize": {
-						"w": 19,
-						"h": 16
-					},
-					"spriteSourceSize": {
-						"x": 0,
-						"y": 0,
-						"w": 19,
-						"h": 16
-					},
-					"frame": {
-						"x": 1,
-						"y": 1,
-						"w": 19,
-						"h": 16
-					}
-				},
-				{
-					"filename": "patrol-idle2.png",
-					"rotated": false,
-					"trimmed": false,
-					"sourceSize": {
-						"w": 19,
-						"h": 16
-					},
-					"spriteSourceSize": {
-						"x": 0,
-						"y": 0,
-						"w": 19,
-						"h": 16
-					},
-					"frame": {
-						"x": 1,
-						"y": 19,
-						"w": 19,
-						"h": 16
-					}
-				},
-				{
-					"filename": "patrol-idle3.png",
+					"filename": "patrol-die5.png",
 					"rotated": false,
 					"trimmed": true,
 					"sourceSize": {
-						"w": 19,
-						"h": 16
+						"w": 32,
+						"h": 25
 					},
 					"spriteSourceSize": {
 						"x": 0,
+						"y": 7,
+						"w": 31,
+						"h": 18
+					},
+					"frame": {
+						"x": 1,
 						"y": 1,
-						"w": 19,
+						"w": 31,
+						"h": 18
+					}
+				},
+				{
+					"filename": "patrol-run6.png",
+					"rotated": false,
+					"trimmed": true,
+					"sourceSize": {
+						"w": 32,
+						"h": 25
+					},
+					"spriteSourceSize": {
+						"x": 5,
+						"y": 6,
+						"w": 21,
+						"h": 18
+					},
+					"frame": {
+						"x": 34,
+						"y": 1,
+						"w": 21,
+						"h": 18
+					}
+				},
+				{
+					"filename": "patrol-die4.png",
+					"rotated": false,
+					"trimmed": true,
+					"sourceSize": {
+						"w": 32,
+						"h": 25
+					},
+					"spriteSourceSize": {
+						"x": 0,
+						"y": 9,
+						"w": 31,
+						"h": 16
+					},
+					"frame": {
+						"x": 1,
+						"y": 21,
+						"w": 31,
+						"h": 16
+					}
+				},
+				{
+					"filename": "patrol-idle1.png",
+					"rotated": false,
+					"trimmed": true,
+					"sourceSize": {
+						"w": 32,
+						"h": 25
+					},
+					"spriteSourceSize": {
+						"x": 5,
+						"y": 8,
+						"w": 21,
+						"h": 17
+					},
+					"frame": {
+						"x": 34,
+						"y": 21,
+						"w": 21,
+						"h": 17
+					}
+				},
+				{
+					"filename": "patrol-run1.png",
+					"rotated": false,
+					"trimmed": true,
+					"sourceSize": {
+						"w": 32,
+						"h": 25
+					},
+					"spriteSourceSize": {
+						"x": 5,
+						"y": 8,
+						"w": 21,
+						"h": 17
+					},
+					"frame": {
+						"x": 34,
+						"y": 21,
+						"w": 21,
+						"h": 17
+					}
+				},
+				{
+					"filename": "patrol-die3.png",
+					"rotated": false,
+					"trimmed": true,
+					"sourceSize": {
+						"w": 32,
+						"h": 25
+					},
+					"spriteSourceSize": {
+						"x": 1,
+						"y": 10,
+						"w": 29,
 						"h": 15
 					},
 					"frame": {
 						"x": 1,
-						"y": 37,
-						"w": 19,
+						"y": 39,
+						"w": 29,
+						"h": 15
+					}
+				},
+				{
+					"filename": "patrol-run2.png",
+					"rotated": false,
+					"trimmed": true,
+					"sourceSize": {
+						"w": 32,
+						"h": 25
+					},
+					"spriteSourceSize": {
+						"x": 4,
+						"y": 10,
+						"w": 23,
+						"h": 15
+					},
+					"frame": {
+						"x": 32,
+						"y": 40,
+						"w": 23,
+						"h": 15
+					}
+				},
+				{
+					"filename": "patrol-attack4.png",
+					"rotated": false,
+					"trimmed": true,
+					"sourceSize": {
+						"w": 32,
+						"h": 25
+					},
+					"spriteSourceSize": {
+						"x": 5,
+						"y": 9,
+						"w": 27,
+						"h": 16
+					},
+					"frame": {
+						"x": 1,
+						"y": 56,
+						"w": 27,
+						"h": 16
+					}
+				},
+				{
+					"filename": "patrol-attack2.png",
+					"rotated": false,
+					"trimmed": true,
+					"sourceSize": {
+						"w": 32,
+						"h": 25
+					},
+					"spriteSourceSize": {
+						"x": 7,
+						"y": 11,
+						"w": 25,
+						"h": 14
+					},
+					"frame": {
+						"x": 30,
+						"y": 57,
+						"w": 25,
+						"h": 14
+					}
+				},
+				{
+					"filename": "patrol-die2.png",
+					"rotated": false,
+					"trimmed": true,
+					"sourceSize": {
+						"w": 32,
+						"h": 25
+					},
+					"spriteSourceSize": {
+						"x": 2,
+						"y": 10,
+						"w": 27,
+						"h": 15
+					},
+					"frame": {
+						"x": 1,
+						"y": 74,
+						"w": 27,
+						"h": 15
+					}
+				},
+				{
+					"filename": "patrol-attack3.png",
+					"rotated": false,
+					"trimmed": true,
+					"sourceSize": {
+						"w": 32,
+						"h": 25
+					},
+					"spriteSourceSize": {
+						"x": 6,
+						"y": 11,
+						"w": 26,
+						"h": 14
+					},
+					"frame": {
+						"x": 1,
+						"y": 91,
+						"w": 26,
+						"h": 14
+					}
+				},
+				{
+					"filename": "patrol-attack1.png",
+					"rotated": false,
+					"trimmed": true,
+					"sourceSize": {
+						"w": 32,
+						"h": 25
+					},
+					"spriteSourceSize": {
+						"x": 3,
+						"y": 11,
+						"w": 23,
+						"h": 14
+					},
+					"frame": {
+						"x": 30,
+						"y": 73,
+						"w": 23,
+						"h": 14
+					}
+				},
+				{
+					"filename": "patrol-die1.png",
+					"rotated": false,
+					"trimmed": true,
+					"sourceSize": {
+						"w": 32,
+						"h": 25
+					},
+					"spriteSourceSize": {
+						"x": 4,
+						"y": 10,
+						"w": 22,
+						"h": 15
+					},
+					"frame": {
+						"x": 1,
+						"y": 107,
+						"w": 22,
 						"h": 15
 					}
 				},
@@ -77,20 +287,125 @@
 					"rotated": false,
 					"trimmed": true,
 					"sourceSize": {
-						"w": 19,
-						"h": 16
+						"w": 32,
+						"h": 25
 					},
 					"spriteSourceSize": {
-						"x": 0,
-						"y": 2,
-						"w": 19,
-						"h": 14
+						"x": 5,
+						"y": 9,
+						"w": 21,
+						"h": 16
 					},
 					"frame": {
 						"x": 1,
-						"y": 54,
-						"w": 19,
+						"y": 124,
+						"w": 21,
+						"h": 16
+					}
+				},
+				{
+					"filename": "patrol-idle2.png",
+					"rotated": false,
+					"trimmed": true,
+					"sourceSize": {
+						"w": 32,
+						"h": 25
+					},
+					"spriteSourceSize": {
+						"x": 5,
+						"y": 10,
+						"w": 21,
+						"h": 15
+					},
+					"frame": {
+						"x": 1,
+						"y": 142,
+						"w": 21,
+						"h": 15
+					}
+				},
+				{
+					"filename": "patrol-run3.png",
+					"rotated": false,
+					"trimmed": true,
+					"sourceSize": {
+						"w": 32,
+						"h": 25
+					},
+					"spriteSourceSize": {
+						"x": 4,
+						"y": 11,
+						"w": 23,
 						"h": 14
+					},
+					"frame": {
+						"x": 30,
+						"y": 89,
+						"w": 23,
+						"h": 14
+					}
+				},
+				{
+					"filename": "patrol-run4.png",
+					"rotated": false,
+					"trimmed": true,
+					"sourceSize": {
+						"w": 32,
+						"h": 25
+					},
+					"spriteSourceSize": {
+						"x": 4,
+						"y": 11,
+						"w": 23,
+						"h": 14
+					},
+					"frame": {
+						"x": 29,
+						"y": 105,
+						"w": 23,
+						"h": 14
+					}
+				},
+				{
+					"filename": "patrol-idle3.png",
+					"rotated": false,
+					"trimmed": true,
+					"sourceSize": {
+						"w": 32,
+						"h": 25
+					},
+					"spriteSourceSize": {
+						"x": 5,
+						"y": 11,
+						"w": 21,
+						"h": 14
+					},
+					"frame": {
+						"x": 25,
+						"y": 121,
+						"w": 21,
+						"h": 14
+					}
+				},
+				{
+					"filename": "patrol-run5.png",
+					"rotated": false,
+					"trimmed": true,
+					"sourceSize": {
+						"w": 32,
+						"h": 25
+					},
+					"spriteSourceSize": {
+						"x": 7,
+						"y": 5,
+						"w": 17,
+						"h": 19
+					},
+					"frame": {
+						"x": 24,
+						"y": 137,
+						"w": 17,
+						"h": 19
 					}
 				}
 			]
@@ -99,6 +414,6 @@
 	"meta": {
 		"app": "https://www.codeandweb.com/texturepacker",
 		"version": "3.0",
-		"smartupdate": "$TexturePacker:SmartUpdate:b4c0c7feb4b3570f18faa07162a9ad61:b84824692df8ea77feff8f979f58f2aa:a99356c10d69482e9bee53d25c3d05e1$"
+		"smartupdate": "$TexturePacker:SmartUpdate:de12626f04d2f2939b692e1ba8723a5f:fbf7b8de1e057725b4c7c503fd6e7dce:a99356c10d69482e9bee53d25c3d05e1$"
 	}
 }

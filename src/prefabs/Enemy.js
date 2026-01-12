@@ -13,7 +13,7 @@ export class PatrolEnemy extends Phaser.Physics.Arcade.Sprite {
         // Constructor puede recibir x, y o no (para pooling)
         super(scene, x, y, ASSETS.ENEMY_ATLAS, 'patrol-idle1.png');
         this.setDepth(20);
-
+        this.isDead = false;
 
         // Use 'patrol' mode: platformRider takes full control of movement and bounds
         enablePlatformRider(this, {
@@ -34,16 +34,36 @@ export class PatrolEnemy extends Phaser.Physics.Arcade.Sprite {
             onEnter: () => this.play('enemy_idle', true),
             onUpdate: () => {
                 if (this.riderAutoPatrol && this.ridingPlatform) {
-                    this.fsm.setState('walk');
+                    this.fsm.setState('run');
                 }
             }
         })
-            .addState('walk', {
-                onEnter: () => this.play('enemy_walk', true),
+            .addState('run', {
+                onEnter: () => this.play('enemy_run', true),
                 onUpdate: () => {
                     if (!this.riderAutoPatrol || !this.ridingPlatform) {
                         this.fsm.setState('idle');
                     }
+                }
+            })
+            .addState('attack', {
+                onEnter: () => {
+                    this.play('enemy_attack', true);
+                    this.once('animationcomplete', () => {
+                        if (this.fsm.currentState === 'attack') {
+                            this.fsm.setState('idle'); // Return to idle after attack
+                        }
+                    });
+                }
+            })
+            .addState('die', {
+                onEnter: () => {
+                    this.stopMoving();
+                    this.body.checkCollision.none = true; // Disable collisions
+                    this.play('enemy_die', true);
+                    this.once('animationcomplete', () => {
+                        this.destroy(); // Destroy after death animation
+                    });
                 }
             });
 
@@ -70,29 +90,26 @@ export class PatrolEnemy extends Phaser.Physics.Arcade.Sprite {
         // Establecer posición PRIMERO
         this.setPosition(x, y);
 
-        // Establecer tamaño visual fijo (sin escalado)
-        this.setDisplaySize(ENEMY_CONFIG.PATROL.SIZE, ENEMY_CONFIG.PATROL.SIZE);
+        // Establecer tamaño visual: NO usar setDisplaySize con el tamaño del hitbox (20),
+        // dejar que el sprite use su tamaño natural (32x25) o forzarlo si fuera necesario.
+        // this.setDisplaySize(ENEMY_CONFIG.PATROL.SIZE, ENEMY_CONFIG.PATROL.SIZE); // REMOVED
         this.setScale(1);  // Asegurar que el scale sea 1
 
         // Configurar body de física
         if (this.body) {
             this.body.setSize(ENEMY_CONFIG.PATROL.SIZE, ENEMY_CONFIG.PATROL.SIZE);
-            // Sprite is 19x16, Body is 20x20.
-            // Align bottom: Offset Y = SpriteHeight (16) - BodyHeight (20) = -4
-            // Center X: (19 - 20) / 2 = -0.5
-            this.body.setOffset(-0.5, -4);
+            // Sprite is 32x25, Body is 20x20.
+            // Align bottom: Offset Y = SpriteHeight (25) - BodyHeight (20) = 5
+            // Center X: (32 - 20) / 2 = 6
+            this.body.setOffset(6, 5);
         }
-
 
         // Configurar física
         this.body.reset(x, y);
-        // IMPORTANTE: PatrolEnemy usa platformRider para movimiento vertical
-        // allowGravity debe estar TRUE para que platformRider detecte bordes
-        // pero gravity.y = 0 para que no caiga (platformRider maneja el movimiento)
         this.body.allowGravity = true;
-        this.body.gravity.y = 0;  // Sin gravedad, platformRider maneja vertical
+        this.body.gravity.y = ENEMY_CONFIG.PATROL.GRAVITY; // Needs gravity to fall onto platform
         this.body.immovable = false;
-        this.body.updateFromGameObject();  // Sincronizar body con posición del sprite
+        this.body.updateFromGameObject();
 
         this.setActive(true);
         this.setVisible(true);
@@ -141,7 +158,21 @@ export class PatrolEnemy extends Phaser.Physics.Arcade.Sprite {
     patrol(minX, maxX, speed = ENEMY_CONFIG.PATROL.SPEED) {
         // this.patrolBehavior.startPatrol(minX, maxX, speed);
         this.riderPatrolSpeed = speed;
+        this.riderPatrolSpeed = speed;
         this.riderAutoPatrol = true;
+    }
+
+    // --- State Actions ---
+
+    attack() {
+        if (this.isDead || this.fsm.currentState === 'attack') return;
+        this.fsm.setState('attack');
+    }
+
+    die() {
+        if (this.isDead) return;
+        this.isDead = true;
+        this.fsm.setState('die');
     }
 
     /**

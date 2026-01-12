@@ -127,17 +127,43 @@ export function registerEnemyAnimations(scene) {
         repeat: -1
     });
 
-    // Reuse idle for walk as requested
+    // Run
     anims.create({
-        key: 'enemy_walk',
+        key: 'enemy_run',
         frames: anims.generateFrameNames(ASSETS.ENEMY_ATLAS, {
-            prefix: 'patrol-idle',
+            prefix: 'patrol-run',
+            start: 1,
+            end: 6,
+            suffix: '.png'
+        }),
+        frameRate: 10,
+        repeat: -1
+    });
+
+    // Attack
+    anims.create({
+        key: 'enemy_attack',
+        frames: anims.generateFrameNames(ASSETS.ENEMY_ATLAS, {
+            prefix: 'patrol-attack',
             start: 1,
             end: 4,
             suffix: '.png'
         }),
-        frameRate: 8,
-        repeat: -1
+        frameRate: 12,
+        repeat: 0
+    });
+
+    // Die
+    anims.create({
+        key: 'enemy_die',
+        frames: anims.generateFrameNames(ASSETS.ENEMY_ATLAS, {
+            prefix: 'patrol-die',
+            start: 1,
+            end: 5,
+            suffix: '.png'
+        }),
+        frameRate: 12,
+        repeat: 0
     });
 }
 
