@@ -383,7 +383,7 @@ export class ShooterEnemy extends Phaser.Physics.Arcade.Sprite {
 
 export class JumperShooterEnemy extends Phaser.Physics.Arcade.Sprite {
     constructor(scene, x, y) {
-        super(scene, x, y, ASSETS.ENEMY_ATLAS, 'patrol-jump1.png'); // Use Atlas
+        super(scene, x, y, ASSETS.ENEMY_ATLAS, 'jumper-idle1.png');
 
         // Agregar al sistema de física (CRÍTICO para pooling)
         scene.physics.add.existing(this);
@@ -398,20 +398,17 @@ export class JumperShooterEnemy extends Phaser.Physics.Arcade.Sprite {
         this.fsm = new StateMachine('jump', this);
         this.fsm.addState('jump', {
             onEnter: () => {
-                this.play('enemy_jump', true);
+                this.play('jumper_jump', true);
             },
             onUpdate: () => {
-                // Loop jump? It is non-looping. Restart if needed?
-                // Or maybe check if grounded? Jumper is mostly in air.
                 if (!this.anims.isPlaying) {
-                    this.play('enemy_jump', true);
+                    this.play('jumper_jump', true);
                 }
             }
         })
             .addState('attack', {
-                // "attack en el aire"
                 onEnter: () => {
-                    this.play('enemy_attack', true);
+                    this.play('jumper_attack', true);
                     this.once('animationcomplete', () => {
                         if (this.fsm.currentState === 'attack' && !this.isDead) {
                             this.fsm.setState('jump');
@@ -432,22 +429,17 @@ export class JumperShooterEnemy extends Phaser.Physics.Arcade.Sprite {
         this.fsm.start();
     }
 
-
     spawn(x, y) {
         // Reset physics body
         this.body.reset(x, y);
 
         this.setScale(1);
 
-        // Body dimensions
+        // Body dimensions based on sprite size 29x24
         if (this.body) {
-            // Using logic: Sprite 32x25, Body 20x20 (consistent feet)
-            this.body.setSize(20, 20);
-            // OffsetX = (32 - 20) / 2 = 6
-            // OffsetY = 25 - 20 = 5
-            this.body.setOffset(6, 5);
+            this.body.setSize(29, 24);
+            this.body.setOffset(0, 0);
         }
-
 
         // La gravedad se hereda del mundo (1200)
         // Solo necesitamos asegurar que no sea immovable

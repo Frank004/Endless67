@@ -178,5 +178,42 @@ export function registerEnemyAnimations(scene) {
         frameRate: 12,
         repeat: 0
     });
+
+    // Jumper Animations
+    anims.create({
+        key: 'jumper_idle',
+        frames: anims.generateFrameNames(ASSETS.ENEMY_ATLAS, {
+            prefix: 'jumper-idle',
+            start: 1,
+            end: 4,
+            suffix: '.png'
+        }),
+        frameRate: 8,
+        repeat: -1
+    });
+
+    anims.create({
+        key: 'jumper_jump',
+        frames: anims.generateFrameNames(ASSETS.ENEMY_ATLAS, {
+            prefix: 'jumper-jump',
+            start: 1,
+            end: 7,
+            suffix: '.png'
+        }),
+        frameRate: 12,
+        repeat: 0
+    });
+
+    anims.create({
+        key: 'jumper_attack',
+        frames: anims.generateFrameNames(ASSETS.ENEMY_ATLAS, {
+            prefix: 'jumper-attack',
+            start: 1,
+            end: 6,
+            suffix: '.png'
+        }),
+        frameRate: 12,
+        repeat: 0
+    });
 }
 
