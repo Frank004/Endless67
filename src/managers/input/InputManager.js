@@ -23,6 +23,14 @@ export class InputManager {
         scene.events.on('create', () => {
             this.sceneTransitionTime = Date.now();
         });
+
+        // Track resume to prevent input bleeding
+        this.resumeTime = 0;
+        this.resumeListener = () => this.trackResume();
+        EventBus.on(Events.GAME_RESUMED, this.resumeListener);
+
+        // Clean up on shutdown
+        scene.events.once('shutdown', () => this.destroy());
     }
 
     /**
@@ -37,6 +45,11 @@ export class InputManager {
         setTimeout(() => {
             this.sceneTransitionCooldown = 300; // Back to default
         }, durationMs);
+    }
+
+    // New method to handle resume safety
+    trackResume() {
+        this.resumeTime = Date.now();
     }
 
 
@@ -136,6 +149,12 @@ export class InputManager {
 
     shouldIgnoreInput() {
         const scene = this.scene;
+
+        // Check resume cooldown (prevent clicks propagating from menu buttons)
+        if (this.resumeTime && Date.now() - this.resumeTime < 200) {
+            return true;
+        }
+
         return scene.isGameOver || scene.isPausedEvent || scene.isDevMenuOpen || scene.isPaused;
     }
 
@@ -570,6 +589,12 @@ export class InputManager {
         const scene = this.scene;
         if (keyListener) {
             scene.input.keyboard.off('keydown', keyListener);
+        }
+    }
+
+    destroy() {
+        if (this.resumeListener) {
+            EventBus.off(Events.GAME_RESUMED, this.resumeListener);
         }
     }
 }
