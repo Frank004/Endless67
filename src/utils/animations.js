@@ -165,5 +165,18 @@ export function registerEnemyAnimations(scene) {
         frameRate: 12,
         repeat: 0
     });
+
+    // Jump
+    anims.create({
+        key: 'enemy_jump',
+        frames: anims.generateFrameNames(ASSETS.ENEMY_ATLAS, {
+            prefix: 'patrol-jump',
+            start: 1,
+            end: 8,
+            suffix: '.png'
+        }),
+        frameRate: 12,
+        repeat: 0
+    });
 }
 
