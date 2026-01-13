@@ -13,8 +13,8 @@ export class RiserPipelineManager {
         this.pipelineMap = {
             [RISER_TYPES.LAVA]: 'Fluid',
             [RISER_TYPES.WATER]: 'Fluid',
-            [RISER_TYPES.ACID]: 'Fluid'
-            // [RISER_TYPES.FIRE]: undefined // No pipeline for FIRE
+            [RISER_TYPES.ACID]: 'Fluid',
+            [RISER_TYPES.FIRE]: 'Flames'
         };
     }
 
@@ -26,6 +26,7 @@ export class RiserPipelineManager {
     getPipelineForType(riserType) {
         const category = this.pipelineMap[riserType];
         if (!category) {
+            console.warn(`RiserPipelineManager: Unknown or unmapped riser type '${riserType}'`);
             // If no pipeline mapped (e.g. FIRE), return null to use standard rendering
             return null;
         }
