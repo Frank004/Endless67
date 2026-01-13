@@ -66,6 +66,7 @@ export const SLOT_CONFIG = {
 
         MAZE: {
             name: 'MAZE',
+            height: 960,                    // Adjusted to fit 125px gaps (6 rows × 42px + 5 gaps × 125px ≈ 877px, rounded to 960)
             rowHeight: MAZE_ROW_HEIGHT,     // Altura de cada bloque de muro (2 tiles de 32px)
             rowGap: MAZE_ROW_GAP,           // Separación vertical entre filas
             rowCount: MAZE_ROW_COUNT,       // Número de filas del maze (alto dinámico)
@@ -111,7 +112,7 @@ export const SLOT_CONFIG = {
     rules: {
         tutorialSlots: 1,              // Solo el primer slot es tutorial (plataformas)
         maxConsecutiveSameType: 2,     // No más de 2 del mismo tipo seguidos
-        spawnBuffer: 800,              // Buffer reducido para generar slots más cerca del jugador
+        spawnBuffer: 1600,              // Buffer aumentado para evitar pop-in de decoraciones parallax
         cleanupDistance: 1800,         // Limpia slots mucho más abajo del jugador para evitar huecos
         startPlatformY: null            // Se calcula dinámicamente desde LayoutConfig (ad banner ahora está arriba)
     }

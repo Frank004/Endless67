@@ -24,12 +24,56 @@ export class MazeSpawner {
     createMazeFloorVisual(x, y, width, height, originX = 0) {
         const scene = this.scene;
         if (!scene?.add?.tileSprite) return null;
-        const centerFrames = ['floor-center-01.png', 'floor-center-02.png', 'floor-center-03.png', 'floor-center-04.png'];
-        const frame = centerFrames[Math.floor(Math.random() * centerFrames.length)];
+
+        // Randomly select beam texture for the FLOOR SURFACE
+        // REQ: "add beam-broken to the random selection", "don't use beam-joint in de selection on maze flooer"
+        const r = Math.random();
+        let frame = ' beam.png'; // Default clean beam (leading space intentional)
+
+        if (r < 0.5) {
+            // 50% Clean Beam
+            frame = ' beam.png';
+        } else if (r < 0.8) {
+            // 30% Deco (01 to 11)
+            const idx = Phaser.Math.Between(1, 11);
+            frame = ` beam-deco-${idx.toString().padStart(2, '0')}.png`;
+        } else {
+            // 20% Broken (01 to 03)
+            const idx = Phaser.Math.Between(1, 3);
+            frame = ` beam-broken-${idx.toString().padStart(2, '0')}.png`;
+        }
+
+        // Fallback/Safety check for frame names
+        if (scene.textures.exists(ASSETS.FLOOR)) {
+            const floorTex = scene.textures.get(ASSETS.FLOOR);
+            // Verify if frame exists, otherwise handle potential space/trim discrepancy
+            if (!floorTex.has(frame)) {
+                if (floorTex.has(frame.trim())) {
+                    frame = frame.trim();
+                } else {
+                    // Ultimate fallback
+                    frame = floorTex.has(' beam.png') ? ' beam.png' : 'beam.png';
+                }
+            }
+        }
+
         const visualCenter = scene.add.tileSprite(x, y, width, height, ASSETS.FLOOR, frame);
         visualCenter.setOrigin(originX, 0.5);
         visualCenter.setDepth(12);
         return [visualCenter];
+    }
+
+    spawnPattern(startY, pattern) {
+        if (!pattern || !pattern.rows) return;
+
+        let currentY = startY;
+        // Use the imported constant
+        const rowHeight = MAZE_ROW_HEIGHT;
+
+        pattern.rows.forEach((rowConfig, index) => {
+            this.spawnMazeRowFromConfig(currentY, rowConfig, true, true, index, pattern);
+            currentY -= rowHeight; // Stack upwards
+        });
     }
 
     spawnMazeRowFromConfig(y, config, allowMoving, allowSpikes, rowIndex = null, pattern = null, tintColor = null, enemyBudget = null, coinBudget = null) {
@@ -66,6 +110,58 @@ export class MazeSpawner {
         const leftX = leftPlayable;
         const rightX = rightPlayable;
 
+        // Helper to add joint with randomization
+        // Joint is 30x54, Beam is 42h.
+        // Align bottom: Joint bottom at y + rowHeight/2
+        // Position X: On the wall seam.
+        const addJoint = (x, isLeft) => {
+            if (!scene?.add?.image) return;
+            const jointY = y + (rowHeight / 2);
+
+            // Randomly select joint texture
+            // 50% 01
+            // 25% 02
+            // 25% 03
+            const r = Math.random();
+            let num = 1;
+
+            if (r < 0.5) num = 1;
+            else if (r < 0.75) num = 2;
+            else num = 3;
+
+            const sideChar = isLeft ? 'l' : 'r';
+            const frame = `beam-joint-${sideChar}-0${num}.png`;
+
+            // Fallback check
+            let finalFrame = frame;
+            if (!scene.textures.get(ASSETS.FLOOR).has(frame)) {
+                // If specific variant missing, try fallback to 01
+                finalFrame = `beam-joint-${sideChar}-01.png`;
+                if (!scene.textures.get(ASSETS.FLOOR).has(finalFrame)) {
+                    return; // No joints available
+                }
+            }
+
+            const joint = scene.add.image(x, jointY, ASSETS.FLOOR, finalFrame);
+
+            // User requested joint to be "al borde de beam" (at the edge of the beam).
+            // Currently centered (0.5), which straddles.
+            // Moving to sit ON THE WALL (Outside playable area), flush with beam.
+            // Left (x=32): Origin 1 (Right align) -> Draws 2..32 (On Wall).
+            // Right (x=368): Origin 0 (Left align) -> Draws 368..398 (On Wall).
+            joint.setOrigin(isLeft ? 1 : 0, 1);
+
+            // Wait, joint texture might be pre-flipped in atlas?
+            // "beam-joint-l" implies it's designed for left. "r" for right.
+            // If they are specific textures, we DON'T need setFlipX unless the asset is reused.
+            // Assuming "l" and "r" are unique assets:
+            // Remove setFlipX if using specific 'r' assets which likely already face correct way.
+            // But let's check: previously I used FlipX for right side.
+            // If assets are explicit 'l' and 'r', we trust the artist.
+
+            joint.setDepth(13); // Above beam (12)
+        };
+
         let w1Eff = w1;
         let w2Eff = w2;
 
@@ -89,32 +185,38 @@ export class MazeSpawner {
             w1 = snap(Math.min(w1, maxCenter));
         }
 
-        // Spawn Walls
+        // Spawn Walls & Joints
         if (type === 'left') {
             const maxWidth = snap(Math.max(TILE, playableWidth - MIN_GAP));
             w1Eff = Math.min(w1Eff, maxWidth);
             let block = scene.mazeWalls.create(leftX, y, ASSETS.MAZE_BLOCK);
             block.setOrigin(0, 0.5).setDisplaySize(w1Eff, rowHeight).refreshBody().setDepth(10).setVisible(false);
             block.visual = this.createMazeFloorVisual(leftX, y, w1Eff, rowHeight, 0);
+            addJoint(leftX, true); // Left Joint
         } else if (type === 'right') {
             const maxWidth = snap(Math.max(TILE, playableWidth - MIN_GAP));
             w1Eff = Math.min(w1Eff, maxWidth);
             let block = scene.mazeWalls.create(rightX, y, ASSETS.MAZE_BLOCK);
             block.setOrigin(1, 0.5).setDisplaySize(w1Eff, rowHeight).refreshBody().setDepth(10).setVisible(false);
             block.visual = this.createMazeFloorVisual(rightX, y, w1Eff, rowHeight, 1);
+            addJoint(rightX, false); // Right Joint
         } else if (type === 'split') {
             let b1 = scene.mazeWalls.create(leftX, y, ASSETS.MAZE_BLOCK);
             b1.setOrigin(0, 0.5).setDisplaySize(w1Eff, rowHeight).refreshBody().setDepth(10).setVisible(false);
             b1.visual = this.createMazeFloorVisual(leftX, y, w1Eff, rowHeight, 0);
+            addJoint(leftX, true); // Left Joint
+
             let b2 = scene.mazeWalls.create(rightX, y, ASSETS.MAZE_BLOCK);
             b2.setOrigin(1, 0.5).setDisplaySize(w2Eff, rowHeight).refreshBody().setDepth(10).setVisible(false);
             b2.visual = this.createMazeFloorVisual(rightX, y, w2Eff, rowHeight, 1);
+            addJoint(rightX, false); // Right Joint
         } else if (type === 'center') {
             const maxCenter = snap(Math.max(TILE, playableWidth - MIN_GAP));
             w1 = snap(Math.min(w1, maxCenter));
             let block = scene.mazeWalls.create(centerX, y, ASSETS.MAZE_BLOCK);
             block.setOrigin(0.5, 0.5).setDisplaySize(w1, rowHeight).refreshBody().setDepth(10).setVisible(false);
             block.visual = this.createMazeFloorVisual(centerX, y, w1, rowHeight, 0.5);
+            // No joints for center (floating)
         }
 
         // Wall Segments for logic
@@ -292,21 +394,28 @@ export class MazeSpawner {
                         const enemyY = platformTop - enemyHalfHeight;
 
                         // Weighted Random Selection based on Tier Distribution
+                        // CRITICAL: Disable jumpers in mazes (they need vertical space to jump)
                         const dist = tierEnemyConfig.distribution || { patrol: 100, shooter: 0, jumper: 0 };
-                        const totalWeight = (dist.patrol || 0) + (dist.shooter || 0) + (dist.jumper || 0);
+                        const mazeDistribution = {
+                            patrol: dist.patrol || 0,
+                            shooter: dist.shooter || 0,
+                            jumper: 0 // Always 0 in mazes - jumpers need vertical space
+                        };
+
+                        const totalWeight = mazeDistribution.patrol + mazeDistribution.shooter + mazeDistribution.jumper;
                         const r = Phaser.Math.Between(0, totalWeight);
 
                         let selectedType = 'patrol';
-                        let cumulative = dist.patrol || 0;
+                        let cumulative = mazeDistribution.patrol;
 
                         if (r <= cumulative) {
                             selectedType = 'patrol';
                         } else {
-                            cumulative += (dist.shooter || 0);
+                            cumulative += mazeDistribution.shooter;
                             if (r <= cumulative) {
                                 selectedType = 'shooter';
                             } else {
-                                selectedType = 'jumper';
+                                selectedType = 'jumper'; // Will never happen since jumper = 0
                             }
                         }
 

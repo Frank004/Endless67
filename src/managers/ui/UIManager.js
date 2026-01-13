@@ -6,6 +6,7 @@ import { PauseMenu } from './menus/PauseMenu.js';
 import { ControlsUI } from './controls/ControlsUI.js';
 import { NotificationsUI } from './notifications/NotificationsUI.js';
 import { GameOverMenu } from './menus/GameOverMenu.js';
+import { MilestoneIndicatorManager } from './hud/MilestoneIndicatorManager.js';
 
 export class UIManager {
     constructor(scene) {
@@ -18,12 +19,19 @@ export class UIManager {
         this.controls = new ControlsUI(scene);
         this.notifications = new NotificationsUI(scene);
         this.gameOverMenu = new GameOverMenu(scene);
+        this.milestoneIndicators = new MilestoneIndicatorManager(scene);
     }
 
     createUI() {
         this.hud.create();
         this.pauseMenu.create();
         this.controls.create();
+
+        // Initialize milestones
+        if (this.milestoneIndicators) {
+            this.milestoneIndicators.createParticleEmitter();
+            this.milestoneIndicators.loadMilestones();
+        }
     }
 
     setGameStartUI() {
@@ -88,6 +96,14 @@ export class UIManager {
         this.gameOverMenu.showPostGameOptions();
     }
 
+    // Proxy methods for Milestone Indicators
+    updateMilestones(playerHeight) {
+        this.milestoneIndicators.update(playerHeight);
+    }
+
+    refreshMilestones() {
+        this.milestoneIndicators.refresh();
+    }
 
     /**
      * Setup EventBus listeners for UI updates
@@ -123,19 +139,26 @@ export class UIManager {
 
         // Listen to game over
         const gameOverListener = (data) => {
-            console.log('[UIManager] Game Over Event Received:', data);
+            console.log('🎮 [UIManager] Game Over Event Received:', data);
+            console.log('🎮 [UIManager] Checking high score with height:', data.height, 'score:', data.score);
             this.showGameOver(data);
 
-            // Check for High Score
-            // Note: GameState emits { score, height }. ScoreManager expects isHighScore(height, coins).
-            // Assuming data.score represents coins/points collected.
-            if (ScoreManager.isHighScore(data.height, data.score)) {
-                console.log('[UIManager] High Score detected! Showing Name Input.');
-                this.showNameInput(ScoreManager);
-            } else {
-                console.log('[UIManager] No High Score. Showing Options.');
-                this.showPostGameOptions();
-            }
+            // Delay before showing UI to allow game over animation to play
+            this.scene.time.delayedCall(1000, () => {
+                // Check for High Score
+                // Note: GameState emits { score, height }. ScoreManager expects isHighScore(height, coins).
+                // Assuming data.score represents coins/points collected.
+                const isHigh = ScoreManager.isHighScore(data.height, data.score);
+                console.log('🎮 [UIManager] isHighScore result:', isHigh);
+
+                if (isHigh) {
+                    console.log('✅ [UIManager] High Score detected! Showing Name Input.');
+                    this.showNameInput(ScoreManager);
+                } else {
+                    console.log('❌ [UIManager] No High Score. Showing Options.');
+                    this.showPostGameOptions();
+                }
+            });
         };
         EventBus.on(Events.GAME_OVER, gameOverListener);
         this.eventListeners.push({ event: Events.GAME_OVER, listener: gameOverListener });
@@ -149,5 +172,10 @@ export class UIManager {
             EventBus.off(event, listener);
         });
         this.eventListeners = [];
+
+        // Clean up milestone indicators
+        if (this.milestoneIndicators) {
+            this.milestoneIndicators.destroy();
+        }
     }
 }

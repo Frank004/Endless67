@@ -3,6 +3,7 @@ import { Player } from '../prefabs/Player.js';
 import { GameInitializer } from '../core/GameInitializer.js';
 import { updatePlatformRider } from '../utils/platformRider.js';
 import { BackgroundManager } from '../managers/background/BackgroundManager.js';
+import { FogEffect } from '../effects/FogEffect.js';
 import GameState from '../core/GameState.js';
 import { PLATFORM_WIDTH, PLATFORM_HEIGHT } from '../prefabs/Platform.js';
 import { SLOT_CONFIG } from '../config/SlotConfig.js';
@@ -48,6 +49,7 @@ export class Game extends Phaser.Scene {
         // Initialize first to ensure it's at the very back (Z-index -20)
         this.backgroundManager = new BackgroundManager(this);
         this.backgroundManager.create();
+        this.fogEffect = new FogEffect(this);
 
         // --- INITIALIZER ---
         // Handles setup of camera, devices, groups, pools, managers, and events
@@ -58,6 +60,10 @@ export class Game extends Phaser.Scene {
         this.events.once('shutdown', () => {
             if (this.uiManager) {
                 this.uiManager.destroy();
+            }
+            if (this.fogEffect) {
+                this.fogEffect.destroy();
+                this.fogEffect = null;
             }
         });
 
@@ -249,6 +255,11 @@ export class Game extends Phaser.Scene {
         if (this.riserManager) this.riserManager.update(this.player.y, this.currentHeight, false);
         if (this.backgroundManager) this.backgroundManager.update(this.cameras.main.scrollY);
 
+        // Update milestone indicators with current player height
+        if (this.uiManager) {
+            this.uiManager.updateMilestones(this.player.y);
+        }
+
         // Throttle audio updates on mobile (every 3 frames = ~20fps updates)
         if (this.audioManager) {
             if (!isMobile || (this._audioUpdateFrame = (this._audioUpdateFrame || 0) + 1) % 3 === 0) {
@@ -332,9 +343,9 @@ export class Game extends Phaser.Scene {
         this.audioManager.startMusic();
 
         // Activar lava cuando el juego comienza
-        if (this.riserManager) {
-            this.riserManager.setEnabled(true);
-        }
+        // if (this.riserManager) {
+        //     this.riserManager.setEnabled(true);
+        // }
 
         if (this.player?.controller?.resetState) {
             this.player.controller.resetState();
@@ -549,6 +560,10 @@ export class Game extends Phaser.Scene {
 
         // Clean up UI Manager listeners
         try {
+            // Reset GameOverMenu state BEFORE destroying to allow name input on next high score
+            if (this.uiManager && this.uiManager.gameOverMenu && typeof this.uiManager.gameOverMenu.reset === 'function') {
+                this.uiManager.gameOverMenu.reset();
+            }
             if (this.uiManager && typeof this.uiManager.destroy === 'function') {
                 this.uiManager.destroy();
             }
@@ -572,6 +587,15 @@ export class Game extends Phaser.Scene {
             }
         } catch (e) {
             // Silently ignore props cleanup errors
+        }
+
+        // Clean up fog effect
+        try {
+            if (this.fogEffect && typeof this.fogEffect.destroy === 'function') {
+                this.fogEffect.destroy();
+            }
+        } catch (e) {
+            // Silently ignore fog cleanup errors
         }
     }
 }

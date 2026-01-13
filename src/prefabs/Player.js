@@ -12,6 +12,9 @@ export class Player extends Phaser.Physics.Arcade.Sprite {
         scene.add.existing(this);
         scene.physics.add.existing(this);
 
+        // Set depth for proper layering (gameplay layer)
+        this.setDepth(20); // Gameplay layer - in front of all background decorations
+
         // Components
         this.visuals = new PlayerVisuals(this);
         this.physics = new PlayerPhysics(this);

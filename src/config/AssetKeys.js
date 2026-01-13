@@ -7,7 +7,10 @@ export const ASSETS = {
     WALLS: 'walls',
     FLOOR: 'floor',
     PROPS: 'props',
+    EFFECTS: 'effects',
     UI_ICONS: 'ui_icons',
+    ENEMY_ATLAS: 'enemy_atlas',
+
 
     // Generated Textures
     WALL_PLACEHOLDER: 'wall_placeholder',
@@ -33,6 +36,12 @@ export const ASSETS = {
     BG_MUSIC: 'bg_music',
     LAVA_AMBIENT: 'lava_ambient',
     LAVA_DROP: 'lava_drop',
+    ACID_AMBIENT: 'acid_ambient',
+    ACID_DROP: 'acid_drop',
+    FIRE_AMBIENT: 'fire_ambient',
+    FIRE_DROP: 'fire_drop',
+    WATER_AMBIENT: 'water_ambient',
+    WATER_DROP: 'water_drop',
     JUMP_SFX: 'jump_sfx',
     DESTROY_SFX: 'destroy_sfx',
     CELEBRATION_SFX: 'celebration_sfx',

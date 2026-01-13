@@ -1,5 +1,7 @@
 import { enablePlatformRider, updatePlatformRider } from '../utils/platformRider.js';
+import StateMachine from '../utils/StateMachine.js'; // Import StateMachine
 import { PatrolBehavior } from './behaviors/PatrolBehavior.js';
+
 import { ShootBehavior } from './behaviors/ShootBehavior.js';
 import { JumpBehavior } from './behaviors/JumpBehavior.js';
 
@@ -9,8 +11,9 @@ import { ASSETS } from '../config/AssetKeys.js';
 export class PatrolEnemy extends Phaser.Physics.Arcade.Sprite {
     constructor(scene, x = 0, y = 0) {
         // Constructor puede recibir x, y o no (para pooling)
-        super(scene, x, y, ASSETS.ENEMY_SPIKE);
+        super(scene, x, y, ASSETS.ENEMY_ATLAS, 'patrol-idle1.png');
         this.setDepth(20);
+        this.isDead = false;
 
         // Use 'patrol' mode: platformRider takes full control of movement and bounds
         enablePlatformRider(this, {
@@ -23,7 +26,50 @@ export class PatrolEnemy extends Phaser.Physics.Arcade.Sprite {
         // Strategy Pattern: Usar PatrolBehavior only for extra custom logic if needed (now reduced)
         // this.patrolBehavior = new PatrolBehavior(this, ENEMY_CONFIG.PATROL.SPEED);
         // this.patrolConfig = null; 
+
+        // Initialize State Machine
+        this.fsm = new StateMachine('idle', this);
+
+        this.fsm.addState('idle', {
+            onEnter: () => this.play('enemy_idle', true),
+            onUpdate: () => {
+                if (this.riderAutoPatrol && this.ridingPlatform) {
+                    this.fsm.setState('run');
+                }
+            }
+        })
+            .addState('run', {
+                onEnter: () => this.play('enemy_run', true),
+                onUpdate: () => {
+                    if (!this.riderAutoPatrol || !this.ridingPlatform) {
+                        this.fsm.setState('idle');
+                    }
+                }
+            })
+            .addState('attack', {
+                onEnter: () => {
+                    this.play('enemy_attack', true);
+                    this.once('animationcomplete', () => {
+                        if (this.fsm.currentState === 'attack') {
+                            this.fsm.setState('idle'); // Return to idle after attack
+                        }
+                    });
+                }
+            })
+            .addState('die', {
+                onEnter: () => {
+                    this.stopMoving();
+                    this.body.checkCollision.none = true; // Disable collisions
+                    this.play('enemy_die', true);
+                    this.once('animationcomplete', () => {
+                        this.destroy(); // Destroy after death animation
+                    });
+                }
+            });
+
+        this.fsm.start();
     }
+
 
     setPatrolBounds(minX, maxX, speed = ENEMY_CONFIG.PATROL.SPEED) {
         // Legacy method support - platformRider auto-calculates bounds from platform
@@ -44,25 +90,26 @@ export class PatrolEnemy extends Phaser.Physics.Arcade.Sprite {
         // Establecer posición PRIMERO
         this.setPosition(x, y);
 
-        // Establecer tamaño visual fijo (sin escalado)
-        this.setDisplaySize(ENEMY_CONFIG.PATROL.SIZE, ENEMY_CONFIG.PATROL.SIZE);
+        // Establecer tamaño visual: NO usar setDisplaySize con el tamaño del hitbox (20),
+        // dejar que el sprite use su tamaño natural (32x25) o forzarlo si fuera necesario.
+        // this.setDisplaySize(ENEMY_CONFIG.PATROL.SIZE, ENEMY_CONFIG.PATROL.SIZE); // REMOVED
         this.setScale(1);  // Asegurar que el scale sea 1
 
         // Configurar body de física
         if (this.body) {
             this.body.setSize(ENEMY_CONFIG.PATROL.SIZE, ENEMY_CONFIG.PATROL.SIZE);
-            this.body.setOffset(0, 0);  // Sin offset, el body coincide con el sprite
+            // Sprite is 32x25, Body is 20x20.
+            // Align bottom: Offset Y = SpriteHeight (25) - BodyHeight (20) = 5
+            // Center X: (32 - 20) / 2 = 6
+            this.body.setOffset(6, 5);
         }
 
         // Configurar física
         this.body.reset(x, y);
-        // IMPORTANTE: PatrolEnemy usa platformRider para movimiento vertical
-        // allowGravity debe estar TRUE para que platformRider detecte bordes
-        // pero gravity.y = 0 para que no caiga (platformRider maneja el movimiento)
         this.body.allowGravity = true;
-        this.body.gravity.y = 0;  // Sin gravedad, platformRider maneja vertical
+        this.body.gravity.y = ENEMY_CONFIG.PATROL.GRAVITY; // Needs gravity to fall onto platform
         this.body.immovable = false;
-        this.body.updateFromGameObject();  // Sincronizar body con posición del sprite
+        this.body.updateFromGameObject();
 
         this.setActive(true);
         this.setVisible(true);
@@ -111,7 +158,21 @@ export class PatrolEnemy extends Phaser.Physics.Arcade.Sprite {
     patrol(minX, maxX, speed = ENEMY_CONFIG.PATROL.SPEED) {
         // this.patrolBehavior.startPatrol(minX, maxX, speed);
         this.riderPatrolSpeed = speed;
+        this.riderPatrolSpeed = speed;
         this.riderAutoPatrol = true;
+    }
+
+    // --- State Actions ---
+
+    attack() {
+        if (this.isDead || this.fsm.currentState === 'attack') return;
+        this.fsm.setState('attack');
+    }
+
+    die() {
+        if (this.isDead) return;
+        this.isDead = true;
+        this.fsm.setState('die');
     }
 
     /**
@@ -128,6 +189,12 @@ export class PatrolEnemy extends Phaser.Physics.Arcade.Sprite {
 
         // PlatformRider updates logic automatically
         updatePlatformRider(this);
+
+        // Update State Machine
+        if (this.fsm) {
+            this.fsm.update(time, delta);
+        }
+
 
         // Debug: verificar que preUpdate se esté llamando solo si debug activo
         const debugPatrol = this.scene?.registry?.get('showPatrolLogs');
@@ -165,14 +232,41 @@ export class PatrolEnemy extends Phaser.Physics.Arcade.Sprite {
 
 export class ShooterEnemy extends Phaser.Physics.Arcade.Sprite {
     constructor(scene, x, y) {
-        super(scene, x, y, ASSETS.ENEMY_SHOOTER);
+        super(scene, x, y, ASSETS.ENEMY_ATLAS, 'patrol-idle1.png'); // Use Atlas
         this.setDepth(20);
+        this.isDead = false;
 
         // Use 'carry' mode: only follow platform, no movement
         enablePlatformRider(this, { mode: 'carry', marginX: 5 });
 
         // Strategy Pattern: Usar ShootBehavior
         this.shootBehavior = new ShootBehavior(this);
+
+        this.fsm = new StateMachine('idle', this);
+        this.fsm.addState('idle', {
+            onEnter: () => this.play('enemy_idle', true)
+        })
+            .addState('attack', {
+                onEnter: () => {
+                    this.play('enemy_attack', true);
+                    this.once('animationcomplete', () => {
+                        if (this.fsm.currentState === 'attack' && !this.isDead) {
+                            this.fsm.setState('idle');
+                        }
+                    });
+                }
+            })
+            .addState('die', {
+                onEnter: () => {
+                    this.stopShooting();
+                    this.body.checkCollision.none = true;
+                    this.play('enemy_die', true);
+                    this.once('animationcomplete', () => {
+                        this.destroy();
+                    });
+                }
+            });
+        this.fsm.start();
     }
 
     spawn(x, y) {
@@ -182,11 +276,16 @@ export class ShooterEnemy extends Phaser.Physics.Arcade.Sprite {
         }
 
         this.body.reset(x, y);
-        this.setDisplaySize(ENEMY_CONFIG.SHOOTER.SIZE, ENEMY_CONFIG.SHOOTER.SIZE);
+        // Remove direct setDisplaySize to respect sprite size
         this.setScale(1);
         if (this.body) {
-            this.body.setSize(ENEMY_CONFIG.SHOOTER.SIZE, ENEMY_CONFIG.SHOOTER.SIZE);
-            this.body.setOffset(0, 0);
+            this.body.setSize(ENEMY_CONFIG.SHOOTER.SIZE, ENEMY_CONFIG.SHOOTER.SIZE); // 24
+            // Sprite 32x25. Body 24x24 (if from config).
+            // Align bottom: 25 - 24 = 1.
+            // Center X: (32 - 24) / 2 = 4.
+            // But let's check what config value is. If 20 like patrol (which I updated previously on user request for general alignment? No user asked for jumper/shooter adjustment now).
+            // Let's assume standard alignment.
+            this.body.setOffset(4, 1);
         }
         this.body.allowGravity = false;
         this.setGravityY(0);
@@ -197,11 +296,24 @@ export class ShooterEnemy extends Phaser.Physics.Arcade.Sprite {
 
         // Reset timers/behavior
         this.stopShooting();
+        this.fsm.setState('idle');
+    }
+
+    attack() {
+        if (!this.isDead && this.fsm.currentState !== 'attack') {
+            this.fsm.setState('attack');
+        }
+    }
+
+    die() {
+        if (this.isDead) return;
+        this.isDead = true;
+        this.fsm.setState('die');
     }
 
     /**
-     * Método llamado cuando el objeto es devuelto al pool
-     */
+        * Método llamado cuando el objeto es devuelto al pool
+        */
     despawn() {
         // Detener disparo
         this.stopShooting();
@@ -224,24 +336,27 @@ export class ShooterEnemy extends Phaser.Physics.Arcade.Sprite {
     }
 
     /**
-     * Iniciar disparo (delegado a ShootBehavior)
-     */
+        * Iniciar disparo (delegado a ShootBehavior)
+        */
     startShooting(projectilesGroup, currentHeight = 0) {
         this.shootBehavior.startShooting(projectilesGroup, currentHeight);
     }
 
     /**
-     * Detener disparo (delegado a ShootBehavior)
-     */
+        * Detener disparo (delegado a ShootBehavior)
+        */
     stopShooting() {
         this.shootBehavior.stopShooting();
     }
 
     preUpdate(time, delta) {
         super.preUpdate(time, delta);
-
-        // Update platform rider behavior
+        // Update physics/logic
         updatePlatformRider(this);
+        // Update State Machine
+        if (this.fsm) {
+            this.fsm.update(time, delta);
+        }
 
         // Cleanup offscreen - usar despawn si hay pool
         if (this.y > this.scene.player.y + 900) {
@@ -256,8 +371,8 @@ export class ShooterEnemy extends Phaser.Physics.Arcade.Sprite {
     }
 
     /**
-     * Limpiar comportamiento al destruir
-     */
+        * Limpiar comportamiento al destruir
+        */
     destroy(fromScene) {
         if (this.shootBehavior) {
             this.shootBehavior.destroy();
@@ -268,41 +383,63 @@ export class ShooterEnemy extends Phaser.Physics.Arcade.Sprite {
 
 export class JumperShooterEnemy extends Phaser.Physics.Arcade.Sprite {
     constructor(scene, x, y) {
-        // Crear textura de cubo violeta sólido si no existe
-        if (!scene.textures.exists('jumper_cube')) {
-            const graphics = scene.add.graphics();
-            graphics.fillStyle(0x9B59B6, 1); // Color violeta
-            graphics.fillRect(0, 0, 32, 32);
-            graphics.generateTexture('jumper_cube', 32, 32);
-            graphics.destroy();
-        }
-
-        super(scene, x, y, 'jumper_cube');
+        super(scene, x, y, ASSETS.ENEMY_ATLAS, 'jumper-idle1.png');
 
         // Agregar al sistema de física (CRÍTICO para pooling)
         scene.physics.add.existing(this);
 
         this.setDepth(20);
+        this.isDead = false;
 
         // Strategy Pattern: Jump + Shoot behaviors
         this.jumpBehavior = new JumpBehavior(this, ENEMY_CONFIG.JUMPER.JUMP_FORCE);
         this.shootBehavior = new ShootBehavior(this);
+
+        this.fsm = new StateMachine('jump', this);
+        this.fsm.addState('jump', {
+            onEnter: () => {
+                this.play('jumper_jump', true);
+            },
+            onUpdate: () => {
+                if (!this.anims.isPlaying) {
+                    this.play('jumper_jump', true);
+                }
+            }
+        })
+            .addState('attack', {
+                onEnter: () => {
+                    this.play('jumper_attack', true);
+                    this.once('animationcomplete', () => {
+                        if (this.fsm.currentState === 'attack' && !this.isDead) {
+                            this.fsm.setState('jump');
+                        }
+                    });
+                }
+            })
+            .addState('die', {
+                onEnter: () => {
+                    this.stopBehavior();
+                    this.body.checkCollision.none = true;
+                    this.play('enemy_die', true);
+                    this.once('animationcomplete', () => {
+                        this.destroy();
+                    });
+                }
+            });
+        this.fsm.start();
     }
 
     spawn(x, y) {
         // Reset physics body
         this.body.reset(x, y);
 
-        // Tamaño completo 32x32 (visual y física)
-        this.setDisplaySize(ENEMY_CONFIG.JUMPER.SIZE, ENEMY_CONFIG.JUMPER.SIZE);
         this.setScale(1);
 
-        // Body completo 32x32
+        // Body dimensions based on sprite size 29x24
         if (this.body) {
-            this.body.setSize(ENEMY_CONFIG.JUMPER.SIZE, ENEMY_CONFIG.JUMPER.SIZE);
+            this.body.setSize(29, 24);
             this.body.setOffset(0, 0);
         }
-
 
         // La gravedad se hereda del mundo (1200)
         // Solo necesitamos asegurar que no sea immovable
@@ -320,6 +457,8 @@ export class JumperShooterEnemy extends Phaser.Physics.Arcade.Sprite {
         // Pop-in effect
         this.setScale(0);
         this.scene.tweens.add({ targets: this, scale: 1, duration: 400, ease: 'Back.out' });
+
+        this.fsm.setState('jump');
     }
 
     despawn() {
@@ -351,6 +490,7 @@ export class JumperShooterEnemy extends Phaser.Physics.Arcade.Sprite {
         super.preUpdate(time, delta);
 
         // Efecto visual dinámico: squash and stretch basado en velocidad
+        /*
         if (this.body) {
             const velocityY = this.body.velocity.y;
 
@@ -363,8 +503,9 @@ export class JumperShooterEnemy extends Phaser.Physics.Arcade.Sprite {
             // Aplicar escala suave usando lerp manual
             const lerpX = this.scaleX + (scaleX - this.scaleX) * 0.3;
             const lerpY = this.scaleY + (scaleY - this.scaleY) * 0.3;
-            this.setScale(lerpX, lerpY);
+            // this.setScale(lerpX, lerpY);
         }
+        */
 
         // Cleanup offscreen
         if (this.y > this.scene.player.y + 900) {
@@ -376,6 +517,18 @@ export class JumperShooterEnemy extends Phaser.Physics.Arcade.Sprite {
                 this.setVisible(false);
             }
         }
+    }
+
+    attack() {
+        if (!this.isDead && this.fsm.currentState !== 'attack') {
+            this.fsm.setState('attack');
+        }
+    }
+
+    die() {
+        if (this.isDead) return;
+        this.isDead = true;
+        this.fsm.setState('die');
     }
 
     destroy(fromScene) {

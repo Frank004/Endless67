@@ -13,7 +13,13 @@ import { ASSETS } from '../config/AssetKeys.js';
 
 // 🔴 CONSTANTES DE DIMENSIONES
 export const PLATFORM_HEIGHT = 32;
-export const PLATFORM_WIDTH = 128; // Ancho ÚNICO para todas las plataformas
+export const PLATFORM_WIDTH = 128; // Ancho ÚNICO para todas las plataformas (4 tiles de 32px)
+const STATIC_PLATFORM_FRAMES = [
+    'platforms-static-01.png',
+    'platforms-static-02.png',
+    'platforms-static-03.png',
+    'platforms-static-04.png'
+];
 
 // 🚀 OPTIMIZATION: Cache de frames de plataformas para evitar búsquedas repetidas
 class PlatformTextureCache {
@@ -27,21 +33,27 @@ class PlatformTextureCache {
      * @param {Phaser.Scene} scene - La escena del juego
      */
     initialize(scene) {
-        if (this.initialized || !scene || !scene.textures.exists('platform')) {
+        if (this.initialized || !scene || !scene.textures.exists(ASSETS.PLATFORM)) {
             return;
         }
 
-        const texture = scene.textures.get('platform');
+        const texture = scene.textures.get(ASSETS.PLATFORM);
         if (!texture) {
             return;
         }
 
         // Cachear referencias a los frames más usados
         const frameNames = [
-            'plat-static-01.png',
-            'plat-static-02.png',
+            'platforms-static-01.png',
+            'platforms-static-02.png',
+            'platforms-static-03.png',
+            'platforms-static-04.png',
+            'platforms-static-05.png',
+            'platforms-static-06.png',
             'plat-move-01.png',
-            'plat-move-02.png'
+            'plat-move-02.png',
+            'plat-move-03.png',
+            'plat-move-04.png'
         ];
 
         frameNames.forEach(frameName => {
@@ -67,8 +79,8 @@ class PlatformTextureCache {
         }
 
         // Si no está en cache, buscarlo y cachearlo
-        if (scene && scene.textures.exists('platform')) {
-            const texture = scene.textures.get('platform');
+        if (scene && scene.textures.exists(ASSETS.PLATFORM)) {
+            const texture = scene.textures.get(ASSETS.PLATFORM);
             if (texture && texture.has(frameName)) {
                 const frame = texture.get(frameName);
                 this.cache.set(frameName, frame);
@@ -109,7 +121,7 @@ export class Platform extends Phaser.GameObjects.TileSprite {
 
         // TileSprite requiere width y height en el constructor
         // Usar textura por defecto, se cambiará en spawn()
-        super(scene, 0, 0, PLATFORM_WIDTH, PLATFORM_HEIGHT, 'platform', 'plat-static-01.png');
+        super(scene, 0, 0, PLATFORM_WIDTH, PLATFORM_HEIGHT, ASSETS.PLATFORM, 'platforms-static-01.png');
 
         // Guardar referencia explícita a la escena (por si Phaser la pierde)
         this._sceneRef = scene;
@@ -180,18 +192,21 @@ export class Platform extends Phaser.GameObjects.TileSprite {
             platformTextureCache.initialize(scene);
         }
 
-        // 🎨 Usar texturas del atlas 'platform' con variación aleatoria
-        // OPTIMIZATION: Pre-calcular frame names para evitar concatenaciones repetidas
-        const variant = Phaser.Math.Between(1, 2); // 01 o 02
-        const frameName = isMoving
-            ? `plat-move-0${variant}.png`
-            : `plat-static-0${variant}.png`;
+        // 🎨 Usar texturas del atlas 'platform'
+        let frameName;
+
+        if (isMoving) {
+            const variant = Phaser.Math.Between(1, 4);
+            frameName = `plat-move-0${variant}.png`;
+        } else {
+            frameName = Phaser.Utils.Array.GetRandom(STATIC_PLATFORM_FRAMES);
+        }
 
         // 🚀 OPTIMIZATION: Verificar cache primero antes de verificar textures.exists()
         // El cache ya valida que el atlas existe durante la inicialización
         if (!platformTextureCache.initialized) {
             // Si el cache no está inicializado, verificar manualmente
-            if (!scene.textures.exists('platform')) {
+            if (!scene.textures.exists(ASSETS.PLATFORM)) {
                 console.error('Platform.spawn: Atlas "platform" not loaded!');
                 return;
             }
@@ -199,7 +214,7 @@ export class Platform extends Phaser.GameObjects.TileSprite {
 
         // 🚀 OPTIMIZATION: setTexture es más rápido cuando el cache está inicializado
         // porque Phaser puede usar las referencias pre-calculadas
-        this.setTexture('platform', frameName);
+        this.setTexture(ASSETS.PLATFORM, frameName);
 
         // Posición PRIMERO
         this.setPosition(x, y);
@@ -214,7 +229,7 @@ export class Platform extends Phaser.GameObjects.TileSprite {
         // Asegurar que el body existe y configurarlo manualmente
         // Para plataformas móviles: usar body dinámico (false), para estáticas: static (true)
         const shouldBeStatic = !isMoving;
-        
+
         if (!this.body) {
             // Crear body según tipo: static para estáticas, dinámico para móviles
             scene.physics.add.existing(this, shouldBeStatic);
@@ -251,7 +266,7 @@ export class Platform extends Phaser.GameObjects.TileSprite {
                 this.body.moves = true;  // ✅ PERMITIR que el motor de física mueva la plataforma
                 this.body.immovable = true; // ✅ No ser empujado por otros objetos
                 this.body.allowGravity = false; // ✅ Asegurar sin gravedad
-                
+
                 // CRÍTICO: Bloquear movimiento vertical - solo movimiento horizontal
                 this.body.velocity.y = 0; // Sin velocidad vertical
                 this.body.setMaxVelocity(Infinity, 0); // Sin límite en X, bloqueado en Y

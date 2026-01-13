@@ -2,6 +2,9 @@ import { ASSETS } from '../config/AssetKeys.js';
 import { Leaderboard } from './Leaderboard.js';
 import { Settings } from './Settings.js';
 import { Playground } from './Playground.js';
+import { WarmupManager } from '../managers/system/WarmupManager.js';
+import { registerEnemyAnimations } from '../utils/animations.js';
+
 
 export class Preloader extends Phaser.Scene {
     constructor() {
@@ -9,6 +12,9 @@ export class Preloader extends Phaser.Scene {
     }
 
     preload() {
+        // Establecer ruta base relativa para asegurar carga en GitHub Pages / Netlify / Capacitor
+        this.load.setBaseURL('./');
+
         // --- LOADING BAR UI ---
         const width = this.cameras.main.width;
         const height = this.cameras.main.height;
@@ -63,18 +69,28 @@ export class Preloader extends Phaser.Scene {
         this.load.audio(ASSETS.DAMAGE_SFX_PREFIX + '3', 'assets/audio/take-damage/Retro Game Low Take Damage 3.mp3');
         this.load.audio(ASSETS.DAMAGE_SFX_PREFIX + '4', 'assets/audio/take-damage/Retro Game Low Take Damage 4.mp3');
         this.load.audio(ASSETS.DAMAGE_SFX_PREFIX + '5', 'assets/audio/take-damage/Retro Game Low Take Damage 5.mp3');
-        this.load.audio(ASSETS.LAVA_AMBIENT, 'assets/audio/lava/Lava.mp3');
-        this.load.audio(ASSETS.BG_MUSIC, 'assets/audio/bg-music/retro-game-music/Retro hiphop.mp3');
-        this.load.audio(ASSETS.LAVA_DROP, 'assets/audio/lava-drop/lava-drop-in.mp3');
+
+        // Riser Sounds
+        this.load.audio(ASSETS.LAVA_AMBIENT, 'assets/audio/riser/lava.mp3');
+        this.load.audio(ASSETS.LAVA_DROP, 'assets/audio/riser/lava-drop.mp3');
+        this.load.audio(ASSETS.ACID_AMBIENT, 'assets/audio/riser/acid.mp3');
+        this.load.audio(ASSETS.ACID_DROP, 'assets/audio/riser/acid-drop.mp3');
+        this.load.audio(ASSETS.FIRE_AMBIENT, 'assets/audio/riser/fire.mp3');
+        this.load.audio(ASSETS.FIRE_DROP, 'assets/audio/riser/fire-drop.mp3');
+        this.load.audio(ASSETS.WATER_AMBIENT, 'assets/audio/riser/water.mp3');
+        this.load.audio(ASSETS.WATER_DROP, 'assets/audio/riser/water-drop.mp3');
+
+        this.load.audio(ASSETS.BG_MUSIC, 'assets/audio/bg-music/retro-game-music/Retro_hiphop.mp3');
         this.load.audio(ASSETS.JUMP_SFX, 'assets/audio/jumps/jumping.mp3');
         this.load.audio(ASSETS.DESTROY_SFX, 'assets/audio/destroy/destroy.mp3');
         this.load.audio(ASSETS.CELEBRATION_SFX, 'assets/audio/celebration/67.mp3');
         this.load.audio(ASSETS.SHOE_BRAKE, 'assets/audio/shoes/shoe-brake.mp3');
         this.load.audio(ASSETS.TRASHCAN_HIT, 'assets/audio/trashcan/trashcan.mp3');
         this.load.audio(ASSETS.TIRE_BOUNCE, 'assets/audio/tire bounce/tirebounce.mp3');
-        this.load.audio(ASSETS.WALL_SLIDE, 'assets/audio/slide/slide.MP3');
+        this.load.audio(ASSETS.WALL_SLIDE, 'assets/audio/slide/slide.mp3');
 
         // --- ASSETS LOADING ---
+        this.load.image('game_logo', 'assets/logo.png');
         this.load.atlas(ASSETS.UI_ICONS, 'assets/ui/icons.png', 'assets/ui/icons.json');
         this.load.multiatlas(ASSETS.COINS, 'assets/spritesheets/coins.json', 'assets/spritesheets');
         this.load.multiatlas('basketball', 'assets/spritesheets/basketball.json', 'assets/spritesheets');
@@ -83,6 +99,10 @@ export class Preloader extends Phaser.Scene {
         this.load.multiatlas('platform', 'assets/spritesheets/platform.json', 'assets/spritesheets');
         this.load.multiatlas(ASSETS.PROPS, 'assets/spritesheets/props.json', 'assets/spritesheets');
         this.load.multiatlas(ASSETS.PLAYER, 'assets/spritesheets/player.json', 'assets/spritesheets');
+        this.load.atlas(ASSETS.ENEMY_ATLAS, 'assets/spritesheets/enemy.png', 'assets/spritesheets/enemy.json');
+        this.load.atlas(ASSETS.EFFECTS, 'assets/spritesheets/effects.png', 'assets/spritesheets/effects.json');
+
+
     }
 
     create() {
@@ -99,6 +119,12 @@ export class Preloader extends Phaser.Scene {
             g.strokeRoundedRect(0, 0, PLAYER_SIZE, PLAYER_SIZE, 8);
             g.generateTexture(ASSETS.PLAYER_PLACEHOLDER, PLAYER_SIZE, PLAYER_SIZE);
         }
+
+        // Particle texture for milestone celebrations
+        g.clear();
+        g.fillStyle(0xffffff, 1);
+        g.fillCircle(4, 4, 4);
+        g.generateTexture('particle', 8, 8);
 
         // --- ANIMATIONS ---
         if (atlasLoaded && this.anims) {
@@ -136,6 +162,27 @@ export class Preloader extends Phaser.Scene {
             makeAnim('player_wall_slide_loop', ['wallslide-06.png', 'wallslide-07.png', 'wallslide-08.png'], 12, -1);
             makeAnim('player_hit', ['hit-01.png', 'hit-02.png'], 10, 0);
 
+            // Effects Animations
+            if (this.textures.exists(ASSETS.EFFECTS)) {
+                // Ensure sorting correct 1-14
+                const fxFrames = [];
+                for (let i = 1; i <= 14; i++) {
+                    fxFrames.push({ key: ASSETS.EFFECTS, frame: `explotion${i}.png` });
+                }
+
+                this.anims.create({
+                    key: 'explosion',
+                    frames: fxFrames,
+                    frameRate: 24,
+                    hideOnComplete: true,
+                    repeat: 0
+                });
+                console.log(`[Preloader] ✅ Created 'explosion' animation with ${fxFrames.length} frames.`);
+            } else {
+                console.error('[Preloader] ❌ EFFECTS texture not found!');
+            }
+
+
             // Powerup Animation
             const powerFrameOrder = [
                 'basketball_powerup-01.png', 'basketball_powerup-02.png', 'basketball_powerup-03.png', 'basketball_powerup-04.png',
@@ -153,6 +200,9 @@ export class Preloader extends Phaser.Scene {
                 this.anims.create({ key: 'player_powerup', frames: powerFrames, frameRate: 10, repeat: 0 });
             }
         }
+
+        registerEnemyAnimations(this);
+
 
         // --- PROCEDURAL TEXTURES ---
         // Platform
@@ -198,7 +248,8 @@ export class Preloader extends Phaser.Scene {
         g.fillStyle(0xeeffaa, 0.4); for (let i = 0; i < 50; i++) g.fillCircle(Phaser.Math.Between(0, riserTextureWidth), Phaser.Math.Between(0, riserTextureHeight), Phaser.Math.Between(1, 4));
         g.generateTexture(ASSETS.ACID_TEXTURE, riserTextureWidth, riserTextureHeight);
 
-        // Fire
+        // Fire (Procedural disabled to use Sprite)
+        /*
         g.clear();
         const pixelSize = 8;
         const flameHeight = riserTextureHeight;
@@ -222,6 +273,37 @@ export class Preloader extends Phaser.Scene {
         }
         g.fillStyle(0xffff00, 0.8); for (let i = 0; i < 50; i++) g.fillRect(Phaser.Math.Between(0, riserTextureWidth), Phaser.Math.Between(0, flameHeight), pixelSize / 2, pixelSize / 2);
         g.fillStyle(0xff4400, 0.7); for (let i = 0; i < 30; i++) g.fillRect(Phaser.Math.Between(0, riserTextureWidth), Phaser.Math.Between(0, flameHeight * 0.5), pixelSize / 3, pixelSize / 3);
+        g.generateTexture(ASSETS.FIRE_TEXTURE, riserTextureWidth, riserTextureHeight);
+        */
+
+        // Fallback: Create a simple red texture if sprite fails or for solid body fill under the wave
+        // Fire Gradient Texture
+        g.clear();
+        // Draw Gradient
+        // Top: Hex #FFD700 (Gold/Yellow)
+        // Middle: Hex #FF8C00 (Dark Orange)
+        // Bottom: Hex #FF0000 (Red)
+
+        // We can draw small rects to simulate gradient or use fillGradientStyle if this was a GameObject, 
+        // but for generating a texture using Graphics, we have to draw lines or rects.
+        // Let's draw 1px high rects interpolating color.
+
+        for (let y = 0; y < riserTextureHeight; y++) {
+            const ratio = y / riserTextureHeight;
+            let r, gr, b;
+
+            // Interpolate colors: Red (Top) -> Orange (Bottom)
+            // Top: Red (255, 0, 0)
+            // Bottom: Orange (255, 140, 0)
+
+            r = 255;
+            // Green goes from 0 to 140
+            gr = Math.floor(ratio * 140);
+            b = 0;
+
+            g.fillStyle(Phaser.Display.Color.GetColor(r, gr, b), 1);
+            g.fillRect(0, y, riserTextureWidth, 1);
+        }
         g.generateTexture(ASSETS.FIRE_TEXTURE, riserTextureWidth, riserTextureHeight);
 
         // UI & FX
@@ -248,6 +330,10 @@ export class Preloader extends Phaser.Scene {
         if (!this.scene.get('Settings')) this.scene.add('Settings', Settings, false);
         if (!this.scene.get('Playground')) this.scene.add('Playground', Playground, false);
 
-        this.scene.start('MainMenu');
+        // Warmup Shaders & Particles
+        const warmup = new WarmupManager(this);
+        warmup.warmup().then(() => {
+            this.scene.start('MainMenu');
+        });
     }
 }

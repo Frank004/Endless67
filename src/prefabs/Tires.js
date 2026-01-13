@@ -10,7 +10,7 @@ export class Tires extends Phaser.Physics.Arcade.Sprite {
         scene.physics.add.existing(this, true); // static body
 
         this.setOrigin(0.5, 1);
-        this.setDepth(11);
+        this.setDepth(30); // Foreground (Above Player 20)
 
         // Body tuned to the top surface to make bounce detection easier
         if (this.body) {

@@ -16,6 +16,8 @@ import { POWERUP_BASE_SIZE } from '../../prefabs/Powerup.js';
 import { EnemySpawnStrategy } from './EnemySpawnStrategy.js';
 // Pure layout logic
 import { GridGenerator } from './GridGenerator.js';
+// Wall decorations (lightboxes, signs, etc.)
+import { WallDecorManager } from '../visuals/WallDecorManager.js';
 
 export class SlotGenerator {
     constructor(scene) {
@@ -49,6 +51,9 @@ export class SlotGenerator {
 
         // Estrategia de spawn de enemigos
         this.enemySpawnStrategy = new EnemySpawnStrategy(scene);
+
+        // Manager de decoraciones de pared (lightboxes, signs, etc.)
+        this.wallDecorManager = new WallDecorManager(scene);
 
         // Flag para prevenir múltiples generaciones en el mismo frame
         this.isGenerating = false;
@@ -251,6 +256,7 @@ export class SlotGenerator {
         if (this.currentSlotIndex < SLOT_CONFIG.rules.tutorialSlots) {
             return 'PLATFORM_BATCH';
         }
+
 
         const mazeConfig = difficulty.getMazeConfig();
         const r = Math.random();
@@ -708,6 +714,11 @@ export class SlotGenerator {
             }
         }
 
+        // ─────────────────────────────────────────────────────────────
+        // PASO 3: Generar DECORACIONES DE PARED (lightboxes, signs, etc.)
+        // ─────────────────────────────────────────────────────────────
+        this.wallDecorManager.generateForSlot(yStart, height);
+
         return {
             patternName: basePatternName,
             transform,
@@ -803,6 +814,11 @@ export class SlotGenerator {
                 coinBudget
             );
         }
+
+        // ─────────────────────────────────────────────────────────────
+        // Generar DECORACIONES DE PARED (lightboxes, signs, etc.)
+        // ─────────────────────────────────────────────────────────────
+        this.wallDecorManager.generateForSlot(yStart, height);
 
         return {
             rowCount,
@@ -927,6 +943,13 @@ export class SlotGenerator {
         const limitY = Math.max(playerLimitY, riserLimitY);
         this.cleanupOldSlots(limitY);
 
+        // Cleanup wall decorations (lightboxes, signs, etc.)
+        this.wallDecorManager.cleanup(playerY, this.cleanupDistance);
+
+        // Update parallax for wall decorations (depth effect)
+        const cameraY = this.scene.cameras.main.scrollY;
+        this.wallDecorManager.updateParallax(cameraY);
+
         // Safety: enforce original position for platforms to avoid drift (opt-in via enablePlatformLock)
         if (this.scene.registry?.get('enablePlatformLock')) {
             this.restorePlatformPositions();
@@ -1035,6 +1058,16 @@ export class SlotGenerator {
         }
         this.slots = [];
         this.currentSlotIndex = 0;
+        this.slots = [];
+        this.consecutiveMazes = 0;
+        this.mazeCooldown = 0;
+        this.isGenerating = false;
+
+        // Clean up Wall Decor (Release pools)
+        if (this.wallDecorManager) {
+            this.wallDecorManager.destroy();
+        }
+
         // this.colorIndex = 0;  // Comentado: colores debug desactivados
     }
 

@@ -1,0 +1,1322 @@
+{
+	"textures": [
+		{
+			"image": "props.png",
+			"format": "RGBA8888",
+			"size": {
+				"w": 1533,
+				"h": 652
+			},
+			"scale": 1,
+			"frames": [
+				{
+					"filename": "cable-black01.png",
+					"rotated": false,
+					"trimmed": true,
+					"sourceSize": {
+						"w": 720,
+						"h": 223
+					},
+					"spriteSourceSize": {
+						"x": 0,
+						"y": 2,
+						"w": 720,
+						"h": 221
+					},
+					"frame": {
+						"x": 1,
+						"y": 1,
+						"w": 720,
+						"h": 221
+					}
+				},
+				{
+					"filename": "cable-black01-noblur.png",
+					"rotated": false,
+					"trimmed": true,
+					"sourceSize": {
+						"w": 720,
+						"h": 223
+					},
+					"spriteSourceSize": {
+						"x": 0,
+						"y": 9,
+						"w": 720,
+						"h": 213
+					},
+					"frame": {
+						"x": 1,
+						"y": 224,
+						"w": 720,
+						"h": 213
+					}
+				},
+				{
+					"filename": "cable5.png",
+					"rotated": false,
+					"trimmed": true,
+					"sourceSize": {
+						"w": 720,
+						"h": 223
+					},
+					"spriteSourceSize": {
+						"x": 0,
+						"y": 9,
+						"w": 720,
+						"h": 213
+					},
+					"frame": {
+						"x": 723,
+						"y": 1,
+						"w": 720,
+						"h": 213
+					}
+				},
+				{
+					"filename": "cableblack02.png",
+					"rotated": false,
+					"trimmed": true,
+					"sourceSize": {
+						"w": 720,
+						"h": 186
+					},
+					"spriteSourceSize": {
+						"x": 0,
+						"y": 23,
+						"w": 720,
+						"h": 90
+					},
+					"frame": {
+						"x": 1,
+						"y": 439,
+						"w": 720,
+						"h": 90
+					}
+				},
+				{
+					"filename": "cableblack02-noblur.png",
+					"rotated": false,
+					"trimmed": true,
+					"sourceSize": {
+						"w": 720,
+						"h": 186
+					},
+					"spriteSourceSize": {
+						"x": 0,
+						"y": 30,
+						"w": 720,
+						"h": 76
+					},
+					"frame": {
+						"x": 723,
+						"y": 216,
+						"w": 720,
+						"h": 76
+					}
+				},
+				{
+					"filename": "cable4.png",
+					"rotated": false,
+					"trimmed": true,
+					"sourceSize": {
+						"w": 720,
+						"h": 186
+					},
+					"spriteSourceSize": {
+						"x": 0,
+						"y": 31,
+						"w": 720,
+						"h": 74
+					},
+					"frame": {
+						"x": 1,
+						"y": 531,
+						"w": 720,
+						"h": 74
+					}
+				},
+				{
+					"filename": "cable3.png",
+					"rotated": false,
+					"trimmed": true,
+					"sourceSize": {
+						"w": 720,
+						"h": 67
+					},
+					"spriteSourceSize": {
+						"x": 0,
+						"y": 4,
+						"w": 720,
+						"h": 44
+					},
+					"frame": {
+						"x": 1,
+						"y": 607,
+						"w": 720,
+						"h": 44
+					}
+				},
+				{
+					"filename": "cableblack03.png",
+					"rotated": false,
+					"trimmed": true,
+					"sourceSize": {
+						"w": 720,
+						"h": 172
+					},
+					"spriteSourceSize": {
+						"x": 0,
+						"y": 41,
+						"w": 720,
+						"h": 71
+					},
+					"frame": {
+						"x": 723,
+						"y": 294,
+						"w": 720,
+						"h": 71
+					}
+				},
+				{
+					"filename": "cable2.png",
+					"rotated": false,
+					"trimmed": true,
+					"sourceSize": {
+						"w": 720,
+						"h": 77
+					},
+					"spriteSourceSize": {
+						"x": 0,
+						"y": 3,
+						"w": 720,
+						"h": 65
+					},
+					"frame": {
+						"x": 723,
+						"y": 367,
+						"w": 720,
+						"h": 65
+					}
+				},
+				{
+					"filename": "cableblack03-noblur.png",
+					"rotated": false,
+					"trimmed": true,
+					"sourceSize": {
+						"w": 720,
+						"h": 172
+					},
+					"spriteSourceSize": {
+						"x": 0,
+						"y": 47,
+						"w": 720,
+						"h": 58
+					},
+					"frame": {
+						"x": 723,
+						"y": 434,
+						"w": 720,
+						"h": 58
+					}
+				},
+				{
+					"filename": "cable1.png",
+					"rotated": false,
+					"trimmed": true,
+					"sourceSize": {
+						"w": 720,
+						"h": 172
+					},
+					"spriteSourceSize": {
+						"x": 0,
+						"y": 48,
+						"w": 720,
+						"h": 56
+					},
+					"frame": {
+						"x": 723,
+						"y": 494,
+						"w": 720,
+						"h": 56
+					}
+				},
+				{
+					"filename": "lightboxBig-r-03.png",
+					"rotated": false,
+					"trimmed": true,
+					"sourceSize": {
+						"w": 54,
+						"h": 107
+					},
+					"spriteSourceSize": {
+						"x": 5,
+						"y": 4,
+						"w": 49,
+						"h": 97
+					},
+					"frame": {
+						"x": 1445,
+						"y": 1,
+						"w": 49,
+						"h": 97
+					}
+				},
+				{
+					"filename": "streetlight-damage.png",
+					"rotated": false,
+					"trimmed": false,
+					"sourceSize": {
+						"w": 36,
+						"h": 90
+					},
+					"spriteSourceSize": {
+						"x": 0,
+						"y": 0,
+						"w": 36,
+						"h": 90
+					},
+					"frame": {
+						"x": 1496,
+						"y": 1,
+						"w": 36,
+						"h": 90
+					}
+				},
+				{
+					"filename": "lightboxBig-l-04.png",
+					"rotated": false,
+					"trimmed": false,
+					"sourceSize": {
+						"w": 49,
+						"h": 96
+					},
+					"spriteSourceSize": {
+						"x": 0,
+						"y": 0,
+						"w": 49,
+						"h": 96
+					},
+					"frame": {
+						"x": 723,
+						"y": 552,
+						"w": 49,
+						"h": 96
+					}
+				},
+				{
+					"filename": "lightboxBig-r-04.png",
+					"rotated": false,
+					"trimmed": false,
+					"sourceSize": {
+						"w": 49,
+						"h": 96
+					},
+					"spriteSourceSize": {
+						"x": 0,
+						"y": 0,
+						"w": 49,
+						"h": 96
+					},
+					"frame": {
+						"x": 1445,
+						"y": 100,
+						"w": 49,
+						"h": 96
+					}
+				},
+				{
+					"filename": "streetlight.png",
+					"rotated": false,
+					"trimmed": false,
+					"sourceSize": {
+						"w": 36,
+						"h": 90
+					},
+					"spriteSourceSize": {
+						"x": 0,
+						"y": 0,
+						"w": 36,
+						"h": 90
+					},
+					"frame": {
+						"x": 1496,
+						"y": 93,
+						"w": 36,
+						"h": 90
+					}
+				},
+				{
+					"filename": "lightbox-l-07.png",
+					"rotated": false,
+					"trimmed": false,
+					"sourceSize": {
+						"w": 48,
+						"h": 95
+					},
+					"spriteSourceSize": {
+						"x": 0,
+						"y": 0,
+						"w": 48,
+						"h": 95
+					},
+					"frame": {
+						"x": 774,
+						"y": 552,
+						"w": 48,
+						"h": 95
+					}
+				},
+				{
+					"filename": "lightbox-l-08.png",
+					"rotated": false,
+					"trimmed": false,
+					"sourceSize": {
+						"w": 48,
+						"h": 95
+					},
+					"spriteSourceSize": {
+						"x": 0,
+						"y": 0,
+						"w": 48,
+						"h": 95
+					},
+					"frame": {
+						"x": 1445,
+						"y": 198,
+						"w": 48,
+						"h": 95
+					}
+				},
+				{
+					"filename": "lightbox-r-07.png",
+					"rotated": false,
+					"trimmed": false,
+					"sourceSize": {
+						"w": 48,
+						"h": 95
+					},
+					"spriteSourceSize": {
+						"x": 0,
+						"y": 0,
+						"w": 48,
+						"h": 95
+					},
+					"frame": {
+						"x": 824,
+						"y": 552,
+						"w": 48,
+						"h": 95
+					}
+				},
+				{
+					"filename": "lightbox-R-08.png",
+					"rotated": false,
+					"trimmed": false,
+					"sourceSize": {
+						"w": 48,
+						"h": 95
+					},
+					"spriteSourceSize": {
+						"x": 0,
+						"y": 0,
+						"w": 48,
+						"h": 95
+					},
+					"frame": {
+						"x": 1445,
+						"y": 295,
+						"w": 48,
+						"h": 95
+					}
+				},
+				{
+					"filename": "lightboxBig-l-03.png",
+					"rotated": false,
+					"trimmed": false,
+					"sourceSize": {
+						"w": 48,
+						"h": 95
+					},
+					"spriteSourceSize": {
+						"x": 0,
+						"y": 0,
+						"w": 48,
+						"h": 95
+					},
+					"frame": {
+						"x": 874,
+						"y": 552,
+						"w": 48,
+						"h": 95
+					}
+				},
+				{
+					"filename": "lightboxBig-l-05.png",
+					"rotated": false,
+					"trimmed": false,
+					"sourceSize": {
+						"w": 48,
+						"h": 94
+					},
+					"spriteSourceSize": {
+						"x": 0,
+						"y": 0,
+						"w": 48,
+						"h": 94
+					},
+					"frame": {
+						"x": 1445,
+						"y": 392,
+						"w": 48,
+						"h": 94
+					}
+				},
+				{
+					"filename": "lightboxBig-r-05.png",
+					"rotated": false,
+					"trimmed": false,
+					"sourceSize": {
+						"w": 48,
+						"h": 94
+					},
+					"spriteSourceSize": {
+						"x": 0,
+						"y": 0,
+						"w": 48,
+						"h": 94
+					},
+					"frame": {
+						"x": 924,
+						"y": 552,
+						"w": 48,
+						"h": 94
+					}
+				},
+				{
+					"filename": "lightboxBig-l-01.png",
+					"rotated": false,
+					"trimmed": false,
+					"sourceSize": {
+						"w": 45,
+						"h": 90
+					},
+					"spriteSourceSize": {
+						"x": 0,
+						"y": 0,
+						"w": 45,
+						"h": 90
+					},
+					"frame": {
+						"x": 974,
+						"y": 552,
+						"w": 45,
+						"h": 90
+					}
+				},
+				{
+					"filename": "lightboxBig-r-01.png",
+					"rotated": false,
+					"trimmed": false,
+					"sourceSize": {
+						"w": 45,
+						"h": 90
+					},
+					"spriteSourceSize": {
+						"x": 0,
+						"y": 0,
+						"w": 45,
+						"h": 90
+					},
+					"frame": {
+						"x": 1021,
+						"y": 552,
+						"w": 45,
+						"h": 90
+					}
+				},
+				{
+					"filename": "lightbox-l-06.png",
+					"rotated": false,
+					"trimmed": false,
+					"sourceSize": {
+						"w": 37,
+						"h": 64
+					},
+					"spriteSourceSize": {
+						"x": 0,
+						"y": 0,
+						"w": 37,
+						"h": 64
+					},
+					"frame": {
+						"x": 1495,
+						"y": 198,
+						"w": 37,
+						"h": 64
+					}
+				},
+				{
+					"filename": "lightbox-r-06.png",
+					"rotated": false,
+					"trimmed": false,
+					"sourceSize": {
+						"w": 37,
+						"h": 64
+					},
+					"spriteSourceSize": {
+						"x": 0,
+						"y": 0,
+						"w": 37,
+						"h": 64
+					},
+					"frame": {
+						"x": 1495,
+						"y": 264,
+						"w": 37,
+						"h": 64
+					}
+				},
+				{
+					"filename": "lightbox-l-01.png",
+					"rotated": false,
+					"trimmed": false,
+					"sourceSize": {
+						"w": 45,
+						"h": 64
+					},
+					"spriteSourceSize": {
+						"x": 0,
+						"y": 0,
+						"w": 45,
+						"h": 64
+					},
+					"frame": {
+						"x": 1068,
+						"y": 552,
+						"w": 45,
+						"h": 64
+					}
+				},
+				{
+					"filename": "lightbox-r-01.png",
+					"rotated": false,
+					"trimmed": false,
+					"sourceSize": {
+						"w": 45,
+						"h": 64
+					},
+					"spriteSourceSize": {
+						"x": 0,
+						"y": 0,
+						"w": 45,
+						"h": 64
+					},
+					"frame": {
+						"x": 1115,
+						"y": 552,
+						"w": 45,
+						"h": 64
+					}
+				},
+				{
+					"filename": "lightbox-l-02.png",
+					"rotated": false,
+					"trimmed": false,
+					"sourceSize": {
+						"w": 44,
+						"h": 64
+					},
+					"spriteSourceSize": {
+						"x": 0,
+						"y": 0,
+						"w": 44,
+						"h": 64
+					},
+					"frame": {
+						"x": 1162,
+						"y": 552,
+						"w": 44,
+						"h": 64
+					}
+				},
+				{
+					"filename": "lightbox-l-03.png",
+					"rotated": false,
+					"trimmed": false,
+					"sourceSize": {
+						"w": 44,
+						"h": 64
+					},
+					"spriteSourceSize": {
+						"x": 0,
+						"y": 0,
+						"w": 44,
+						"h": 64
+					},
+					"frame": {
+						"x": 1208,
+						"y": 552,
+						"w": 44,
+						"h": 64
+					}
+				},
+				{
+					"filename": "lightbox-l-04.png",
+					"rotated": false,
+					"trimmed": false,
+					"sourceSize": {
+						"w": 64,
+						"h": 44
+					},
+					"spriteSourceSize": {
+						"x": 0,
+						"y": 0,
+						"w": 64,
+						"h": 44
+					},
+					"frame": {
+						"x": 1254,
+						"y": 552,
+						"w": 64,
+						"h": 44
+					}
+				},
+				{
+					"filename": "lightbox-r-04.png",
+					"rotated": false,
+					"trimmed": false,
+					"sourceSize": {
+						"w": 64,
+						"h": 44
+					},
+					"spriteSourceSize": {
+						"x": 0,
+						"y": 0,
+						"w": 64,
+						"h": 44
+					},
+					"frame": {
+						"x": 1320,
+						"y": 552,
+						"w": 64,
+						"h": 44
+					}
+				},
+				{
+					"filename": "lightbox-r-02.png",
+					"rotated": false,
+					"trimmed": false,
+					"sourceSize": {
+						"w": 44,
+						"h": 64
+					},
+					"spriteSourceSize": {
+						"x": 0,
+						"y": 0,
+						"w": 44,
+						"h": 64
+					},
+					"frame": {
+						"x": 1445,
+						"y": 488,
+						"w": 44,
+						"h": 64
+					}
+				},
+				{
+					"filename": "lightbox-r-03.png",
+					"rotated": false,
+					"trimmed": false,
+					"sourceSize": {
+						"w": 44,
+						"h": 64
+					},
+					"spriteSourceSize": {
+						"x": 0,
+						"y": 0,
+						"w": 44,
+						"h": 64
+					},
+					"frame": {
+						"x": 1386,
+						"y": 552,
+						"w": 44,
+						"h": 64
+					}
+				},
+				{
+					"filename": "lightbox-l-05.png",
+					"rotated": false,
+					"trimmed": false,
+					"sourceSize": {
+						"w": 64,
+						"h": 38
+					},
+					"spriteSourceSize": {
+						"x": 0,
+						"y": 0,
+						"w": 64,
+						"h": 38
+					},
+					"frame": {
+						"x": 1254,
+						"y": 598,
+						"w": 64,
+						"h": 38
+					}
+				},
+				{
+					"filename": "lightbox-r-05.png",
+					"rotated": false,
+					"trimmed": false,
+					"sourceSize": {
+						"w": 64,
+						"h": 38
+					},
+					"spriteSourceSize": {
+						"x": 0,
+						"y": 0,
+						"w": 64,
+						"h": 38
+					},
+					"frame": {
+						"x": 1320,
+						"y": 598,
+						"w": 64,
+						"h": 38
+					}
+				},
+				{
+					"filename": "transcan_animation-04.png",
+					"rotated": false,
+					"trimmed": true,
+					"sourceSize": {
+						"w": 32,
+						"h": 64
+					},
+					"spriteSourceSize": {
+						"x": 4,
+						"y": 31,
+						"w": 25,
+						"h": 33
+					},
+					"frame": {
+						"x": 1068,
+						"y": 618,
+						"w": 25,
+						"h": 33
+					}
+				},
+				{
+					"filename": "transcan_animation-01.png",
+					"rotated": false,
+					"trimmed": true,
+					"sourceSize": {
+						"w": 32,
+						"h": 64
+					},
+					"spriteSourceSize": {
+						"x": 4,
+						"y": 31,
+						"w": 24,
+						"h": 33
+					},
+					"frame": {
+						"x": 1095,
+						"y": 618,
+						"w": 24,
+						"h": 33
+					}
+				},
+				{
+					"filename": "transcan_animation-02.png",
+					"rotated": false,
+					"trimmed": true,
+					"sourceSize": {
+						"w": 32,
+						"h": 64
+					},
+					"spriteSourceSize": {
+						"x": 5,
+						"y": 31,
+						"w": 24,
+						"h": 33
+					},
+					"frame": {
+						"x": 1095,
+						"y": 618,
+						"w": 24,
+						"h": 33
+					}
+				},
+				{
+					"filename": "pipe-bottom-deco.png",
+					"rotated": false,
+					"trimmed": false,
+					"sourceSize": {
+						"w": 32,
+						"h": 32
+					},
+					"spriteSourceSize": {
+						"x": 0,
+						"y": 0,
+						"w": 32,
+						"h": 32
+					},
+					"frame": {
+						"x": 1495,
+						"y": 330,
+						"w": 32,
+						"h": 32
+					}
+				},
+				{
+					"filename": "pipe-top-deco.png",
+					"rotated": false,
+					"trimmed": false,
+					"sourceSize": {
+						"w": 32,
+						"h": 32
+					},
+					"spriteSourceSize": {
+						"x": 0,
+						"y": 0,
+						"w": 32,
+						"h": 32
+					},
+					"frame": {
+						"x": 1121,
+						"y": 618,
+						"w": 32,
+						"h": 32
+					}
+				},
+				{
+					"filename": "transcan_animation-05.png",
+					"rotated": false,
+					"trimmed": true,
+					"sourceSize": {
+						"w": 32,
+						"h": 64
+					},
+					"spriteSourceSize": {
+						"x": 4,
+						"y": 30,
+						"w": 28,
+						"h": 34
+					},
+					"frame": {
+						"x": 1495,
+						"y": 364,
+						"w": 28,
+						"h": 34
+					}
+				},
+				{
+					"filename": "transcan_animation-06.png",
+					"rotated": false,
+					"trimmed": true,
+					"sourceSize": {
+						"w": 32,
+						"h": 64
+					},
+					"spriteSourceSize": {
+						"x": 4,
+						"y": 30,
+						"w": 28,
+						"h": 34
+					},
+					"frame": {
+						"x": 1495,
+						"y": 400,
+						"w": 28,
+						"h": 34
+					}
+				},
+				{
+					"filename": "transcan_animation-07.png",
+					"rotated": false,
+					"trimmed": true,
+					"sourceSize": {
+						"w": 32,
+						"h": 64
+					},
+					"spriteSourceSize": {
+						"x": 4,
+						"y": 30,
+						"w": 28,
+						"h": 34
+					},
+					"frame": {
+						"x": 1495,
+						"y": 436,
+						"w": 28,
+						"h": 34
+					}
+				},
+				{
+					"filename": "tire-bounce4.png",
+					"rotated": false,
+					"trimmed": true,
+					"sourceSize": {
+						"w": 32,
+						"h": 32
+					},
+					"spriteSourceSize": {
+						"x": 0,
+						"y": 4,
+						"w": 32,
+						"h": 27
+					},
+					"frame": {
+						"x": 1155,
+						"y": 618,
+						"w": 32,
+						"h": 27
+					}
+				},
+				{
+					"filename": "tire-bounce5.png",
+					"rotated": false,
+					"trimmed": true,
+					"sourceSize": {
+						"w": 32,
+						"h": 32
+					},
+					"spriteSourceSize": {
+						"x": 0,
+						"y": 4,
+						"w": 32,
+						"h": 27
+					},
+					"frame": {
+						"x": 1189,
+						"y": 618,
+						"w": 32,
+						"h": 27
+					}
+				},
+				{
+					"filename": "tires.png",
+					"rotated": false,
+					"trimmed": true,
+					"sourceSize": {
+						"w": 32,
+						"h": 32
+					},
+					"spriteSourceSize": {
+						"x": 3,
+						"y": 7,
+						"w": 29,
+						"h": 23
+					},
+					"frame": {
+						"x": 1223,
+						"y": 618,
+						"w": 29,
+						"h": 23
+					}
+				},
+				{
+					"filename": "tire-bounce2.png",
+					"rotated": false,
+					"trimmed": true,
+					"sourceSize": {
+						"w": 32,
+						"h": 32
+					},
+					"spriteSourceSize": {
+						"x": 0,
+						"y": 9,
+						"w": 32,
+						"h": 22
+					},
+					"frame": {
+						"x": 1386,
+						"y": 618,
+						"w": 32,
+						"h": 22
+					}
+				},
+				{
+					"filename": "transcan_animation-08.png",
+					"rotated": false,
+					"trimmed": true,
+					"sourceSize": {
+						"w": 32,
+						"h": 64
+					},
+					"spriteSourceSize": {
+						"x": 4,
+						"y": 30,
+						"w": 28,
+						"h": 34
+					},
+					"frame": {
+						"x": 1432,
+						"y": 554,
+						"w": 28,
+						"h": 34
+					}
+				},
+				{
+					"filename": "transcan_animation-09.png",
+					"rotated": false,
+					"trimmed": true,
+					"sourceSize": {
+						"w": 32,
+						"h": 64
+					},
+					"spriteSourceSize": {
+						"x": 4,
+						"y": 30,
+						"w": 28,
+						"h": 34
+					},
+					"frame": {
+						"x": 1462,
+						"y": 554,
+						"w": 28,
+						"h": 34
+					}
+				},
+				{
+					"filename": "tire-bounce6.png",
+					"rotated": false,
+					"trimmed": true,
+					"sourceSize": {
+						"w": 32,
+						"h": 32
+					},
+					"spriteSourceSize": {
+						"x": 0,
+						"y": 7,
+						"w": 32,
+						"h": 24
+					},
+					"frame": {
+						"x": 1432,
+						"y": 590,
+						"w": 32,
+						"h": 24
+					}
+				},
+				{
+					"filename": "tire-bounce1.png",
+					"rotated": false,
+					"trimmed": true,
+					"sourceSize": {
+						"w": 32,
+						"h": 32
+					},
+					"spriteSourceSize": {
+						"x": 3,
+						"y": 7,
+						"w": 27,
+						"h": 24
+					},
+					"frame": {
+						"x": 1466,
+						"y": 590,
+						"w": 27,
+						"h": 24
+					}
+				},
+				{
+					"filename": "tire-bounce3.png",
+					"rotated": false,
+					"trimmed": true,
+					"sourceSize": {
+						"w": 32,
+						"h": 32
+					},
+					"spriteSourceSize": {
+						"x": 0,
+						"y": 17,
+						"w": 32,
+						"h": 14
+					},
+					"frame": {
+						"x": 1495,
+						"y": 472,
+						"w": 32,
+						"h": 14
+					}
+				},
+				{
+					"filename": "transcan_animation-10.png",
+					"rotated": false,
+					"trimmed": true,
+					"sourceSize": {
+						"w": 32,
+						"h": 64
+					},
+					"spriteSourceSize": {
+						"x": 4,
+						"y": 30,
+						"w": 28,
+						"h": 34
+					},
+					"frame": {
+						"x": 1491,
+						"y": 488,
+						"w": 28,
+						"h": 34
+					}
+				},
+				{
+					"filename": "lamp.png",
+					"rotated": false,
+					"trimmed": true,
+					"sourceSize": {
+						"w": 32,
+						"h": 32
+					},
+					"spriteSourceSize": {
+						"x": 8,
+						"y": 4,
+						"w": 24,
+						"h": 21
+					},
+					"frame": {
+						"x": 1491,
+						"y": 524,
+						"w": 24,
+						"h": 21
+					}
+				},
+				{
+					"filename": "lamp1.png",
+					"rotated": false,
+					"trimmed": true,
+					"sourceSize": {
+						"w": 32,
+						"h": 32
+					},
+					"spriteSourceSize": {
+						"x": 8,
+						"y": 4,
+						"w": 24,
+						"h": 21
+					},
+					"frame": {
+						"x": 1491,
+						"y": 524,
+						"w": 24,
+						"h": 21
+					}
+				},
+				{
+					"filename": "lamp2.png",
+					"rotated": false,
+					"trimmed": true,
+					"sourceSize": {
+						"w": 32,
+						"h": 32
+					},
+					"spriteSourceSize": {
+						"x": 8,
+						"y": 4,
+						"w": 24,
+						"h": 21
+					},
+					"frame": {
+						"x": 1491,
+						"y": 524,
+						"w": 24,
+						"h": 21
+					}
+				},
+				{
+					"filename": "lamp3.png",
+					"rotated": false,
+					"trimmed": true,
+					"sourceSize": {
+						"w": 32,
+						"h": 32
+					},
+					"spriteSourceSize": {
+						"x": 8,
+						"y": 4,
+						"w": 24,
+						"h": 21
+					},
+					"frame": {
+						"x": 1491,
+						"y": 524,
+						"w": 24,
+						"h": 21
+					}
+				},
+				{
+					"filename": "transcan_animation-03.png",
+					"rotated": false,
+					"trimmed": true,
+					"sourceSize": {
+						"w": 32,
+						"h": 64
+					},
+					"spriteSourceSize": {
+						"x": 4,
+						"y": 30,
+						"w": 25,
+						"h": 34
+					},
+					"frame": {
+						"x": 1492,
+						"y": 547,
+						"w": 25,
+						"h": 34
+					}
+				},
+				{
+					"filename": "transcan.png",
+					"rotated": false,
+					"trimmed": true,
+					"sourceSize": {
+						"w": 32,
+						"h": 32
+					},
+					"spriteSourceSize": {
+						"x": 4,
+						"y": 0,
+						"w": 23,
+						"h": 32
+					},
+					"frame": {
+						"x": 1495,
+						"y": 583,
+						"w": 23,
+						"h": 32
+					}
+				},
+				{
+					"filename": "pipe-mid-deco.png",
+					"rotated": false,
+					"trimmed": false,
+					"sourceSize": {
+						"w": 13,
+						"h": 32
+					},
+					"spriteSourceSize": {
+						"x": 0,
+						"y": 0,
+						"w": 13,
+						"h": 32
+					},
+					"frame": {
+						"x": 1519,
+						"y": 524,
+						"w": 13,
+						"h": 32
+					}
+				}
+			]
+		}
+	],
+	"meta": {
+		"app": "https://www.codeandweb.com/texturepacker",
+		"version": "3.0",
+		"smartupdate": "$TexturePacker:SmartUpdate:4e967eacc06ba7c1024bec6bec052ce7:d32f9d405a6915caee3233a0fcc8a317:f4c39b94f5b79b4c461da96ae5609d50$"
+	}
+}

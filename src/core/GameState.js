@@ -150,6 +150,8 @@ class GameState {
         this._isGameOver = true;
         this._isPaused = true;
 
+        console.log('💀 [GameState] gameOver() called, emitting GAME_OVER event with:', { score: this._score, height: this._maxHeight });
+
         EventBus.emit(Events.GAME_OVER, {
             score: this._score,
             height: this._maxHeight,

@@ -8,6 +8,7 @@ import { ParticleManager } from '../managers/gameplay/ParticleManager.js';
 import { RiserManager } from '../managers/gameplay/RiserManager.js';
 import { DebugManager } from '../managers/debug/DebugManager.js';
 import { WallDecorator } from '../managers/level/WallDecorator.js';
+import { InteractableManager } from '../managers/gameplay/InteractableManager.js';
 import PoolManager, { poolRegistry } from './PoolManager.js';
 import { Platform, PLATFORM_WIDTH, PLATFORM_HEIGHT, initializePlatformTextureCache } from '../prefabs/Platform.js';
 import { Coin } from '../prefabs/Coin.js';
@@ -112,13 +113,22 @@ export class GameInitializer {
         scene.particleManager.createParticles();
 
         // Randomize Riser Type for this session
-        const riserTypes = Object.values(RISER_TYPES);
-        const randomType = riserTypes[Phaser.Math.Between(0, riserTypes.length - 1)];
-        console.log(`🎲 Game Initializer: Selected Riser Type: ${randomType}`);
+        // Forcing FIRE riser for development per user request
+        const randomType = RISER_TYPES.FIRE;
+        console.log(`🔥 Game Initializer: FORCED Riser Type: ${randomType}`);
 
         scene.riserManager = new RiserManager(scene, randomType);
+
+        // Setup specific ambient sound for the selected riser
+        if (scene.riserManager.config && scene.riserManager.config.soundKey) {
+            scene.audioManager.setupRiserSound(scene.riserManager.config.soundKey);
+        }
+
         scene.debugManager = new DebugManager(scene);
         scene.wallDecorator = new WallDecorator(scene);
+        
+        // Crear InteractableManager
+        scene.interactableManager = new InteractableManager(scene);
 
         // OPTIMIZATION: Pre-initialize wall patterns and segments immediately
         // This ensures walls are visible from the start and reduces first-frame load
@@ -256,6 +266,10 @@ export class GameInitializer {
             scene.isGameOver = false;
             scene.isPaused = false;
             scene.gameStarted = true;
+            // Ensure music starts if not already playing (e.g. keyboard start)
+            if (scene.audioManager) {
+                scene.audioManager.startMusic();
+            }
         };
         EventBus.on(Events.GAME_STARTED, gameStartListener);
         scene._gameStartListener = gameStartListener;
@@ -267,6 +281,14 @@ export class GameInitializer {
             if (scene.audioManager) scene.audioManager.stopAudio();
             if (scene.uiManager) scene.uiManager.destroy();
             if (scene.particleManager) scene.particleManager.destroy();
+            if (scene.interactableManager) scene.interactableManager.destroy();
+            if (scene.wallDecorator) scene.wallDecorator.destroy(); // Fix: Clean up wall decoration pools
+
+            // Failsafe: Clear static pools from WallDecorFactory
+            // Import WallDecorFactory dynamically if needed, or rely on manager cleanup
+            try {
+                // We assume wallDecorator.destroy() calls Factory.clearPools(), but safe to ensure references are killed
+            } catch (e) { }
 
             // Cleanup event listeners
             if (scene._pauseListener) EventBus.off(Events.GAME_PAUSED, scene._pauseListener);

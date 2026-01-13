@@ -21,11 +21,21 @@ export class ControlsUI {
         scene.joystickBase = this.joystickBase;
         scene.joystickKnob = this.joystickKnob;
 
-        // Positions based on the 32px Floor at the bottom of the gameplay stage
-        // Ad banner está arriba, así que el floor va al fondo sin restar adHeight
+        // Positions based on player position at start
+        // Calculate player spawn position (same as in LayoutConfig)
         const floorHeight = 32;
-        const effectiveHeight = scene.scale.height; // Ad banner está arriba, no resta altura
-        const controlY = effectiveHeight - (floorHeight / 2); // Center of the 32px floor
+        const effectiveHeight = scene.scale.height;
+        const floorY = effectiveHeight - floorHeight;
+        const playerSpawnY = floorY - 18; // Player spawn Y (centro del player sobre el floor)
+        
+        // Calculate original control text position (center of floor)
+        const originalControlY = effectiveHeight - (floorHeight / 2);
+        
+        // Calculate distance from player to original text position
+        const distanceFromPlayer = originalControlY - playerSpawnY; // ~34px
+        
+        // New position: above player with same distance
+        const controlY = playerSpawnY - distanceFromPlayer;
 
         // Mobile Controls UI
         if (isMobile) {

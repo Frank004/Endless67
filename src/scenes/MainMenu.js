@@ -2,6 +2,7 @@ import { UIHelpers } from '../utils/UIHelpers.js';
 import { InputManager } from '../managers/input/InputManager.js';
 import { MenuNavigation } from '../managers/ui/MenuNavigation.js';
 import EventBus, { Events } from '../core/EventBus.js';
+import AudioManager from '../managers/audio/AudioManager.js';
 import GameState from '../core/GameState.js';
 
 export class MainMenu extends Phaser.Scene {
@@ -11,6 +12,10 @@ export class MainMenu extends Phaser.Scene {
 	}
 
 	create() {
+		// Initialize Audio Manager for this scene to capture interactions
+		AudioManager.setScene(this);
+		AudioManager.setupAudioContextResume();
+
 		this.inputManager = new InputManager(this);
 		this.inputManager.setupInputs();
 
@@ -21,32 +26,27 @@ export class MainMenu extends Phaser.Scene {
 		this.add.rectangle(width / 2, height / 2, width, height, 0x050505);
 
 		// Title
-		this.add.text(width / 2, 120, 'ENDLESS 67', {
-			fontSize: '48px',
-			color: '#ffd700',
-			fontStyle: 'bold',
-			stroke: '#8B4500',
-			strokeThickness: 6
-		}).setOrigin(0.5);
+		// Title
+		this.add.image(width / 2, 120, 'game_logo').setScale(0.28);
 
 		// --- BUTTONS ---
 		this.buttons = [];
 
-		const startBtn = UIHelpers.createTextButton(this, width / 2, 250, 'START GAME', {
+		const startBtn = UIHelpers.createTextButton(this, width / 2, height / 2, 'START GAME', {
 			textColor: '#00ff00',
 			fontSize: '28px',
 			callback: () => this.scene.start('Game')
 		});
 		this.buttons.push(startBtn);
 
-		const leaderboardBtn = UIHelpers.createTextButton(this, width / 2, 330, 'LEADERBOARD', {
+		const leaderboardBtn = UIHelpers.createTextButton(this, width / 2, height / 2 + 80, 'LEADERBOARD', {
 			textColor: '#00ffff',
 			fontSize: '28px',
 			callback: () => this.scene.start('Leaderboard')
 		});
 		this.buttons.push(leaderboardBtn);
 
-		const settingsBtn = UIHelpers.createTextButton(this, width / 2, 410, 'SETTINGS', {
+		const settingsBtn = UIHelpers.createTextButton(this, width / 2, height / 2 + 160, 'SETTINGS', {
 			textColor: '#ffffff',
 			fontSize: '28px',
 			callback: () => this.scene.start('Settings')
@@ -63,7 +63,7 @@ export class MainMenu extends Phaser.Scene {
 		});
 
 		// Version (visible text)
-		const versionText = this.add.text(width / 2, height - 30, 'v0.0.41', {
+		const versionText = this.add.text(width / 2, height - 30, 'v0.0.45', {
 			fontSize: '14px',
 			color: '#444'
 		}).setOrigin(0.5);

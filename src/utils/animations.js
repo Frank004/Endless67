@@ -1,4 +1,6 @@
+import { ASSETS } from '../config/AssetKeys.js';
 /**
+
  * Registro centralizado de animaciones.
  * Define animaciones solo si no existen para evitar duplicados.
  */
@@ -105,3 +107,113 @@ export function registerTireAnimation(scene) {
         repeat: 0
     });
 }
+
+
+export function registerEnemyAnimations(scene) {
+    const anims = scene.anims;
+    if (!anims) return;
+    if (anims.exists('enemy_idle')) return;
+    if (!scene.textures.exists(ASSETS.ENEMY_ATLAS)) return;
+
+    anims.create({
+        key: 'enemy_idle',
+        frames: anims.generateFrameNames(ASSETS.ENEMY_ATLAS, {
+            prefix: 'patrol-idle',
+            start: 1,
+            end: 4,
+            suffix: '.png'
+        }),
+        frameRate: 8,
+        repeat: -1
+    });
+
+    // Run
+    anims.create({
+        key: 'enemy_run',
+        frames: anims.generateFrameNames(ASSETS.ENEMY_ATLAS, {
+            prefix: 'patrol-run',
+            start: 1,
+            end: 6,
+            suffix: '.png'
+        }),
+        frameRate: 10,
+        repeat: -1
+    });
+
+    // Attack
+    anims.create({
+        key: 'enemy_attack',
+        frames: anims.generateFrameNames(ASSETS.ENEMY_ATLAS, {
+            prefix: 'patrol-attack',
+            start: 1,
+            end: 4,
+            suffix: '.png'
+        }),
+        frameRate: 12,
+        repeat: 0
+    });
+
+    // Die
+    anims.create({
+        key: 'enemy_die',
+        frames: anims.generateFrameNames(ASSETS.ENEMY_ATLAS, {
+            prefix: 'patrol-die',
+            start: 1,
+            end: 5,
+            suffix: '.png'
+        }),
+        frameRate: 12,
+        repeat: 0
+    });
+
+    // Jump
+    anims.create({
+        key: 'enemy_jump',
+        frames: anims.generateFrameNames(ASSETS.ENEMY_ATLAS, {
+            prefix: 'patrol-jump',
+            start: 1,
+            end: 8,
+            suffix: '.png'
+        }),
+        frameRate: 12,
+        repeat: 0
+    });
+
+    // Jumper Animations
+    anims.create({
+        key: 'jumper_idle',
+        frames: anims.generateFrameNames(ASSETS.ENEMY_ATLAS, {
+            prefix: 'jumper-idle',
+            start: 1,
+            end: 4,
+            suffix: '.png'
+        }),
+        frameRate: 8,
+        repeat: -1
+    });
+
+    anims.create({
+        key: 'jumper_jump',
+        frames: anims.generateFrameNames(ASSETS.ENEMY_ATLAS, {
+            prefix: 'jumper-jump',
+            start: 1,
+            end: 7,
+            suffix: '.png'
+        }),
+        frameRate: 12,
+        repeat: 0
+    });
+
+    anims.create({
+        key: 'jumper_attack',
+        frames: anims.generateFrameNames(ASSETS.ENEMY_ATLAS, {
+            prefix: 'jumper-attack',
+            start: 1,
+            end: 6,
+            suffix: '.png'
+        }),
+        frameRate: 12,
+        repeat: 0
+    });
+}
+

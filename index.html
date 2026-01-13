@@ -18,11 +18,11 @@
     <link rel="manifest" href="./manifest.json">
 
     <!-- Favicon -->
-    <link rel="icon" type="image/png" sizes="192x192" href="./icon-192.png">
-    <link rel="apple-touch-icon" href="./icon-192.png">
+    <link rel="icon" type="image/png" sizes="192x192" href="./assets/icons/icon-192.png">
+    <link rel="apple-touch-icon" href="./assets/icons/icon-192.png">
 
-    <title>ENDLESS67 v0.0.41 - Vertical Runner</title>
-    <link rel="stylesheet" href="css/style.css?b=2">
+    <title>ENDLESS67 v0.0.45 - Vertical Runner</title>
+    <link rel="stylesheet" href="css/style.css?b=4">
     <script src="https://cdn.jsdelivr.net/npm/phaser@3.87.0/dist/phaser.min.js"></script>
 </head>
 
@@ -31,12 +31,20 @@
     <!-- Loader -->
     <div id="loader">
         <div class="loader-content">
-            <div class="loader-title">ENDLESS67</div>
-            <div id="loader-version" class="loader-version">v0.0.41</div>
+            <div class="loader-title">
+                <img src="./assets/logo.png" alt="ENDLESS67"
+                    style="width: 150px; height: auto; display: block; margin: 0 auto;">
+            </div>
+            <div id="loader-version" class="loader-version">v0.0.45</div>
             <div class="loader-spinner"></div>
             <div class="loader-text">Cargando<span id="loader-dots">...</span></div>
         </div>
     </div>
+
+    <!-- Font Preloader (Hack to force font download) -->
+    <div
+        style="font-family: 'Pixelify Sans'; position: absolute; visibility: hidden; width:0; height:0; overflow:hidden;">
+        .</div>
 
     <!-- Orientation Lock Overlay -->
     <div id="orientation-lock">
@@ -49,7 +57,7 @@
     </div>
     <script>
         // Versión del juego (se actualiza desde build.json)
-        const GAME_VERSION = window.GAME_VERSION || 'v0.0.41';
+        const GAME_VERSION = window.GAME_VERSION || 'v0.0.45';
 
         // Mostrar versión en el loader
         (function () {
@@ -75,6 +83,8 @@
     <div id="game-container"></div>
 
     <!-- Service Worker Registration for PWA/Offline Support -->
+    <!-- DISABLED IN DEVELOPMENT: Uncomment for production builds -->
+    <!--
     <script>
         if ('serviceWorker' in navigator) {
             window.addEventListener('load', () => {
@@ -84,30 +94,29 @@
             });
         }
     </script>
-
-    <!-- Asegurar que Phaser esté completamente cargado antes de cargar módulos -->
+    -->
     <script>
-        // Esperar a que Phaser esté disponible antes de cargar módulos
-        if (typeof Phaser === 'undefined') {
-            window.addEventListener('load', function () {
-                // Phaser debería estar cargado ahora
-                if (typeof Phaser !== 'undefined') {
-                    const script = document.createElement('script');
-                    script.type = 'module';
-                    script.src = 'src/main.js?v=20260107-1320';
-                    document.body.appendChild(script);
-                } else {
-                    console.error('Phaser no se cargó correctamente');
-                }
+        // Development: Unregister any existing service workers
+        if ('serviceWorker' in navigator && window.location.hostname === 'localhost') {
+            navigator.serviceWorker.getRegistrations().then(registrations => {
+                registrations.forEach(reg => {
+                    reg.unregister();
+                    console.log('[SW] Unregistered for development');
+                });
             });
-        } else {
-            // Phaser ya está disponible, cargar módulos inmediatamente
-            const script = document.createElement('script');
-            script.type = 'module';
-            script.src = 'src/main.js?v=20260107-1320';
-            document.body.appendChild(script);
         }
     </script>
+
+    <!-- Asegurar que Phaser esté completamente cargado antes de cargar módulos -->
+    <!-- Phaser Loading Check & Game Entry -->
+    <script>
+        // Ensure Phaser is loaded before game starts
+        if (typeof Phaser === 'undefined') {
+            console.error('Phaser CDN failed to load.');
+        }
+    </script>
+    <script type="module" src="src/main.js?b=4"> </script>
+
 </body>
 
 </html>
