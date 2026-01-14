@@ -1,26 +1,11 @@
-import { CollisionManager } from '../managers/collision/CollisionManager.js';
-import { LevelManager } from '../managers/level/LevelManager.js';
-import { SlotGenerator } from '../managers/level/SlotGenerator.js';
-import { InputManager } from '../managers/input/InputManager.js';
-import { UIManager } from '../managers/ui/UIManager.js';
-import { AudioManager } from '../managers/audio/AudioManager.js';
-import { ParticleManager } from '../managers/gameplay/ParticleManager.js';
-import { RiserManager } from '../managers/gameplay/RiserManager.js';
-import { DebugManager } from '../managers/debug/DebugManager.js';
-import { WallDecorator } from '../managers/level/WallDecorator.js';
-import { InteractableManager } from '../managers/gameplay/InteractableManager.js';
-import PoolManager, { poolRegistry } from './PoolManager.js';
-import { Platform, PLATFORM_WIDTH, PLATFORM_HEIGHT, initializePlatformTextureCache } from '../prefabs/Platform.js';
-import { Coin } from '../prefabs/Coin.js';
-import { Powerup } from '../prefabs/Powerup.js';
-import { PatrolEnemy, ShooterEnemy, JumperShooterEnemy } from '../prefabs/Enemy.js';
-import { Projectile } from '../prefabs/Projectile.js';
+import { ManagerInitializer } from './initializers/ManagerInitializer.js';
+import { PoolInitializer } from './initializers/PoolInitializer.js';
 import { POOL, WALLS, PHYSICS } from '../config/GameConstants.js';
 import EventBus, { Events } from './EventBus.js';
-import { getDeviceInfo, applyDeviceClasses } from '../utils/DeviceDetection.js';
+import { DeviceConfig } from './config/DeviceConfig.js';
 import { ASSETS } from '../config/AssetKeys.js';
 import { LAYOUT_CONFIG } from '../config/LayoutConfig.js';
-import { RISER_TYPES } from '../config/RiserConfig.js';
+
 
 export class GameInitializer {
     constructor(scene) {
@@ -37,41 +22,7 @@ export class GameInitializer {
     }
 
     setupDeviceDetection() {
-        const scene = this.scene;
-        const deviceInfo = getDeviceInfo(scene.sys.game);
-
-        scene.isMobile = deviceInfo.isMobile;
-        scene.isAndroid = deviceInfo.isAndroid;
-        scene.isIOS = deviceInfo.isIOS;
-        scene.isIPad = deviceInfo.isIPad;
-        scene.isIPhone = deviceInfo.isIPhone;
-
-        applyDeviceClasses(deviceInfo);
-
-        console.log(`Device Detection: Mobile=${scene.isMobile}, Android=${scene.isAndroid}, iOS=${scene.isIOS}`);
-
-        const checkOrientation = () => {
-            if (window.innerWidth > window.innerHeight) {
-                document.body.classList.add('landscape');
-                document.body.classList.remove('portrait');
-            } else {
-                document.body.classList.add('portrait');
-                document.body.classList.remove('landscape');
-            }
-        };
-
-        scene._orientationHandlers = scene._orientationHandlers || {};
-        scene._orientationHandlers.checkOrientation = checkOrientation;
-        scene._orientationHandlers.visibilityHandler = () => {
-            if (!document.hidden && scene.audioManager?.scene?.sound?.context) {
-                scene.audioManager.scene.sound.context.resume().catch(() => { });
-            }
-        };
-
-        window.addEventListener('resize', checkOrientation);
-        window.addEventListener('orientationchange', checkOrientation);
-        document.addEventListener('visibilitychange', scene._orientationHandlers.visibilityHandler);
-        checkOrientation();
+        DeviceConfig.setup(this.scene);
     }
 
     setupCamera() {
@@ -94,98 +45,11 @@ export class GameInitializer {
     }
 
     createManagers() {
-        const scene = this.scene;
-        scene.collisionManager = new CollisionManager(scene);
-        scene.levelManager = new LevelManager(scene);
-        scene.slotGenerator = new SlotGenerator(scene);
-        scene.inputManager = new InputManager(scene);
-        scene.uiManager = new UIManager(scene);
-
-        scene.audioManager = new AudioManager();
-        scene.audioManager.setScene(scene);
-        scene.audioManager.setupAudio();
-
-        scene.input.once('pointerdown', () => {
-            scene.audioManager.startMusic();
-        });
-
-        scene.particleManager = new ParticleManager(scene);
-        scene.particleManager.createParticles();
-
-        // Randomize Riser Type for this session
-        // Forcing FIRE riser for development per user request
-        const randomType = RISER_TYPES.FIRE;
-        console.log(`🔥 Game Initializer: FORCED Riser Type: ${randomType}`);
-
-        scene.riserManager = new RiserManager(scene, randomType);
-
-        // Setup specific ambient sound for the selected riser
-        if (scene.riserManager.config && scene.riserManager.config.soundKey) {
-            scene.audioManager.setupRiserSound(scene.riserManager.config.soundKey);
-        }
-
-        scene.debugManager = new DebugManager(scene);
-        scene.wallDecorator = new WallDecorator(scene);
-        
-        // Crear InteractableManager
-        scene.interactableManager = new InteractableManager(scene);
-
-        // OPTIMIZATION: Pre-initialize wall patterns and segments immediately
-        // This ensures walls are visible from the start and reduces first-frame load
-        if (scene.textures.exists('walls')) {
-            const initialScrollY = scene.cameras.main.scrollY || 0;
-            scene.wallDecorator.preInitialize(initialScrollY);
-        }
-
-        // 🚀 OPTIMIZATION: Pre-initialize platform texture cache
-        // This caches platform frame references to avoid repeated texture lookups
-        if (scene.textures.exists('platform')) {
-            initializePlatformTextureCache(scene);
-        }
+        ManagerInitializer.init(this.scene);
     }
 
     createGroups() {
-        const scene = this.scene;
-
-        // --- POOLS ---
-        scene.platformPool = new PoolManager(scene, 'platforms', Platform, POOL.INITIAL_SIZE.PLATFORMS || 20, POOL.GROW_SIZE || 5);
-        poolRegistry.register('platforms', scene.platformPool);
-
-        scene.coinPool = new PoolManager(scene, 'coins', Coin, POOL.INITIAL_SIZE.COINS || 20, POOL.GROW_SIZE || 5);
-        poolRegistry.register('coins', scene.coinPool);
-
-        scene.powerupPool = new PoolManager(scene, 'powerups', Powerup, 10, POOL.GROW_SIZE || 3);
-        poolRegistry.register('powerups', scene.powerupPool);
-
-        scene.patrolEnemyPool = new PoolManager(scene, 'patrolEnemies', PatrolEnemy, POOL.INITIAL_SIZE.ENEMIES || 10, POOL.GROW_SIZE || 5);
-        poolRegistry.register('patrolEnemies', scene.patrolEnemyPool);
-
-        scene.shooterEnemyPool = new PoolManager(scene, 'shooterEnemies', ShooterEnemy, POOL.INITIAL_SIZE.ENEMIES || 10, POOL.GROW_SIZE || 5);
-        poolRegistry.register('shooterEnemies', scene.shooterEnemyPool);
-
-        scene.jumperShooterEnemyPool = new PoolManager(scene, 'jumperShooterEnemies', JumperShooterEnemy, POOL.INITIAL_SIZE.ENEMIES || 10, POOL.GROW_SIZE || 5);
-        poolRegistry.register('jumperShooterEnemies', scene.jumperShooterEnemyPool);
-
-        scene.projectilePool = new PoolManager(scene, 'projectiles', Projectile, POOL.INITIAL_SIZE.PROJECTILES || 15, POOL.GROW_SIZE || 5);
-        poolRegistry.register('projectiles', scene.projectilePool);
-
-        // --- GROUPS ---
-        scene.platforms = scene.physics.add.group({ allowGravity: false, immovable: true });
-        scene.coins = scene.physics.add.group({ allowGravity: false, immovable: true, runChildUpdate: true, classType: Coin });
-        scene.powerups = scene.physics.add.group({ allowGravity: false, immovable: true, runChildUpdate: true, classType: Powerup });
-
-        scene.patrolEnemies = scene.physics.add.group({ classType: PatrolEnemy, allowGravity: true, immovable: false, runChildUpdate: true });
-        scene.shooterEnemies = scene.physics.add.group({ classType: ShooterEnemy, allowGravity: false, immovable: true, runChildUpdate: true });
-        scene.jumperShooterEnemies = scene.physics.add.group({ classType: JumperShooterEnemy, allowGravity: true, immovable: false, runChildUpdate: true });
-
-        scene.projectiles = scene.physics.add.group({
-            classType: Projectile,
-            allowGravity: false,
-            runChildUpdate: true,
-            maxSize: 50
-        });
-
-        scene.mazeWalls = scene.physics.add.staticGroup();
+        PoolInitializer.init(this.scene);
     }
 
     createWalls() {
@@ -297,16 +161,7 @@ export class GameInitializer {
             if (scene._gameStartListener) EventBus.off(Events.GAME_STARTED, scene._gameStartListener);
 
             // Clean global listeners
-            const handlers = scene._orientationHandlers;
-            if (handlers) {
-                if (handlers.checkOrientation) {
-                    window.removeEventListener('resize', handlers.checkOrientation);
-                    window.removeEventListener('orientationchange', handlers.checkOrientation);
-                }
-                if (handlers.visibilityHandler) {
-                    document.removeEventListener('visibilitychange', handlers.visibilityHandler);
-                }
-            }
+            DeviceConfig.cleanup(scene);
         });
     }
 
