@@ -1,5 +1,5 @@
 
-import { PlayerVisuals } from '../../src/player/PlayerVisuals.js';
+import { PlayerVisuals } from '../../src/entities/player/PlayerVisuals.js';
 import { ASSETS } from '../../src/config/AssetKeys.js';
 
 describe('PlayerVisuals', () => {

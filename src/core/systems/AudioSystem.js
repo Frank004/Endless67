@@ -1,14 +1,14 @@
 import EventBus, { Events } from '../../core/EventBus.js';
 import { ASSETS } from '../../config/AssetKeys.js';
 
-export class AudioManager {
+export class AudioSystem {
     static instance = null;
 
     constructor() {
-        if (AudioManager.instance) {
-            return AudioManager.instance;
+        if (AudioSystem.instance) {
+            return AudioSystem.instance;
         }
-        AudioManager.instance = this;
+        AudioSystem.instance = this;
 
         this.scene = null;
         this.bgMusic = null;
@@ -473,4 +473,5 @@ export class AudioManager {
 }
 
 // Export singleton instance
-export default new AudioManager();
+// Export singleton instance
+export default new AudioSystem();

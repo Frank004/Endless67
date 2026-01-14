@@ -1,6 +1,6 @@
 import GameState from '../core/GameState.js';
 import { UIHelpers } from '../utils/UIHelpers.js';
-import { InputManager } from '../managers/input/InputManager.js';
+import { InputSystem } from '../core/systems/InputSystem.js';
 import EventBus, { Events } from '../core/EventBus.js';
 import { MenuNavigation } from '../managers/ui/MenuNavigation.js';
 
@@ -10,7 +10,7 @@ export class Settings extends Phaser.Scene {
     }
 
     create() {
-        this.inputManager = new InputManager(this);
+        this.inputManager = new InputSystem(this);
         this.inputManager.setupInputs();
 
         const width = this.cameras.main.width;

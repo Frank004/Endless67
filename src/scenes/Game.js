@@ -1,9 +1,7 @@
 import EventBus, { Events } from '../core/EventBus.js';
-import { Player } from '../prefabs/Player.js';
+import { Player } from '../entities/player/Player.js';
 import { GameInitializer } from '../core/GameInitializer.js';
 import { updatePlatformRider } from '../utils/platformRider.js';
-import { BackgroundManager } from '../managers/background/BackgroundManager.js';
-import { FogEffect } from '../effects/FogEffect.js';
 import GameState from '../core/GameState.js';
 import { PLATFORM_WIDTH, PLATFORM_HEIGHT } from '../prefabs/Platform.js';
 import { SLOT_CONFIG } from '../config/SlotConfig.js';
@@ -14,7 +12,7 @@ import { LAYOUT_CONFIG, calculateLayout } from '../config/LayoutConfig.js';
 import { StageFloor } from '../prefabs/StageFloor.js';
 import { AdBanner } from '../prefabs/AdBanner.js';
 import { StageProps } from '../managers/ui/StageProps.js';
-import { DifficultyManager } from '../managers/level/DifficultyManager.js';
+
 
 /**
  * @phasereditor
@@ -44,12 +42,6 @@ export class Game extends Phaser.Scene {
 
         // Reset Global State
         GameState.reset();
-
-        // --- BACKGROUND SYSTEM ---
-        // Initialize first to ensure it's at the very back (Z-index -20)
-        this.backgroundManager = new BackgroundManager(this);
-        this.backgroundManager.create();
-        this.fogEffect = new FogEffect(this);
 
         // --- INITIALIZER ---
         // Handles setup of camera, devices, groups, pools, managers, and events
@@ -82,9 +74,6 @@ export class Game extends Phaser.Scene {
         this.powerupTimer = null;
         this.lastPowerupSpawnHeight = -1000;
         this.lastPowerupTime = -15000;
-
-        // --- DIFFICULTY MANAGER ---
-        this.difficultyManager = new DifficultyManager(this);
 
         // --- VISUAL REFRESH ---
         // OPTIMIZATION: Pre-initialize walls immediately for instant rendering
@@ -343,9 +332,7 @@ export class Game extends Phaser.Scene {
         this.audioManager.startMusic();
 
         // Activar lava cuando el juego comienza
-        // if (this.riserManager) {
-        //     this.riserManager.setEnabled(true);
-        // }
+
 
         if (this.player?.controller?.resetState) {
             this.player.controller.resetState();
@@ -500,102 +487,45 @@ export class Game extends Phaser.Scene {
             // Silently ignore emitter cleanup errors (emitters may not exist on first run)
         }
 
-        // Reset slot generator - only if it exists
-        try {
-            if (this.slotGenerator && typeof this.slotGenerator.reset === 'function') {
-                this.slotGenerator.reset();
+        // Reset slot generator
+        this.slotGenerator?.reset?.();
+
+        // Reset riser manager
+        if (this.riserManager) {
+            this.riserManager.setEnabled?.(false);
+            if (this.riserManager.riser?.destroy) {
+                this.riserManager.riser.destroy();
+                this.riserManager.riser = null;
             }
-        } catch (e) {
-            // Silently ignore slot generator reset errors
+            this.riserManager.hasStartedRising = false;
+            this.riserManager.initialPlayerY = undefined;
         }
 
-        // Reset riser manager - only if it exists
-        try {
-            if (this.riserManager) {
-                if (typeof this.riserManager.setEnabled === 'function') {
-                    this.riserManager.setEnabled(false);
-                }
-                if (this.riserManager.riser && typeof this.riserManager.riser.destroy === 'function') {
-                    this.riserManager.riser.destroy();
-                    this.riserManager.riser = null;
-                }
-                this.riserManager.hasStartedRising = false;
-                this.riserManager.initialPlayerY = undefined;
-            }
-        } catch (e) {
-            // Silently ignore riser manager cleanup errors
-        }
+        // Clean up timers
+        this.powerupTimer?.remove?.();
+        this.powerupTimer = null;
 
-        // Clean up timers - only if they exist
-        try {
-            if (this.powerupTimer && typeof this.powerupTimer.remove === 'function') {
-                this.powerupTimer.remove();
-                this.powerupTimer = null;
-            }
-        } catch (e) {
-            // Silently ignore timer cleanup errors
-        }
+        // Stop all tweens
+        this.tweens?.killAll?.();
 
-        // Stop all tweens - only if tweens system exists
-        try {
-            if (this.tweens && typeof this.tweens.killAll === 'function') {
-                this.tweens.killAll();
-            }
-        } catch (e) {
-            // Silently ignore tween cleanup errors
-        }
-
-        // Reset camera - only if camera exists
-        try {
-            if (this.cameras && this.cameras.main) {
-                if (typeof this.cameras.main.stopFollow === 'function') {
-                    this.cameras.main.stopFollow();
-                }
-                this.cameras.main.scrollX = 0;
-                this.cameras.main.scrollY = 0;
-            }
-        } catch (e) {
-            // Silently ignore camera reset errors
+        // Reset camera
+        if (this.cameras?.main) {
+            this.cameras.main.stopFollow?.();
+            this.cameras.main.scrollX = 0;
+            this.cameras.main.scrollY = 0;
         }
 
         // Clean up UI Manager listeners
-        try {
-            // Reset GameOverMenu state BEFORE destroying to allow name input on next high score
-            if (this.uiManager && this.uiManager.gameOverMenu && typeof this.uiManager.gameOverMenu.reset === 'function') {
-                this.uiManager.gameOverMenu.reset();
-            }
-            if (this.uiManager && typeof this.uiManager.destroy === 'function') {
-                this.uiManager.destroy();
-            }
-        } catch (e) {
-            // Silently ignore UI cleanup errors
-        }
+        this.uiManager?.gameOverMenu?.reset?.();
+        this.uiManager?.destroy?.();
 
         // Clean up Audio Manager listeners
-        try {
-            if (this.audioManager && typeof this.audioManager.stopAudio === 'function') {
-                this.audioManager.stopAudio();
-            }
-        } catch (e) {
-            // Silently ignore Audio cleanup errors
-        }
+        this.audioManager?.stopAudio?.();
 
         // Clean up stage props
-        try {
-            if (this.stageProps && typeof this.stageProps.destroy === 'function') {
-                this.stageProps.destroy();
-            }
-        } catch (e) {
-            // Silently ignore props cleanup errors
-        }
+        this.stageProps?.destroy?.();
 
         // Clean up fog effect
-        try {
-            if (this.fogEffect && typeof this.fogEffect.destroy === 'function') {
-                this.fogEffect.destroy();
-            }
-        } catch (e) {
-            // Silently ignore fog cleanup errors
-        }
+        this.fogEffect?.destroy?.();
     }
 }

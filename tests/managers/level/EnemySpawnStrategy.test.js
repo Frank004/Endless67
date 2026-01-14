@@ -48,7 +48,7 @@ describe('EnemySpawnStrategy', () => {
         // Chances: Patrol 0.2
         jest.spyOn(Math, 'random').mockReturnValue(0.1);
 
-        const chances = { patrol: 0.2, shooter: 0.1, jumper: 0.1 };
+        const chances = { enemies: 1.0, distribution: { patrol: 20, shooter: 10, jumper: 10 } };
 
         const result = strategy.trySpawn(mockPlatform, { isMoving: false, spawnChances: chances });
 
@@ -60,7 +60,7 @@ describe('EnemySpawnStrategy', () => {
         // Chances: Patrol 0.2, Shooter 0.1 => Range [0.2, 0.3)
         jest.spyOn(Math, 'random').mockReturnValue(0.25);
 
-        const chances = { patrol: 0.2, shooter: 0.1, jumper: 0.1 };
+        const chances = { enemies: 1.0, distribution: { patrol: 20, shooter: 10, jumper: 10 } };
 
         const result = strategy.trySpawn(mockPlatform, { isMoving: false, spawnChances: chances });
 
@@ -72,7 +72,7 @@ describe('EnemySpawnStrategy', () => {
         // Chances: Patrol 0.2, Shooter 0.1, Jumper 0.1 => Range [0.3, 0.4)
         jest.spyOn(Math, 'random').mockReturnValue(0.35);
 
-        const chances = { patrol: 0.2, shooter: 0.1, jumper: 0.1 };
+        const chances = { enemies: 1.0, distribution: { patrol: 20, shooter: 10, jumper: 10 } };
 
         const result = strategy.trySpawn(mockPlatform, { isMoving: false, spawnChances: chances });
 
@@ -84,7 +84,7 @@ describe('EnemySpawnStrategy', () => {
         // Chances total 0.4. Value 0.5 should fail.
         jest.spyOn(Math, 'random').mockReturnValue(0.5);
 
-        const chances = { patrol: 0.2, shooter: 0.1, jumper: 0.1 };
+        const chances = { enemies: 1.0, distribution: { patrol: 20, shooter: 10, jumper: 10 } };
 
         const result = strategy.trySpawn(mockPlatform, { isMoving: false, spawnChances: chances });
 

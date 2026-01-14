@@ -15,6 +15,20 @@ export class WallDecorFactory {
     };
 
     /**
+     * Checks if a decoration is valid for reuse in the current scene.
+     * Validates scene match and internal sprite integrity.
+     */
+    static isValid(decoration, scene) {
+        if (!decoration) return false;
+        if (decoration.scene !== scene) return false;
+        if (!decoration.visualObject) return false;
+        // Check if internal Phaser object is destroyed (scene/sys will be null/undefined)
+        if (!decoration.visualObject.scene || !decoration.visualObject.scene.sys) return false;
+
+        return true;
+    }
+
+    /**
      * Obtiene una PipeDecoration del pool o crea una nueva.
      * @returns {PipeDecoration}
      */
@@ -22,9 +36,7 @@ export class WallDecorFactory {
         const pool = this.pools.PIPE;
         if (pool.length > 0) {
             const decoration = pool.pop();
-            // Validar que la decoración pertenezca a la escena actual
-            if (decoration.scene !== scene) {
-                // Decoración de una escena anterior destruida, intentar con la siguiente
+            if (!this.isValid(decoration, scene)) {
                 return this.getPipe(scene, config, x, y, side, pattern, tint);
             }
             decoration.reset(config, x, y, side, pattern, tint);
@@ -41,7 +53,7 @@ export class WallDecorFactory {
         const pool = this.pools.SIGN;
         if (pool.length > 0) {
             const decoration = pool.pop();
-            if (decoration.scene !== scene) {
+            if (!this.isValid(decoration, scene)) {
                 return this.getSign(scene, config, x, y, side, frame, tint);
             }
             decoration.reset(config, x, y, side, frame, tint);
@@ -58,7 +70,7 @@ export class WallDecorFactory {
         const pool = this.pools.LAMP;
         if (pool.length > 0) {
             const decoration = pool.pop();
-            if (decoration.scene !== scene) {
+            if (!this.isValid(decoration, scene)) {
                 return this.getLamp(scene, config, x, y, side, frame, tint);
             }
             decoration.reset(config, x, y, side, frame, tint);

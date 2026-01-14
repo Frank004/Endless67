@@ -23,6 +23,13 @@ describe('WallDecorManager', () => {
         mockScene = {
             game: {
                 config: { width: 800, height: 600 }
+            },
+            scale: {
+                width: 800,
+                height: 600
+            },
+            cameras: {
+                main: { scrollY: 0, height: 600 }
             }
         };
         WallDecorFactory.getPipe = jest.fn();
@@ -40,6 +47,7 @@ describe('WallDecorManager', () => {
     test('should add decoration when spawn is successful', () => {
         const mockDecor = {
             initParallax: jest.fn(),
+            update: jest.fn(),
             active: true
         };
         WallDecorFactory.getSign.mockReturnValue(mockDecor);

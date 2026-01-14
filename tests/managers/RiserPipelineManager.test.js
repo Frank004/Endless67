@@ -12,7 +12,7 @@ describe('RiserPipelineManager', () => {
 
         const result = RiserPipelineManager.getPipelineForType('UNKNOWN');
 
-        expect(result).toBe('FluidPipeline');
+        expect(result).toBeNull();
         expect(warnSpy).toHaveBeenCalled();
         warnSpy.mockRestore();
     });

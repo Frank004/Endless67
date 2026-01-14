@@ -31,7 +31,12 @@ describe('PipeDecoration', () => {
         };
 
         mockImage = {
-            setOrigin: jest.fn()
+            setOrigin: jest.fn().mockReturnThis(),
+            setDepth: jest.fn().mockReturnThis(),
+            setScrollFactor: jest.fn().mockReturnThis(),
+            setTint: jest.fn().mockReturnThis(),
+            setFlipX: jest.fn().mockReturnThis(),
+            setScale: jest.fn().mockReturnThis()
         };
 
         mockScene = {

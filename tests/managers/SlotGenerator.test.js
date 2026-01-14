@@ -71,6 +71,25 @@ describe('SlotGenerator', () => {
     beforeEach(() => {
         // Setup robust mock scene
         mockScene = {
+            // FIXED: Add game config for WallDecorManager
+            game: {
+                config: {
+                    width: 400,
+                    height: 800
+                }
+            },
+            sys: {
+                game: {
+                    config: {
+                        width: 400,
+                        height: 800
+                    }
+                }
+            },
+            scale: {
+                height: 800,
+                width: 400
+            },
             cameras: {
                 main: {
                     width: 400,
@@ -92,6 +111,42 @@ describe('SlotGenerator', () => {
                 spawnMazeRowFromConfig: jest.fn(),
                 cleanupOnly: jest.fn()
             },
+            add: {
+                text: jest.fn(() => ({ setOrigin: jest.fn(), setDepth: jest.fn().mockReturnThis() })),
+                image: jest.fn(() => ({
+                    setDepth: jest.fn().mockReturnThis(),
+                    setAlpha: jest.fn().mockReturnThis(),
+                    setScale: jest.fn().mockReturnThis(),
+                    setTint: jest.fn().mockReturnThis(),
+                    setOrigin: jest.fn().mockReturnThis(),
+                    setVisible: jest.fn().mockReturnThis(),
+                    setActive: jest.fn().mockReturnThis(),
+                    setPosition: jest.fn().mockReturnThis(),
+                    setTexture: jest.fn().mockReturnThis(),
+                    setBlendMode: jest.fn().mockReturnThis(),
+                    setFlipX: jest.fn().mockReturnThis(),
+                    setAngle: jest.fn().mockReturnThis()
+                })),
+                particles: jest.fn(() => ({
+                    setDepth: jest.fn(),
+                    setBlendMode: jest.fn()
+                })),
+                container: jest.fn(() => ({
+                    setDepth: jest.fn().mockReturnThis(),
+                    setAlpha: jest.fn().mockReturnThis(),
+                    setScale: jest.fn().mockReturnThis(),
+                    add: jest.fn(),
+                    destroy: jest.fn(),
+                    bringToTop: jest.fn()
+                })),
+                graphics: jest.fn(() => ({
+                    fillStyle: jest.fn(),
+                    fillRect: jest.fn(),
+                    lineStyle: jest.fn(),
+                    strokeRect: jest.fn(),
+                    destroy: jest.fn()
+                }))
+            },
             physics: {
                 add: {
                     staticSprite: jest.fn(() => ({
@@ -110,8 +165,22 @@ describe('SlotGenerator', () => {
             powerups: { add: jest.fn() },
             coins: { add: jest.fn() },
             time: { delayedCall: jest.fn((delay, cb) => cb && cb()) },
-            player: { y: 400 }
+            player: { y: 400 },
+            // Add mazeWalls mock for maze cleanup access
+            mazeWalls: {
+                children: {
+                    each: jest.fn()
+                },
+                getChildren: jest.fn(() => [])
+            },
+            textures: {
+                exists: jest.fn(() => true)
+            }
         };
+
+        if (generator && generator.scene && generator.scene.events && generator.scene.events.removeAllListeners) {
+            generator.scene.events.removeAllListeners();
+        }
 
         // Reset implementations
         jest.clearAllMocks();
@@ -162,21 +231,48 @@ describe('SlotGenerator', () => {
         expect(slot2.yEnd).toBeLessThan(slot2.yStart);
     });
 
-    test('determineSlotType should return valid types', () => {
-        // Mock random
-        jest.spyOn(Math, 'random').mockReturnValue(0.1); // PLATFORM_BATCH
+    it('determineSlotType should return valid types', () => {
+        // Skip tutorial slots
+        generator.currentSlotIndex = 1000;
+
+        // Mock DifficultyManager
+        generator.scene.difficultyManager = {
+            getCurrentTier: jest.fn(() => 1),
+            getMazeConfig: jest.fn(() => ({ enabled: true, chance: 30 })), // 30% chance (0.3)
+            getPlatformConfig: jest.fn(() => ({})),
+            getMechanicsConfig: jest.fn(() => ({})),
+            getEnemyConfig: jest.fn(() => ({}))
+        };
+
+        const randomSpy = jest.spyOn(Math, 'random');
+
+        // 1. PLATFORM_BATCH
+        // Maze check: 0.5 (> 0.3) -> Fail
+        // SafeZone check: 0.8 (> 0.15) -> Fail
+        randomSpy.mockReturnValueOnce(0.5).mockReturnValueOnce(0.8);
         expect(generator.determineSlotType()).toBe('PLATFORM_BATCH');
 
-        jest.spyOn(Math, 'random').mockReturnValue(0.6); // SAFE_ZONE
+        // 2. SAFE_ZONE
+        // Maze check: 0.4 (> 0.3) -> Fail
+        // SafeZone check: 0.1 (< 0.15) -> Success
+        randomSpy.mockReturnValueOnce(0.4).mockReturnValueOnce(0.1);
         expect(generator.determineSlotType()).toBe('SAFE_ZONE');
 
-        jest.spyOn(Math, 'random').mockReturnValue(0.9); // MAZE
+        // 3. MAZE
+        // Maze check: 0.2 (< 0.3) -> Success
+        randomSpy.mockReturnValueOnce(0.2);
         expect(generator.determineSlotType()).toBe('MAZE');
     });
 
-    test('generatePlatformBatch should spawn platforms via levelManager', () => {
-        const layoutData = {
+    test('generateNextSlot (PLATFORM_BATCH) should use PlatformSlotStrategy and spawn platforms', () => {
+        // Force type to PLATFORM_BATCH
+        generator.determineSlotType = jest.fn(() => 'PLATFORM_BATCH');
+
+        // Mock GridGenerator to return specific data
+        generator.gridGenerator.nextSlot = jest.fn(() => ({
             yStart: 1000,
+            yEnd: 400,
+            height: 600,
             type: 'PLATFORM_BATCH',
             index: 10,
             data: {
@@ -184,28 +280,42 @@ describe('SlotGenerator', () => {
                 sourcePattern: 'test_pattern',
                 transform: 'none'
             }
-        };
-        const result = generator.generatePlatformBatch(layoutData);
+        }));
 
+        generator.generateNextSlot();
+
+        // PlatformSlotStrategy calls levelManager.spawnPlatform
         expect(mockScene.levelManager.spawnPlatform).toHaveBeenCalled();
-        expect(result.platformCount).toBeGreaterThan(0);
-        expect(result).toHaveProperty('contentHeight');
+        expect(generator.slots.length).toBeGreaterThan(0);
+        const lastSlot = generator.slots[generator.slots.length - 1];
+        expect(lastSlot.type).toBe('PLATFORM_BATCH');
+        expect(lastSlot.platformCount).toBeGreaterThan(0);
     });
 
-    test('generateMaze should call spawnMazeRowFromConfig', () => {
-        const layoutData = {
+    test('generateNextSlot (MAZE) should use MazeSlotStrategy and spawn maze', () => {
+        // Force type to MAZE
+        generator.determineSlotType = jest.fn(() => 'MAZE');
+
+        // Mock GridGenerator
+        generator.gridGenerator.nextSlot = jest.fn(() => ({
             yStart: 1000,
             yEnd: 400,
             height: 600,
             type: 'MAZE',
+            index: 11,
             data: {
                 pattern: [['X', 'X', 'X']],
                 patternIndex: 0
             }
-        };
-        generator.generateMaze(layoutData);
+        }));
 
+        generator.generateNextSlot();
+
+        // MazeSlotStrategy calls levelManager.spawnMazeRowFromConfig
         expect(mockScene.levelManager.spawnMazeRowFromConfig).toHaveBeenCalled();
+        expect(generator.slots.length).toBeGreaterThan(0);
+        const lastSlot = generator.slots[generator.slots.length - 1];
+        expect(lastSlot.type).toBe('MAZE');
     });
 
     test('update should generate new slots when player moves up', () => {
@@ -247,9 +357,9 @@ describe('SlotGenerator', () => {
         // If isGenerating is true, generateNextSlot logic inside might still run if called directly?
         // Ah, generateNextSlot DOES NOT check isGenerating at start, `update` does.
 
+        // This test seems to be testing internal state management
         generator.update(); // Should return early
-        // We can't easily spy on internal methods without prototype spying, 
-        // but coverage would show it.
+
         expect(generator.isGenerating).toBe(true);
     });
 });

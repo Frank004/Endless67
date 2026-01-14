@@ -90,7 +90,7 @@ export class Preloader extends Phaser.Scene {
         this.load.audio(ASSETS.WALL_SLIDE, 'assets/audio/slide/slide.mp3');
 
         // --- ASSETS LOADING ---
-        this.load.image('game_logo', 'assets/logo.png');
+        this.load.image(ASSETS.GAME_LOGO, 'assets/logo.png');
         this.load.atlas(ASSETS.UI_ICONS, 'assets/ui/icons.png', 'assets/ui/icons.json');
         this.load.multiatlas(ASSETS.COINS, 'assets/spritesheets/coins.json', 'assets/spritesheets');
         this.load.multiatlas('basketball', 'assets/spritesheets/basketball.json', 'assets/spritesheets');
@@ -124,7 +124,7 @@ export class Preloader extends Phaser.Scene {
         g.clear();
         g.fillStyle(0xffffff, 1);
         g.fillCircle(4, 4, 4);
-        g.generateTexture('particle', 8, 8);
+        g.generateTexture(ASSETS.PARTICLE, 8, 8);
 
         // --- ANIMATIONS ---
         if (atlasLoaded && this.anims) {
@@ -171,7 +171,7 @@ export class Preloader extends Phaser.Scene {
                 }
 
                 this.anims.create({
-                    key: 'explosion',
+                    key: ASSETS.EXPLOSION_ANIM,
                     frames: fxFrames,
                     frameRate: 24,
                     hideOnComplete: true,
@@ -196,8 +196,8 @@ export class Preloader extends Phaser.Scene {
                 }
                 return { key: ASSETS.PLAYER, frame: f };
             });
-            if (powerFrames.length > 0 && !this.anims.exists('player_powerup')) {
-                this.anims.create({ key: 'player_powerup', frames: powerFrames, frameRate: 10, repeat: 0 });
+            if (powerFrames.length > 0 && !this.anims.exists(ASSETS.POWERUP_ANIM)) {
+                this.anims.create({ key: ASSETS.POWERUP_ANIM, frames: powerFrames, frameRate: 10, repeat: 0 });
             }
         }
 
@@ -307,9 +307,9 @@ export class Preloader extends Phaser.Scene {
         g.generateTexture(ASSETS.FIRE_TEXTURE, riserTextureWidth, riserTextureHeight);
 
         // UI & FX
-        g.clear(); g.lineStyle(4, 0xffffff, 0.3); g.strokeCircle(65, 65, 60); g.generateTexture('joystick_base', 130, 130);
-        g.clear(); g.fillStyle(0xffffff, 0.5); g.fillCircle(30, 30, 30); g.generateTexture('joystick_knob', 60, 60);
-        g.clear(); g.lineStyle(4, 0xffffff, 0.5); g.strokeCircle(40, 40, 38); g.generateTexture('jump_feedback', 80, 80);
+        g.clear(); g.lineStyle(4, 0xffffff, 0.3); g.strokeCircle(65, 65, 60); g.generateTexture(ASSETS.JOYSTICK_BASE, 130, 130);
+        g.clear(); g.fillStyle(0xffffff, 0.5); g.fillCircle(30, 30, 30); g.generateTexture(ASSETS.JOYSTICK_KNOB, 60, 60);
+        g.clear(); g.lineStyle(4, 0xffffff, 0.5); g.strokeCircle(40, 40, 38); g.generateTexture(ASSETS.JUMP_FEEDBACK, 80, 80);
         g.clear(); g.fillStyle(0xffffff, 1); g.fillRect(0, 0, 6, 6); g.generateTexture(ASSETS.PARTICLE_DUST, 6, 6);
         g.clear(); g.fillStyle(0xffff00, 1); g.fillCircle(3, 3, 3); g.generateTexture(ASSETS.PARTICLE_SPARK, 6, 6);
         g.clear(); g.fillStyle(0xff4400, 1); g.fillCircle(4, 4, 4); g.generateTexture(ASSETS.PARTICLE_BURN, 8, 8);

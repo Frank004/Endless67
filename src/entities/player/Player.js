@@ -1,9 +1,9 @@
-import EventBus, { Events } from '../core/EventBus.js';
-import { PlayerController } from '../player/PlayerController.js';
-import { PlayerVisuals } from '../player/PlayerVisuals.js';
-import { PlayerPhysics } from '../player/PlayerPhysics.js';
-import { PLAYER_CONFIG } from '../config/PlayerConfig.js';
-import { ASSETS } from '../config/AssetKeys.js';
+import EventBus, { Events } from '../../core/EventBus.js';
+import { PlayerController } from './PlayerController.js';
+import { PlayerVisuals } from './PlayerVisuals.js';
+import { PlayerPhysics } from './PlayerPhysics.js';
+import { PLAYER_CONFIG } from '../../config/PlayerConfig.js';
+import { ASSETS } from '../../config/AssetKeys.js';
 
 export class Player extends Phaser.Physics.Arcade.Sprite {
     constructor(scene, x, y) {
@@ -164,7 +164,7 @@ export class Player extends Phaser.Physics.Arcade.Sprite {
         this.clearTint();
 
         if (this.powerupOverlay) {
-            this.powerupOverlay.stop();
+            this.powerupOverlay = null;
         }
     }
 

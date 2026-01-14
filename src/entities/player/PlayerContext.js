@@ -1,4 +1,4 @@
-import EventBus from '../core/EventBus.js';
+import EventBus from '../../core/EventBus.js';
 
 /**
  * Contexto del jugador: sensores, intent y wrappers a acciones existentes.
@@ -92,7 +92,15 @@ export class PlayerContext {
     updateSensors() {
         if (!this.sprite || !this.sprite.body) return;
         const body = this.sprite.body;
-        this.sensors.onFloor = body.blocked.down || body.touching.down;
+
+        // Detección robusta de suelo usando timestamp y blocked
+        // blocked.down: Colisión con World Bounds o Tiles estáticos (siempre es suelo real)
+        // lastGroundedTime: Actualizado por callbacks de colisión con Plataformas (para filtrar triggers)
+        const now = this.sprite.scene?.time?.now || 0;
+        const wasGroundedRecently = (now - (this.sprite.lastGroundedTime || 0)) < 50; // 50ms ventana
+
+        this.sensors.onFloor = body.blocked.down || wasGroundedRecently;
+
         this.sensors.touchWallLeft = body.blocked.left || body.touching.left;
         this.sensors.touchWallRight = body.blocked.right || body.touching.right;
         this.sensors.touchWall = this.sensors.touchWallLeft || this.sensors.touchWallRight;

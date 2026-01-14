@@ -32,6 +32,17 @@ export const ASSETS = {
     ACID_TEXTURE: 'acid_texture',
     FIRE_TEXTURE: 'fire_texture',
 
+    // UI & Misc
+    GAME_LOGO: 'game_logo',
+    JOYSTICK_BASE: 'joystick_base',
+    JOYSTICK_KNOB: 'joystick_knob',
+    JUMP_FEEDBACK: 'jump_feedback',
+    PARTICLE: 'particle',
+
+    // Animations
+    EXPLOSION_ANIM: 'explosion',
+    POWERUP_ANIM: 'player_powerup',
+
     // Audio
     BG_MUSIC: 'bg_music',
     LAVA_AMBIENT: 'lava_ambient',

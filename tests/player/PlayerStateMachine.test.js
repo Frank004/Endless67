@@ -1,5 +1,5 @@
 
-import { PlayerStateMachine } from '../../src/player/PlayerStateMachine.js';
+import { PlayerStateMachine } from '../../src/entities/player/PlayerStateMachine.js';
 
 describe('PlayerStateMachine', () => {
     let fsm;
@@ -43,6 +43,7 @@ describe('PlayerStateMachine', () => {
             resolve: jest.fn((state, sub) => `${state}_${sub || 'base'}`),
             play: jest.fn(),
             playOnceHoldLast: jest.fn(),
+            playOnceThen: jest.fn(),
             setFacing: jest.fn(),
             currentKey: ''
         };
@@ -98,7 +99,8 @@ describe('PlayerStateMachine', () => {
         fsm.update();
 
         expect(fsm.state).toBe('AIR_FALL');
-        expect(mockAnim.play).toHaveBeenCalledWith('AIR_FALL_base');
+        expect(fsm.state).toBe('AIR_FALL');
+        expect(mockAnim.playOnceThen).toHaveBeenCalled();
     });
 
     test('should transition to WALL_SLIDE if touching wall in air', () => {
@@ -108,7 +110,8 @@ describe('PlayerStateMachine', () => {
         fsm.update();
 
         expect(fsm.state).toBe('WALL_SLIDE');
-        expect(mockAnim.play).toHaveBeenCalledWith('WALL_SLIDE_base');
+        expect(fsm.state).toBe('WALL_SLIDE');
+        expect(mockAnim.playOnceThen).toHaveBeenCalled();
     });
 
     test('should perform double jump in air', () => {

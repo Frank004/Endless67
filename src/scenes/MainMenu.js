@@ -1,9 +1,10 @@
 import { UIHelpers } from '../utils/UIHelpers.js';
-import { InputManager } from '../managers/input/InputManager.js';
+import { InputSystem } from '../core/systems/InputSystem.js';
 import { MenuNavigation } from '../managers/ui/MenuNavigation.js';
 import EventBus, { Events } from '../core/EventBus.js';
-import AudioManager from '../managers/audio/AudioManager.js';
+import AudioSystem from '../core/systems/AudioSystem.js';
 import GameState from '../core/GameState.js';
+import { ASSETS } from '../config/AssetKeys.js';
 
 export class MainMenu extends Phaser.Scene {
 	constructor() {
@@ -13,10 +14,10 @@ export class MainMenu extends Phaser.Scene {
 
 	create() {
 		// Initialize Audio Manager for this scene to capture interactions
-		AudioManager.setScene(this);
-		AudioManager.setupAudioContextResume();
+		AudioSystem.setScene(this);
+		AudioSystem.setupAudioContextResume();
 
-		this.inputManager = new InputManager(this);
+		this.inputManager = new InputSystem(this);
 		this.inputManager.setupInputs();
 
 		const width = this.cameras.main.width;
@@ -27,7 +28,7 @@ export class MainMenu extends Phaser.Scene {
 
 		// Title
 		// Title
-		this.add.image(width / 2, 120, 'game_logo').setScale(0.28);
+		this.add.image(width / 2, 120, ASSETS.GAME_LOGO).setScale(0.28);
 
 		// --- BUTTONS ---
 		this.buttons = [];
@@ -63,7 +64,7 @@ export class MainMenu extends Phaser.Scene {
 		});
 
 		// Version (visible text)
-		const versionText = this.add.text(width / 2, height - 30, 'v0.0.45', {
+		const versionText = this.add.text(width / 2, height - 30, 'v0.0.46', {
 			fontSize: '14px',
 			color: '#444'
 		}).setOrigin(0.5);

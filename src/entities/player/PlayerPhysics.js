@@ -1,6 +1,6 @@
 
-import { PLAYER_CONFIG } from '../config/PlayerConfig.js';
-import { ASSETS } from '../config/AssetKeys.js';
+import { PLAYER_CONFIG } from '../../config/PlayerConfig.js';
+import { ASSETS } from '../../config/AssetKeys.js';
 
 export class PlayerPhysics {
     /**

@@ -8,9 +8,9 @@ import { ASSETS } from '../config/AssetKeys.js';
 export function registerCoinAnimation(scene) {
     const anims = scene.anims;
     if (!anims || anims.exists('coin_spin')) return;
-    if (!scene.textures.exists('coins')) return;
+    if (!scene.textures.exists(ASSETS.COINS)) return;
 
-    const frames = anims.generateFrameNames('coins', {
+    const frames = anims.generateFrameNames(ASSETS.COINS, {
         start: 1,
         end: 8,
         zeroPad: 2,
@@ -30,13 +30,13 @@ export function registerCoinAnimation(scene) {
 export function registerBasketballAnimation(scene) {
     const anims = scene.anims;
     if (!anims || anims.exists('basketball_spin')) return;
-    if (!scene.textures.exists('basketball')) return;
+    if (!scene.textures.exists(ASSETS.BASKETBALL)) return;
 
     const frameOrder = ['basketball 1.png', 'basketball 2.png', 'basketball 3.png'];
-    const texture = scene.textures.get('basketball');
+    const texture = scene.textures.get(ASSETS.BASKETBALL);
     const frames = frameOrder
         .filter(name => texture?.has(name))
-        .map(frame => ({ key: 'basketball', frame }));
+        .map(frame => ({ key: ASSETS.BASKETBALL, frame }));
     if (!frames.length) return;
 
     anims.create({
@@ -50,7 +50,7 @@ export function registerBasketballAnimation(scene) {
 export function registerTrashcanAnimation(scene) {
     const anims = scene.anims;
     if (!anims || anims.exists('trashcan_hit')) return;
-    if (!scene.textures.exists('props')) return;
+    if (!scene.textures.exists(ASSETS.PROPS)) return;
 
     // Frame order from props.json: transcan_animation-01.png to transcan_animation-10.png
     const frameOrder = [
@@ -65,10 +65,10 @@ export function registerTrashcanAnimation(scene) {
         'transcan_animation-09.png',
         'transcan_animation-10.png'
     ];
-    const texture = scene.textures.get('props');
+    const texture = scene.textures.get(ASSETS.PROPS);
     const frames = frameOrder
         .filter(name => texture?.has(name))
-        .map(frame => ({ key: 'props', frame }));
+        .map(frame => ({ key: ASSETS.PROPS, frame }));
     if (!frames.length) return;
 
     anims.create({
@@ -82,7 +82,7 @@ export function registerTrashcanAnimation(scene) {
 export function registerTireAnimation(scene) {
     const anims = scene.anims;
     if (!anims || anims.exists('tire_bounce')) return;
-    if (!scene.textures.exists('props')) return;
+    if (!scene.textures.exists(ASSETS.PROPS)) return;
 
     // Frames from props.json (bounce sequence + regreso a idle)
     const frameOrder = [
@@ -94,10 +94,10 @@ export function registerTireAnimation(scene) {
         'tire-bounce6.png',
         'tires.png'
     ];
-    const texture = scene.textures.get('props');
+    const texture = scene.textures.get(ASSETS.PROPS);
     const frames = frameOrder
         .filter(name => texture?.has(name))
-        .map(frame => ({ key: 'props', frame }));
+        .map(frame => ({ key: ASSETS.PROPS, frame }));
     if (!frames.length) return;
 
     anims.create({
