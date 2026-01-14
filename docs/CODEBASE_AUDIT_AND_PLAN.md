@@ -73,8 +73,15 @@ src/managers/
   - ✅ Updated `ControlsUI.js` to use `ASSETS.JOYSTICK_BASE`, `ASSETS.JOYSTICK_KNOB`, `ASSETS.JUMP_FEEDBACK`
 
 ### Phase 2: Manager Decoupling
-- [ ] **Audit Singleton Usage**: Identify Managers that *must* be singletons vs those that should be Scene-scoped.
+- [x] **Audit Singleton Usage**: Identify Managers that *must* be singletons vs those that should be Scene-scoped.
+  - ✅ Analyzed all 4 singletons: `GameState`, `ScoreManager`, `AudioSystem`, `PoolManagerRegistry`
+  - ✅ Verified all are correctly implemented
+  - ✅ Confirmed all other managers are correctly scene-scoped
+  - ✅ Created `docs/SINGLETON_AUDIT.md` with detailed analysis
+  - **Result:** No refactoring needed - architecture is correct
 - [ ] **Simplify `SlotGenerator`**: Extract specific slot pattern generation to `patterns/` strategies.
+  - ✅ Already started: Created `PlatformSlotStrategy` and `MazeSlotStrategy`
+  - ⏳ Next: Consider extracting item generation logic
 
 ### Phase 3: Comment & Code Cleanup
 - [ ] **Remove Legacy Comments**: Remove commented-out code blocks in `Game.js` and `SlotGenerator.js`.
