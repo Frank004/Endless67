@@ -34,7 +34,6 @@ export class SlotGenerator {
         this.slots = [];  // Historial de slots generados
         this.consecutiveMazes = 0;
         this.mazeCooldown = 0; // Slots obligatorios sin maze tras generar uno
-        // this.colorIndex = 0;  // Comentado: colores debug desactivados
 
         // Offset inicial: primera plataforma del batch empieza arriba de la plataforma de inicio
         this.startY = 290;  // Y inicial del primer batch (se recalcula en init)
@@ -491,12 +490,7 @@ export class SlotGenerator {
         // We do not destroy it here as it is a shared resource.
         if (this.scene.wallDecorManager && typeof this.scene.wallDecorManager.reset === 'function') {
             this.scene.wallDecorManager.reset();
-        } else if (this.scene.wallDecorManager) {
-            // Fallback: manually clear if no reset method exists yet (though destroy works, it might be too aggressive)
-            // this.scene.wallDecorManager.destroy(); // DISABLED: Shared resource
         }
-
-        // this.colorIndex = 0;  // Comentado: colores debug desactivados
     }
 
     /**

@@ -84,8 +84,12 @@ src/managers/
   - ⏳ Next: Consider extracting item generation logic
 
 ### Phase 3: Comment & Code Cleanup
-- [ ] **Remove Legacy Comments**: Remove commented-out code blocks in `Game.js` and `SlotGenerator.js`.
+- [x] **Remove Legacy Comments**: Remove commented-out code blocks in `Game.js` and `SlotGenerator.js`.
+  - ✅ Removed 3 lines of commented debug code from `SlotGenerator.js`
+  - ✅ Verified `Game.js` has no commented-out code
+  - ✅ All 254 tests still passing
 - [ ] **JSDoc Standardization**: Ensure all public methods in Managers have concise JSDoc.
+  - ⏳ Low priority - can be done incrementally
 
 ## 6. Next Step
 Proceed with **Phase 1: Core Cleanup** starting with `GameInitializer.ts` refactoring.
