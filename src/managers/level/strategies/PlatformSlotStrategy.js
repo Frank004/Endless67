@@ -4,6 +4,11 @@ import { ItemSpawnStrategy } from '../ItemSpawnStrategy.js';
 import { WallDecorManager } from '../../visuals/WallDecorManager.js';
 import { EnemySpawnStrategy } from '../EnemySpawnStrategy.js';
 
+/**
+ * Strategy for generating Platform slots (Standard & Safe Zones).
+ * Handles the creation of platforms, items (coins/powerups), and enemy spawning.
+ * @extends SlotStrategy
+ */
 export class PlatformSlotStrategy extends SlotStrategy {
     constructor(scene) {
         super(scene);
@@ -24,6 +29,14 @@ export class PlatformSlotStrategy extends SlotStrategy {
         this.enemySpawnStrategy = new EnemySpawnStrategy(scene);
     }
 
+    /**
+     * Generates a platform slot based on the provided layout data.
+     * @param {Object} layoutData - The layout data calculated by GridGenerator.
+     * @param {number} layoutData.yStart - The starting Y coordinate of the slot.
+     * @param {number} layoutData.height - The height of the slot.
+     * @param {Object} layoutData.data - Internal data containing platforms and transforms.
+     * @returns {Object} Result of generation (platformCount, movingPlatforms, etc.).
+     */
     generate(layoutData) {
         const { yStart, type, yEnd, height } = layoutData;
         const internalData = layoutData.data;

@@ -7,8 +7,7 @@
 
 import { SLOT_CONFIG, getPlatformBounds, getItemBounds } from '../../config/SlotConfig.js';
 import { getPlayableBounds } from '../../utils/playableBounds.js';
-import { PLATFORM_PATTERNS, getRandomPattern } from '../../data/PlatformPatterns.js';
-import { MAZE_PATTERNS_EASY, MAZE_PATTERNS_MEDIUM, MAZE_PATTERNS, MAZE_ROW_HEIGHT } from '../../data/MazePatterns.js';
+import { MAZE_ROW_HEIGHT } from '../../data/MazePatterns.js';
 import { PatternTransformer } from '../../utils/PatternTransformer.js';
 import { PlatformSlotStrategy } from './strategies/PlatformSlotStrategy.js';
 import { MazeSlotStrategy } from './strategies/MazeSlotStrategy.js';

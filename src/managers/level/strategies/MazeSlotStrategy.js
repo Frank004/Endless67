@@ -3,6 +3,11 @@ import { SLOT_CONFIG } from '../../../config/SlotConfig.js';
 import { MAZE_ROW_HEIGHT } from '../../../data/MazePatterns.js';
 import { WallDecorManager } from '../../visuals/WallDecorManager.js';
 
+/**
+ * Strategy for generating Maze slots.
+ * Handles the creation of grid-based layouts with walls, spikes, enemies, and coins.
+ * @extends SlotStrategy
+ */
 export class MazeSlotStrategy extends SlotStrategy {
     constructor(scene) {
         super(scene);
@@ -13,6 +18,14 @@ export class MazeSlotStrategy extends SlotStrategy {
         }
     }
 
+    /**
+     * Generates a maze slot based on the provided layout data.
+     * @param {Object} layoutData - The layout data calculated by GridGenerator.
+     * @param {number} layoutData.yStart - The starting Y coordinate of the slot.
+     * @param {number} layoutData.height - The height of the slot.
+     * @param {Object} layoutData.data - Internal data containing pattern info.
+     * @returns {Object} Result of generation (rowCount, patternName, etc.).
+     */
     generate(layoutData) {
         const { yStart, height, yEnd } = layoutData;
         const internalData = layoutData.data || {};
