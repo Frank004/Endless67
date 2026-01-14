@@ -8,10 +8,68 @@ export class ItemSpawnStrategy {
     }
 
     /**
+     * Spawns a single item (Powerup or Coin) in a specific zone/rect.
+     * Used by MazeSpawner or specific placements that don't need random searching.
+     * checks overlaps with provided obstacles is minimal (relies on caller providing safe zone).
+     */
+    spawnInZone(x, y, typePreference = 'auto') {
+        const difficulty = this.scene.difficultyManager;
+        const mechanicsConfig = difficulty ? difficulty.getMechanicsConfig() : { powerups: true, powerupChance: 8, coins: true, coinChance: 60 };
+
+        // 1. Check Powerup eligibility
+        if (typePreference === 'powerup' || typePreference === 'auto') {
+            // Re-use logic: inline or extract. Let's extract 'canSpawnPowerup' logic if possible, 
+            // but 'canSpawnPowerup' relies on `this.scene` state which is available.
+            // We need to DRY this up. Ideally `checkPowerupEligibility(y)` helper.
+
+            // For now, let's replicate the check cleanly using instance methods if we refactor,
+            // or just implementing it here.
+
+            const isDev = this.scene.registry?.get('isDevMode');
+            const POWERUP_MIN_DISTANCE = isDev ? 1000 : 4000;
+            const POWERUP_COOLDOWN = isDev ? 5000 : 30000;
+            const POWERUP_CHANCE = (mechanicsConfig.powerups ? mechanicsConfig.powerupChance : 0) / 100;
+
+            const lastHeight = Math.abs(this.scene.lastPowerupSpawnHeight || -99999);
+            const lastTime = this.scene.lastPowerupTime || -99999;
+            const now = Date.now();
+            const distanceDelta = Math.abs(y) - lastHeight;
+
+            if (distanceDelta >= POWERUP_MIN_DISTANCE && now - lastTime >= POWERUP_COOLDOWN) {
+                // Explicit verification for Maze usually forces chance check unless 'powerup' is strictly requested
+                if (typePreference === 'powerup' || Math.random() < POWERUP_CHANCE) {
+                    const powerup = this.scene.powerupPool.spawn(x, y);
+                    if (powerup) {
+                        if (this.scene.powerups) this.scene.powerups.add(powerup, true);
+                        this.scene.lastPowerupSpawnHeight = y;
+                        this.scene.lastPowerupTime = now;
+                        return 'powerup';
+                    }
+                }
+            }
+        }
+
+        // 2. Check Coin eligibility
+        if (typePreference === 'coin' || typePreference === 'auto') {
+            const coinChance = (mechanicsConfig.coins ? mechanicsConfig.coinChance : 0) / 100;
+            // Maze logic usually has its own probability override passed in? 
+            // For now, use global mech config + simple valid check.
+
+            if (typePreference === 'coin' || Math.random() < coinChance) {
+                const coin = this.scene.coinPool.spawn(x, y);
+                if (coin) {
+                    if (this.scene.coins) this.scene.coins.add(coin, true);
+                    return 'coin';
+                }
+            }
+        }
+
+        return null;
+    }
+
+    /**
      * Tries to generate items (coins/powerups) for a platform batch.
-     * @param {Object} slotData - Data about the current slot (index, etc.)
-     * @param {Array} spawnedPlatforms - Array of platform objects {x, y, width, height}
-     * @param {Array} mazeWalls - Array of maze wall objects (if any) to check overlaps
+     * ... (rest of existing method)
      */
     generateItems(slotData, spawnedPlatforms, mazeWalls = []) {
         // --- CONFIG ---

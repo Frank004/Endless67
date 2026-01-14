@@ -2,8 +2,8 @@ import PoolManager, { poolRegistry } from '../PoolManager.js';
 import { Platform } from '../../prefabs/Platform.js';
 import { Coin } from '../../prefabs/Coin.js';
 import { Powerup } from '../../prefabs/Powerup.js';
-import { PatrolEnemy, ShooterEnemy, JumperShooterEnemy } from '../../prefabs/Enemy.js';
-import { Projectile } from '../../prefabs/Projectile.js';
+import { PatrolEnemy, ShooterEnemy, JumperShooterEnemy } from '../../entities/Enemy.js';
+import { Projectile } from '../../entities/Projectile.js';
 import { POOL } from '../../config/GameConstants.js';
 
 export class PoolInitializer {

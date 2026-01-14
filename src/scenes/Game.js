@@ -1,5 +1,5 @@
 import EventBus, { Events } from '../core/EventBus.js';
-import { Player } from '../prefabs/Player.js';
+import { Player } from '../entities/Player.js';
 import { GameInitializer } from '../core/GameInitializer.js';
 import { updatePlatformRider } from '../utils/platformRider.js';
 import { BackgroundManager } from '../managers/background/BackgroundManager.js';
@@ -14,7 +14,7 @@ import { LAYOUT_CONFIG, calculateLayout } from '../config/LayoutConfig.js';
 import { StageFloor } from '../prefabs/StageFloor.js';
 import { AdBanner } from '../prefabs/AdBanner.js';
 import { StageProps } from '../managers/ui/StageProps.js';
-import { DifficultyManager } from '../managers/level/DifficultyManager.js';
+
 
 /**
  * @phasereditor
@@ -82,9 +82,6 @@ export class Game extends Phaser.Scene {
         this.powerupTimer = null;
         this.lastPowerupSpawnHeight = -1000;
         this.lastPowerupTime = -15000;
-
-        // --- DIFFICULTY MANAGER ---
-        this.difficultyManager = new DifficultyManager(this);
 
         // --- VISUAL REFRESH ---
         // OPTIMIZATION: Pre-initialize walls immediately for instant rendering

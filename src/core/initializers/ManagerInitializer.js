@@ -12,6 +12,7 @@ import { InteractableManager } from '../../managers/gameplay/InteractableManager
 import { initializePlatformTextureCache } from '../../prefabs/Platform.js';
 import { RISER_TYPES } from '../../config/RiserConfig.js';
 import { WallDecorManager } from '../../managers/visuals/WallDecorManager.js';
+import { DifficultyManager } from '../../managers/level/DifficultyManager.js';
 
 export class ManagerInitializer {
     /**
@@ -19,6 +20,10 @@ export class ManagerInitializer {
      * @param {Phaser.Scene} scene 
      */
     static init(scene) {
+        // Core Systems (Source of Truth)
+        scene.difficultyManager = new DifficultyManager(scene);
+
+        // Gameplay Managers
         scene.collisionManager = new CollisionManager(scene);
         scene.levelManager = new LevelManager(scene);
         scene.wallDecorManager = new WallDecorManager(scene);

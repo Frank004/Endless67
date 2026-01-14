@@ -1,4 +1,4 @@
-import { PatrolEnemy, ShooterEnemy, JumperShooterEnemy } from '../../prefabs/Enemy.js';
+import { PatrolEnemy, ShooterEnemy, JumperShooterEnemy } from '../../entities/Enemy.js';
 import { PlatformSpawner } from './PlatformSpawner.js';
 import { MazeSpawner } from './MazeSpawner.js';
 import { EnemySpawner } from './EnemySpawner.js';
