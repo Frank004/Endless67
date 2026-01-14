@@ -1,12 +1,22 @@
 import { WALLS, PHYSICS } from '../../config/GameConstants.js';
 import { ASSETS } from '../../config/AssetKeys.js';
 import { PoolInitializer } from './PoolInitializer.js';
+import { BackgroundManager } from '../../managers/background/BackgroundManager.js';
+import { FogEffect } from '../../effects/FogEffect.js';
 
 export class WorldInitializer {
     static init(scene) {
         this.setupCamera(scene);
+        this.setupBackground(scene);
         this.createGroups(scene);
         this.createWalls(scene);
+    }
+
+    static setupBackground(scene) {
+        // Initialize first to ensure it's at the very back (Z-index -20)
+        scene.backgroundManager = new BackgroundManager(scene);
+        scene.backgroundManager.create();
+        scene.fogEffect = new FogEffect(scene);
     }
 
     static setupCamera(scene) {

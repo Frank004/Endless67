@@ -2,8 +2,6 @@ import EventBus, { Events } from '../core/EventBus.js';
 import { Player } from '../entities/Player.js';
 import { GameInitializer } from '../core/GameInitializer.js';
 import { updatePlatformRider } from '../utils/platformRider.js';
-import { BackgroundManager } from '../managers/background/BackgroundManager.js';
-import { FogEffect } from '../effects/FogEffect.js';
 import GameState from '../core/GameState.js';
 import { PLATFORM_WIDTH, PLATFORM_HEIGHT } from '../prefabs/Platform.js';
 import { SLOT_CONFIG } from '../config/SlotConfig.js';
@@ -44,12 +42,6 @@ export class Game extends Phaser.Scene {
 
         // Reset Global State
         GameState.reset();
-
-        // --- BACKGROUND SYSTEM ---
-        // Initialize first to ensure it's at the very back (Z-index -20)
-        this.backgroundManager = new BackgroundManager(this);
-        this.backgroundManager.create();
-        this.fogEffect = new FogEffect(this);
 
         // --- INITIALIZER ---
         // Handles setup of camera, devices, groups, pools, managers, and events
