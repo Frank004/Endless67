@@ -1,5 +1,27 @@
 # Release Notes
 
+## v0.0.46 (2026-01-14)
+
+### 🏗️ Architectural Refactoring
+*   **Asset Key Centralization**: Eliminated all "magic strings" for assets
+    *   Created comprehensive `AssetKeys.js` with texture, audio, and UI constants
+    *   Updated `Preloader.js`, `MainMenu.js`, `ControlsUI.js`, and `AudioSystem.js`
+*   **Singleton Audit**: Verified all singleton patterns are correctly implemented
+    *   Analyzed `GameState`, `ScoreManager`, `AudioSystem`, `PoolManagerRegistry`
+    *   Created detailed documentation in `docs/SINGLETON_AUDIT.md`
+*   **Code Cleanup**: Removed legacy commented code from `SlotGenerator.js`
+
+### 📚 Documentation
+*   Created `docs/SINGLETON_AUDIT.md` with detailed architectural analysis
+*   Updated `docs/CODEBASE_AUDIT_AND_PLAN.md` with complete progress tracking
+
+### ✅ Quality
+*   All 254 unit tests passing
+*   Manual testing verified up to 4859m
+*   No regressions detected
+
+---
+
 ## v0.0.45 (2026-01-11)
 
 ### 🌟 New Features
