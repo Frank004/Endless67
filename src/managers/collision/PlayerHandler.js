@@ -11,6 +11,11 @@ export class PlayerHandler {
 
     handlePlatformCollision(player, platform) {
         if (player.body.touching.down && platform.body.touching.up) {
+            // Actualizar timestamp de grounded (para distinguir de triggers)
+            if (player.lastGroundedTime !== undefined) {
+                player.lastGroundedTime = this.scene.time.now;
+            }
+
             // FSM/Context maneja el aterrizaje; sólo actualizamos plataforma y reseteos básicos
             if (player.setCurrentPlatform) {
                 player.setCurrentPlatform(platform);
@@ -58,6 +63,12 @@ export class PlayerHandler {
         if (!player.body?.touching?.down || !floor?.body?.touching?.up) {
             return;
         }
+
+        // Actualizar timestamp de grounded
+        if (player.lastGroundedTime !== undefined) {
+            player.lastGroundedTime = this.scene.time.now;
+        }
+
         if (player.setCurrentPlatform) {
             player.setCurrentPlatform(floor);
         }
