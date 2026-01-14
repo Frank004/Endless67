@@ -4,6 +4,7 @@ import { MenuNavigation } from '../managers/ui/MenuNavigation.js';
 import EventBus, { Events } from '../core/EventBus.js';
 import AudioSystem from '../core/systems/AudioSystem.js';
 import GameState from '../core/GameState.js';
+import { ASSETS } from '../config/AssetKeys.js';
 
 export class MainMenu extends Phaser.Scene {
 	constructor() {
@@ -27,7 +28,7 @@ export class MainMenu extends Phaser.Scene {
 
 		// Title
 		// Title
-		this.add.image(width / 2, 120, 'game_logo').setScale(0.28);
+		this.add.image(width / 2, 120, ASSETS.GAME_LOGO).setScale(0.28);
 
 		// --- BUTTONS ---
 		this.buttons = [];

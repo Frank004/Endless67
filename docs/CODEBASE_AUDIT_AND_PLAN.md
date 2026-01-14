@@ -66,6 +66,11 @@ src/managers/
 ### Phase 1: Core Cleanup (High Priority)
 - [x] **Refactor `GameInitializer`**: Break down into `AppConfig.js`, `DebugSystem.js`, and `GameBoot.js` (Implemented as `EventInitializer`, `WorldInitializer`).
 - [x] **Centralize Asset Keys**: Create `src/config/AssetKeys.js` to avoid magic strings for textures/audio.
+  - ✅ Created `AssetKeys.js` with all texture, audio, and UI constants
+  - ✅ Updated `Preloader.js` to use `ASSETS` constants
+  - ✅ Updated `AudioSystem.js` to use `ASSETS` constants
+  - ✅ Updated `MainMenu.js` to use `ASSETS.GAME_LOGO`
+  - ✅ Updated `ControlsUI.js` to use `ASSETS.JOYSTICK_BASE`, `ASSETS.JOYSTICK_KNOB`, `ASSETS.JUMP_FEEDBACK`
 
 ### Phase 2: Manager Decoupling
 - [ ] **Audit Singleton Usage**: Identify Managers that *must* be singletons vs those that should be Scene-scoped.
