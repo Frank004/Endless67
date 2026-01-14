@@ -332,9 +332,7 @@ export class Game extends Phaser.Scene {
         this.audioManager.startMusic();
 
         // Activar lava cuando el juego comienza
-        // if (this.riserManager) {
-        //     this.riserManager.setEnabled(true);
-        // }
+
 
         if (this.player?.controller?.resetState) {
             this.player.controller.resetState();
