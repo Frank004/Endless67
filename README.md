@@ -102,10 +102,13 @@ Este es un proyecto privado. Todos los derechos reservados.
 
 ### 🏗️ Arquitectura
 - **Sistema de slots**: Generación procedural de niveles con `SlotGenerator`
+- **Patrón Strategy**: Estrategias especializadas para plataformas y laberintos
 - **Object pooling**: Optimización de rendimiento con reutilización de objetos
 - **Sistema de eventos**: Comunicación desacoplada con `EventBus`
 - **Gestión de estado**: Sistema centralizado de estado del juego
 - **Manejo de colisiones**: Sistema modular de detección y respuesta
+- **Asset Keys centralizados**: Constantes tipadas para todos los assets
+- **Singletons correctos**: Arquitectura verificada y documentada
 
 ### 🎯 Sistemas Implementados
 - ✅ Sistema de slots (PLATFORM_BATCH, MAZE, SAFE_ZONE)
@@ -126,13 +129,25 @@ Este es un proyecto privado. Todos los derechos reservados.
 ### 📦 Estructura del Proyecto
 ```
 src/
-├── core/           # Estado del juego, eventos, inicialización
-├── managers/       # Gestores de sistemas (UI, audio, colisiones, etc.)
-├── prefabs/        # Prefabricados (Player, Enemy, Platform, etc.)
-├── scenes/         # Escenas de Phaser (Game, MainMenu, etc.)
-├── config/         # Configuraciones y constantes
-├── data/           # Datos (patrones, configuraciones de niveles)
-└── utils/          # Utilidades y helpers
+├── core/              # Estado del juego, eventos, inicialización
+│   ├── systems/       # Sistemas globales (Audio, Input)
+│   ├── initializers/  # Inicializadores modulares
+│   └── config/        # Configuración de dispositivos
+├── managers/          # Gestores de sistemas
+│   ├── level/         # Generación de niveles y slots
+│   │   └── strategies/ # Estrategias de generación
+│   ├── ui/            # Gestión de interfaz
+│   ├── collision/     # Manejo de colisiones
+│   ├── gameplay/      # Mecánicas de juego
+│   └── visuals/       # Efectos visuales
+├── entities/          # Entidades del juego
+│   ├── player/        # Sistema completo del jugador
+│   └── behaviors/     # Comportamientos de enemigos
+├── scenes/            # Escenas de Phaser
+├── config/            # Configuraciones y constantes
+│   └── AssetKeys.js   # Claves centralizadas de assets
+├── data/              # Datos (patrones, configuraciones)
+└── utils/             # Utilidades y helpers
 ```
 
 ## 👨‍💻 Desarrollo
@@ -164,7 +179,15 @@ npx http-server
 
 ## 📝 Versión Actual
 
-**v0.0.42** - Sistema de milestones y mejoras de UI
+**v0.0.46** - Refactorización Arquitectónica & Calidad de Código
+
+### 🏗️ Mejoras Recientes
+- ✅ **Centralización de Asset Keys**: Eliminación de "magic strings" en todo el código
+- ✅ **Auditoría de Singletons**: Verificación y documentación de patrones arquitectónicos
+- ✅ **Limpieza de Código**: Eliminación de código comentado y legacy
+- ✅ **Documentación Mejorada**: Guías de arquitectura y mejores prácticas
+- ✅ **254 Tests Unitarios**: Cobertura completa de managers y sistemas core
+- ✅ **Sistema de Estrategias**: Generación de slots con patrón Strategy
 
 Ver todas las versiones en [Releases](https://github.com/Frank004/Endless67/releases)
 
