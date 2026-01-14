@@ -7,7 +7,7 @@ import { GameOverMenu } from '../../src/managers/ui/menus/GameOverMenu.js';
 import EventBus, { Events } from '../../src/core/EventBus.js';
 import GameState from '../../src/core/GameState.js';
 import { UIHelpers } from '../../src/utils/UIHelpers.js';
-import { InputManager } from '../../src/managers/input/InputManager.js';
+import { InputSystem } from '../../src/core/systems/InputSystem.js';
 
 // Mock ScoreManager
 jest.mock('../../src/managers/gameplay/ScoreManager.js', () => ({
@@ -23,15 +23,17 @@ jest.mock('../../src/utils/UIHelpers.js', () => ({
 }));
 
 // Mock InputManager
-jest.mock('../../src/managers/input/InputManager.js', () => ({
-    InputManager: jest.fn().mockImplementation(() => ({
+jest.mock('../../src/core/systems/InputSystem.js', () => ({
+    InputSystem: jest.fn().mockImplementation(() => ({
         setupInputs: jest.fn(),
         update: jest.fn(),
         toggleJoystickVisual: jest.fn(),
         createMobileTextInput: jest.fn(),
         createTextInputListener: jest.fn(),
         removeTextInputListener: jest.fn(),
-        removeMobileTextInput: jest.fn()
+        removeTextInputListener: jest.fn(),
+        removeMobileTextInput: jest.fn(),
+        setExtendedCooldown: jest.fn()
     }))
 }));
 
@@ -139,13 +141,17 @@ describe('Menu Navigation Integration', () => {
             createMobileTextInput: jest.fn(),
             createTextInputListener: jest.fn(),
             removeTextInputListener: jest.fn(),
-            removeMobileTextInput: jest.fn()
+            removeMobileTextInput: jest.fn(),
+            setExtendedCooldown: jest.fn()
         };
 
         // Spy on EventBus
         jest.spyOn(EventBus, 'on');
         jest.spyOn(EventBus, 'off');
         jest.spyOn(EventBus, 'emit');
+
+        // Mock time.delayedCall
+        mockScene.time.delayedCall = jest.fn((delay, callback) => callback());
     });
 
     afterEach(() => {

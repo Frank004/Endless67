@@ -1,5 +1,5 @@
 
-import { PlayerPhysics } from '../../src/player/PlayerPhysics.js';
+import { PlayerPhysics } from '../../src/entities/player/PlayerPhysics.js';
 import { PLAYER_CONFIG } from '../../src/config/PlayerConfig.js';
 import { ASSETS } from '../../src/config/AssetKeys.js';
 

@@ -1,5 +1,5 @@
 
-import { PatrolEnemy, ShooterEnemy } from '../../src/prefabs/Enemy.js';
+import { PatrolEnemy, ShooterEnemy } from '../../src/entities/Enemy.js';
 
 describe('Enemies', () => {
     let scene;

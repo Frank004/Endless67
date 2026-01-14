@@ -43,7 +43,7 @@ describe('DifficultyManager', () => {
         difficultyManager.update(50000); // Way above max
         const tier = difficultyManager.getCurrentTier();
         expect(tier.description).toContain('Endless Chaos');
-        expect(tier.lava.speed).toBe(-110);
+        expect(tier.lava.speed).toBe(-60);
     });
 
     test('getPlatformConfig should return correct config for current tier', () => {

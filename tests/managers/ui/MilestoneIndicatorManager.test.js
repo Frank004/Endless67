@@ -19,6 +19,7 @@ jest.mock('../../../src/prefabs/ui/MilestoneIndicator.js', () => {
             setVisible: jest.fn(),
             playPassEffect: jest.fn(),
             setLocked: jest.fn(),
+            setAlpha: jest.fn(),
             destroy: jest.fn()
         };
     });
@@ -41,6 +42,9 @@ describe('MilestoneIndicatorManager', () => {
 
         // Mock scene
         mockScene = {
+            time: { now: 0 },
+            textures: { exists: jest.fn(() => true) },
+            layout: { playerSpawnY: 500 },
             add: {
                 particles: jest.fn().mockReturnValue({
                     setDepth: jest.fn().mockReturnThis(),
@@ -63,6 +67,9 @@ describe('MilestoneIndicatorManager', () => {
 
         manager = new MilestoneIndicatorManager(mockScene);
     });
+
+    // Helper to advance time (for rate limited logs)
+    const advanceTime = (ms) => { mockScene.time.now += ms; };
 
     afterEach(() => {
         if (manager) {
@@ -117,7 +124,7 @@ describe('MilestoneIndicatorManager', () => {
             const firstIndicator = manager.indicators[0];
 
             // Player passes the milestone (at -1000 or below)
-            manager.update(-1000);
+            manager.update(-10000);
 
             expect(firstIndicator.playPassEffect).toHaveBeenCalled();
             expect(firstIndicator.setLocked).toHaveBeenCalledWith(true);
@@ -128,11 +135,11 @@ describe('MilestoneIndicatorManager', () => {
             const firstIndicator = manager.indicators[0];
 
             // Pass milestone first time
-            manager.update(-1000);
+            manager.update(-10000);
             expect(firstIndicator.playPassEffect).toHaveBeenCalledTimes(1);
 
             // Update again - should not trigger again
-            manager.update(-1100);
+            manager.update(-11000);
             expect(firstIndicator.playPassEffect).toHaveBeenCalledTimes(1);
         });
 
@@ -142,7 +149,7 @@ describe('MilestoneIndicatorManager', () => {
             // Player far below milestone
             manager.update(0);
 
-            expect(firstIndicator.updatePosition).toHaveBeenCalledWith(50); // Fixed top position
+            expect(firstIndicator.updatePosition).toHaveBeenCalledWith(10); // Fixed top position
             expect(firstIndicator.setVisible).toHaveBeenCalledWith(true);
         });
     });

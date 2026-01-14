@@ -1,5 +1,5 @@
 import EventBus, { Events } from '../core/EventBus.js';
-import { Player } from '../entities/Player.js';
+import { Player } from '../entities/player/Player.js';
 import { GameInitializer } from '../core/GameInitializer.js';
 import { updatePlatformRider } from '../utils/platformRider.js';
 import GameState from '../core/GameState.js';
