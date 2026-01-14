@@ -25,8 +25,9 @@ export class ItemSpawnStrategy {
 
         // Powerup Config
         const isDev = this.scene.registry?.get('isDevMode');
-        const POWERUP_MIN_DISTANCE = isDev ? 0 : 2000;
-        const POWERUP_COOLDOWN = isDev ? 0 : 15000;
+        // REFACTORED: Increased default cooldowns and set non-zero for dev mode to prevent spam
+        const POWERUP_MIN_DISTANCE = isDev ? 1000 : 4000; // was 0 : 2000
+        const POWERUP_COOLDOWN = isDev ? 5000 : 30000;   // was 0 : 15000
         const POWERUP_CHANCE = (mechanicsConfig.powerups ? mechanicsConfig.powerupChance : 0) / 100;
 
         const logPowerups = this.scene.registry?.get('logPowerups') === true;

@@ -196,17 +196,17 @@ export class RiserManager {
 
         // Catch-up logic (if player is too far ahead, riser speeds up)
         // Only apply catch-up if NOT in last chance mode
-        // REFACTORED: Thresholds relaxed to prevent "Riser too fast" feeling.
+        // REFACTORED: Thresholds balanced.
         if (!inLastChance) {
-            if (distanceToRiser < -1500) {
+            if (distanceToRiser < -1200) {
                 // > 2 screens ahead
-                targetSpeed = this.config.speedConfig.maxSpeed * 1.3; // Extreme catchup
-            } else if (distanceToRiser < -1000) {
-                // > 1.5 screens ahead
-                targetSpeed = this.config.speedConfig.maxSpeed * 0.9; // Fast catchup
-            } else if (distanceToRiser < -600) {
-                // > 1 screen ahead
-                targetSpeed = this.config.speedConfig.maxSpeed * 0.6; // Moderate catchup
+                targetSpeed = this.config.speedConfig.maxSpeed * 1.4; // Extreme catchup
+            } else if (distanceToRiser < -800) {
+                // > 1.3 screens ahead
+                targetSpeed = this.config.speedConfig.maxSpeed * 1.1; // Fast catchup
+            } else if (distanceToRiser < -450) {
+                // > 0.75 screen ahead
+                targetSpeed = this.config.speedConfig.maxSpeed * 0.75; // Moderate catchup
             }
         }
 

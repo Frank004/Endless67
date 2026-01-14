@@ -58,6 +58,10 @@ export class ItemHandler {
         if (!powerup || !powerup.active) return;
         if (powerup.getData && powerup.getData('ignoreCollection')) return;
 
+        // Reset spawn cooldown on collection to prevent back-to-back spawns
+        scene.lastPowerupTime = Date.now();
+        scene.lastPowerupSpawnHeight = player.y; // approximate
+
         // Deshabilitar colisión de inmediato para evitar múltiples triggers
         if (powerup.body) {
             powerup.body.setEnable(false);
