@@ -1,6 +1,6 @@
 import EventBus, { Events } from '../../core/EventBus.js';
 
-export class InputManager {
+export class InputSystem {
     constructor(scene) {
         this.scene = scene;
         this.moveAnchorX = null;

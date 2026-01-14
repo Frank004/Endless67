@@ -1,8 +1,8 @@
 import { UIHelpers } from '../utils/UIHelpers.js';
-import { InputManager } from '../managers/input/InputManager.js';
+import { InputSystem } from '../core/systems/InputSystem.js';
 import { MenuNavigation } from '../managers/ui/MenuNavigation.js';
 import EventBus, { Events } from '../core/EventBus.js';
-import AudioManager from '../managers/audio/AudioManager.js';
+import AudioSystem from '../core/systems/AudioSystem.js';
 import GameState from '../core/GameState.js';
 
 export class MainMenu extends Phaser.Scene {
@@ -13,10 +13,10 @@ export class MainMenu extends Phaser.Scene {
 
 	create() {
 		// Initialize Audio Manager for this scene to capture interactions
-		AudioManager.setScene(this);
-		AudioManager.setupAudioContextResume();
+		AudioSystem.setScene(this);
+		AudioSystem.setupAudioContextResume();
 
-		this.inputManager = new InputManager(this);
+		this.inputManager = new InputSystem(this);
 		this.inputManager.setupInputs();
 
 		const width = this.cameras.main.width;

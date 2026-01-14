@@ -1,4 +1,4 @@
-import AudioManager from '../../../managers/audio/AudioManager.js';
+import AudioSystem from '../../../core/systems/AudioSystem.js';
 import { launchItem } from '../../../utils/physicsUtils.js';
 
 /**
@@ -44,7 +44,7 @@ export class TrashcanInteractable {
         }
 
         // Play SFX
-        AudioManager.playTrashcanHit();
+        AudioSystem.playTrashcanHit();
 
         // Spawn item (Coin or Powerup)
         const spawnX = trashcan.x - 25;

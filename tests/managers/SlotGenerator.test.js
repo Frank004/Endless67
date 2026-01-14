@@ -264,9 +264,15 @@ describe('SlotGenerator', () => {
         expect(generator.determineSlotType()).toBe('MAZE');
     });
 
-    test('generatePlatformBatch should spawn platforms via levelManager', () => {
-        const layoutData = {
+    test('generateNextSlot (PLATFORM_BATCH) should use PlatformSlotStrategy and spawn platforms', () => {
+        // Force type to PLATFORM_BATCH
+        generator.determineSlotType = jest.fn(() => 'PLATFORM_BATCH');
+
+        // Mock GridGenerator to return specific data
+        generator.gridGenerator.nextSlot = jest.fn(() => ({
             yStart: 1000,
+            yEnd: 400,
+            height: 600,
             type: 'PLATFORM_BATCH',
             index: 10,
             data: {
@@ -274,28 +280,42 @@ describe('SlotGenerator', () => {
                 sourcePattern: 'test_pattern',
                 transform: 'none'
             }
-        };
-        const result = generator.generatePlatformBatch(layoutData);
+        }));
 
+        generator.generateNextSlot();
+
+        // PlatformSlotStrategy calls levelManager.spawnPlatform
         expect(mockScene.levelManager.spawnPlatform).toHaveBeenCalled();
-        expect(result.platformCount).toBeGreaterThan(0);
-        expect(result).toHaveProperty('contentHeight');
+        expect(generator.slots.length).toBeGreaterThan(0);
+        const lastSlot = generator.slots[generator.slots.length - 1];
+        expect(lastSlot.type).toBe('PLATFORM_BATCH');
+        expect(lastSlot.platformCount).toBeGreaterThan(0);
     });
 
-    test('generateMaze should call spawnMazeRowFromConfig', () => {
-        const layoutData = {
+    test('generateNextSlot (MAZE) should use MazeSlotStrategy and spawn maze', () => {
+        // Force type to MAZE
+        generator.determineSlotType = jest.fn(() => 'MAZE');
+
+        // Mock GridGenerator
+        generator.gridGenerator.nextSlot = jest.fn(() => ({
             yStart: 1000,
             yEnd: 400,
             height: 600,
             type: 'MAZE',
+            index: 11,
             data: {
                 pattern: [['X', 'X', 'X']],
                 patternIndex: 0
             }
-        };
-        generator.generateMaze(layoutData);
+        }));
 
+        generator.generateNextSlot();
+
+        // MazeSlotStrategy calls levelManager.spawnMazeRowFromConfig
         expect(mockScene.levelManager.spawnMazeRowFromConfig).toHaveBeenCalled();
+        expect(generator.slots.length).toBeGreaterThan(0);
+        const lastSlot = generator.slots[generator.slots.length - 1];
+        expect(lastSlot.type).toBe('MAZE');
     });
 
     test('update should generate new slots when player moves up', () => {

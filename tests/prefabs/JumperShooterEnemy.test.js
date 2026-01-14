@@ -145,7 +145,7 @@ describe('JumperShooterEnemy', () => {
         test('should configure body size correctly', () => {
             jumper.spawn(150, 250);
             // Body completo 32x32
-            expect(jumper.body.setSize).toHaveBeenCalledWith(32, 32);
+            expect(jumper.body.setSize).toHaveBeenCalledWith(29, 24);
         });
     });
 

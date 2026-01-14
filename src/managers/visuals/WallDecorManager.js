@@ -18,7 +18,7 @@ export class WallDecorManager {
     constructor(scene) {
         this.scene = scene;
         this.decorations = []; // Array de todas las decoraciones activas (BaseWallDecoration)
-        this.gameWidth = scene.game.config.width;
+        this.gameWidth = scene.game?.config?.width || scene.scale?.width || 600;
     }
 
     /**
@@ -312,6 +312,14 @@ export class WallDecorManager {
         const b = Math.floor(c * 1.0);  // Mantener azul relativo (cool tint)
 
         return Phaser.Display.Color.GetColor(r, g, b);
+    }
+
+    /**
+     * Limpia todas las decoraciones activas (para reinicio de nivel)
+     */
+    reset() {
+        this.decorations.forEach(decor => WallDecorFactory.release(decor));
+        this.decorations = [];
     }
 
     /**

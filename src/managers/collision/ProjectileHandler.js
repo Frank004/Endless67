@@ -1,4 +1,4 @@
-import AudioManager from '../audio/AudioManager.js';
+import AudioSystem from '../../core/systems/AudioSystem.js';
 import { ASSETS } from '../../config/AssetKeys.js';
 
 export class ProjectileHandler {
@@ -79,7 +79,7 @@ export class ProjectileHandler {
             }
 
             // Play damage sound
-            AudioManager.playDamageSound();
+            AudioSystem.playDamageSound();
 
             let dir = (player.x < projX) ? -1 : 1;
             if (projVelX > 0) dir = 1; else if (projVelX < 0) dir = -1;

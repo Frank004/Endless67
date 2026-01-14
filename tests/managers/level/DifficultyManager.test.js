@@ -32,24 +32,24 @@ describe('DifficultyManager', () => {
         expect(tier.platforms.staticOnly).toBe(false);
     });
 
-    test('should transition to Patrol Enemies at 800m', () => {
-        difficultyManager.update(800);
+    test('should transition to Patrol Enemies at 1000m', () => {
+        difficultyManager.update(1000);
         const tier = difficultyManager.getCurrentTier();
         expect(tier.description).toContain('Intro: Patrol Enemies');
         expect(tier.enemies.types).toContain('patrol');
     });
 
-    test('should handle high heights gracefully (Endless Hell)', () => {
+    test('should handle high heights gracefully (Endless Chaos)', () => {
         difficultyManager.update(50000); // Way above max
         const tier = difficultyManager.getCurrentTier();
-        expect(tier.description).toContain('Endless Hell');
-        expect(tier.lava.speed).toBe(-100);
+        expect(tier.description).toContain('Endless Chaos');
+        expect(tier.lava.speed).toBe(-110);
     });
 
     test('getPlatformConfig should return correct config for current tier', () => {
         difficultyManager.update(500); // Moving Platforms tier
         const config = difficultyManager.getPlatformConfig();
-        expect(config.movingChance).toBe(30);
+        expect(config.movingChance).toBe(40);
         expect(config.movingSpeed).toBe(80);
     });
 });

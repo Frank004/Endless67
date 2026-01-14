@@ -1,6 +1,6 @@
 import GameState from '../../core/GameState.js';
 import ScoreManager from '../gameplay/ScoreManager.js';
-import AudioManager from '../audio/AudioManager.js';
+import AudioSystem from '../../core/systems/AudioSystem.js';
 import { PLAYER_CONFIG } from '../../config/PlayerConfig.js';
 import { launchItem } from '../../utils/physicsUtils.js';
 
@@ -122,7 +122,7 @@ export class PlayerHandler {
         // Play riser drop sound
         const riserConfig = scene.riserManager.config;
         if (riserConfig && riserConfig.dropSoundKey) {
-            AudioManager.playRiserDrop(riserConfig.dropSoundKey);
+            AudioSystem.playRiserDrop(riserConfig.dropSoundKey);
         }
 
         // NOTIFICAR AL ESTADO GLOBAL PARA PARAR AUDIO Y BLOQUEAR PAUSA
@@ -186,7 +186,7 @@ export class PlayerHandler {
         }
 
         // Play SFX
-        AudioManager.playTrashcanHit();
+        AudioSystem.playTrashcanHit();
 
         // --- NEW LOGIC: Spawn Bouncing Item (Coin or Powerup) ---
         // Fix offset: Trashcan appears to offset coin to the right, adjusting spawnX left by 25px
@@ -281,7 +281,7 @@ export class PlayerHandler {
         player.setVelocityY(-bounceForce);
 
         // Play SFX
-        AudioManager.playTireBounce();
+        AudioSystem.playTireBounce();
 
         const ctx = player.controller?.context;
         if (ctx) {

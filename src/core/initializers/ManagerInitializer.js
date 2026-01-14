@@ -1,9 +1,9 @@
 import { CollisionManager } from '../../managers/collision/CollisionManager.js';
 import { LevelManager } from '../../managers/level/LevelManager.js';
 import { SlotGenerator } from '../../managers/level/SlotGenerator.js';
-import { InputManager } from '../../managers/input/InputManager.js';
+import { InputSystem } from '../systems/InputSystem.js';
 import { UIManager } from '../../managers/ui/UIManager.js';
-import { AudioManager } from '../../managers/audio/AudioManager.js';
+import { AudioSystem } from '../systems/AudioSystem.js';
 import { ParticleManager } from '../../managers/gameplay/ParticleManager.js';
 import { RiserManager } from '../../managers/gameplay/RiserManager.js';
 import { DebugManager } from '../../managers/debug/DebugManager.js';
@@ -11,6 +11,7 @@ import { WallDecorator } from '../../managers/level/WallDecorator.js';
 import { InteractableManager } from '../../managers/gameplay/InteractableManager.js';
 import { initializePlatformTextureCache } from '../../prefabs/Platform.js';
 import { RISER_TYPES } from '../../config/RiserConfig.js';
+import { WallDecorManager } from '../../managers/visuals/WallDecorManager.js';
 
 export class ManagerInitializer {
     /**
@@ -20,11 +21,12 @@ export class ManagerInitializer {
     static init(scene) {
         scene.collisionManager = new CollisionManager(scene);
         scene.levelManager = new LevelManager(scene);
+        scene.wallDecorManager = new WallDecorManager(scene);
         scene.slotGenerator = new SlotGenerator(scene);
-        scene.inputManager = new InputManager(scene);
+        scene.inputManager = new InputSystem(scene);
         scene.uiManager = new UIManager(scene);
 
-        scene.audioManager = new AudioManager();
+        scene.audioManager = new AudioSystem(); // Using new() to get the singleton (safe)
         scene.audioManager.setScene(scene);
         scene.audioManager.setupAudio();
 

@@ -1,13 +1,13 @@
-import AudioManager from '../../src/managers/audio/AudioManager.js';
+import AudioSystem from '../../../src/core/systems/AudioSystem.js';
 
-describe('AudioManager', () => {
+describe('AudioSystem', () => {
     let scene;
 
     const resetManager = () => {
-        AudioManager.scene = null;
-        AudioManager.bgMusic = null;
-        AudioManager.lavaSound = null;
-        AudioManager.soundEnabled = true;
+        AudioSystem.scene = null;
+        AudioSystem.bgMusic = null;
+        AudioSystem.lavaSound = null;
+        AudioSystem.soundEnabled = true;
     };
 
     beforeEach(() => {
@@ -35,54 +35,54 @@ describe('AudioManager', () => {
     test('setScene should read registry and sync mute state', () => {
         scene.registry.get.mockReturnValue(false);
 
-        AudioManager.setScene(scene);
+        AudioSystem.setScene(scene);
 
-        expect(AudioManager.soundEnabled).toBe(false);
+        expect(AudioSystem.soundEnabled).toBe(false);
         expect(scene.sound.mute).toBe(true);
     });
 
     test('toggleSound should flip registry value and mute sound', () => {
-        AudioManager.setScene(scene);
+        AudioSystem.setScene(scene);
         scene.registry.get.mockReturnValue(true);
 
-        AudioManager.toggleSound();
+        AudioSystem.toggleSound();
 
         expect(scene.registry.set).toHaveBeenCalledWith('soundEnabled', false);
-        expect(AudioManager.soundEnabled).toBe(false);
+        expect(AudioSystem.soundEnabled).toBe(false);
         expect(scene.sound.mute).toBe(true);
     });
 
     test('toggleSound with payload should set specific state', () => {
-        AudioManager.setScene(scene);
+        AudioSystem.setScene(scene);
 
-        AudioManager.toggleSound({ enabled: false });
+        AudioSystem.toggleSound({ enabled: false });
 
         expect(scene.registry.set).toHaveBeenCalledWith('soundEnabled', false);
-        expect(AudioManager.soundEnabled).toBe(false);
+        expect(AudioSystem.soundEnabled).toBe(false);
         expect(scene.sound.mute).toBe(true);
 
-        AudioManager.toggleSound({ enabled: true });
+        AudioSystem.toggleSound({ enabled: true });
 
         expect(scene.registry.set).toHaveBeenCalledWith('soundEnabled', true);
-        expect(AudioManager.soundEnabled).toBe(true);
+        expect(AudioSystem.soundEnabled).toBe(true);
         expect(scene.sound.mute).toBe(false);
     });
 
     test('updateAudio should adjust lava and music volumes based on distance', () => {
-        AudioManager.scene = scene;
-        AudioManager.lavaSound = {
+        AudioSystem.scene = scene;
+        AudioSystem.riserAmbientSound = {
             isPlaying: true,
             volume: 0,
             setVolume: jest.fn()
         };
-        AudioManager.bgMusic = {
+        AudioSystem.bgMusic = {
             isPlaying: true,
             setVolume: jest.fn()
         };
 
-        AudioManager.updateAudio(100, 60);
+        AudioSystem.updateAudio(100, 60);
 
-        expect(AudioManager.lavaSound.setVolume).toHaveBeenCalledWith(expect.any(Number));
-        expect(AudioManager.bgMusic.setVolume).toHaveBeenCalledWith(expect.any(Number));
+        expect(AudioSystem.riserAmbientSound.setVolume).toHaveBeenCalledWith(expect.any(Number));
+        expect(AudioSystem.bgMusic.setVolume).toHaveBeenCalledWith(expect.any(Number));
     });
 });

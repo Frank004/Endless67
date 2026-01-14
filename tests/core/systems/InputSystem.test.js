@@ -1,9 +1,9 @@
-import { InputManager } from '../../src/managers/input/InputManager.js';
-import EventBus, { Events } from '../../src/core/EventBus.js';
+import { InputSystem } from '../../../src/core/systems/InputSystem.js';
+import EventBus, { Events } from '../../../src/core/EventBus.js';
 
-describe('InputManager', () => {
+describe('InputSystem', () => {
     let scene;
-    let inputManager;
+    let inputManager; // Variable name kept for minimal diff, or rename it? Let's keep it.
     let mockPad;
 
     beforeEach(() => {
@@ -59,10 +59,13 @@ describe('InputManager', () => {
         // Populate buttons for index access (e.g. pad.buttons[9])
         for (let i = 0; i < 20; i++) mockPad.buttons[i] = { pressed: false, value: 0 };
 
-        scene.input.gamepad = {
+        // Enhance existing mock instead of overwriting entirely
+        Object.assign(scene.input.gamepad, {
             on: jest.fn(),
-            getPad: jest.fn().mockReturnValue(mockPad)
-        };
+            getPad: jest.fn().mockReturnValue(mockPad),
+            enabled: true,
+            start: jest.fn()
+        });
 
         // Mock Player
         scene.player = {
@@ -75,7 +78,7 @@ describe('InputManager', () => {
         scene.registry.get.mockReturnValue(true); // showJoystick = true
         scene.registry.set = jest.fn();
 
-        inputManager = new InputManager(scene);
+        inputManager = new InputSystem(scene);
         jest.spyOn(EventBus, 'emit');
     });
 
