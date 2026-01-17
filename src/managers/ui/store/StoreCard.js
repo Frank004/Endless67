@@ -66,7 +66,7 @@ export class StoreCard extends Phaser.GameObjects.Container {
         });
 
         // Force debug refresh
-        this.scene.input.enableDebug(this, STORE_CARD_CONSTANTS.COLORS.DEBUG);
+        // this.scene.input.enableDebug(this, STORE_CARD_CONSTANTS.COLORS.DEBUG);
     }
 
     updateVisualState() {

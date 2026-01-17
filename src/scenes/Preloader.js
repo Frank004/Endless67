@@ -91,20 +91,35 @@ export class Preloader extends Phaser.Scene {
         this.load.audio(ASSETS.WALL_SLIDE, 'assets/audio/slide/slide.mp3');
 
         // --- ASSETS LOADING ---
-        this.load.image(ASSETS.GAME_LOGO, 'assets/logo.png');
-        this.load.atlas(ASSETS.UI_ICONS, 'assets/ui/icons.png', 'assets/ui/icons.json');
-        this.load.multiatlas(ASSETS.COINS, 'assets/spritesheets/coins.json', 'assets/spritesheets');
-        this.load.multiatlas('basketball', 'assets/spritesheets/basketball.json', 'assets/spritesheets');
-        this.load.multiatlas('walls', 'assets/spritesheets/walls.json', 'assets/spritesheets');
-        this.load.multiatlas('floor', 'assets/spritesheets/floor.json', 'assets/spritesheets');
-        this.load.multiatlas('platform', 'assets/spritesheets/platform.json', 'assets/spritesheets');
-        this.load.multiatlas(ASSETS.PROPS, 'assets/spritesheets/props.json', 'assets/spritesheets');
-        this.load.multiatlas(ASSETS.STORE, 'assets/spritesheets/store.json', 'assets/spritesheets');
+        // --- ASSETS LOADING ---
+        if (!this.textures.exists(ASSETS.GAME_LOGO)) this.load.image(ASSETS.GAME_LOGO, 'assets/logo.png');
+        if (!this.textures.exists(ASSETS.UI_ICONS)) this.load.atlas(ASSETS.UI_ICONS, 'assets/ui/icons.png', 'assets/ui/icons.json');
+
+        if (!this.textures.exists(ASSETS.COINS)) this.load.multiatlas(ASSETS.COINS, 'assets/spritesheets/coins.json', 'assets/spritesheets');
+        if (!this.textures.exists('basketball')) this.load.multiatlas('basketball', 'assets/spritesheets/basketball.json', 'assets/spritesheets');
+        if (!this.textures.exists('walls')) this.load.multiatlas('walls', 'assets/spritesheets/walls.json', 'assets/spritesheets');
+        if (!this.textures.exists('floor')) this.load.multiatlas('floor', 'assets/spritesheets/floor.json', 'assets/spritesheets');
+        if (!this.textures.exists('platform')) this.load.multiatlas('platform', 'assets/spritesheets/platform.json', 'assets/spritesheets');
+        if (!this.textures.exists(ASSETS.PROPS)) this.load.multiatlas(ASSETS.PROPS, 'assets/spritesheets/props.json', 'assets/spritesheets');
+        if (!this.textures.exists(ASSETS.STORE)) this.load.multiatlas(ASSETS.STORE, 'assets/spritesheets/store.json', 'assets/spritesheets');
+
+        // Player Skin - Force Reload to support skin changes
+        if (this.textures.exists(ASSETS.PLAYER)) {
+            this.textures.remove(ASSETS.PLAYER);
+        }
+
         const profile = PlayerProfileService.loadOrCreate();
-        const skinId = profile?.skins?.equipped || 'default';
+        let skinId = profile?.skins?.equipped || 'default';
+
+        // Fallback for mock skins or missing folders
+        if (skinId.includes('mock')) {
+            skinId = 'default';
+        }
+
         this.load.multiatlas(ASSETS.PLAYER, `assets/skins/${skinId}/player.json`, `assets/skins/${skinId}`);
-        this.load.atlas(ASSETS.ENEMY_ATLAS, 'assets/spritesheets/enemy.png', 'assets/spritesheets/enemy.json');
-        this.load.atlas(ASSETS.EFFECTS, 'assets/spritesheets/effects.png', 'assets/spritesheets/effects.json');
+
+        if (!this.textures.exists(ASSETS.ENEMY_ATLAS)) this.load.atlas(ASSETS.ENEMY_ATLAS, 'assets/spritesheets/enemy.png', 'assets/spritesheets/enemy.json');
+        if (!this.textures.exists(ASSETS.EFFECTS)) this.load.atlas(ASSETS.EFFECTS, 'assets/spritesheets/effects.png', 'assets/spritesheets/effects.json');
 
 
     }

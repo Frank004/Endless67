@@ -40,6 +40,86 @@
       "atlasKey": "player",
       "multiatlasJson": "assets/skins/default/player.json",
       "multiatlasBase": "assets/skins/default"
+    },
+    {
+      "id": "skin_mock_4",
+      "name": "Neon Rider",
+      "rarity": "common",
+      "priceCoins": 500,
+      "preview": "",
+      "atlasKey": "player",
+      "multiatlasJson": "assets/skins/default/player.json",
+      "multiatlasBase": "assets/skins/default"
+    },
+    {
+      "id": "skin_mock_5",
+      "name": "Shadow Ops",
+      "rarity": "rare",
+      "priceCoins": 2500,
+      "preview": "",
+      "atlasKey": "player",
+      "multiatlasJson": "assets/skins/default/player.json",
+      "multiatlasBase": "assets/skins/default"
+    },
+    {
+      "id": "skin_mock_6",
+      "name": "Magma Core",
+      "rarity": "epic",
+      "priceCoins": 9000,
+      "preview": "",
+      "atlasKey": "player",
+      "multiatlasJson": "assets/skins/default/player.json",
+      "multiatlasBase": "assets/skins/default"
+    },
+    {
+      "id": "skin_mock_7",
+      "name": "Frostbite",
+      "rarity": "legendary",
+      "priceCoins": 20000,
+      "preview": "",
+      "atlasKey": "player",
+      "multiatlasJson": "assets/skins/default/player.json",
+      "multiatlasBase": "assets/skins/default"
+    },
+    {
+      "id": "skin_mock_8",
+      "name": "Golden Boy",
+      "rarity": "rare",
+      "priceCoins": 4500,
+      "preview": "",
+      "atlasKey": "player",
+      "multiatlasJson": "assets/skins/default/player.json",
+      "multiatlasBase": "assets/skins/default"
+    },
+    {
+      "id": "skin_mock_9",
+      "name": "Toxic Hazard",
+      "rarity": "common",
+      "priceCoins": 800,
+      "preview": "",
+      "atlasKey": "player",
+      "multiatlasJson": "assets/skins/default/player.json",
+      "multiatlasBase": "assets/skins/default"
+    },
+    {
+      "id": "skin_mock_10",
+      "name": "Void Walker",
+      "rarity": "epic",
+      "priceCoins": 12000,
+      "preview": "",
+      "atlasKey": "player",
+      "multiatlasJson": "assets/skins/default/player.json",
+      "multiatlasBase": "assets/skins/default"
+    },
+    {
+      "id": "skin_mock_11",
+      "name": "Cyber Glitch",
+      "rarity": "legendary",
+      "priceCoins": 30000,
+      "preview": "",
+      "atlasKey": "player",
+      "multiatlasJson": "assets/skins/default/player.json",
+      "multiatlasBase": "assets/skins/default"
     }
   ]
 }
