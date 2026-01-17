@@ -5,6 +5,7 @@ import { MainMenu } from './scenes/MainMenu.js';
 import { Leaderboard } from './scenes/Leaderboard.js';
 import { Settings } from './scenes/Settings.js';
 import { Playground } from './scenes/Playground.js';
+import { Store } from './scenes/Store.js';
 import { GAME_CONFIG } from './config/GameConstants.js';
 import { isMobileDevice, getResolution, getHiDpiScale } from './utils/DeviceDetection.js';
 
@@ -58,7 +59,7 @@ const config = {
         gamepad: true  // Enable gamepad plugin
     },
     physics: { default: 'arcade', arcade: { gravity: { y: 1200 }, debug: false } },
-    scene: [Boot, Preloader, MainMenu, Game, Leaderboard, Settings, Playground]
+    scene: [Boot, Preloader, MainMenu, Game, Leaderboard, Settings, Playground, Store]
 };
 
 const game = new Phaser.Game(config);

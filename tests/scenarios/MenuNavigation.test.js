@@ -161,7 +161,7 @@ describe('Menu Navigation Integration', () => {
 
     describe('MainMenu', () => {
         let mainMenu;
-        let startBtnContainer, leaderboardBtnContainer, settingsBtnContainer;
+        let startBtnContainer, leaderboardBtnContainer, storeBtnContainer, settingsBtnContainer;
 
         beforeEach(() => {
             mainMenu = new MainMenu();
@@ -177,11 +177,13 @@ describe('Menu Navigation Integration', () => {
             // Specific mocks for buttons
             startBtnContainer = { ...mockContainer };
             leaderboardBtnContainer = { ...mockContainer };
+            storeBtnContainer = { ...mockContainer };
             settingsBtnContainer = { ...mockContainer };
 
             UIHelpers.createTextButton
                 .mockImplementationOnce((s, x, y, t, o) => createMockButtonObj(startBtnContainer, mockText, null, o?.callback))
                 .mockImplementationOnce((s, x, y, t, o) => createMockButtonObj(leaderboardBtnContainer, mockText, null, o?.callback))
+                .mockImplementationOnce((s, x, y, t, o) => createMockButtonObj(storeBtnContainer, mockText, null, o?.callback))
                 .mockImplementationOnce((s, x, y, t, o) => createMockButtonObj(settingsBtnContainer, mockText, null, o?.callback));
 
             // For Dev Mode button if needed later
@@ -196,6 +198,9 @@ describe('Menu Navigation Integration', () => {
             EventBus.emit(Events.UI_NAV_DOWN);
             expect(leaderboardBtnContainer.setScale).toHaveBeenCalledWith(1.1);
             expect(startBtnContainer.setScale).toHaveBeenCalledWith(1.0); // Deselected
+
+            EventBus.emit(Events.UI_NAV_DOWN);
+            expect(storeBtnContainer.setScale).toHaveBeenCalledWith(1.1);
 
             EventBus.emit(Events.UI_NAV_DOWN);
             expect(settingsBtnContainer.setScale).toHaveBeenCalledWith(1.1);

@@ -19,7 +19,7 @@ export class PlayerVisuals {
 
         if (hasAtlas) {
             player.setTexture(ASSETS.PLAYER);
-            const frameName = 'IDLE 1.png';
+            const frameName = 'idle-01.png';
             if (scene.textures.get(ASSETS.PLAYER).has(frameName)) {
                 player.setFrame(frameName);
             } else {

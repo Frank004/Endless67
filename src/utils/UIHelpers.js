@@ -164,4 +164,19 @@ export class UIHelpers {
 
         return buttonObj;
     }
+
+    /**
+     * Format large numbers into compact strings (e.g. 1.2k, 1M)
+     * @param {number} amount - The numeric amount
+     * @returns {string} - Formatted string
+     */
+    static formatCurrency(amount) {
+        if (amount >= 1000000) {
+            return (amount / 1000000).toFixed(1).replace(/\.0$/, '') + 'M';
+        }
+        if (amount >= 1000) {
+            return (amount / 1000).toFixed(1).replace(/\.0$/, '') + 'k';
+        }
+        return (amount || 0).toLocaleString();
+    }
 }

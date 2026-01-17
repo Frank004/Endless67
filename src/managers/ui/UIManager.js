@@ -1,6 +1,7 @@
 import EventBus, { Events } from '../../core/EventBus.js';
 import GameState from '../../core/GameState.js';
 import ScoreManager from '../gameplay/ScoreManager.js';
+import CurrencyRunService from '../gameplay/CurrencyRunService.js';
 import { HUDManager } from './hud/HUDManager.js';
 import { PauseMenu } from './menus/PauseMenu.js';
 import { ControlsUI } from './controls/ControlsUI.js';
@@ -141,6 +142,7 @@ export class UIManager {
         const gameOverListener = (data) => {
             console.log('🎮 [UIManager] Game Over Event Received:', data);
             console.log('🎮 [UIManager] Checking high score with height:', data.height, 'score:', data.score);
+            CurrencyRunService.commitRunCoinsToProfile();
             this.showGameOver(data);
 
             // Delay before showing UI to allow game over animation to play

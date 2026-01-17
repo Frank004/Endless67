@@ -12,6 +12,7 @@ import { LAYOUT_CONFIG, calculateLayout } from '../config/LayoutConfig.js';
 import { StageFloor } from '../prefabs/StageFloor.js';
 import { AdBanner } from '../prefabs/AdBanner.js';
 import { StageProps } from '../managers/ui/StageProps.js';
+import CurrencyRunService from '../managers/gameplay/CurrencyRunService.js';
 
 
 /**
@@ -42,6 +43,7 @@ export class Game extends Phaser.Scene {
 
         // Reset Global State
         GameState.reset();
+        CurrencyRunService.resetRunCoins();
 
         // --- INITIALIZER ---
         // Handles setup of camera, devices, groups, pools, managers, and events

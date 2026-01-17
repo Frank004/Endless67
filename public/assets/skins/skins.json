@@ -1,0 +1,45 @@
+{
+  "version": 1,
+  "skins": [
+    {
+      "id": "default",
+      "name": "Default",
+      "rarity": "common",
+      "priceCoins": 0,
+      "preview": "assets/skins/default/preview.png",
+      "atlasKey": "player",
+      "multiatlasJson": "assets/skins/default/player.json",
+      "multiatlasBase": "assets/skins/default"
+    },
+    {
+      "id": "skin_mock_1",
+      "name": "Purple Storm",
+      "rarity": "rare",
+      "priceCoins": 3500,
+      "preview": "",
+      "atlasKey": "player",
+      "multiatlasJson": "assets/skins/default/player.json",
+      "multiatlasBase": "assets/skins/default"
+    },
+    {
+      "id": "skin_mock_2",
+      "name": "Cyber Ninja",
+      "rarity": "epic",
+      "priceCoins": 8000,
+      "preview": "",
+      "atlasKey": "player",
+      "multiatlasJson": "assets/skins/default/player.json",
+      "multiatlasBase": "assets/skins/default"
+    },
+    {
+      "id": "skin_mock_3",
+      "name": "Diamond",
+      "rarity": "legendary",
+      "priceCoins": 15000,
+      "preview": "",
+      "atlasKey": "player",
+      "multiatlasJson": "assets/skins/default/player.json",
+      "multiatlasBase": "assets/skins/default"
+    }
+  ]
+}

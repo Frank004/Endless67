@@ -1,0 +1,167 @@
+{
+	"textures": [
+		{
+			"image": "store.png",
+			"format": "RGBA8888",
+			"size": {
+				"w": 483,
+				"h": 1018
+			},
+			"scale": 1,
+			"frames": [
+				{
+					"filename": "storebg.png",
+					"rotated": false,
+					"trimmed": false,
+					"sourceSize": {
+						"w": 360,
+						"h": 640
+					},
+					"spriteSourceSize": {
+						"x": 0,
+						"y": 0,
+						"w": 360,
+						"h": 640
+					},
+					"frame": {
+						"x": 1,
+						"y": 1,
+						"w": 360,
+						"h": 640
+					}
+				},
+				{
+					"filename": "cardbox-disable.png",
+					"rotated": false,
+					"trimmed": true,
+					"sourceSize": {
+						"w": 160,
+						"h": 192
+					},
+					"spriteSourceSize": {
+						"x": 0,
+						"y": 3,
+						"w": 159,
+						"h": 186
+					},
+					"frame": {
+						"x": 1,
+						"y": 643,
+						"w": 159,
+						"h": 186
+					}
+				},
+				{
+					"filename": "cardbox-epic.png",
+					"rotated": false,
+					"trimmed": true,
+					"sourceSize": {
+						"w": 160,
+						"h": 192
+					},
+					"spriteSourceSize": {
+						"x": 0,
+						"y": 3,
+						"w": 159,
+						"h": 186
+					},
+					"frame": {
+						"x": 1,
+						"y": 831,
+						"w": 159,
+						"h": 186
+					}
+				},
+				{
+					"filename": "cardbox-legend.png",
+					"rotated": false,
+					"trimmed": true,
+					"sourceSize": {
+						"w": 160,
+						"h": 192
+					},
+					"spriteSourceSize": {
+						"x": 0,
+						"y": 3,
+						"w": 159,
+						"h": 186
+					},
+					"frame": {
+						"x": 162,
+						"y": 643,
+						"w": 159,
+						"h": 186
+					}
+				},
+				{
+					"filename": "cardbox-own.png",
+					"rotated": false,
+					"trimmed": true,
+					"sourceSize": {
+						"w": 160,
+						"h": 192
+					},
+					"spriteSourceSize": {
+						"x": 0,
+						"y": 3,
+						"w": 159,
+						"h": 186
+					},
+					"frame": {
+						"x": 162,
+						"y": 831,
+						"w": 159,
+						"h": 186
+					}
+				},
+				{
+					"filename": "cardbox-rare.png",
+					"rotated": false,
+					"trimmed": true,
+					"sourceSize": {
+						"w": 160,
+						"h": 192
+					},
+					"spriteSourceSize": {
+						"x": 0,
+						"y": 3,
+						"w": 159,
+						"h": 186
+					},
+					"frame": {
+						"x": 323,
+						"y": 643,
+						"w": 159,
+						"h": 186
+					}
+				},
+				{
+					"filename": "cardbox.png",
+					"rotated": false,
+					"trimmed": true,
+					"sourceSize": {
+						"w": 160,
+						"h": 192
+					},
+					"spriteSourceSize": {
+						"x": 0,
+						"y": 3,
+						"w": 159,
+						"h": 186
+					},
+					"frame": {
+						"x": 323,
+						"y": 831,
+						"w": 159,
+						"h": 186
+					}
+				}
+			]
+		}
+	],
+	"meta": {
+		"app": "https://www.codeandweb.com/texturepacker",
+		"version": "3.0",
+		"smartupdate": "$TexturePacker:SmartUpdate:3844a818930f4f7eafb98998eed54e99:f53e2fb8b79386cd051e51bbd867fc75:63f3262fe02996a7d1c4de18e76b3514$"
+	}
+}

@@ -38,24 +38,27 @@ export class AudioSystem {
         const scene = this.scene;
         if (!scene) return;
 
-        // Resume audio context when user interacts with the page
         const resumeAudio = () => {
-            if (scene.sound && scene.sound.context) {
+            if (scene.sound && scene.sound.context && scene.sound.context.state === 'suspended') {
                 scene.sound.context.resume().then(() => {
                     // Force restart music if it should be playing but isn't
                     if (this.soundEnabled && this.bgMusic && !this.bgMusic.isPlaying) {
                         console.log('🔊 Audio Context Resumed: Restarting Music');
                         this.bgMusic.play();
                     }
+                    // Success! Remove the listener to avoid redundant calls
+                    scene.input.off('pointerdown', resumeAudio, this);
                 }).catch(err => {
-                    console.warn('Could not resume audio context:', err);
+                    // Silently fail if still blocked - browser will warn enough
                 });
+            } else if (scene.sound && scene.sound.context && scene.sound.context.state === 'running') {
+                // Already running, detach listener
+                scene.input.off('pointerdown', resumeAudio, this);
             }
         };
 
         // Listen for user interactions
         scene.input.on('pointerdown', resumeAudio, this);
-        // Nota: el listener de visibilitychange ahora se maneja en Game y se limpia en shutdown
     }
 
     setupEventListeners() {

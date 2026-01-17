@@ -10,6 +10,7 @@ export const ASSETS = {
     EFFECTS: 'effects',
     UI_ICONS: 'ui_icons',
     ENEMY_ATLAS: 'enemy_atlas',
+    STORE: 'store',
 
 
     // Generated Textures

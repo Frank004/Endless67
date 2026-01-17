@@ -1,6 +1,7 @@
 import { handlePlatformRiderCollision, updatePlatformRider } from '../../utils/platformRider.js';
 import EventBus, { Events } from '../../core/EventBus.js';
 import GameState from '../../core/GameState.js';
+import CurrencyRunService from '../gameplay/CurrencyRunService.js';
 
 export class ItemHandler {
     constructor(scene) {
@@ -33,6 +34,7 @@ export class ItemHandler {
         // Update both local and global score
         scene.totalScore += 1;
         GameState.addScore(1); // CRITICAL: Update GameState for high score check
+        CurrencyRunService.onCoinCollected(1);
 
         console.log('🪙 [ItemHandler] Coin collected! totalScore:', scene.totalScore, 'GameState.score:', GameState.score);
 

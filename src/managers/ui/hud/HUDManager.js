@@ -13,6 +13,8 @@ export class HUDManager {
     create() {
         const scene = this.scene;
         const isMobile = scene.isMobile;
+        const labelPaddingX = 8;
+        const labelPaddingY = 6;
 
         // UI - Position away from left wall
         // Ad banner está arriba (50px), así que el gameplay empieza desde Y=50
@@ -22,30 +24,43 @@ export class HUDManager {
         const centerX = scene.cameras.main.centerX;
 
         // --- PRIMARY: HEIGHT (Main metric for leaderboard) ---
-        this.heightTextBg = scene.add.rectangle(scoreX, scoreY + 12, 140, 28, 0x000000, 0.5)
-            .setOrigin(0, 0.5).setScrollFactor(0).setDepth(200);
-
         this.heightText = scene.add.text(scoreX + 8, scoreY, 'HEIGHT: ' + (scene.currentHeight || 0) + 'm', {
-            fontSize: '20px',
+            fontSize: '16px',
             color: '#ffffff', // White
-            fontStyle: 'bold' // Restore bold for standard font visibility
-        }).setScrollFactor(0).setDepth(201);
+            fontFamily: 'Arial',
+            fontStyle: 'bold'
+        }).setOrigin(0, 0.5).setScrollFactor(0).setDepth(201);
+        this.heightTextBg = scene.add.rectangle(
+            this.heightText.x - labelPaddingX,
+            this.heightText.y,
+            this.heightText.width + labelPaddingX * 2,
+            this.heightText.height + labelPaddingY,
+            0x000000,
+            0.5
+        ).setOrigin(0, 0.5).setScrollFactor(0).setDepth(200);
 
         // --- SECONDARY: COINS (Currency) ---
-        this.scoreTextBg = scene.add.rectangle(scoreX, scoreY + 42, 110, 22, 0x000000, 0.5)
-            .setOrigin(0, 0.5).setScrollFactor(0).setDepth(200);
-
-        this.scoreText = scene.add.text(scoreX + 8, scoreY + 30, 'COINS: 0', {
-            fontSize: '14px',
+        this.scoreText = scene.add.text(scoreX + 8, scoreY + 24, 'COINS: 0', {
+            fontSize: '12px',
             color: '#ffd700', // Gold
-            fontStyle: 'bold' // Restore bold
-        }).setScrollFactor(0).setDepth(201);
+            fontFamily: 'Arial',
+            fontStyle: 'bold'
+        }).setOrigin(0, 0.5).setScrollFactor(0).setDepth(201);
+        this.scoreTextBg = scene.add.rectangle(
+            this.scoreText.x - labelPaddingX,
+            this.scoreText.y,
+            this.scoreText.width + labelPaddingX * 2,
+            this.scoreText.height + labelPaddingY,
+            0x000000,
+            0.5
+        ).setOrigin(0, 0.5).setScrollFactor(0).setDepth(200);
 
         // UI text también debe estar 50px más abajo
         this.uiText = scene.add.text(centerX, 200 + adBannerHeight, 'JUMP!', {
             fontSize: '18px',
             color: '#00ffff',
             align: 'center',
+            fontFamily: 'Arial',
             fontStyle: 'bold'
         }).setOrigin(0.5).setScrollFactor(0).setDepth(100);
 
@@ -53,17 +68,34 @@ export class HUDManager {
         scene.scoreText = this.scoreText;
         scene.heightText = this.heightText;
         scene.uiText = this.uiText;
+
+        this.labelPaddingX = labelPaddingX;
+        this.labelPaddingY = labelPaddingY;
     }
 
     updateScore(score) {
         if (this.scoreText) {
             this.scoreText.setText('COINS: ' + score);
+            if (this.scoreTextBg) {
+                this.scoreTextBg.setSize(
+                    this.scoreText.width + this.labelPaddingX * 2,
+                    this.scoreText.height + this.labelPaddingY
+                );
+                this.scoreTextBg.setPosition(this.scoreText.x - this.labelPaddingX, this.scoreText.y);
+            }
         }
     }
 
     updateHeight(height) {
         if (this.heightText) {
             this.heightText.setText(`HEIGHT: ${height}m`);
+            if (this.heightTextBg) {
+                this.heightTextBg.setSize(
+                    this.heightText.width + this.labelPaddingX * 2,
+                    this.heightText.height + this.labelPaddingY
+                );
+                this.heightTextBg.setPosition(this.heightText.x - this.labelPaddingX, this.heightText.y);
+            }
         }
     }
 

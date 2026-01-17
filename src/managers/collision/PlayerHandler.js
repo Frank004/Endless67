@@ -137,16 +137,20 @@ export class PlayerHandler {
         }
 
         // NOTIFICAR AL ESTADO GLOBAL PARA PARAR AUDIO Y BLOQUEAR PAUSA
-        // NOTIFICAR AL ESTADO GLOBAL PARA PARAR AUDIO Y BLOQUEAR PAUSA
         GameState.gameOver();
 
         scene.isGameOver = true;
         scene.burnEmitter.emitParticleAt(player.x, player.y, 50);
-        player.setVelocity(0, 0);
+
+        if (player.body) {
+            player.setVelocity(0, 0);
+        }
         player.setTint(0x000000);
         scene.time.delayedCall(300, () => {
-            player.setVisible(false);
-            player.setActive(false);
+            if (player && player.active) {
+                player.setVisible(false);
+                player.setActive(false);
+            }
         });
 
         scene.time.delayedCall(50, () => {

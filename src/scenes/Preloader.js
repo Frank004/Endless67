@@ -4,6 +4,7 @@ import { Settings } from './Settings.js';
 import { Playground } from './Playground.js';
 import { WarmupManager } from '../managers/system/WarmupManager.js';
 import { registerEnemyAnimations } from '../utils/animations.js';
+import PlayerProfileService from '../managers/gameplay/PlayerProfileService.js';
 
 
 export class Preloader extends Phaser.Scene {
@@ -98,7 +99,10 @@ export class Preloader extends Phaser.Scene {
         this.load.multiatlas('floor', 'assets/spritesheets/floor.json', 'assets/spritesheets');
         this.load.multiatlas('platform', 'assets/spritesheets/platform.json', 'assets/spritesheets');
         this.load.multiatlas(ASSETS.PROPS, 'assets/spritesheets/props.json', 'assets/spritesheets');
-        this.load.multiatlas(ASSETS.PLAYER, 'assets/spritesheets/player.json', 'assets/spritesheets');
+        this.load.multiatlas(ASSETS.STORE, 'assets/spritesheets/store.json', 'assets/spritesheets');
+        const profile = PlayerProfileService.loadOrCreate();
+        const skinId = profile?.skins?.equipped || 'default';
+        this.load.multiatlas(ASSETS.PLAYER, `assets/skins/${skinId}/player.json`, `assets/skins/${skinId}`);
         this.load.atlas(ASSETS.ENEMY_ATLAS, 'assets/spritesheets/enemy.png', 'assets/spritesheets/enemy.json');
         this.load.atlas(ASSETS.EFFECTS, 'assets/spritesheets/effects.png', 'assets/spritesheets/effects.json');
 
@@ -129,19 +133,19 @@ export class Preloader extends Phaser.Scene {
         // --- ANIMATIONS ---
         if (atlasLoaded && this.anims) {
             const playerTex = this.textures.get(ASSETS.PLAYER);
-            const findFrame = (f) => {
+            const findFrame = (f, silent = false) => {
                 if (playerTex.has(f)) return f;
                 if (playerTex.has(f.trim())) return f.trim();
-                console.warn(`Frame no encontrado en Player Atlas: "${f}"`);
+                if (!silent) console.warn(`Frame no encontrado en Player Atlas: "${f}"`);
                 return null;
             };
-            const hasFrame = (f) => findFrame(f) !== null;
+            const hasFrame = (f) => findFrame(f, true) !== null;
 
-            const makeAnim = (key, frameNames, frameRate = 10, repeat = -1) => {
+            const makeAnim = (key, frameNames, frameRate = 10, repeat = -1, silent = false) => {
                 if (this.anims.exists(key)) return;
                 const frames = [];
                 frameNames.forEach(name => {
-                    const realName = findFrame(name);
+                    const realName = findFrame(name, silent);
                     if (realName) frames.push({ key: ASSETS.PLAYER, frame: realName });
                 });
                 if (frames.length > 0) {
@@ -149,13 +153,40 @@ export class Preloader extends Phaser.Scene {
                 }
             };
 
-            makeAnim('player_idle', ['IDLE 1.png', 'IDLE 2.png', 'IDLE 3.png'], 6, -1);
+            const playerAnimKeys = [
+                'player_idle',
+                'player_run',
+                'player_run_stop',
+                'player_jump_up',
+                'player_jump_side',
+                'player_jump_wall',
+                'player_double_jump',
+                'player_fall_start',
+                'player_fall_loop',
+                'player_wall_slide_start',
+                'player_wall_slide_loop',
+                'player_hit'
+            ];
+            playerAnimKeys.forEach((key) => {
+                if (this.anims.exists(key)) {
+                    this.anims.remove(key);
+                }
+            });
+
+            makeAnim('player_idle', ['idle-01.png', 'idle-02.png', 'idle-03.png'], 6, -1);
             makeAnim('player_run', ['running-01.png', 'running-02.png', 'running-03.png', 'running-04.png', 'running-05.png', 'running-06.png', 'running-07.png', 'running-08.png'], 12, -1);
             makeAnim('player_run_stop', ['stop-running-01.png', 'stop-running-02.png', 'stop-running-03.png'], 12, 0);
             makeAnim('player_jump_up', ['jump-01.png', 'jump-02.png', 'jump-03.png'], 12, 0);
             makeAnim('player_jump_side', ['jump-01.png', 'jump-02.png', 'jump-03.png'], 12, 0);
             makeAnim('player_jump_wall', ['jump-03.png'], 10, 0);
-            makeAnim('player_double_jump', ['double-jump-01.png', 'double-jump-02.png', 'double-jump-03.png'], 12, 0);
+
+            // Double jump with fallback
+            const djFrames = ['double-jump-01.png', 'double-jump-02.png', 'double-jump-03.png'];
+            if (!djFrames.some(hasFrame)) {
+                makeAnim('player_double_jump', ['jump-01.png', 'jump-02.png', 'jump-03.png'], 12, 0);
+            } else {
+                makeAnim('player_double_jump', djFrames, 12, 0);
+            }
             makeAnim('player_fall_start', ['falling-01.png', 'falling-02.png'], 12, 0);
             makeAnim('player_fall_loop', ['falling-04.png', 'falling-05.png', 'falling-06.png', 'falling-07.png', 'falling-08.png', 'falling-09.png'], 12, -1);
             makeAnim('player_wall_slide_start', ['wallslide-01.png', 'wallslide-02.png', 'wallslide-03.png', 'wallslide-04.png', 'wallslide-05.png'], 12, 0);

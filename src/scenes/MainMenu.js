@@ -47,7 +47,14 @@ export class MainMenu extends Phaser.Scene {
 		});
 		this.buttons.push(leaderboardBtn);
 
-		const settingsBtn = UIHelpers.createTextButton(this, width / 2, height / 2 + 160, 'SETTINGS', {
+		const skinsBtn = UIHelpers.createTextButton(this, width / 2, height / 2 + 160, 'STORE', {
+			textColor: '#ffff00',
+			fontSize: '28px',
+			callback: () => this.scene.start('Store')
+		});
+		this.buttons.push(skinsBtn);
+
+		const settingsBtn = UIHelpers.createTextButton(this, width / 2, height / 2 + 240, 'SETTINGS', {
 			textColor: '#ffffff',
 			fontSize: '28px',
 			callback: () => this.scene.start('Settings')
