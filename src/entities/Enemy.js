@@ -283,8 +283,6 @@ export class ShooterEnemy extends Phaser.Physics.Arcade.Sprite {
             // Sprite 32x25. Body 24x24 (if from config).
             // Align bottom: 25 - 24 = 1.
             // Center X: (32 - 24) / 2 = 4.
-            // But let's check what config value is. If 20 like patrol (which I updated previously on user request for general alignment? No user asked for jumper/shooter adjustment now).
-            // Let's assume standard alignment.
             this.body.setOffset(4, 1);
         }
         this.body.allowGravity = false;

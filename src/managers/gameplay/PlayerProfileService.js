@@ -74,6 +74,7 @@ class PlayerProfileService {
         const profile = this._sanitize(parsed || this._defaultProfile());
         this._profile = profile;
         this.save(profile);
+
         return profile;
     }
 
@@ -124,6 +125,7 @@ class PlayerProfileService {
         if (!profile.skins.owned[id]) return false;
         profile.skins.equipped = id;
         this.save(profile);
+
         return true;
     }
 

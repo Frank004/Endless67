@@ -43,9 +43,9 @@ export class ManagerInitializer {
         scene.particleManager.createParticles();
 
         // Randomize Riser Type for this session
-        // Forcing FIRE riser for development per user request
+        // Currently defaulted to FIRE for testing purposes
         const randomType = RISER_TYPES.FIRE;
-        console.log(`🔥 Game Initializer: FORCED Riser Type: ${randomType}`);
+        console.log(`🔥 Game Initializer: Riser Type: ${randomType}`);
 
         scene.riserManager = new RiserManager(scene, randomType);
 
@@ -60,15 +60,13 @@ export class ManagerInitializer {
         // Create InteractableManager
         scene.interactableManager = new InteractableManager(scene);
 
-        // OPTIMIZATION: Pre-initialize wall patterns and segments immediately
-        // This ensures walls are visible from the start and reduces first-frame load
+        // Pre-initialize wall patterns and segments immediately for better startup performance
         if (scene.textures.exists('walls')) {
             const initialScrollY = scene.cameras.main.scrollY || 0;
             scene.wallDecorator.preInitialize(initialScrollY);
         }
 
-        // 🚀 OPTIMIZATION: Pre-initialize platform texture cache
-        // This caches platform frame references to avoid repeated texture lookups
+        // Cache platform frame references to avoid repeated texture lookups
         if (scene.textures.exists('platform')) {
             initializePlatformTextureCache(scene);
         }

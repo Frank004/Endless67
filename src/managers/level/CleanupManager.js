@@ -25,7 +25,7 @@ export class CleanupManager {
             .getActive()
             .filter(p => p.y > limitY);
         platformsToRemove.forEach(p => {
-            // OPTIMIZATION: Logs removed - only show if explicitly debugging cleanup
+            // Logs removed - only show if explicitly debugging cleanup
             // if (scene.registry?.get('showSlotLogs')) {
             //     console.log('[CleanupManager] Despawning platform y=', p.y, 'limitY=', limitY);
             // }

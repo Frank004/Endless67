@@ -64,5 +64,8 @@ export const ASSETS = {
 
     // Audio Arrays (Prefixes)
     COIN_SFX_PREFIX: 'coin_sfx_',
-    DAMAGE_SFX_PREFIX: 'damage_sfx_'
+    DAMAGE_SFX_PREFIX: 'damage_sfx_',
+
+    // Store
+    STORE_LOGO: 'store_logo'
 };

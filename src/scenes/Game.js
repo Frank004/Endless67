@@ -31,14 +31,13 @@ export class Game extends Phaser.Scene {
      * Initialize the game scene.
      */
     create() {
-        // CONFIRM UPDATE (only log if debug is enabled)
-        // OPTIMIZATION: Disable version log by default to reduce console noise
+        // Version Logging
         if (this.registry?.get('showSlotLogs') === true) {
             console.log('🚀 GAME VERSION: ROCKET-ITEMS-REFACTOR-' + Date.now());
         }
 
         // --- CLEANUP FROM PREVIOUS GAME (if restarting) ---
-        // CRITICAL: Clean up any residual objects from previous game session
+        // Ensure clean state before initializing new game
         this.cleanupPreviousGame();
 
         // Reset Global State
@@ -50,7 +49,7 @@ export class Game extends Phaser.Scene {
         this.initializer = new GameInitializer(this);
         this.initializer.init();
 
-        // CRITICAL: Ensure UIManager cleans up global EventBus listeners on scene shutdown
+        // Ensure listeners are cleaned up on shutdown
         this.events.once('shutdown', () => {
             if (this.uiManager) {
                 this.uiManager.destroy();

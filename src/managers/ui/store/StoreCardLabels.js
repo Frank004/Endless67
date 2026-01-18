@@ -35,6 +35,15 @@ export class StoreCardLabels {
 
         this.equippedIndicator.setVisible(false);
         this.container.add(this.equippedIndicator);
+
+        // Lock Icon (Top-Left)
+        // Positioned same as equipped indicator: 10, 10
+        // Use ASSETS.STORE instead of generic atlas if needed, but constants define texture name
+        this.lockIcon = this.scene.add.image(10, 10, ASSETS.STORE, STORE_CARD_CONSTANTS.TEXTURES.LOCK)
+            .setOrigin(0, 0); // Top-Left
+
+        this.lockIcon.setVisible(false);
+        this.container.add(this.lockIcon);
     }
 
     /**
@@ -43,10 +52,17 @@ export class StoreCardLabels {
      * @param {number} cost 
      * @param {boolean} equipped 
      */
-    update(owned, cost, equipped) {
+    update(owned, cost, equipped, affordable) {
         // Update Equipped Star
         if (this.equippedIndicator) {
             this.equippedIndicator.setVisible(equipped);
+        }
+
+        // Update Lock Icon
+        if (this.lockIcon) {
+            // Show lock if NOT owned AND NOT affordable
+            const isLocked = !owned && !affordable;
+            this.lockIcon.setVisible(isLocked);
         }
 
         // Rebuild Bottom Label
@@ -69,7 +85,7 @@ export class StoreCardLabels {
             const costText = this.scene.add.text(LAYOUT.RIGHT_ANCHOR_X, LAYOUT.LABEL_Y, UIHelpers.formatCurrency(cost), {
                 fontSize: FONTS.PRICE,
                 fontFamily: FONTS.FAMILY,
-                color: COLORS.TEXT,
+                color: affordable ? COLORS.TEXT : '#FF4444', // Red if can't afford
                 fontStyle: 'bold',
                 align: 'right'
             }).setOrigin(1, 0.5);

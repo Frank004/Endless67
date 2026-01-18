@@ -46,7 +46,7 @@ export class WallDecorator {
         this.maxTiles = this.tilesPerSegment * this.segmentsPerSide * 2; // dos lados
         this.patternsVersion = this._computeFrameVersion();
 
-        // OPTIMIZATION: Pre-initialize patterns immediately if texture is ready
+        // Pre-initialize patterns immediately if texture is ready
         // This avoids delay on first update
         this._patternsInitialized = false;
         this._initialSegmentsCreated = false;
@@ -111,7 +111,7 @@ export class WallDecorator {
     acquireTile(frame) {
         if (!this.scene.textures.exists('walls')) return null;
 
-        // OPTIMIZATION: Use a more efficient pool lookup
+        // Use a more efficient pool lookup
         // Instead of find(), iterate with early exit
         let tile = null;
         for (let i = 0; i < this.tilePool.length; i++) {
@@ -137,11 +137,11 @@ export class WallDecorator {
 
     createSegment(side, yStart) {
         const tiles = [];
-        // OPTIMIZATION: Cache pattern selection to avoid repeated random calls
+        // Cache pattern selection to avoid repeated random calls
         const patternIndex = Phaser.Math.Between(0, this.patterns.length - 1);
         const pattern = this.patterns[patternIndex];
 
-        // OPTIMIZATION: Batch tile creation for better performance
+        // Batch tile creation for better performance
         for (let r = 0; r < this.rowsPerSegment; r++) {
             const frame = pattern[r];
             const tile = this.acquireTile(frame);
@@ -183,7 +183,7 @@ export class WallDecorator {
     recycle(list, side, top, bottom) {
         if (list.length === 0) return;
 
-        // 🚀 OPTIMIZATION: Use simple loops instead of map() and forEach()
+        // Use simple loops instead of map() and forEach()
         // Calculate maxY and minY in a single pass
         let maxY = list[0].yStart;
         let minY = list[0].yStart;
@@ -224,7 +224,7 @@ export class WallDecorator {
     update(scrollY = 0) {
         if (!this.scene.textures.exists('walls')) return;
 
-        // OPTIMIZATION: Use pre-initialized patterns if available
+        // Use pre-initialized patterns if available
         if (!this._patternsInitialized) {
             this.ensurePatterns();
             this._patternsInitialized = true;

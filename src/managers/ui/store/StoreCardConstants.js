@@ -31,10 +31,12 @@ export const STORE_CARD_CONSTANTS = {
 
     // Assets
     TEXTURES: {
-        COMMON: 'cardbox.png',
+        COMMON: 'cardbox common.png',
         RARE: 'cardbox-rare.png',
         EPIC: 'cardbox-epic.png',
         LEGENDARY: 'cardbox-legend.png',
-        DISABLED: 'cardbox-disable.png'
+        BLACKMARKET: 'cardbox-blackmarket.png',
+        OWNED: 'cardbox-own.png',
+        LOCK: 'lock.png'
     }
 };

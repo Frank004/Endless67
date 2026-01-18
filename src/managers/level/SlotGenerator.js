@@ -230,7 +230,7 @@ export class SlotGenerator {
         const r = Math.random();
 
         // 2. Logic:
-        // - Safe Zone: ~20% change if enabled (TODO: Add to config if needed, for now standard)
+        // - Safe Zone: ~20% change if enabled
         // - Maze: Uses config.chance (percentage)
 
         const mazeChance = (mazeConfig.enabled ? mazeConfig.chance : 0) / 100;
@@ -241,7 +241,7 @@ export class SlotGenerator {
             return 'MAZE';
         }
 
-        // Safe Zone logic (Hardcoded 20% for now or add to Manager)
+        // Safe Zone logic
         // For now, let's say Safe Zones act as spacers.
         if (Math.random() < 0.15) {
             return 'SAFE_ZONE';
@@ -298,7 +298,7 @@ export class SlotGenerator {
                 const spawnThreshold = lastSlot.yEnd + this.spawnBuffer;
 
                 // Count slots that are ahead AND close to the player
-                // OPTIMIZED: Use a simple loop with early exit when we find enough slots
+                // Use a simple loop with early exit when we find enough slots
                 let slotsAhead = 0;
                 const maxSlotsToCheck = MIN_SLOTS_AHEAD + 2; // Early exit optimization
                 for (let i = 0; i < this.slots.length && slotsAhead < maxSlotsToCheck; i++) {
@@ -335,7 +335,7 @@ export class SlotGenerator {
                 }
             }
 
-            // OPTIMIZATION: Only warn about max generations if debug is enabled
+            // Only warn about max generations if debug is enabled
             if (generatedThisFrame >= MAX_GENERATIONS_PER_UPDATE && verbose) {
                 console.warn(`[SlotGenerator] Max generations per frame reached (${MAX_GENERATIONS_PER_UPDATE}). Slots=${this.slots.length}`);
             }
@@ -346,7 +346,7 @@ export class SlotGenerator {
         }
 
         // Cleanup slots viejos
-        // OPTIMIZED: Use both player position AND riser (lava) position for cleanup
+        // Use both player position AND riser (lava) position for cleanup
         // If lava has passed a slot, the player can never go back to it, so we can safely remove it
         const playerLimitY = (this.scene.player?.y || cameraTop) + this.cleanupDistance;
 
@@ -385,7 +385,7 @@ export class SlotGenerator {
         }
 
         // Debug: log if any platform drifted (position != initial)
-        // OPTIMIZED: Only check drift if debug flags are enabled (throttled check)
+        // Only check drift if debug flags are enabled (throttled check)
         if (this.scene.registry?.get('showSlotLogs') && this.scene.registry?.get('logPlatformDrift')) {
             // Throttle drift checks to every 60 frames (1 second at 60fps) to reduce CPU usage
             if (!this._driftCheckFrame) this._driftCheckFrame = 0;
@@ -394,7 +394,7 @@ export class SlotGenerator {
                 this._driftCheckFrame = 0;
                 const activePlatforms = this.scene.platformPool?.getActive?.() || [];
                 const drifted = [];
-                // OPTIMIZED: Use simple loop instead of filter
+                // Use simple loop instead of filter
                 for (let i = 0; i < activePlatforms.length; i++) {
                     const p = activePlatforms[i];
                     if ((p.initialY !== undefined && p.y !== p.initialY) ||
@@ -475,7 +475,7 @@ export class SlotGenerator {
      * Limpia todos los slots y reinicia el generador
      */
     reset() {
-        // OPTIMIZATION: Only log reset if debug is enabled
+        // Only log reset if debug is enabled
         if (this.scene?.registry?.get('showSlotLogs') === true) {
             console.log('🔄 SlotGenerator: Reiniciando...');
         }

@@ -22,17 +22,15 @@ export class StoreCard extends Phaser.GameObjects.Container {
     }
 
     create() {
-        // 1. Create Layout Components
+        // Create Layout Components
         this.background.create();
         this.labels.create();
 
-        // 2. Set Size and Input (Standard Top-Left)
+        // Set Size and Input
         this.setSize(STORE_CARD_CONSTANTS.WIDTH, STORE_CARD_CONSTANTS.HEIGHT);
-
-        // 3. Setup Input (Centralized)
         this._setupInput();
 
-        // 4. Pointer Events
+        // Pointer Events
         this.on('pointerup', (pointer) => {
             if (this.scene.isDragging) return;
             const dist = Phaser.Math.Distance.Between(pointer.downX, pointer.downY, pointer.upX, pointer.upY);
@@ -41,7 +39,7 @@ export class StoreCard extends Phaser.GameObjects.Container {
             }
         });
 
-        // 5. Initial State Update
+        // Initial State Update
         this.updateVisualState();
     }
 
@@ -52,10 +50,7 @@ export class StoreCard extends Phaser.GameObjects.Container {
             this.removeInteractive();
         }
 
-        // Standard Phaser: HitArea is relative to the Game Object's origin.
-        // For a Container, the origin is always 0,0 (Top-Left).
-        // However, based on visual verification, we need to center the hit area logic 
-        // to match the centered content.
+        // Center the hit area to match content
         const halfW = STORE_CARD_CONSTANTS.WIDTH / 2;
         const halfH = STORE_CARD_CONSTANTS.HEIGHT / 2;
 
@@ -64,9 +59,6 @@ export class StoreCard extends Phaser.GameObjects.Container {
             hitAreaCallback: Phaser.Geom.Rectangle.Contains,
             useHandCursor: true
         });
-
-        // Force debug refresh
-        // this.scene.input.enableDebug(this, STORE_CARD_CONSTANTS.COLORS.DEBUG);
     }
 
     updateVisualState() {
@@ -74,7 +66,7 @@ export class StoreCard extends Phaser.GameObjects.Container {
         const affordable = this.playerCoins >= cost;
 
         this.background.updateTexture(rarity, owned, affordable);
-        this.labels.update(owned, cost, equipped);
+        this.labels.update(owned, cost, equipped, affordable);
 
         this.updateInteractiveState();
     }
@@ -98,8 +90,7 @@ export class StoreCard extends Phaser.GameObjects.Container {
     }
 
     handleClick() {
-        // Emit interaction intent immediately. 
-        // Logic (can afford? already equipped?) is for the parent/manager to decide.
+        // Emit interaction intent immediately
         this.emit('cardClick', { skinData: this.skinData });
     }
 

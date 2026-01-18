@@ -7,15 +7,7 @@ import PlayerProfileService from '../managers/gameplay/PlayerProfileService.js';
 
 /**
  * Store - "The Vault"
- * 
- * Resolución: 360×640 px
- * Layout:
- * - Header fijo (64px): Título "THE VAULT" + Coin Counter
- * - Grid scrolleable: 2 columnas × N filas (4 cards visibles)
- * - Card size: 140×160 px cada uno (reducido)
- * - Footer: Back button (estilo estándar)
- * 
- * Integra la lógica de negocio de SkinCatalogService y PlayerProfileService
+ * Handles the purchasing and equipping of skins.
  */
 export class Store extends Phaser.Scene {
     constructor() {
@@ -64,15 +56,10 @@ export class Store extends Phaser.Scene {
         });
 
         // --- DEBUG HELPERS ---
-        // Access profile service directly through import for cleanest access, 
-        // or through the manager instance we just created.
+        // Expose debug tools for testing
         window.STORE_DEBUG = {
             addCoins: (amount) => {
-                // Must access the service instance. Since StoreManager imports it, 
-                // we can access it via the manager if we exposed it, or re-import it.
-                // Assuming StoreManager uses the singleton export.
-                // window.STORE_DEBUG.addCoins(50000)
-                // window.STORE_DEBUG.resetProfile()
+                // Dynamically import service to add coins for testing
                 import('../managers/gameplay/PlayerProfileService.js').then(module => {
                     const service = module.default;
                     const newProfile = service.addCoins(amount);
@@ -95,13 +82,16 @@ export class Store extends Phaser.Scene {
         // Header container (fixed, no scroll)
         this.headerContainer = this.add.container(0, 0).setScrollFactor(0).setDepth(100);
 
-        // Title: "THE VAULT"
-        const title = this.add.text(width / 2, headerY, 'THE VAULT', {
-            fontSize: '28px',
-            fontFamily: 'monospace',
-            color: '#ffffff',
-            fontStyle: 'bold'
-        }).setOrigin(0.5).setScrollFactor(0);
+        // Title: "THE VAULT" (Logo)
+        const logo = this.add.image(width / 2, headerY, ASSETS.STORE_LOGO)
+            .setOrigin(0.5)
+            .setScrollFactor(0)
+            .setScale(0.2);
+
+        // Scale down if strictly necessary, but respecting the new base scale
+        if (logo.displayWidth > 280) {
+            logo.setDisplaySize(280, logo.displayHeight * (280 / logo.displayWidth));
+        }
 
         // -- DYNAMIC COIN COUNTER --
         // Container anchored to Top-Right
@@ -127,7 +117,7 @@ export class Store extends Phaser.Scene {
             .setScale(2.5); // Match StoreCard scale
 
         this.coinCounterContainer.add([this.coinBg, this.coinText, this.coinIcon]);
-        this.headerContainer.add([title, this.coinCounterContainer]);
+        this.headerContainer.add([logo, this.coinCounterContainer]);
 
         // Initial Layout Update
         this.updateCoinVisuals();

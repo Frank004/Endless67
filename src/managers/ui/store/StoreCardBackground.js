@@ -41,13 +41,15 @@ export class StoreCardBackground {
 
         let texture = STORE_CARD_CONSTANTS.TEXTURES.COMMON;
 
-        if (!owned && !affordable) {
-            texture = STORE_CARD_CONSTANTS.TEXTURES.DISABLED;
+        if (owned) {
+            texture = STORE_CARD_CONSTANTS.TEXTURES.OWNED;
         } else {
+            // User didn't explicitly say to use 'cardbox-own', but it exists.
             switch (rarity) {
                 case 'rare': texture = STORE_CARD_CONSTANTS.TEXTURES.RARE; break;
                 case 'epic': texture = STORE_CARD_CONSTANTS.TEXTURES.EPIC; break;
                 case 'legendary': texture = STORE_CARD_CONSTANTS.TEXTURES.LEGENDARY; break;
+                case 'blackmarket': texture = STORE_CARD_CONSTANTS.TEXTURES.BLACKMARKET; break;
                 default: texture = STORE_CARD_CONSTANTS.TEXTURES.COMMON; break;
             }
         }

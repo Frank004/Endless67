@@ -27,7 +27,6 @@ export class MainMenu extends Phaser.Scene {
 		this.add.rectangle(width / 2, height / 2, width, height, 0x050505);
 
 		// Title
-		// Title
 		this.add.image(width / 2, 120, ASSETS.GAME_LOGO).setScale(0.28);
 
 		// --- BUTTONS ---

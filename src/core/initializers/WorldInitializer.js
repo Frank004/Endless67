@@ -85,7 +85,7 @@ export class WorldInitializer {
     }
 
     static updateWalls(scene) {
-        // 🚀 OPTIMIZATION: Throttle wall updates more aggressively
+        // Throttle wall updates more aggressively
         // Update every 2 frames on desktop, every 3 frames on mobile
         const isMobile = scene.isMobile || false;
         const isFirstUpdate = scene._wallUpdateFrame === undefined;

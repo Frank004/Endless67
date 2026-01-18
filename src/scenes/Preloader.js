@@ -93,6 +93,7 @@ export class Preloader extends Phaser.Scene {
         // --- ASSETS LOADING ---
         // --- ASSETS LOADING ---
         if (!this.textures.exists(ASSETS.GAME_LOGO)) this.load.image(ASSETS.GAME_LOGO, 'assets/logo.png');
+        if (!this.textures.exists(ASSETS.STORE_LOGO)) this.load.image(ASSETS.STORE_LOGO, 'assets/the-vault-store.png');
         if (!this.textures.exists(ASSETS.UI_ICONS)) this.load.atlas(ASSETS.UI_ICONS, 'assets/ui/icons.png', 'assets/ui/icons.json');
 
         if (!this.textures.exists(ASSETS.COINS)) this.load.multiatlas(ASSETS.COINS, 'assets/spritesheets/coins.json', 'assets/spritesheets');

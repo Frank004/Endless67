@@ -31,7 +31,28 @@
 					}
 				},
 				{
-					"filename": "cardbox-disable.png",
+					"filename": "lock.png",
+					"rotated": false,
+					"trimmed": false,
+					"sourceSize": {
+						"w": 17,
+						"h": 21
+					},
+					"spriteSourceSize": {
+						"x": 0,
+						"y": 0,
+						"w": 17,
+						"h": 21
+					},
+					"frame": {
+						"x": 363,
+						"y": 1,
+						"w": 17,
+						"h": 21
+					}
+				},
+				{
+					"filename": "cardbox common.png",
 					"rotated": false,
 					"trimmed": true,
 					"sourceSize": {
@@ -52,7 +73,7 @@
 					}
 				},
 				{
-					"filename": "cardbox-epic.png",
+					"filename": "cardbox-blackmarket.png",
 					"rotated": false,
 					"trimmed": true,
 					"sourceSize": {
@@ -68,6 +89,27 @@
 					"frame": {
 						"x": 1,
 						"y": 831,
+						"w": 159,
+						"h": 186
+					}
+				},
+				{
+					"filename": "cardbox-epic.png",
+					"rotated": false,
+					"trimmed": true,
+					"sourceSize": {
+						"w": 160,
+						"h": 192
+					},
+					"spriteSourceSize": {
+						"x": 0,
+						"y": 3,
+						"w": 159,
+						"h": 186
+					},
+					"frame": {
+						"x": 162,
+						"y": 643,
 						"w": 159,
 						"h": 186
 					}
@@ -88,34 +130,13 @@
 					},
 					"frame": {
 						"x": 162,
-						"y": 643,
-						"w": 159,
-						"h": 186
-					}
-				},
-				{
-					"filename": "cardbox-own.png",
-					"rotated": false,
-					"trimmed": true,
-					"sourceSize": {
-						"w": 160,
-						"h": 192
-					},
-					"spriteSourceSize": {
-						"x": 0,
-						"y": 3,
-						"w": 159,
-						"h": 186
-					},
-					"frame": {
-						"x": 162,
 						"y": 831,
 						"w": 159,
 						"h": 186
 					}
 				},
 				{
-					"filename": "cardbox-rare.png",
+					"filename": "cardbox-own.png",
 					"rotated": false,
 					"trimmed": true,
 					"sourceSize": {
@@ -136,7 +157,7 @@
 					}
 				},
 				{
-					"filename": "cardbox.png",
+					"filename": "cardbox-rare.png",
 					"rotated": false,
 					"trimmed": true,
 					"sourceSize": {
@@ -162,6 +183,6 @@
 	"meta": {
 		"app": "https://www.codeandweb.com/texturepacker",
 		"version": "3.0",
-		"smartupdate": "$TexturePacker:SmartUpdate:3844a818930f4f7eafb98998eed54e99:f53e2fb8b79386cd051e51bbd867fc75:63f3262fe02996a7d1c4de18e76b3514$"
+		"smartupdate": "$TexturePacker:SmartUpdate:1cfbd1aac3215732fa6b1f96477d4c08:87413255defe9ef685cb83dd52f2290b:63f3262fe02996a7d1c4de18e76b3514$"
 	}
 }
