@@ -306,14 +306,7 @@ export class Store extends Phaser.Scene {
         // --- Navigation Controls ---
         this._createPageIndicators(width, height);
 
-        // --- Input (Swipe) ---
-        this.input.on('pointerup', this._handleSwipe, this);
-
-        // Setup ESC key
-        this.input.keyboard.on('keydown-ESC', () => this._handleBack());
     }
-
-    // --- Navigation Indicators ---
 
     _createPageIndicators(width, height) {
         // Calculate grid bottom position dynamically
@@ -386,53 +379,129 @@ export class Store extends Phaser.Scene {
 
     goToPage(index) {
         if (this._isModalOpen) return;
-        const pageDiff = index - this.currentPage;
-        if (pageDiff !== 0) {
-            this.changePage(pageDiff);
-        }
-    }
-
-    _handleSwipe(pointer) {
-        // BLOCK SWIPE IF MODAL OPEN
-        if (this._isModalOpen) return;
-
-        // Ignore if interacting with UI buttons
-        if (pointer.event.target.closest && pointer.event.target.closest('button')) return;
-
-        const swipeThreshold = 50;
-        const duration = pointer.upTime - pointer.downTime;
-
-        if (duration < 350) { // Fast swipe
-            const dist = pointer.upX - pointer.downX;
-            if (Math.abs(dist) > swipeThreshold) {
-                if (dist < 0) this.changePage(1); // Swipe Left -> Next Page
-                else this.changePage(-1);       // Swipe Right -> Prev Page
-            }
-        }
-    }
-
-    changePage(delta) {
-        if (this._isModalOpen) return;
-        const newPage = Phaser.Math.Clamp(this.currentPage + delta, 0, this.totalPages - 1);
-
-        if (newPage !== this.currentPage) {
-            this.currentPage = newPage;
-
-            // Animate grid container
-            this.tweens.add({
-                targets: this.gridContainer,
-                x: -this.currentPage * this.cameras.main.width,
-                duration: 300,
-                ease: 'Power2'
-            });
-
-            this._updatePageIndicators();
+        if (index !== this.currentPage) {
+            this._snapToPage(index);
         }
     }
 
     setupInput() {
         // ESC to go back
         this.input.keyboard.on('keydown-ESC', () => this._handleBack());
+
+        // Swipe / Drag Handling
+        this._swipeData = {
+            startX: 0,
+            gridStartX: 0,
+            isDown: false,
+            startTime: 0
+        };
+        this.isDragging = false;
+
+        this.input.on('pointerdown', this._onPointerDown, this);
+        this.input.on('pointermove', this._onPointerMove, this);
+        this.input.on('pointerup', this._onPointerUp, this);
+    }
+
+    _onPointerDown(pointer) {
+        if (this._isModalOpen) return;
+
+        this._swipeData.isDown = true;
+        this._swipeData.startX = pointer.x;
+        this._swipeData.startTime = pointer.time;
+
+        // Capture current X position of the grid
+        // If a tween is running, this picks up the mid-tween position, allowing "catch"
+        this._swipeData.gridStartX = this.gridContainer.x;
+
+        // Stop any ongoing tweens to allow manual control
+        this.tweens.killTweensOf(this.gridContainer);
+
+        this.isDragging = false;
+    }
+
+    _onPointerMove(pointer) {
+        if (!this._swipeData.isDown) return;
+        if (this._isModalOpen) return;
+
+        const diff = pointer.x - this._swipeData.startX;
+
+        // Threshold to start treating as drag (prevent accidental clicks turning into drags)
+        if (!this.isDragging && Math.abs(diff) > 10) {
+            this.isDragging = true;
+        }
+
+        if (this.isDragging && this.gridContainer) {
+            // Apply resistance at edges
+            let effectiveDiff = diff;
+            const isFirst = this.currentPage === 0;
+            const isLast = this.currentPage === this.totalPages - 1;
+
+            // Logarithmic-like resistance if dragging beyond bounds
+            if ((isFirst && diff > 0) || (isLast && diff < 0)) {
+                effectiveDiff *= 0.3;
+            }
+
+            this.gridContainer.x = this._swipeData.gridStartX + effectiveDiff;
+        }
+    }
+
+    _onPointerUp(pointer) {
+        if (!this._swipeData.isDown) return;
+        this._swipeData.isDown = false;
+
+        if (this.isDragging) {
+            const diff = pointer.x - this._swipeData.startX;
+            const duration = pointer.time - this._swipeData.startTime;
+            const { width } = this.cameras.main;
+            const threshold = width * 0.25; // 25% screen width to switch
+
+            // Allow fast swipes to switch even if distance is short
+            const isFast = duration < 300 && Math.abs(diff) > 30;
+
+            let targetPage = this.currentPage;
+
+            if (diff < -threshold || (diff < 0 && isFast)) {
+                // Next page (swiped left)
+                if (this.currentPage < this.totalPages - 1) {
+                    targetPage++;
+                }
+            } else if (diff > threshold || (diff > 0 && isFast)) {
+                // Prev page (swiped right)
+                if (this.currentPage > 0) {
+                    targetPage--;
+                }
+            }
+
+            this._snapToPage(targetPage);
+
+            // Keep isDragging true briefly to ensure card clicks originating from this interaction are ignored
+            // StoreCard checks this.scene.isDragging
+            this.time.delayedCall(50, () => {
+                this.isDragging = false;
+            });
+        } else {
+            // It was a click (no significant movement)
+            this.isDragging = false;
+        }
+    }
+
+    _snapToPage(pageIndex) {
+        if (this._isModalOpen) return;
+
+        this.currentPage = pageIndex;
+        const targetX = -this.currentPage * this.cameras.main.width;
+
+        this.tweens.add({
+            targets: this.gridContainer,
+            x: targetX,
+            duration: 300,
+            ease: 'Power2',
+            onComplete: () => {
+                this._updatePageIndicators();
+            }
+        });
+
+        this._updatePageIndicators();
     }
 
     _handleCardInteraction(card, data) {
@@ -600,10 +669,7 @@ export class Store extends Phaser.Scene {
         this.scene.start('MainMenu');
     }
 
-    _updateCoins(profile) {
-        // Deprecated by direct logic in _refreshUI, but kept if needed by inheritance or mixins
-        // Can be removed if unused.
-    }
+
 
     _playPurchaseFx() {
         if (!this.gridContainer) return;

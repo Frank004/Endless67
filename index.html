@@ -115,7 +115,20 @@
             console.error('Phaser CDN failed to load.');
         }
     </script>
-    <script type="module" src="src/main.js?v=20260117-2004"></script>
+    <script>
+        // Game Version - Updated automatically
+        window.GAME_VERSION = 'v0.0.47';
+        console.log(`🚀 ENDLESS67 ${window.GAME_VERSION} initialized`);
+
+        // Mostrar versión en el loader
+        (function () {
+            var versionElement = document.getElementById('loader-version');
+            if (versionElement) {
+                versionElement.textContent = window.GAME_VERSION;
+            }
+        })();
+    </script>
+    <script type="module" src="src/main.js?v=20260118-1555"></script>
 
 </body>
 
