@@ -26,12 +26,17 @@ export class Preloader extends Phaser.Scene {
         const progressBar = this.add.graphics();
         const progressBox = this.add.graphics();
 
+        const barWidth = width * 0.7; // 70% of screen width
+        const barHeight = 50;
+        const barX = (width - barWidth) / 2;
+        const barY = (height - barHeight) / 2;
+
         progressBox.fillStyle(0x222222, 0.8);
-        progressBox.fillRect(width / 2 - 160, height / 2 - 25, 320, 50);
+        progressBox.fillRect(barX - 10, barY - 10, barWidth + 20, barHeight + 20);
 
         const loadingText = this.make.text({
             x: width / 2,
-            y: height / 2 - 50,
+            y: barY - 30, // Above bar
             text: 'Loading...',
             style: {
                 font: '20px monospace',
@@ -55,7 +60,7 @@ export class Preloader extends Phaser.Scene {
             percentText.setText(parseInt(value * 100) + '%');
             progressBar.clear();
             progressBar.fillStyle(0x00ff00, 1);
-            progressBar.fillRect(width / 2 - 150, height / 2 - 15, 300 * value, 30);
+            progressBar.fillRect(barX, barY, barWidth * value, barHeight);
         });
 
         this.load.on('complete', () => {

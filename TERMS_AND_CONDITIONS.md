@@ -47,17 +47,31 @@ Las siguientes secciones describen características que **no están activas actu
 *   **Sin Valor Monetario:** Las Coins y los artículos virtuales **no** tienen valor monetario real, no son transferibles y no pueden ser canjeados por dinero real en ningún momento.
 *   **Cancelación:** Nos reservamos el derecho de gestionar, regular, controlar, modificar o eliminar la moneda virtual a nuestra discreción sin responsabilidad alguna.
 
-### 4.3 [FUTURO] Publicidad (Ads)
-El Juego podrá integrar publicidad de terceros:
-*   **Banners:** Anuncios visuales en la parte superior de la pantalla durante el juego.
-*   **Anuncios de Video (Reward Ads):** Videos opcionales que el usuario puede elegir ver tras perder una partida para obtener una "vida extra" o continuar jugando ("Revive").
-*   Al interactuar con estos anuncios, aceptas que ciertos datos técnicos no personales puedan ser compartidos con proveedores de publicidad para mostrar anuncios relevantes.
+### 4.3 Publicidad y Monetización (Google AdMob)
+El Juego utiliza **Google AdMob** como proveedor de servicios de publicidad.
+*   **Tipos de Anuncios:** Se mostrarán Banners (durante el juego) y Videos Bonificados (opcionales para "Revivir").
+*   **Datos Publicitarios:** AdMob puede recopilar y utilizar identificadores únicos del dispositivo (como el ID de publicidad de Android o IDFA en iOS) para mostrar anuncios personalizados, medir la efectividad de la publicidad y prevenir fraudes.
+*   Para más información, consulta la Política de Privacidad de Google.
 
-### 4.4 [FUTURO] Recopilación de Datos y Analíticas
-Para mejorar el Juego, implementaremos sistemas de seguimiento (Tracking) y bases de datos que podrán recopilar:
-*   **Datos de Juego:** Tiempo de juego, niveles alcanzados, frecuencia de muertes, uso de powerups.
-*   **Datos Técnicos:** Modelo del dispositivo, sistema operativo, versión del juego.
-*   Estos datos se utilizarán exclusivamente para análisis estadístico, corrección de errores y mejora de la experiencia de usuario.
+### 4.4 Analíticas y Mejora del Juego (GameAnalytics)
+El Juego utiliza el servicio **GameAnalytics** para entender cómo interactúan los jugadores y mejorar la experiencia.
+*   **Datos Recopilados:** Recopilamos datos estrictamente relacionados con el juego, incluyendo:
+    *   Progreso del jugador (puntuación, altura alcanzada).
+    *   Eventos de juego (causa de muerte, uso de powerups).
+    *   Economía virtual (monedas ganadas y gastadas).
+    *   Información técnica básica (modelo de dispositivo, sistema operativo, país).
+*   **Privacidad:** **No** recopilamos información personal identificable (PII) como nombres reales, direcciones físicas o números de teléfono a través de este servicio. Todos los datos de análisis son agregados y anónimos.
+
+### 4.5 Eliminación de Datos (Derecho al Olvido)
+Cumpliendo con las normativas de Google Play Store y App Store:
+*   Aunque no requerimos registro de cuentas, los datos asociados a tu dispositivo (como IDs de publicidad) pueden ser eliminados a petición.
+*   **Cómo solicitarlo:** Envía un correo electrónico a nuestro contacto de soporte indicando "Solicitud de Borrado de Datos".
+*   Nos comprometemos a procesar dicha solicitud y eliminar cualquier rastro de datos en nuestros proveedores (AdMob/GameAnalytics) en un plazo razonable.
+
+### 4.6 Política de Niños (COPPA / Edad Mínima)
+*   Nuestros servicios **no** están dirigidos a niños menores de 13 años.
+*   No recopilamos a sabiendas información personal de niños menores de 13 años. Si descubrimos que hemos recopilado inadvertidamente dichos datos, tomaremos medidas inmediatas para eliminarlos.
+*   Si eres padre, madre o tutor legal y crees que tu hijo nos ha proporcionado datos sin consentimiento, por favor contáctanos inmediatamente.
 
 ---
 

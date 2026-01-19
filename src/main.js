@@ -29,8 +29,20 @@ if (typeof window !== 'undefined') {
 // La detección precisa se hace en Game.js usando Phaser.Device
 const isMobile = isMobileDevice();
 const baseResolution = getResolution(isMobile, GAME_CONFIG.RESOLUTIONS);
-const GAME_WIDTH = baseResolution.width;
-const GAME_HEIGHT = baseResolution.height;
+let GAME_WIDTH = baseResolution.width;
+let GAME_HEIGHT = baseResolution.height;
+
+// FIX: Dynamic Height for Mobile to avoid letterboxing (black bars)
+// iPhone 14+ and modern Androids are taller than 16:9. We extend the height to fit.
+if (isMobile && typeof window !== 'undefined') {
+    const windowRatio = window.innerHeight / window.innerWidth;
+    const targetHeight = Math.ceil(GAME_WIDTH * windowRatio);
+    // Only extend if taller than base (avoid squashing on weird small screens)
+    if (targetHeight > GAME_HEIGHT) {
+        GAME_HEIGHT = targetHeight;
+        console.log(`[Main] Adjusted Mobile Height to ${GAME_HEIGHT} (Ratio: ${windowRatio.toFixed(2)})`);
+    }
+}
 // Usa DPR para render más nítido sin cambiar el tamaño lógico del juego
 const DPR = getHiDpiScale();
 

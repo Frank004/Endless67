@@ -4,8 +4,8 @@
 			"image": "store.png",
 			"format": "RGBA8888",
 			"size": {
-				"w": 483,
-				"h": 1018
+				"w": 366,
+				"h": 1014
 			},
 			"scale": 1,
 			"frames": [
@@ -31,6 +31,111 @@
 					}
 				},
 				{
+					"filename": "cardbox-blackmarket.png",
+					"rotated": false,
+					"trimmed": false,
+					"sourceSize": {
+						"w": 120,
+						"h": 184
+					},
+					"spriteSourceSize": {
+						"x": 0,
+						"y": 0,
+						"w": 120,
+						"h": 184
+					},
+					"frame": {
+						"x": 1,
+						"y": 643,
+						"w": 120,
+						"h": 184
+					}
+				},
+				{
+					"filename": "cardbox-common.png",
+					"rotated": false,
+					"trimmed": false,
+					"sourceSize": {
+						"w": 120,
+						"h": 184
+					},
+					"spriteSourceSize": {
+						"x": 0,
+						"y": 0,
+						"w": 120,
+						"h": 184
+					},
+					"frame": {
+						"x": 123,
+						"y": 643,
+						"w": 120,
+						"h": 184
+					}
+				},
+				{
+					"filename": "cardbox-epic.png",
+					"rotated": false,
+					"trimmed": false,
+					"sourceSize": {
+						"w": 120,
+						"h": 184
+					},
+					"spriteSourceSize": {
+						"x": 0,
+						"y": 0,
+						"w": 120,
+						"h": 184
+					},
+					"frame": {
+						"x": 245,
+						"y": 643,
+						"w": 120,
+						"h": 184
+					}
+				},
+				{
+					"filename": "cardbox-legend.png",
+					"rotated": false,
+					"trimmed": false,
+					"sourceSize": {
+						"w": 120,
+						"h": 184
+					},
+					"spriteSourceSize": {
+						"x": 0,
+						"y": 0,
+						"w": 120,
+						"h": 184
+					},
+					"frame": {
+						"x": 1,
+						"y": 829,
+						"w": 120,
+						"h": 184
+					}
+				},
+				{
+					"filename": "cardbox-rare.png",
+					"rotated": false,
+					"trimmed": false,
+					"sourceSize": {
+						"w": 120,
+						"h": 184
+					},
+					"spriteSourceSize": {
+						"x": 0,
+						"y": 0,
+						"w": 120,
+						"h": 184
+					},
+					"frame": {
+						"x": 123,
+						"y": 829,
+						"w": 120,
+						"h": 184
+					}
+				},
+				{
 					"filename": "lock.png",
 					"rotated": false,
 					"trimmed": false,
@@ -45,136 +150,10 @@
 						"h": 21
 					},
 					"frame": {
-						"x": 363,
-						"y": 1,
+						"x": 245,
+						"y": 829,
 						"w": 17,
 						"h": 21
-					}
-				},
-				{
-					"filename": "cardbox common.png",
-					"rotated": false,
-					"trimmed": true,
-					"sourceSize": {
-						"w": 160,
-						"h": 192
-					},
-					"spriteSourceSize": {
-						"x": 0,
-						"y": 3,
-						"w": 159,
-						"h": 186
-					},
-					"frame": {
-						"x": 1,
-						"y": 643,
-						"w": 159,
-						"h": 186
-					}
-				},
-				{
-					"filename": "cardbox-blackmarket.png",
-					"rotated": false,
-					"trimmed": true,
-					"sourceSize": {
-						"w": 160,
-						"h": 192
-					},
-					"spriteSourceSize": {
-						"x": 0,
-						"y": 3,
-						"w": 159,
-						"h": 186
-					},
-					"frame": {
-						"x": 1,
-						"y": 831,
-						"w": 159,
-						"h": 186
-					}
-				},
-				{
-					"filename": "cardbox-epic.png",
-					"rotated": false,
-					"trimmed": true,
-					"sourceSize": {
-						"w": 160,
-						"h": 192
-					},
-					"spriteSourceSize": {
-						"x": 0,
-						"y": 3,
-						"w": 159,
-						"h": 186
-					},
-					"frame": {
-						"x": 162,
-						"y": 643,
-						"w": 159,
-						"h": 186
-					}
-				},
-				{
-					"filename": "cardbox-legend.png",
-					"rotated": false,
-					"trimmed": true,
-					"sourceSize": {
-						"w": 160,
-						"h": 192
-					},
-					"spriteSourceSize": {
-						"x": 0,
-						"y": 3,
-						"w": 159,
-						"h": 186
-					},
-					"frame": {
-						"x": 162,
-						"y": 831,
-						"w": 159,
-						"h": 186
-					}
-				},
-				{
-					"filename": "cardbox-own.png",
-					"rotated": false,
-					"trimmed": true,
-					"sourceSize": {
-						"w": 160,
-						"h": 192
-					},
-					"spriteSourceSize": {
-						"x": 0,
-						"y": 3,
-						"w": 159,
-						"h": 186
-					},
-					"frame": {
-						"x": 323,
-						"y": 643,
-						"w": 159,
-						"h": 186
-					}
-				},
-				{
-					"filename": "cardbox-rare.png",
-					"rotated": false,
-					"trimmed": true,
-					"sourceSize": {
-						"w": 160,
-						"h": 192
-					},
-					"spriteSourceSize": {
-						"x": 0,
-						"y": 3,
-						"w": 159,
-						"h": 186
-					},
-					"frame": {
-						"x": 323,
-						"y": 831,
-						"w": 159,
-						"h": 186
 					}
 				}
 			]
@@ -183,6 +162,6 @@
 	"meta": {
 		"app": "https://www.codeandweb.com/texturepacker",
 		"version": "3.0",
-		"smartupdate": "$TexturePacker:SmartUpdate:1cfbd1aac3215732fa6b1f96477d4c08:87413255defe9ef685cb83dd52f2290b:63f3262fe02996a7d1c4de18e76b3514$"
+		"smartupdate": "$TexturePacker:SmartUpdate:046bb07f9edb87de8cda872d20e38afa:02af8b0bb974ff968a9f6b0ce1377490:63f3262fe02996a7d1c4de18e76b3514$"
 	}
 }

@@ -3,8 +3,8 @@
  */
 export const STORE_CARD_CONSTANTS = {
     // Dimensions
-    WIDTH: 140,
-    HEIGHT: 168, // Scaled from 160x192 (Ratio 1.2)
+    WIDTH: 120,
+    HEIGHT: 184, // Exact sprite size
 
     // Styles
     COLORS: {
@@ -31,7 +31,7 @@ export const STORE_CARD_CONSTANTS = {
 
     // Assets
     TEXTURES: {
-        COMMON: 'cardbox common.png',
+        COMMON: 'cardbox-common.png',
         RARE: 'cardbox-rare.png',
         EPIC: 'cardbox-epic.png',
         LEGENDARY: 'cardbox-legend.png',

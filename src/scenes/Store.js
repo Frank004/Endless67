@@ -13,14 +13,12 @@ export class Store extends Phaser.Scene {
     constructor() {
         super('Store');
 
-        // Layout constants (360×640 design)
-        this.HEADER_HEIGHT = 0;  // Increased for more breathing room
-        this.FOOTER_HEIGHT = 60;
+        // Layout constants (360×640 design)  
         this.PADDING_SIDE = 20;
         this.COLUMN_GAP = 10;
         this.ROW_GAP = 10;
-        this.CARD_WIDTH = 140;
-        this.CARD_HEIGHT = 160; // Matched with StoreCardConstants
+        this.CARD_WIDTH = 120;
+        this.CARD_HEIGHT = 184;
 
         // Business logic
         this._catalog = null;
@@ -29,19 +27,22 @@ export class Store extends Phaser.Scene {
     }
 
     create() {
-        this.cards = []; // Reset cards array to avoid stale references
+        this.cards = [];
         const { width, height } = this.cameras.main;
 
         // Background
-        this.add.image(width / 2, height / 2, ASSETS.STORE, 'storebg.png')
+        const bg = this.add.image(width / 2, height / 2, ASSETS.STORE, 'storebg.png')
             .setOrigin(0.5)
             .setScrollFactor(0);
 
-        // Create fixed header
-        this.createHeader();
+        // Ensure background covers screen
+        const scaleX = width / bg.width;
+        const scaleY = height / bg.height;
+        const scale = Math.max(scaleX, scaleY);
+        bg.setScale(scale);
 
-        // Create footer with back button
-        this.createFooter();
+        // Setup Header (Logo + Coins + Back Button)
+        this.createHeader();
 
         // Setup store (async)
         this._setupStore();
@@ -55,11 +56,9 @@ export class Store extends Phaser.Scene {
             this._interactionBlocked = false;
         });
 
-        // --- DEBUG HELPERS ---
-        // Expose debug tools for testing
+        // Debug
         window.STORE_DEBUG = {
             addCoins: (amount) => {
-                // Dynamically import service to add coins for testing
                 import('../managers/gameplay/PlayerProfileService.js').then(module => {
                     const service = module.default;
                     const newProfile = service.addCoins(amount);
@@ -68,95 +67,135 @@ export class Store extends Phaser.Scene {
                 });
             },
             resetProfile: () => {
-                localStorage.removeItem('endless67_profile_v1');
-                location.reload();
+                import('../managers/gameplay/PlayerProfileService.js').then(module => {
+                    const service = module.default;
+                    // Reset Skins
+                    service.debugResetSkins();
+                    // Reset Coins
+                    const profile = service.loadOrCreate();
+                    profile.currency.coins = 0;
+                    service.save(profile);
+
+                    console.log('🗑️ Profile Reset (Skins & Coins cleared).');
+                    this._refreshUI();
+                });
             }
         };
-        console.log('🔧 STORE DEBUG: Use window.STORE_DEBUG.addCoins(50000)');
     }
 
     createHeader() {
         const { width } = this.cameras.main;
-        const headerY = this.HEADER_HEIGHT / 2 + 75; // Lowered title position
 
-        // Header container (fixed, no scroll)
+        // Header container (fixed)
         this.headerContainer = this.add.container(0, 0).setScrollFactor(0).setDepth(100);
 
-        // Title: "THE VAULT" (Logo)
-        const logo = this.add.image(width / 2, headerY, ASSETS.STORE_LOGO)
+        // 1. Back Button (Top Left - Circle with Arrow)
+        const btnRadius = 24;
+        const btnX = 30 + btnRadius; // Margin left
+        const btnY = 35; // Top margin
+
+        const btnBg = this.add.circle(0, 0, btnRadius, 0x000000, 0.5)
+            .setStrokeStyle(2, 0xffffff);
+
+        const btnArrow = this.add.text(0, 0, '←', {
+            fontSize: '28px',
+            fontStyle: 'bold',
+            color: '#ffffff'
+        }).setOrigin(0.5, 0.55); // Visual center correction
+
+        const btnContainer = this.add.container(btnX, btnY, [btnBg, btnArrow])
+            .setSize(btnRadius * 2, btnRadius * 2)
+            .setInteractive({ useHandCursor: true });
+
+        btnContainer.on('pointerdown', () => {
+            this.tweens.add({
+                targets: btnContainer,
+                scale: 0.9,
+                duration: 50,
+                yoyo: true
+            });
+            this._handleBack();
+        });
+
+        // 2. Title: "THE VAULT" (Logo) - Moved Down
+        // Center text closer to the grid start (visual balance)
+        const logoY = 100;
+        const logo = this.add.image(width / 2, logoY, ASSETS.STORE_LOGO)
             .setOrigin(0.5)
             .setScrollFactor(0)
             .setScale(0.2);
 
-        // Scale down if strictly necessary, but respecting the new base scale
         if (logo.displayWidth > 280) {
             logo.setDisplaySize(280, logo.displayHeight * (280 / logo.displayWidth));
         }
 
-        // -- DYNAMIC COIN COUNTER --
-        // Container anchored to Top-Right
-        const cardMargin = 10;
-        this.coinCounterContainer = this.add.container(width - cardMargin, cardMargin).setScrollFactor(0);
+        // 3. Coin Counter (Top Right)
+        const cardMargin = 20;
+        this.coinCounterContainer = this.add.container(width - cardMargin, btnY).setScrollFactor(0);
 
-        // 1. Background Rect (Placeholder size, updated dynamically)
-        this.coinBg = this.add.rectangle(0, 0, 100, 36, 0x000000, 0.85).setOrigin(1, 0);
+        this.coinBg = this.add.rectangle(0, 0, 100, 36, 0x000000, 0.85).setOrigin(1, 0.5);
 
-        // 2. Coin Text (Anchor Right inside container)
-        // Padding from right edge of container
         const textPaddingRight = 15;
-        this.coinText = this.add.text(-textPaddingRight, 18, '0', {
+        this.coinText = this.add.text(-textPaddingRight, 0, '0', {
             fontSize: '20px',
             fontFamily: 'monospace',
             color: '#ffdd00',
             fontStyle: 'bold'
-        }).setOrigin(1, 0.5); // Right-Center
+        }).setOrigin(1, 0.5);
 
-        // 3. Coin Icon (Positioned relative to text)
-        this.coinIcon = this.add.image(0, 18, ASSETS.COINS, 'coin-01.png')
-            .setOrigin(0.1, 0.4)
-            .setScale(2.5); // Match StoreCard scale
+        this.coinIcon = this.add.image(0, 0, ASSETS.COINS, 'coin-01.png')
+            .setOrigin(0.5, 0.5)
+            .setScale(2.5);
 
         this.coinCounterContainer.add([this.coinBg, this.coinText, this.coinIcon]);
-        this.headerContainer.add([logo, this.coinCounterContainer]);
 
-        // Initial Layout Update
+        this.headerContainer.add([btnContainer, logo, this.coinCounterContainer]);
+
+        // Initial Layout
         this.updateCoinVisuals();
     }
 
     updateCoinVisuals() {
         if (!this.coinText || !this.coinIcon || !this.coinBg) return;
 
-        // Ensure text metrics are fresh
         this.coinText.updateText();
 
-        let textWidth = this.coinText.width;
+        // --- LAYOUT CONSTANTS ---
+        const PADDING_RIGHT = 15; // Space from right container edge to text
+        const PADDING_LEFT = 10;  // Space from left container edge to icon
+        const GAP = 10;           // Space between Text and Icon
 
-        // Fallback for first frame or zero width
-        if (textWidth === 0 && this.coinText.text) {
-            textWidth = this.coinText.text.length * 12; // Estimate
-        }
+        // --- SIZES ---
+        const textWidth = this.coinText.width;
+        const iconDisplayWidth = this.coinIcon.displayWidth || (16 * 2.5); // Fallback if not loaded
 
-        const iconPadding = 8;
-        const containerPadding = 15;
+        // --- POSITIONS (Right to Left Calculation) ---
 
-        // Layout: [ (Icon Center) ] --padding-- [Text(Right)]
-        const coinDisplayWidth = this.coinIcon.displayWidth || (16 * 2.5);
+        // 1. Text (Origin 1, 0.5) -> Anchor is Right-Center
+        // Positioned at -PADDING_RIGHT
+        const textX = -PADDING_RIGHT;
 
-        // Determine critical X positions
-        const textRightX = this.coinText.x;
-        const textLeftX = textRightX - textWidth;
+        // 2. Icon (Origin 0.5, 0.5) -> Anchor is Center
+        // Icon Center X = (Text Left Edge) - GAP - (Half Icon Width)
+        // Text Left Edge = textX - textWidth
+        const iconCenterX = (textX - textWidth) - GAP - (iconDisplayWidth / 2);
 
-        const iconRightX = textLeftX - iconPadding;
-        const iconCenterX = iconRightX - (coinDisplayWidth / 2);
+        // --- APPLY POSITIONS ---
+        this.coinText.x = textX;
+        this.coinText.y = 0; // Vertically centered
 
-        this.coinIcon.setX(iconCenterX);
+        this.coinIcon.x = iconCenterX;
+        this.coinIcon.y = 0; // Vertically centered using origin 0.5
 
-        const iconLeftX = iconCenterX - (coinDisplayWidth / 2);
-
-        // Total from Right(0) to IconLeft(negative) + Padding
-        const totalWidth = Math.abs(iconLeftX) + containerPadding;
+        // --- BACKGROUND SIZE ---
+        // Total Width = PADDING_RIGHT + textWidth + GAP + iconWidth + PADDING_LEFT
+        // Or calculated from positions: ABS(Icon Left Edge) + PADDING_LEFT
+        const iconLeftEdge = iconCenterX - (iconDisplayWidth / 2);
+        const totalWidth = Math.abs(iconLeftEdge) + PADDING_LEFT;
 
         this.coinBg.width = totalWidth;
+
+        // Verify container position in createHeader is correct (Top Right)
     }
 
     updateCoins(amount) {
@@ -168,35 +207,18 @@ export class Store extends Phaser.Scene {
         }
     }
 
-    createFooter() {
-        const { width, height } = this.cameras.main;
-
-        // Back button (estilo UIHelpers estándar)
-        this.btnBack = UIHelpers.createTextButton(this, width / 2, height - 30, 'BACK', {
-            textColor: '#ffffff',
-            fontSize: '20px',
-            callback: () => this._handleBack()
-        });
-        this.btnBack.container.setScrollFactor(0).setDepth(100);
-    }
-
     async _setupStore() {
-        // Initialize logic manager
         this.storeManager = new StoreManager();
         await this.storeManager.init();
-
         this._refreshUI();
     }
 
     _refreshUI() {
-        // Get fresh state from manager
         const coins = this.storeManager.getCoins();
         const skinsWithState = this.storeManager.getSkinsWithState();
 
-        // Update Header
         this.updateCoins(coins);
 
-        // Update existing cards or create new grid
         if (this.cards && this.cards.length > 0) {
             this._updateExistingCards(skinsWithState, coins);
         } else {
@@ -205,16 +227,12 @@ export class Store extends Phaser.Scene {
     }
 
     _updateExistingCards(skinsWithState, coins) {
-        // Map of skin ID to state
         const stateMap = new Map(skinsWithState.map(s => [s.id, s]));
-
         this.cards.forEach(card => {
             const newState = stateMap.get(card.skinData.id);
             if (newState) {
-                // Update card data
                 card.skinData.owned = newState.owned;
                 card.skinData.equipped = newState.equipped;
-                // Update visuals
                 card.updateAffordableState(coins);
             }
         });
@@ -223,59 +241,49 @@ export class Store extends Phaser.Scene {
     createPagedGrid(skins) {
         const { width, height } = this.cameras.main;
 
-        // --- Paging Setup ---
         const CARDS_PER_PAGE = 4;
         this.totalPages = Math.ceil(skins.length / CARDS_PER_PAGE);
         this.currentPage = 0;
 
-        // --- Grid Measurements ---
         const effectiveColumnGap = 20;
         const totalCardWidth = (this.CARD_WIDTH * 2) + effectiveColumnGap;
-        // Total grid height (2 rows)
+        // Total grid height (2 rows) + row gap
         const totalGridHeight = (this.CARD_HEIGHT * 2) + this.ROW_GAP;
 
-        // Calculate offsets to center 2x2 grid in the "Body" area
-        const headerPadding = 20;
-        const availableHeight = height - this.HEADER_HEIGHT - this.FOOTER_HEIGHT - headerPadding;
-        const startY = this.HEADER_HEIGHT + headerPadding + Math.max(0, (availableHeight - totalGridHeight) / 2);
+        // --- BOTTOM ALIGNMENT LOGIC ---
+        // Push container to the bottom area.
+        // Leave some margin from bottom (e.g., 50px-80px for spacing or indicators)
+        const bottomMargin = 50;
+        const startY = height - totalGridHeight - bottomMargin;
 
         // Horizontal centering
         const startX = (width - totalCardWidth) / 2;
         const col1X = startX;
         const col2X = col1X + this.CARD_WIDTH + effectiveColumnGap;
 
-        // --- Container ---
-        // We will move this container horizontally to change pages
         this.gridContainer = this.add.container(0, 0);
 
-        // --- SWIPE AREA (Background Layer) ---
-        // A transparent interactive layer BEHIND the cards to ensure swipes are caught 
-        // even if starting between cards, while still allowing card clicks.
+        // --- SWIPE ZONE ---
         const totalContainerWidth = width * this.totalPages;
-        const swipeZoneHeight = height * 0.7; // Cover main area
-
+        const swipeZoneHeight = height * 0.6; // Cover bottom half mostly
         const swipeZone = this.add.rectangle(
-            (width * this.totalPages) / 2 - (width / 2), // Center relative to container
-            height / 2,
+            (width * this.totalPages) / 2 - (width / 2),
+            height - (swipeZoneHeight / 2), // Aligned to bottom
             totalContainerWidth,
             swipeZoneHeight,
-            0x000000, 0 // Invisible (Alpha 0)
-        ).setOrigin(0.5);
+            0x000000, 0
+        ); // origin 0.5 default
 
-        // Add to container FIRST so it renders behind cards
         this.gridContainer.add(swipeZone);
 
         this.cards = [];
 
-        // --- Create Cards ---
         skins.forEach((skin, index) => {
             const pageIndex = Math.floor(index / CARDS_PER_PAGE);
             const indexInPage = index % CARDS_PER_PAGE;
-
             const row = Math.floor(indexInPage / 2);
             const col = indexInPage % 2;
 
-            // X Position includes Page Offset
             const x = (pageIndex * width) + (col === 0 ? col1X : col2X);
             const y = startY + (row * (this.CARD_HEIGHT + this.ROW_GAP));
 
@@ -296,83 +304,73 @@ export class Store extends Phaser.Scene {
                 this.storeManager.getCoins()
             );
 
-            // Listen for card click
             card.on('cardClick', (data) => this._handleCardInteraction(card, data));
-
             this.gridContainer.add(card);
             this.cards.push(card);
         });
 
-        // --- Navigation Controls ---
-        this._createPageIndicators(width, height);
-
+        // Indicators follow the grid bottom
+        this._createPageIndicators(width, startY + totalGridHeight + 30);
     }
 
-    _createPageIndicators(width, height) {
-        // Calculate grid bottom position dynamically
-        const totalRows = 2; // Fixed 2x2 grid
-        const totalGridHeight = (this.CARD_HEIGHT * 2) + this.ROW_GAP;
-        const headerPadding = 20;
-        const availableHeight = height - this.HEADER_HEIGHT - this.FOOTER_HEIGHT - headerPadding;
-        const gridStartY = this.HEADER_HEIGHT + headerPadding + Math.max(0, (availableHeight - totalGridHeight) / 2);
+    _createPageIndicators(width, yPos) {
+        if (this.indicatorContainer) this.indicatorContainer.destroy();
 
-        // Position 30px below the last row (increased spacing)
-        const y = gridStartY + totalGridHeight + 30;
-
-        this.indicatorContainer = this.add.container(width / 2, y).setScrollFactor(0).setDepth(100);
+        this.indicatorContainer = this.add.container(width / 2, yPos).setScrollFactor(0).setDepth(100);
         this.pageIndicators = [];
 
-        // Colors
         this.COLOR_ACTIVE = 0x997652;
         this.COLOR_INACTIVE = 0xCCAA88;
 
         for (let i = 0; i < this.totalPages; i++) {
-            // Create dots (circles)
-            const circle = this.add.circle(0, 0, 5, this.COLOR_INACTIVE, 1);
+            const circle = this.add.circle(0, 0, 6, this.COLOR_INACTIVE, 1);
 
-            // Make INDICATOR CLICKABLE (as button)
-            circle.setInteractive({ cursor: 'pointer' });
-            circle.on('pointerdown', () => this.goToPage(i));
+            // Hit area 30px for easier tapping
+            circle.setInteractive({
+                hitArea: new Phaser.Geom.Circle(0, 0, 20),
+                hitAreaCallback: Phaser.Geom.Circle.Contains,
+                useHandCursor: true
+            });
+
+            circle.on('pointerdown', () => {
+                this._blockSwipe = true; // Signal to ignore global swipe
+                this.goToPage(i);
+            });
 
             this.indicatorContainer.add(circle);
             this.pageIndicators.push(circle);
         }
 
-        // Initialize positions IMMEDIATELY (No "Loading" animation on first show)
-        this._updatePageIndicators(true); // check immediate flag
+        this._updatePageIndicators(true);
     }
 
     _updatePageIndicators(immediate = false) {
         if (!this.pageIndicators) return;
 
-        const gap = 24; // Distance between dot centers
-
-        // Center the group
+        const gap = 30; // Increased gap for touch friendliness
         const totalW = (this.totalPages - 1) * gap;
         let currentX = -totalW / 2;
 
         this.pageIndicators.forEach((circle, i) => {
             const isActive = (i === this.currentPage);
-            const targetScale = isActive ? 1.4 : 1.0;
+            const targetX = currentX;
             const targetColor = isActive ? this.COLOR_ACTIVE : this.COLOR_INACTIVE;
+            const targetScale = isActive ? 1.4 : 1.0;
 
             if (immediate) {
-                // Set explicitly without tween
-                circle.x = currentX;
+                circle.x = targetX;
                 circle.setScale(targetScale);
                 circle.setFillStyle(targetColor);
             } else {
-                // Animate
                 this.tweens.add({
                     targets: circle,
-                    scale: targetScale, // Pop effect for active dot
+                    scale: targetScale,
                     fillColor: targetColor,
-                    x: currentX,
+                    x: targetX,
                     duration: 200,
                     ease: 'Back.out'
                 });
             }
-
             currentX += gap;
         });
     }
@@ -384,17 +382,24 @@ export class Store extends Phaser.Scene {
         }
     }
 
+    _snapToPage(pageIndex) {
+        this.currentPage = pageIndex;
+        const targetX = -this.currentPage * this.cameras.main.width;
+
+        this.tweens.add({
+            targets: this.gridContainer,
+            x: targetX,
+            duration: 300,
+            ease: 'Power2',
+            onComplete: () => this._updatePageIndicators()
+        });
+        this._updatePageIndicators();
+    }
+
     setupInput() {
-        // ESC to go back
         this.input.keyboard.on('keydown-ESC', () => this._handleBack());
 
-        // Swipe / Drag Handling
-        this._swipeData = {
-            startX: 0,
-            gridStartX: 0,
-            isDown: false,
-            startTime: 0
-        };
+        this._swipeData = { startX: 0, isDown: false, startTime: 0 };
         this.isDragging = false;
 
         this.input.on('pointerdown', this._onPointerDown, this);
@@ -405,42 +410,33 @@ export class Store extends Phaser.Scene {
     _onPointerDown(pointer) {
         if (this._isModalOpen) return;
 
+        // Prevent interfering with UI buttons that claimed interaction
+        if (this._blockSwipe) {
+            this._blockSwipe = false;
+            return;
+        }
+
         this._swipeData.isDown = true;
         this._swipeData.startX = pointer.x;
-        this._swipeData.startTime = pointer.time;
-
-        // Capture current X position of the grid
-        // If a tween is running, this picks up the mid-tween position, allowing "catch"
         this._swipeData.gridStartX = this.gridContainer.x;
-
-        // Stop any ongoing tweens to allow manual control
+        this._swipeData.startTime = pointer.time;
         this.tweens.killTweensOf(this.gridContainer);
-
         this.isDragging = false;
     }
 
     _onPointerMove(pointer) {
-        if (!this._swipeData.isDown) return;
-        if (this._isModalOpen) return;
-
+        if (!this._swipeData.isDown || this._isModalOpen) return;
         const diff = pointer.x - this._swipeData.startX;
 
-        // Threshold to start treating as drag (prevent accidental clicks turning into drags)
         if (!this.isDragging && Math.abs(diff) > 10) {
             this.isDragging = true;
         }
 
         if (this.isDragging && this.gridContainer) {
-            // Apply resistance at edges
             let effectiveDiff = diff;
             const isFirst = this.currentPage === 0;
             const isLast = this.currentPage === this.totalPages - 1;
-
-            // Logarithmic-like resistance if dragging beyond bounds
-            if ((isFirst && diff > 0) || (isLast && diff < 0)) {
-                effectiveDiff *= 0.3;
-            }
-
+            if ((isFirst && diff > 0) || (isLast && diff < 0)) effectiveDiff *= 0.3;
             this.gridContainer.x = this._swipeData.gridStartX + effectiveDiff;
         }
     }
@@ -452,182 +448,88 @@ export class Store extends Phaser.Scene {
         if (this.isDragging) {
             const diff = pointer.x - this._swipeData.startX;
             const duration = pointer.time - this._swipeData.startTime;
-            const { width } = this.cameras.main;
-            const threshold = width * 0.25; // 25% screen width to switch
-
-            // Allow fast swipes to switch even if distance is short
+            const width = this.cameras.main.width;
+            const threshold = width * 0.25;
             const isFast = duration < 300 && Math.abs(diff) > 30;
 
             let targetPage = this.currentPage;
-
             if (diff < -threshold || (diff < 0 && isFast)) {
-                // Next page (swiped left)
-                if (this.currentPage < this.totalPages - 1) {
-                    targetPage++;
-                }
+                if (this.currentPage < this.totalPages - 1) targetPage++;
             } else if (diff > threshold || (diff > 0 && isFast)) {
-                // Prev page (swiped right)
-                if (this.currentPage > 0) {
-                    targetPage--;
-                }
+                if (this.currentPage > 0) targetPage--;
             }
-
             this._snapToPage(targetPage);
 
-            // Keep isDragging true briefly to ensure card clicks originating from this interaction are ignored
-            // StoreCard checks this.scene.isDragging
-            this.time.delayedCall(50, () => {
-                this.isDragging = false;
-            });
+            this.time.delayedCall(50, () => this.isDragging = false);
         } else {
-            // It was a click (no significant movement)
             this.isDragging = false;
         }
     }
 
-    _snapToPage(pageIndex) {
-        if (this._isModalOpen) return;
-
-        this.currentPage = pageIndex;
-        const targetX = -this.currentPage * this.cameras.main.width;
-
-        this.tweens.add({
-            targets: this.gridContainer,
-            x: targetX,
-            duration: 300,
-            ease: 'Power2',
-            onComplete: () => {
-                this._updatePageIndicators();
-            }
-        });
-
-        this._updatePageIndicators();
-    }
-
     _handleCardInteraction(card, data) {
-        // BLOCK IF MODAL OPEN OR INTERACTION BLOCKED (Cooldown)
         if (this._isModalOpen || this._interactionBlocked) return;
-
         const { skinData } = data;
 
-        // 1. Is it equipped? (No action needed usually, or maybe toggle off?)
-        if (skinData.equipped) {
-            return;
-        }
+        if (skinData.equipped) return;
 
-        // 2. Is it owned? (Equip it)
         if (skinData.owned) {
             if (this.storeManager.equipSkin(skinData.id)) {
                 this._equipChanged = true;
-                console.log(`✅ Equipped: ${skinData.name}`);
-
-                // Visual success on card
                 card.animateSuccess();
-
-                // Refresh UI (will update all cards' equipped status)
                 this._refreshUI();
             }
-            return;
-        }
-
-        // 3. Not owned (Purchase Flow)
-        const myCoins = this.storeManager.getCoins();
-        if (myCoins >= skinData.cost) {
-            // SHOW CONFIRMATION MODAL
-            this._showConfirmModal(skinData, () => {
-                // Actual Purchase logic inside callback
-                const result = this.storeManager.purchaseSkin(skinData.id, skinData.cost);
-                if (result.success) {
-                    this._playPurchaseFx();
-                    console.log(`✅ Purchased: ${skinData.name}`);
-                    card.animateSuccess();
-                    this._refreshUI();
-                } else {
-                    this.cameras.main.shake(100, 0.005);
-                    card.animateFail();
-                }
-            });
         } else {
-            // Not enough money
-            this.cameras.main.shake(100, 0.005);
-            card.animateFail();
+            const myCoins = this.storeManager.getCoins();
+            if (myCoins >= skinData.cost) {
+                this._showConfirmModal(skinData, () => {
+                    const result = this.storeManager.purchaseSkin(skinData.id, skinData.cost);
+                    if (result.success) {
+                        this._playPurchaseFx();
+                        card.animateSuccess();
+                        this._refreshUI();
+                    } else {
+                        card.animateFail();
+                    }
+                });
+            } else {
+                this.cameras.main.shake(100, 0.005);
+                card.animateFail();
+            }
         }
     }
 
     _showConfirmModal(skinData, onConfirm) {
-        this._isModalOpen = true; // SET FLAG
-
+        this._isModalOpen = true;
         const { width, height } = this.cameras.main;
 
-        // 1. Blocker (Darken bg, block clicks)
         const blocker = this.add.rectangle(width / 2, height / 2, width, height, 0x000000, 0.7)
-            .setInteractive()
-            .setScrollFactor(0)
-            .setDepth(200);
+            .setInteractive().setScrollFactor(0).setDepth(200);
 
-        // 2. Modal Container
         const modal = this.add.container(width / 2, height / 2).setDepth(201).setScrollFactor(0);
+        const panel = this.add.rectangle(0, 0, 280, 180, 0x1a1a1a).setStrokeStyle(2, 0xffffff);
 
-        // Panel
-        const panelW = 280;
-        const panelH = 180;
-        const panel = this.add.rectangle(0, 0, panelW, panelH, 0x1a1a1a)
-            .setStrokeStyle(2, 0xffffff);
-
-        // Title
         const title = this.add.text(0, -60, 'CONFIRM PURCHASE', {
-            fontSize: '22px',
-            fontFamily: 'monospace',
-            fontStyle: 'bold',
-            color: '#ffdd00'
+            fontSize: '22px', fontFamily: 'monospace', fontStyle: 'bold', color: '#ffdd00'
         }).setOrigin(0.5);
 
-        // Description
         const desc = this.add.text(0, -10, `Buy ${skinData.name}\nfor ${UIHelpers.formatCurrency(skinData.cost)} coins?`, {
-            fontSize: '18px',
-            fontFamily: 'monospace',
-            align: 'center',
-            color: '#ffffff'
+            fontSize: '18px', fontFamily: 'monospace', align: 'center', color: '#ffffff'
         }).setOrigin(0.5);
 
-        // Buttons
-        const btnY = 50;
-
-        // Cooldown flag
         let canInteract = false;
-
-        // YES Button
-        const btnYes = UIHelpers.createTextButton(this, 60, btnY, 'YES', {
-            width: 100,
-            fontSize: '18px',
-            hoverColor: '#00ff00',
-            textColor: '#00ff00', // Green text for YES
-            callback: () => {
-                if (!canInteract) return;
-                onConfirm();
-                closeModal();
-            }
+        const btnYes = UIHelpers.createTextButton(this, 60, 50, 'YES', {
+            width: 100, fontSize: '18px', textColor: '#00ff00',
+            callback: () => { if (canInteract) { onConfirm(); closeModal(); } }
+        });
+        const btnNo = UIHelpers.createTextButton(this, -60, 50, 'NO', {
+            width: 100, fontSize: '18px', textColor: '#ffaaaa',
+            callback: () => { if (canInteract) { closeModal(); } }
         });
 
-        // NO Button
-        const btnNo = UIHelpers.createTextButton(this, -60, btnY, 'NO', {
-            width: 100,
-            fontSize: '18px',
-            hoverColor: '#ff0000',
-            textColor: '#ffaaaa', // Reddish text for NO
-            callback: () => {
-                if (!canInteract) return;
-                closeModal();
-            }
-        });
-
-        // Start buttons as dim/alpha to visualize cooldown
         btnYes.container.setAlpha(0.5);
         btnNo.container.setAlpha(0.5);
 
-        // Enable after 500ms
         this.time.delayedCall(500, () => {
-            // Check if scene/modal still active (simple check if container exists)
             if (modal.active) {
                 canInteract = true;
                 if (btnYes.container) btnYes.container.setAlpha(1);
@@ -636,48 +538,32 @@ export class Store extends Phaser.Scene {
         });
 
         modal.add([panel, title, desc, btnYes.container, btnNo.container]);
-
-        // Animate In
         modal.setScale(0);
+
         this.tweens.add({
-            targets: modal,
-            scale: 1,
-            duration: 200,
-            ease: 'Back.out'
+            targets: modal, scale: 1, duration: 200, ease: 'Back.out'
         });
 
-        // Close Logic
         const closeModal = () => {
             blocker.destroy();
             modal.destroy();
-
-            // Sustain block for short duration to prevent click-through
-            this.time.delayedCall(300, () => {
-                this._isModalOpen = false;
-            });
+            this.time.delayedCall(300, () => this._isModalOpen = false);
         };
     }
 
     _handleBack() {
-        if (this._isModalOpen) return; // BLOCK BACK IF MODAL OPEN
-
+        if (this._isModalOpen) return;
         if (this._equipChanged) {
-            // Reload assets if skin was changed
             this.scene.start('Preloader');
             return;
         }
         this.scene.start('MainMenu');
     }
 
-
-
     _playPurchaseFx() {
         if (!this.gridContainer) return;
         this.tweens.add({
-            targets: this.gridContainer,
-            scale: 1.02,
-            duration: 120,
-            yoyo: true
+            targets: this.gridContainer, scale: 1.02, duration: 120, yoyo: true
         });
     }
 }
