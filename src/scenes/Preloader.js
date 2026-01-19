@@ -16,6 +16,10 @@ export class Preloader extends Phaser.Scene {
         // Establecer ruta base relativa para asegurar carga en GitHub Pages / Netlify / Capacitor
         this.load.setBaseURL('./');
 
+        // CACHE BUSTER
+        // Gets version from index.html (e.g., "v0.0.48") to force asset refresh
+        const v = window.GAME_VERSION ? `?v=${window.GAME_VERSION}` : '';
+
         // --- LOADING BAR UI ---
         const width = this.cameras.main.width;
         const height = this.cameras.main.height;
@@ -62,47 +66,47 @@ export class Preloader extends Phaser.Scene {
         });
 
         // --- AUDIO LOADING ---
-        this.load.audio(ASSETS.COIN_SFX_PREFIX + '1', 'assets/audio/collecting-coins/Several Coins 01.mp3');
-        this.load.audio(ASSETS.COIN_SFX_PREFIX + '2', 'assets/audio/collecting-coins/Several Coins 02.mp3');
-        this.load.audio(ASSETS.COIN_SFX_PREFIX + '3', 'assets/audio/collecting-coins/Several Coins 03.mp3');
-        this.load.audio(ASSETS.DAMAGE_SFX_PREFIX + '1', 'assets/audio/take-damage/Retro Game Low Take Damage.mp3');
-        this.load.audio(ASSETS.DAMAGE_SFX_PREFIX + '2', 'assets/audio/take-damage/Retro Game Low Take Damage 2.mp3');
-        this.load.audio(ASSETS.DAMAGE_SFX_PREFIX + '3', 'assets/audio/take-damage/Retro Game Low Take Damage 3.mp3');
-        this.load.audio(ASSETS.DAMAGE_SFX_PREFIX + '4', 'assets/audio/take-damage/Retro Game Low Take Damage 4.mp3');
-        this.load.audio(ASSETS.DAMAGE_SFX_PREFIX + '5', 'assets/audio/take-damage/Retro Game Low Take Damage 5.mp3');
+        this.load.audio(ASSETS.COIN_SFX_PREFIX + '1', 'assets/audio/collecting-coins/Several Coins 01.mp3' + v);
+        this.load.audio(ASSETS.COIN_SFX_PREFIX + '2', 'assets/audio/collecting-coins/Several Coins 02.mp3' + v);
+        this.load.audio(ASSETS.COIN_SFX_PREFIX + '3', 'assets/audio/collecting-coins/Several Coins 03.mp3' + v);
+        this.load.audio(ASSETS.DAMAGE_SFX_PREFIX + '1', 'assets/audio/take-damage/Retro Game Low Take Damage.mp3' + v);
+        this.load.audio(ASSETS.DAMAGE_SFX_PREFIX + '2', 'assets/audio/take-damage/Retro Game Low Take Damage 2.mp3' + v);
+        this.load.audio(ASSETS.DAMAGE_SFX_PREFIX + '3', 'assets/audio/take-damage/Retro Game Low Take Damage 3.mp3' + v);
+        this.load.audio(ASSETS.DAMAGE_SFX_PREFIX + '4', 'assets/audio/take-damage/Retro Game Low Take Damage 4.mp3' + v);
+        this.load.audio(ASSETS.DAMAGE_SFX_PREFIX + '5', 'assets/audio/take-damage/Retro Game Low Take Damage 5.mp3' + v);
 
         // Riser Sounds
-        this.load.audio(ASSETS.LAVA_AMBIENT, 'assets/audio/riser/lava.mp3');
-        this.load.audio(ASSETS.LAVA_DROP, 'assets/audio/riser/lava-drop.mp3');
-        this.load.audio(ASSETS.ACID_AMBIENT, 'assets/audio/riser/acid.mp3');
-        this.load.audio(ASSETS.ACID_DROP, 'assets/audio/riser/acid-drop.mp3');
-        this.load.audio(ASSETS.FIRE_AMBIENT, 'assets/audio/riser/fire.mp3');
-        this.load.audio(ASSETS.FIRE_DROP, 'assets/audio/riser/fire-drop.mp3');
-        this.load.audio(ASSETS.WATER_AMBIENT, 'assets/audio/riser/water.mp3');
-        this.load.audio(ASSETS.WATER_DROP, 'assets/audio/riser/water-drop.mp3');
+        this.load.audio(ASSETS.LAVA_AMBIENT, 'assets/audio/riser/lava.mp3' + v);
+        this.load.audio(ASSETS.LAVA_DROP, 'assets/audio/riser/lava-drop.mp3' + v);
+        this.load.audio(ASSETS.ACID_AMBIENT, 'assets/audio/riser/acid.mp3' + v);
+        this.load.audio(ASSETS.ACID_DROP, 'assets/audio/riser/acid-drop.mp3' + v);
+        this.load.audio(ASSETS.FIRE_AMBIENT, 'assets/audio/riser/fire.mp3' + v);
+        this.load.audio(ASSETS.FIRE_DROP, 'assets/audio/riser/fire-drop.mp3' + v);
+        this.load.audio(ASSETS.WATER_AMBIENT, 'assets/audio/riser/water.mp3' + v);
+        this.load.audio(ASSETS.WATER_DROP, 'assets/audio/riser/water-drop.mp3' + v);
 
-        this.load.audio(ASSETS.BG_MUSIC, 'assets/audio/bg-music/retro-game-music/Retro_hiphop.mp3');
-        this.load.audio(ASSETS.JUMP_SFX, 'assets/audio/jumps/jumping.mp3');
-        this.load.audio(ASSETS.DESTROY_SFX, 'assets/audio/destroy/destroy.mp3');
-        this.load.audio(ASSETS.CELEBRATION_SFX, 'assets/audio/celebration/67.mp3');
-        this.load.audio(ASSETS.SHOE_BRAKE, 'assets/audio/shoes/shoe-brake.mp3');
-        this.load.audio(ASSETS.TRASHCAN_HIT, 'assets/audio/trashcan/trashcan.mp3');
-        this.load.audio(ASSETS.TIRE_BOUNCE, 'assets/audio/tire bounce/tirebounce.mp3');
-        this.load.audio(ASSETS.WALL_SLIDE, 'assets/audio/slide/slide.mp3');
+        this.load.audio(ASSETS.BG_MUSIC, 'assets/audio/bg-music/retro-game-music/Retro_hiphop.mp3' + v);
+        this.load.audio(ASSETS.JUMP_SFX, 'assets/audio/jumps/jumping.mp3' + v);
+        this.load.audio(ASSETS.DESTROY_SFX, 'assets/audio/destroy/destroy.mp3' + v);
+        this.load.audio(ASSETS.CELEBRATION_SFX, 'assets/audio/celebration/67.mp3' + v);
+        this.load.audio(ASSETS.SHOE_BRAKE, 'assets/audio/shoes/shoe-brake.mp3' + v);
+        this.load.audio(ASSETS.TRASHCAN_HIT, 'assets/audio/trashcan/trashcan.mp3' + v);
+        this.load.audio(ASSETS.TIRE_BOUNCE, 'assets/audio/tire bounce/tirebounce.mp3' + v);
+        this.load.audio(ASSETS.WALL_SLIDE, 'assets/audio/slide/slide.mp3' + v);
 
         // --- ASSETS LOADING ---
         // --- ASSETS LOADING ---
-        if (!this.textures.exists(ASSETS.GAME_LOGO)) this.load.image(ASSETS.GAME_LOGO, 'assets/logo.png');
-        if (!this.textures.exists(ASSETS.STORE_LOGO)) this.load.image(ASSETS.STORE_LOGO, 'assets/the-vault-store.png');
-        if (!this.textures.exists(ASSETS.UI_ICONS)) this.load.atlas(ASSETS.UI_ICONS, 'assets/ui/icons.png', 'assets/ui/icons.json');
+        if (!this.textures.exists(ASSETS.GAME_LOGO)) this.load.image(ASSETS.GAME_LOGO, 'assets/logo.png' + v);
+        if (!this.textures.exists(ASSETS.STORE_LOGO)) this.load.image(ASSETS.STORE_LOGO, 'assets/the-vault-store.png' + v);
+        if (!this.textures.exists(ASSETS.UI_ICONS)) this.load.atlas(ASSETS.UI_ICONS, 'assets/ui/icons.png' + v, 'assets/ui/icons.json' + v);
 
-        if (!this.textures.exists(ASSETS.COINS)) this.load.multiatlas(ASSETS.COINS, 'assets/spritesheets/coins.json', 'assets/spritesheets');
-        if (!this.textures.exists('basketball')) this.load.multiatlas('basketball', 'assets/spritesheets/basketball.json', 'assets/spritesheets');
-        if (!this.textures.exists('walls')) this.load.multiatlas('walls', 'assets/spritesheets/walls.json', 'assets/spritesheets');
-        if (!this.textures.exists('floor')) this.load.multiatlas('floor', 'assets/spritesheets/floor.json', 'assets/spritesheets');
-        if (!this.textures.exists('platform')) this.load.multiatlas('platform', 'assets/spritesheets/platform.json', 'assets/spritesheets');
-        if (!this.textures.exists(ASSETS.PROPS)) this.load.multiatlas(ASSETS.PROPS, 'assets/spritesheets/props.json', 'assets/spritesheets');
-        if (!this.textures.exists(ASSETS.STORE)) this.load.multiatlas(ASSETS.STORE, 'assets/spritesheets/store.json', 'assets/spritesheets');
+        if (!this.textures.exists(ASSETS.COINS)) this.load.multiatlas(ASSETS.COINS, 'assets/spritesheets/coins.json' + v, 'assets/spritesheets');
+        if (!this.textures.exists('basketball')) this.load.multiatlas('basketball', 'assets/spritesheets/basketball.json' + v, 'assets/spritesheets');
+        if (!this.textures.exists('walls')) this.load.multiatlas('walls', 'assets/spritesheets/walls.json' + v, 'assets/spritesheets');
+        if (!this.textures.exists('floor')) this.load.multiatlas('floor', 'assets/spritesheets/floor.json' + v, 'assets/spritesheets');
+        if (!this.textures.exists('platform')) this.load.multiatlas('platform', 'assets/spritesheets/platform.json' + v, 'assets/spritesheets');
+        if (!this.textures.exists(ASSETS.PROPS)) this.load.multiatlas(ASSETS.PROPS, 'assets/spritesheets/props.json' + v, 'assets/spritesheets');
+        if (!this.textures.exists(ASSETS.STORE)) this.load.multiatlas(ASSETS.STORE, 'assets/spritesheets/store.json' + v, 'assets/spritesheets');
 
         // Player Skin - Force Reload to support skin changes
         if (this.textures.exists(ASSETS.PLAYER)) {
@@ -117,10 +121,10 @@ export class Preloader extends Phaser.Scene {
             skinId = 'default';
         }
 
-        this.load.multiatlas(ASSETS.PLAYER, `assets/skins/${skinId}/player.json`, `assets/skins/${skinId}`);
+        this.load.multiatlas(ASSETS.PLAYER, `assets/skins/${skinId}/player.json` + v, `assets/skins/${skinId}`);
 
-        if (!this.textures.exists(ASSETS.ENEMY_ATLAS)) this.load.atlas(ASSETS.ENEMY_ATLAS, 'assets/spritesheets/enemy.png', 'assets/spritesheets/enemy.json');
-        if (!this.textures.exists(ASSETS.EFFECTS)) this.load.atlas(ASSETS.EFFECTS, 'assets/spritesheets/effects.png', 'assets/spritesheets/effects.json');
+        if (!this.textures.exists(ASSETS.ENEMY_ATLAS)) this.load.atlas(ASSETS.ENEMY_ATLAS, 'assets/spritesheets/enemy.png' + v, 'assets/spritesheets/enemy.json' + v);
+        if (!this.textures.exists(ASSETS.EFFECTS)) this.load.atlas(ASSETS.EFFECTS, 'assets/spritesheets/effects.png' + v, 'assets/spritesheets/effects.json' + v);
 
 
     }
