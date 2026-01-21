@@ -19,11 +19,26 @@ export class PlayerVisuals {
 
         if (hasAtlas) {
             player.setTexture(ASSETS.PLAYER);
-            const frameName = 'idle-01.png';
-            if (scene.textures.get(ASSETS.PLAYER).has(frameName)) {
+
+            // Robust frame lookup to handle skin folders (e.g. "IDLE/idle-01.png" vs "idle-01.png")
+            const findFrame = (requestedName) => {
+                const texture = scene.textures.get(ASSETS.PLAYER);
+                if (texture.has(requestedName)) return requestedName;
+
+                // Normalization: Remove folders, usage lowercase, remove separators
+                const normalize = (name) => name.split('/').pop().toLowerCase().replace(/[\s\-_]/g, '');
+                const reqNorm = normalize(requestedName);
+
+                const found = texture.getFrameNames().find(fn => normalize(fn) === reqNorm);
+                return found || null;
+            };
+
+            const frameName = findFrame('idle-01.png');
+
+            if (frameName) {
                 player.setFrame(frameName);
             } else {
-                console.warn(`[PlayerVisuals] Frame ${frameName} not found in atlas!`);
+                console.warn(`[PlayerVisuals] Frame idle-01.png not found in atlas!`);
             }
         } else {
             this._createPlaceholder();

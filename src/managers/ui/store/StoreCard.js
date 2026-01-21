@@ -15,6 +15,7 @@ export class StoreCard extends Phaser.GameObjects.Container {
 
         // Components
         this.background = new StoreCardBackground(scene, this);
+        this.previewSprite = null; // Character Sprite
         this.labels = new StoreCardLabels(scene, this);
 
         // Initialize
@@ -24,6 +25,14 @@ export class StoreCard extends Phaser.GameObjects.Container {
     create() {
         // Create Layout Components
         this.background.create();
+
+        // Create Preview Sprite (Center of card)
+        // Position at bottom with 20px padding
+        this.previewSprite = this.scene.add.sprite(STORE_CARD_CONSTANTS.WIDTH / 2, STORE_CARD_CONSTANTS.HEIGHT - 15, 'player') // Default fallback
+            .setOrigin(0.5, 1.0) // Bootom-Center origin
+            .setScale(3); // Adjust scale to fit nicely
+        this.add(this.previewSprite);
+
         this.labels.create();
 
         // Set Size and Input
@@ -66,6 +75,27 @@ export class StoreCard extends Phaser.GameObjects.Container {
         const affordable = this.playerCoins >= cost;
 
         this.background.updateTexture(rarity, owned, affordable);
+
+        // Update Preview
+        const skinKey = `skin_atlas_${this.skinData.id}`;
+        if (this.scene.textures.exists(skinKey)) {
+            const texture = this.scene.textures.get(skinKey);
+            const frames = texture.getFrameNames();
+            // Find a frame that matches "idle" and "1" or "01", preventing matches like "10", "11", etc.
+            // Matches: "idle-01.png", "IDLE/IDLE 1.png", "IDLE_01.png"
+            const idleFrame = frames.find(f => f.match(/idle.*[^0-9]0?1\.png/i));
+
+            if (idleFrame) {
+                this.previewSprite.setTexture(skinKey, idleFrame);
+                this.previewSprite.setVisible(true);
+            } else {
+                this.previewSprite.setVisible(false);
+            }
+        } else {
+            // Asset not loaded yet or invalid
+            this.previewSprite.setVisible(false);
+        }
+
         this.labels.update(owned, cost, equipped, affordable);
 
         this.updateInteractiveState();

@@ -210,7 +210,43 @@ export class Store extends Phaser.Scene {
     async _setupStore() {
         this.storeManager = new StoreManager();
         await this.storeManager.init();
+
+        // Dynamically load skin assets for previews
+        if (this.storeManager.catalog && this.storeManager.catalog.skins) {
+            this._loadSkinAssets(this.storeManager.catalog.skins);
+        }
+
         this._refreshUI();
+    }
+
+    _loadSkinAssets(skins) {
+        let loadCount = 0;
+        const v = window.GAME_VERSION ? `?v=${window.GAME_VERSION}` : '';
+
+        skins.forEach(skin => {
+            // Unique key for each skin atlas to avoid collisions and allow previewing non-equipped skins
+            const skinKey = `skin_atlas_${skin.id}`;
+
+            if (!this.textures.exists(skinKey) && skin.multiatlasJson) {
+                // Determine path - support both relative to assets or full paths if specified in JSON
+                // The JSON usually has relative paths like "assets/skins/..."
+                const texturePath = skin.multiatlasBase;
+
+                this.load.multiatlas(skinKey, `${skin.multiatlasJson}${v}`, texturePath);
+                loadCount++;
+            }
+        });
+
+        if (loadCount > 0) {
+            this.load.start();
+
+            // Listen for individual file completion to update UI progressively or once all done
+            // Simple approach: refresh UI when all dynamic loads are done
+            this.load.once('complete', () => {
+                console.log(`[Store] Loaded ${loadCount} skin assets.`);
+                this._refreshUI();
+            });
+        }
     }
 
     _refreshUI() {

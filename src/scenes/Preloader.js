@@ -158,12 +158,36 @@ export class Preloader extends Phaser.Scene {
         // --- ANIMATIONS ---
         if (atlasLoaded && this.anims) {
             const playerTex = this.textures.get(ASSETS.PLAYER);
-            const findFrame = (f, silent = false) => {
-                if (playerTex.has(f)) return f;
-                if (playerTex.has(f.trim())) return f.trim();
-                if (!silent) console.warn(`Frame no encontrado en Player Atlas: "${f}"`);
+            const allFrameNames = playerTex.getFrameNames();
+
+            // Robust Frame Finder
+            // Normalizes: "IDLE/idle_01.png" -> "idle01png"
+            const normalize = (name) => {
+                if (!name) return '';
+                // Get filename part, ignore folder
+                const filename = name.split('/').pop();
+                // Lowercase, remove underscores, dashes, spaces
+                return filename.toLowerCase().replace(/[\s\-_]/g, '');
+            };
+
+            const findFrame = (requestedName, silent = false) => {
+                // 1. Exact match (Fastest)
+                if (playerTex.has(requestedName)) return requestedName;
+                if (playerTex.has(requestedName.trim())) return requestedName.trim();
+
+                // 2. Normalized Fuzzy Match
+                // Matches "idle-01.png" with "IDLE/idle_01.png"
+                const reqNorm = normalize(requestedName);
+                if (!reqNorm) return null;
+
+                const found = allFrameNames.find(fn => normalize(fn) === reqNorm);
+
+                if (found) return found;
+
+                if (!silent) console.warn(`[Preloader] Frame not found in Player Atlas: "${requestedName}"`);
                 return null;
             };
+
             const hasFrame = (f) => findFrame(f, true) !== null;
 
             const makeAnim = (key, frameNames, frameRate = 10, repeat = -1, silent = false) => {
@@ -198,24 +222,64 @@ export class Preloader extends Phaser.Scene {
                 }
             });
 
-            makeAnim('player_idle', ['idle-01.png', 'idle-02.png', 'idle-03.png'], 6, -1);
+            // IDLE: 2 frames, first one 500ms
+            if (!this.anims.exists('player_idle')) {
+                const idleDef = [
+                    { frame: 'idle-01.png', duration: 500 },
+                    { frame: 'idle-02.png' }
+                ];
+
+                const finalIdleFrames = [];
+                idleDef.forEach(def => {
+                    const realName = findFrame(def.frame);
+                    if (realName) {
+                        finalIdleFrames.push({ key: ASSETS.PLAYER, frame: realName, duration: def.duration });
+                    }
+                });
+
+                if (finalIdleFrames.length > 0) {
+                    this.anims.create({ key: 'player_idle', frames: finalIdleFrames, frameRate: 6, repeat: -1 });
+                }
+            }
+
+            // Standard Animations using normalized lookup
             makeAnim('player_run', ['running-01.png', 'running-02.png', 'running-03.png', 'running-04.png', 'running-05.png', 'running-06.png', 'running-07.png', 'running-08.png'], 12, -1);
             makeAnim('player_run_stop', ['stop-running-01.png', 'stop-running-02.png', 'stop-running-03.png'], 12, 0);
-            makeAnim('player_jump_up', ['jump-01.png', 'jump-02.png', 'jump-03.png'], 12, 0);
-            makeAnim('player_jump_side', ['jump-01.png', 'jump-02.png', 'jump-03.png'], 12, 0);
-            makeAnim('player_jump_wall', ['jump-03.png'], 10, 0);
 
-            // Double jump with fallback
-            const djFrames = ['double-jump-01.png', 'double-jump-02.png', 'double-jump-03.png'];
-            if (!djFrames.some(hasFrame)) {
-                makeAnim('player_double_jump', ['jump-01.png', 'jump-02.png', 'jump-03.png'], 12, 0);
+            // Jump animations with fallback for missing jump-03.png
+            const jump03Exists = findFrame('jump-03.png', true);
+            const jumpFrames = jump03Exists
+                ? ['jump-01.png', 'jump-02.png', 'jump-03.png']
+                : ['jump-01.png', 'jump-02.png'];
+            makeAnim('player_jump_up', jumpFrames, 12, 0);
+            makeAnim('player_jump_side', jumpFrames, 12, 0);
+
+            // Wall jump - use last available jump frame
+            const wallJumpFrame = jump03Exists ? 'jump-03.png' : 'jump-02.png';
+            makeAnim('player_jump_wall', [wallJumpFrame], 10, 0);
+
+            // Double jump with multiple fallback strategies
+            // Try with hyphens first, then underscores
+            let djFrames = ['double-jump-01.png', 'double-jump-02.png', 'double-jump-03.png'];
+            let djExists = djFrames.some(f => findFrame(f, true));
+
+            if (!djExists) {
+                // Try with underscores (redbasketball skin uses this format)
+                djFrames = ['double-jump_01.png', 'double-jump_02.png', 'double-jump_03.png'];
+                djExists = djFrames.some(f => findFrame(f, true));
+            }
+
+            if (!djExists) {
+                // Reuse jump frames if double jump missing
+                makeAnim('player_double_jump', jumpFrames, 12, 0);
             } else {
                 makeAnim('player_double_jump', djFrames, 12, 0);
             }
+
             makeAnim('player_fall_start', ['falling-01.png', 'falling-02.png'], 12, 0);
-            makeAnim('player_fall_loop', ['falling-04.png', 'falling-05.png', 'falling-06.png', 'falling-07.png', 'falling-08.png', 'falling-09.png'], 12, -1);
+            makeAnim('player_fall_loop', ['falling-03.png', 'falling-04.png', 'falling-05.png', 'falling-06.png', 'falling-07.png', 'falling-08.png'], 12, -1);
             makeAnim('player_wall_slide_start', ['wallslide-01.png', 'wallslide-02.png', 'wallslide-03.png', 'wallslide-04.png', 'wallslide-05.png'], 12, 0);
-            makeAnim('player_wall_slide_loop', ['wallslide-06.png', 'wallslide-07.png', 'wallslide-08.png'], 12, -1);
+            makeAnim('player_wall_slide_loop', ['wallslide-04.png', 'wallslide-05.png', 'wallslide-06.png'], 12, -1, true);
             makeAnim('player_hit', ['hit-01.png', 'hit-02.png'], 10, 0);
 
             // Effects Animations
@@ -226,32 +290,42 @@ export class Preloader extends Phaser.Scene {
                     fxFrames.push({ key: ASSETS.EFFECTS, frame: `explotion${i}.png` });
                 }
 
-                this.anims.create({
-                    key: ASSETS.EXPLOSION_ANIM,
-                    frames: fxFrames,
-                    frameRate: 24,
-                    hideOnComplete: true,
-                    repeat: 0
-                });
-                console.log(`[Preloader] ✅ Created 'explosion' animation with ${fxFrames.length} frames.`);
+                if (!this.anims.exists(ASSETS.EXPLOSION_ANIM)) {
+                    this.anims.create({
+                        key: ASSETS.EXPLOSION_ANIM,
+                        frames: fxFrames,
+                        frameRate: 24,
+                        hideOnComplete: true,
+                        repeat: 0
+                    });
+                }
             } else {
                 console.error('[Preloader] ❌ EFFECTS texture not found!');
             }
 
 
-            // Powerup Animation
+            // Powerup Animation (9 frames)
             const powerFrameOrder = [
-                'basketball_powerup-01.png', 'basketball_powerup-02.png', 'basketball_powerup-03.png', 'basketball_powerup-04.png',
-                'basketball_powerup-05.png', 'basketball_powerup-06.png', 'basketball_powerup-07.png', 'basketball_powerup-08.png',
-                'basketball_powerup-09.png', 'basketball_powerup-10.png', 'basketball_powerup-11.png', 'basketball_powerup-12.png',
-                'basketball_powerup-13.png', 'basketball_powerup-14.png', 'basketball_powerup-15.png', 'basketball_powerup-16.png'
+                'basketball-powerup-01.png', 'basketball-powerup-02.png', 'basketball-powerup-03.png',
+                'basketball-powerup-04.png', 'basketball-powerup-05.png', 'basketball-powerup-06.png',
+                'basketball-powerup-07.png', 'basketball-powerup-08.png', 'basketball-powerup-09.png'
             ];
-            const powerFrames = powerFrameOrder.filter(hasFrame).flatMap(f => {
-                if (f === 'basketball_powerup-05.png' || f === 'basketball_powerup-06.png') {
-                    return [{ key: ASSETS.PLAYER, frame: f }, { key: ASSETS.PLAYER, frame: f }];
+
+            const powerFrames = [];
+            powerFrameOrder.forEach(f => {
+                const realName = findFrame(f);
+                if (!realName) return;
+
+                let duration = undefined; // default duration determined by frameRate
+                // Frames 06 and 07 have longer duration for emphasis
+                const n = normalize(f);
+                if (n.includes('basketballpowerup06') || n.includes('basketballpowerup07')) {
+                    duration = 200;
                 }
-                return { key: ASSETS.PLAYER, frame: f };
+
+                powerFrames.push({ key: ASSETS.PLAYER, frame: realName, duration: duration });
             });
+
             if (powerFrames.length > 0 && !this.anims.exists(ASSETS.POWERUP_ANIM)) {
                 this.anims.create({ key: ASSETS.POWERUP_ANIM, frames: powerFrames, frameRate: 10, repeat: 0 });
             }

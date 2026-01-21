@@ -29,7 +29,45 @@ export class PlayerStateMachine {
         if (style === 'wall') subStyle = 'wall';
 
         const key = this.anim?.resolve('AIR_RISE', subStyle);
-        const finalFrame = (style === 'double') ? 'double-jump-03.png' : 'jump-03.png';
+
+        // Helper to find frames with normalization
+        const texture = sprite?.texture;
+        const normalize = (name) => name.split('/').pop().toLowerCase().replace(/[\s\-_]/g, '');
+        const hasFrame = (requested) => {
+            if (!texture) return false;
+            if (texture.has(requested)) return true;
+            const reqNorm = normalize(requested);
+            return texture.getFrameNames().some(fn => normalize(fn) === reqNorm);
+        };
+        const findFrame = (requested) => {
+            if (!texture) return null;
+            if (texture.has(requested)) return requested;
+            const reqNorm = normalize(requested);
+            return texture.getFrameNames().find(fn => normalize(fn) === reqNorm) || null;
+        };
+
+        // Determine the final frame to hold based on what's available
+        let finalFrame = 'jump-03.png';
+        if (style === 'double') {
+            // Try with underscore first (some skins use this format)
+            if (hasFrame('double-jump_03.png')) {
+                finalFrame = findFrame('double-jump_03.png');
+            } else if (hasFrame('double-jump-03.png')) {
+                finalFrame = findFrame('double-jump-03.png');
+            } else if (hasFrame('double-jump_02.png')) {
+                finalFrame = findFrame('double-jump_02.png');
+            } else if (hasFrame('double-jump-02.png')) {
+                finalFrame = findFrame('double-jump-02.png');
+            }
+        } else {
+            // Regular jump - fallback to jump-02.png if jump-03.png doesn't exist
+            if (!hasFrame('jump-03.png') && hasFrame('jump-02.png')) {
+                finalFrame = findFrame('jump-02.png');
+            } else if (hasFrame('jump-03.png')) {
+                finalFrame = findFrame('jump-03.png');
+            }
+        }
+
         const manager = sprite?.anims?.animationManager;
 
         // Evitar reiniciar la animación si ya está corriendo o ya quedó en el frame final
@@ -43,10 +81,12 @@ export class PlayerStateMachine {
         } else {
             sprite?.anims?.stop();
             // Fallback frame set
-            if (sprite?.texture?.has(finalFrame)) {
-                sprite.setFrame(finalFrame);
-            } else if (sprite?.texture?.has('jump-03.png')) {
-                sprite.setFrame('jump-03.png');
+            if (finalFrame && hasFrame(finalFrame)) {
+                const frame = findFrame(finalFrame);
+                if (frame) sprite.setFrame(frame);
+            } else if (hasFrame('jump-02.png')) {
+                const frame = findFrame('jump-02.png');
+                if (frame) sprite.setFrame(frame);
             }
         }
     }
@@ -62,6 +102,8 @@ export class PlayerStateMachine {
     update(delta = 16) {
         const { sensors, flags, intent } = this.ctx;
         const jumpBuffered = this.ctx.hasJumpBuffered();
+
+
 
         // Prioridades altas: DEAD / HIT
         if (flags.dead) {
@@ -106,47 +148,61 @@ export class PlayerStateMachine {
                 this.transition('GROUND');
                 flags.canDoubleJump = true;
                 const absMove = Math.abs(intent.moveX);
-                const wasRunning = this.anim?.currentKey === ANIM_MANIFEST.GROUND.run;
-                const velX = Math.abs(this.ctx.sensors.vx);
-                const stopThreshold = 20; // velocidad mínima antes de pasar a idle
+
+                // Check if player is currently running
+                const sprite = this.ctx.sprite;
+                const currentAnim = sprite?.anims?.currentAnim?.key;
+                const isRunning = currentAnim === 'player_run';
 
                 if (absMove > 0.1) {
+                    // Player is moving - play run
                     this.runStopping = false;
                     this.runStopSoundPlayed = false;
                     this.ctx?.sprite?.scene?.audioManager?.stopShoeBrake?.();
                     this.anim?.play(this.anim?.resolve('GROUND', 'run'));
                     this.anim?.setFacing(intent.moveX);
-                } else if (wasRunning) {
-                    // Se soltó el input mientras corría: reproducir transición y luego mantener frame 02
-                    this.runStopping = true;
-                    if (!this.runStopSoundPlayed) {
-                        this.ctx?.sprite?.scene?.audioManager?.playShoeBrake?.();
-                        this.runStopSoundPlayed = true;
-                    }
-                    this.anim?.play(this.anim?.resolve('GROUND', 'run_stop'));
-                    this.anim?.setFacing(this.ctx.intent.moveX);
-                } else if (this.runStopping) {
-                    if (velX > stopThreshold) {
-                        // Mantener en frame stop-running-02 mientras desliza
-                        const sprite = this.ctx.sprite;
-                        if (sprite && sprite.anims) {
-                            sprite.anims.stop();
-                            sprite.setFrame('stop-running-02.png');
-                            if (this.anim) this.anim.currentKey = 'player_run_stop_hold';
+
+                } else {
+                    // Player stopped moving
+                    if (isRunning) {
+                        // Was running, play stop animation
+                        const stopKey = this.anim?.resolve('GROUND', 'run_stop');
+
+                        if (!this.runStopSoundPlayed) {
+                            this.ctx?.sprite?.scene?.audioManager?.playShoeBrake?.();
+                            this.runStopSoundPlayed = true;
                         }
-                        return;
+
+                        // Play stop animation through controller (proper architecture)
+                        if (this.anim) {
+                            this.anim.play(stopKey);
+                        } else {
+                            console.warn('❌ ERROR: this.anim is missing in SM!');
+                        }
+
+                        this.anim?.setFacing(this.ctx.intent.moveX);
+                        this.runStopping = true;
+
+                    } else if (this.runStopping) {
+                        // Check if stop animation finished
+                        const stopKey = this.anim?.resolve('GROUND', 'run_stop');
+                        const isPlayingStop = sprite?.anims?.isPlaying && sprite?.anims?.currentAnim?.key === stopKey;
+
+                        if (!isPlayingStop) {
+                            // Animation finished, go to idle
+                            this.runStopping = false;
+                            this.runStopSoundPlayed = false;
+                            this.ctx?.sprite?.scene?.audioManager?.stopShoeBrake?.();
+                            this.anim?.play(this.anim?.resolve('GROUND', 'idle'));
+                            this.anim?.setFacing(intent.moveX);
+                        }
                     } else {
-                        this.ctx?.sprite?.scene?.audioManager?.stopShoeBrake?.();
-                        this.runStopping = false;
+                        // Default idle
                         this.runStopSoundPlayed = false;
+                        this.ctx?.sprite?.scene?.audioManager?.stopShoeBrake?.();
                         this.anim?.play(this.anim?.resolve('GROUND', 'idle'));
                         this.anim?.setFacing(intent.moveX);
                     }
-                } else {
-                    this.runStopSoundPlayed = false;
-                    this.ctx?.sprite?.scene?.audioManager?.stopShoeBrake?.();
-                    this.anim?.play(this.anim?.resolve('GROUND', 'idle'));
-                    this.anim?.setFacing(intent.moveX);
                 }
             }
             return;

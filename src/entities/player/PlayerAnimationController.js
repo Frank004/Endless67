@@ -19,11 +19,15 @@ export class PlayerAnimationController {
     play(key) {
         if (!this.sprite || !this.sprite.anims) return;
         if (!key) return;
-        if (this.currentKey === key && this.sprite.anims.isPlaying) return;
+
+        // Check if the SAME animation is already playing (use sprite's actual state, not tracked state)
+        const currentlyPlaying = this.sprite.anims.currentAnim?.key;
+        if (currentlyPlaying === key && this.sprite.anims.isPlaying) return;
+
         if (!this.sprite.anims.animationManager.exists(key)) {
-            // Anim no existe todavía: no-op
             return;
         }
+
         this.currentKey = key;
         this.sprite.anims.play(key, true);
     }

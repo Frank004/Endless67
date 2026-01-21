@@ -12,6 +12,16 @@
       "multiatlasBase": "assets/skins/default"
     },
     {
+      "id": "redbasketball",
+      "name": "Red Basketball",
+      "rarity": "rare",
+      "priceCoins": 3500,
+      "preview": "assets/skins/redbasketball/preview.png",
+      "atlasKey": "player",
+      "multiatlasJson": "assets/skins/redbasketball/player.json",
+      "multiatlasBase": "assets/skins/redbasketball"
+    },
+    {
       "id": "skin_mock_1",
       "name": "Purple Storm",
       "rarity": "rare",
