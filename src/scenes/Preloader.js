@@ -304,27 +304,30 @@ export class Preloader extends Phaser.Scene {
             }
 
 
-            // Powerup Animation (9 frames)
-            const powerFrameOrder = [
-                'basketball-powerup-01.png', 'basketball-powerup-02.png', 'basketball-powerup-03.png',
-                'basketball-powerup-04.png', 'basketball-powerup-05.png', 'basketball-powerup-06.png',
-                'basketball-powerup-07.png', 'basketball-powerup-08.png', 'basketball-powerup-09.png'
-            ];
-
+            // Powerup Animation (Refactored to 2000ms total)
             const powerFrames = [];
-            powerFrameOrder.forEach(f => {
-                const realName = findFrame(f);
-                if (!realName) return;
 
-                let duration = undefined; // default duration determined by frameRate
-                // Frames 06 and 07 have longer duration for emphasis
-                const n = normalize(f);
-                if (n.includes('basketballpowerup06') || n.includes('basketballpowerup07')) {
-                    duration = 200;
-                }
-
-                powerFrames.push({ key: ASSETS.PLAYER, frame: realName, duration: duration });
+            // 1. INTRO: Frames 01-04 (150ms each = 600ms)
+            ['01', '02', '03', '04'].forEach(num => {
+                const real = findFrame(`basketball-powerup-${num}.png`);
+                if (real) powerFrames.push({ key: ASSETS.PLAYER, frame: real, duration: 150 });
             });
+
+            // 2. LOOP: Frames 05-07 (Repeated 2 times, 185ms each = 1110ms)
+            for (let i = 0; i < 2; i++) {
+                ['05', '06', '07'].forEach(num => {
+                    const real = findFrame(`basketball-powerup-${num}.png`);
+                    if (real) powerFrames.push({ key: ASSETS.PLAYER, frame: real, duration: 185 });
+                });
+            }
+
+            // 3. OUTRO: Frames 08-09 (145ms each = 290ms)
+            ['08', '09'].forEach(num => {
+                const real = findFrame(`basketball-powerup-${num}.png`);
+                if (real) powerFrames.push({ key: ASSETS.PLAYER, frame: real, duration: 145 });
+            });
+
+            // Total: 440 + 1320 + 240 = 2000ms
 
             if (powerFrames.length > 0 && !this.anims.exists(ASSETS.POWERUP_ANIM)) {
                 this.anims.create({ key: ASSETS.POWERUP_ANIM, frames: powerFrames, frameRate: 10, repeat: 0 });
