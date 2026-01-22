@@ -230,7 +230,10 @@ export class Store extends Phaser.Scene {
             if (!this.textures.exists(skinKey) && skin.multiatlasJson) {
                 // Determine path - support both relative to assets or full paths if specified in JSON
                 // The JSON usually has relative paths like "assets/skins/..."
-                const texturePath = skin.multiatlasBase;
+                let texturePath = skin.multiatlasBase;
+                if (texturePath && !texturePath.endsWith('/')) {
+                    texturePath += '/';
+                }
 
                 this.load.multiatlas(skinKey, `${skin.multiatlasJson}${v}`, texturePath);
                 loadCount++;

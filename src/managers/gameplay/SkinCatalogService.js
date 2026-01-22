@@ -8,7 +8,8 @@ class SkinCatalogService {
         if (this._catalog) return this._catalog;
         if (this._loading) return this._loading;
 
-        this._loading = fetch('./assets/skins/skins.json')
+        const v = window.GAME_VERSION ? `?v=${window.GAME_VERSION}` : '';
+        this._loading = fetch(`./assets/skins/skins.json${v}`)
             .then(async (res) => {
                 if (!res.ok) throw new Error(`Failed to load skins.json (${res.status})`);
                 const data = await res.json();

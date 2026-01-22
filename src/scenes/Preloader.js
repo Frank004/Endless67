@@ -125,8 +125,14 @@ export class Preloader extends Phaser.Scene {
         if (skinId.includes('mock')) {
             skinId = 'default';
         }
+        this._equippedSkinId = skinId;
 
-        this.load.multiatlas(ASSETS.PLAYER, `assets/skins/${skinId}/player.json` + v, `assets/skins/${skinId}`);
+        let texturePath = `assets/skins/${skinId}`;
+        // Ensure texturePath has a trailing slash for multiatlas base path
+        if (!texturePath.endsWith('/')) {
+            texturePath += '/';
+        }
+        this.load.multiatlas(ASSETS.PLAYER, `${texturePath}player.json${v}`, texturePath);
 
         if (!this.textures.exists(ASSETS.ENEMY_ATLAS)) this.load.atlas(ASSETS.ENEMY_ATLAS, 'assets/spritesheets/enemy.png' + v, 'assets/spritesheets/enemy.json' + v);
         if (!this.textures.exists(ASSETS.EFFECTS)) this.load.atlas(ASSETS.EFFECTS, 'assets/spritesheets/effects.png' + v, 'assets/spritesheets/effects.json' + v);
@@ -202,6 +208,68 @@ export class Preloader extends Phaser.Scene {
                 }
             };
 
+            const requiredFrames = [
+                'idle-01.png',
+                'idle-02.png',
+                'running-01.png',
+                'running-02.png',
+                'running-03.png',
+                'running-04.png',
+                'running-05.png',
+                'running-06.png',
+                'running-07.png',
+                'running-08.png',
+                'stop-running-01.png',
+                'stop-running-02.png',
+                'stop-running-03.png',
+                'jump-01.png',
+                'jump-02.png',
+                'falling-01.png',
+                'falling-02.png',
+                'falling-03.png',
+                'falling-04.png',
+                'falling-05.png',
+                'falling-06.png',
+                'falling-07.png',
+                'falling-08.png',
+                'wallslide-01.png',
+                'wallslide-02.png',
+                'wallslide-03.png',
+                'wallslide-04.png',
+                'wallslide-05.png',
+                'wallslide-06.png',
+                'hit-01.png',
+                'hit-02.png',
+                'basketball-powerup-01.png',
+                'basketball-powerup-02.png',
+                'basketball-powerup-03.png',
+                'basketball-powerup-04.png',
+                'basketball-powerup-05.png',
+                'basketball-powerup-06.png',
+                'basketball-powerup-07.png',
+                'basketball-powerup-08.png',
+                'basketball-powerup-09.png'
+            ];
+
+            const missingFrames = requiredFrames.filter(frame => !hasFrame(frame));
+            const doubleJumpHyphen = ['double-jump-01.png', 'double-jump-02.png', 'double-jump-03.png'];
+            const doubleJumpUnderscore = ['double-jump_01.png', 'double-jump_02.png', 'double-jump_03.png'];
+            const hasDoubleJump = doubleJumpHyphen.every(hasFrame) || doubleJumpUnderscore.every(hasFrame);
+            if (!hasDoubleJump) {
+                missingFrames.push(...doubleJumpHyphen);
+            }
+            if (missingFrames.length) {
+                const skinId = this._equippedSkinId || 'default';
+                console.warn(`[Preloader] Missing frames for skin "${skinId}":`, missingFrames);
+                if (skinId !== 'default') {
+                    const fallbackProfile = PlayerProfileService.loadOrCreate();
+                    fallbackProfile.skins.equipped = 'default';
+                    PlayerProfileService.save(fallbackProfile);
+                    this.scene.restart();
+                    return;
+                }
+            }
+
             const playerAnimKeys = [
                 'player_idle',
                 'player_run',
@@ -214,7 +282,9 @@ export class Preloader extends Phaser.Scene {
                 'player_fall_loop',
                 'player_wall_slide_start',
                 'player_wall_slide_loop',
-                'player_hit'
+                'player_hit',
+                ASSETS.POWERUP_ANIM,
+                'player_goal'
             ];
             playerAnimKeys.forEach((key) => {
                 if (this.anims.exists(key)) {
@@ -264,7 +334,7 @@ export class Preloader extends Phaser.Scene {
             let djExists = djFrames.some(f => findFrame(f, true));
 
             if (!djExists) {
-                // Try with underscores (redbasketball skin uses this format)
+                // Try with underscores (redjersey skin uses this format)
                 djFrames = ['double-jump_01.png', 'double-jump_02.png', 'double-jump_03.png'];
                 djExists = djFrames.some(f => findFrame(f, true));
             }

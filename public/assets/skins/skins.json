@@ -12,14 +12,34 @@
       "multiatlasBase": "assets/skins/default"
     },
     {
-      "id": "redbasketball",
-      "name": "Red Basketball",
+      "id": "redjersey",
+      "name": "Red Jersey",
       "rarity": "rare",
       "priceCoins": 3500,
-      "preview": "assets/skins/redbasketball/preview.png",
+      "preview": "",
       "atlasKey": "player",
-      "multiatlasJson": "assets/skins/redbasketball/player.json",
-      "multiatlasBase": "assets/skins/redbasketball"
+      "multiatlasJson": "assets/skins/redjersey/player.json",
+      "multiatlasBase": "assets/skins/redjersey"
+    },
+    {
+      "id": "blackjersey",
+      "name": "Black Jersey",
+      "rarity": "rare",
+      "priceCoins": 3500,
+      "preview": "",
+      "atlasKey": "player",
+      "multiatlasJson": "assets/skins/blackjersey/player.json",
+      "multiatlasBase": "assets/skins/blackjersey"
+    },
+    {
+      "id": "playerhat",
+      "name": "Player Hat",
+      "rarity": "common",
+      "priceCoins": 500,
+      "preview": "",
+      "atlasKey": "player",
+      "multiatlasJson": "assets/skins/playerhat/player.json",
+      "multiatlasBase": "assets/skins/playerhat"
     },
     {
       "id": "skin_mock_1",
