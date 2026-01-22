@@ -32,6 +32,16 @@
       "multiatlasBase": "assets/skins/blackjersey"
     },
     {
+      "id": "probasketball",
+      "name": "Pro Basketball",
+      "rarity": "legendary",
+      "priceCoins": 15000,
+      "preview": "",
+      "atlasKey": "player",
+      "multiatlasJson": "assets/skins/probasketball/player.json",
+      "multiatlasBase": "assets/skins/probasketball"
+    },
+    {
       "id": "playerhat",
       "name": "Player Hat",
       "rarity": "common",
