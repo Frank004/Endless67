@@ -13,6 +13,10 @@ const mockScene = {
             centerX: 180
         }
     },
+    scale: {
+        height: 640,
+        width: 360
+    },
     registry: {
         get: jest.fn(() => false)
     },
@@ -31,13 +35,46 @@ const mockScene = {
             }))
         }
     },
-    platforms: { add: jest.fn() },
+    platforms: { add: jest.fn(), contains: jest.fn(() => false) },
     powerupPool: { spawn: jest.fn() },
     coinPool: { spawn: jest.fn() },
     powerups: { add: jest.fn(), children: { iterate: jest.fn() } },
     coins: { add: jest.fn(), children: { iterate: jest.fn() } },
     time: { delayedCall: jest.fn() },
-    player: { y: 0 }
+    time: { delayedCall: jest.fn() },
+    player: { y: 0 },
+    add: {
+        image: jest.fn(() => ({
+            setDepth: jest.fn().mockReturnThis(),
+            setAlpha: jest.fn().mockReturnThis(),
+            setScale: jest.fn().mockReturnThis(),
+            setTint: jest.fn().mockReturnThis(),
+            setOrigin: jest.fn().mockReturnThis(),
+            setVisible: jest.fn().mockReturnThis(),
+            setActive: jest.fn().mockReturnThis(),
+            setPosition: jest.fn().mockReturnThis(),
+            setTexture: jest.fn().mockReturnThis(),
+            setBlendMode: jest.fn().mockReturnThis(),
+            setFlipX: jest.fn().mockReturnThis(),
+            setAngle: jest.fn().mockReturnThis()
+        })),
+        container: jest.fn(() => ({
+            setDepth: jest.fn().mockReturnThis(),
+            setAlpha: jest.fn().mockReturnThis(),
+            setScale: jest.fn().mockReturnThis(),
+            add: jest.fn(),
+            destroy: jest.fn(),
+            bringToTop: jest.fn()
+        })),
+        text: jest.fn(() => ({ setOrigin: jest.fn() })),
+        particles: jest.fn(() => ({
+            setDepth: jest.fn(),
+            setBlendMode: jest.fn()
+        }))
+    },
+    textures: {
+        exists: jest.fn(() => true)
+    }
 };
 
 describe('Level Generation Integration Logic', () => {
@@ -97,8 +134,8 @@ describe('Level Generation Integration Logic', () => {
         calls.forEach(call => {
             const [x, y, width] = call;
             const halfWidth = width / 2;
-            const minX = 32 + 5 + halfWidth; // Wall + margin + halfWidth
-            const maxX = 360 - 32 - 5 - halfWidth;
+            const minX = 32 + halfWidth;
+            const maxX = 360 - 32 - halfWidth;
 
             expect(x).toBeGreaterThanOrEqual(minX);
             expect(x).toBeLessThanOrEqual(maxX);

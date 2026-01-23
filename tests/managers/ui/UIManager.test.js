@@ -18,7 +18,20 @@ describe('UIManager', () => {
         mockScene = {
             add: {
                 text: jest.fn(),
-                image: jest.fn()
+                image: jest.fn(),
+                particles: jest.fn(() => ({
+                    setDepth: jest.fn(),
+                    destroy: jest.fn()
+                }))
+            },
+            textures: {
+                exists: jest.fn(() => true)
+            },
+            layout: {
+                playerSpawnY: 500
+            },
+            milestoneParticles: {
+                destroy: jest.fn()
             }
         };
 

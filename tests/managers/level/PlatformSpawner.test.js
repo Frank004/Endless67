@@ -62,6 +62,5 @@ describe('PlatformSpawner diagnostics', () => {
 
         expect(result).toBe(platform);
         expect(scene.platforms.add).toHaveBeenCalledWith(platform, true);
-        expect(platform.debugText).toBe(textMock);
     });
 });

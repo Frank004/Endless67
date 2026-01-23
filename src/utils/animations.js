@@ -1,4 +1,6 @@
+import { ASSETS } from '../config/AssetKeys.js';
 /**
+
  * Registro centralizado de animaciones.
  * Define animaciones solo si no existen para evitar duplicados.
  */
@@ -6,9 +8,9 @@
 export function registerCoinAnimation(scene) {
     const anims = scene.anims;
     if (!anims || anims.exists('coin_spin')) return;
-    if (!scene.textures.exists('coins')) return;
+    if (!scene.textures.exists(ASSETS.COINS)) return;
 
-    const frames = anims.generateFrameNames('coins', {
+    const frames = anims.generateFrameNames(ASSETS.COINS, {
         start: 1,
         end: 8,
         zeroPad: 2,
@@ -28,13 +30,13 @@ export function registerCoinAnimation(scene) {
 export function registerBasketballAnimation(scene) {
     const anims = scene.anims;
     if (!anims || anims.exists('basketball_spin')) return;
-    if (!scene.textures.exists('basketball')) return;
+    if (!scene.textures.exists(ASSETS.BASKETBALL)) return;
 
     const frameOrder = ['basketball 1.png', 'basketball 2.png', 'basketball 3.png'];
-    const texture = scene.textures.get('basketball');
+    const texture = scene.textures.get(ASSETS.BASKETBALL);
     const frames = frameOrder
         .filter(name => texture?.has(name))
-        .map(frame => ({ key: 'basketball', frame }));
+        .map(frame => ({ key: ASSETS.BASKETBALL, frame }));
     if (!frames.length) return;
 
     anims.create({
@@ -48,7 +50,7 @@ export function registerBasketballAnimation(scene) {
 export function registerTrashcanAnimation(scene) {
     const anims = scene.anims;
     if (!anims || anims.exists('trashcan_hit')) return;
-    if (!scene.textures.exists('props')) return;
+    if (!scene.textures.exists(ASSETS.PROPS)) return;
 
     // Frame order from props.json: transcan_animation-01.png to transcan_animation-10.png
     const frameOrder = [
@@ -63,10 +65,10 @@ export function registerTrashcanAnimation(scene) {
         'transcan_animation-09.png',
         'transcan_animation-10.png'
     ];
-    const texture = scene.textures.get('props');
+    const texture = scene.textures.get(ASSETS.PROPS);
     const frames = frameOrder
         .filter(name => texture?.has(name))
-        .map(frame => ({ key: 'props', frame }));
+        .map(frame => ({ key: ASSETS.PROPS, frame }));
     if (!frames.length) return;
 
     anims.create({
@@ -80,7 +82,7 @@ export function registerTrashcanAnimation(scene) {
 export function registerTireAnimation(scene) {
     const anims = scene.anims;
     if (!anims || anims.exists('tire_bounce')) return;
-    if (!scene.textures.exists('props')) return;
+    if (!scene.textures.exists(ASSETS.PROPS)) return;
 
     // Frames from props.json (bounce sequence + regreso a idle)
     const frameOrder = [
@@ -92,10 +94,10 @@ export function registerTireAnimation(scene) {
         'tire-bounce6.png',
         'tires.png'
     ];
-    const texture = scene.textures.get('props');
+    const texture = scene.textures.get(ASSETS.PROPS);
     const frames = frameOrder
         .filter(name => texture?.has(name))
-        .map(frame => ({ key: 'props', frame }));
+        .map(frame => ({ key: ASSETS.PROPS, frame }));
     if (!frames.length) return;
 
     anims.create({
@@ -105,3 +107,113 @@ export function registerTireAnimation(scene) {
         repeat: 0
     });
 }
+
+
+export function registerEnemyAnimations(scene) {
+    const anims = scene.anims;
+    if (!anims) return;
+    if (anims.exists('enemy_idle')) return;
+    if (!scene.textures.exists(ASSETS.ENEMY_ATLAS)) return;
+
+    anims.create({
+        key: 'enemy_idle',
+        frames: anims.generateFrameNames(ASSETS.ENEMY_ATLAS, {
+            prefix: 'patrol-idle',
+            start: 1,
+            end: 4,
+            suffix: '.png'
+        }),
+        frameRate: 8,
+        repeat: -1
+    });
+
+    // Run
+    anims.create({
+        key: 'enemy_run',
+        frames: anims.generateFrameNames(ASSETS.ENEMY_ATLAS, {
+            prefix: 'patrol-run',
+            start: 1,
+            end: 6,
+            suffix: '.png'
+        }),
+        frameRate: 10,
+        repeat: -1
+    });
+
+    // Attack
+    anims.create({
+        key: 'enemy_attack',
+        frames: anims.generateFrameNames(ASSETS.ENEMY_ATLAS, {
+            prefix: 'patrol-attack',
+            start: 1,
+            end: 4,
+            suffix: '.png'
+        }),
+        frameRate: 12,
+        repeat: 0
+    });
+
+    // Die
+    anims.create({
+        key: 'enemy_die',
+        frames: anims.generateFrameNames(ASSETS.ENEMY_ATLAS, {
+            prefix: 'patrol-die',
+            start: 1,
+            end: 5,
+            suffix: '.png'
+        }),
+        frameRate: 12,
+        repeat: 0
+    });
+
+    // Jump
+    anims.create({
+        key: 'enemy_jump',
+        frames: anims.generateFrameNames(ASSETS.ENEMY_ATLAS, {
+            prefix: 'patrol-jump',
+            start: 1,
+            end: 8,
+            suffix: '.png'
+        }),
+        frameRate: 12,
+        repeat: 0
+    });
+
+    // Jumper Animations
+    anims.create({
+        key: 'jumper_idle',
+        frames: anims.generateFrameNames(ASSETS.ENEMY_ATLAS, {
+            prefix: 'jumper-idle',
+            start: 1,
+            end: 4,
+            suffix: '.png'
+        }),
+        frameRate: 8,
+        repeat: -1
+    });
+
+    anims.create({
+        key: 'jumper_jump',
+        frames: anims.generateFrameNames(ASSETS.ENEMY_ATLAS, {
+            prefix: 'jumper-jump',
+            start: 1,
+            end: 7,
+            suffix: '.png'
+        }),
+        frameRate: 12,
+        repeat: 0
+    });
+
+    anims.create({
+        key: 'jumper_attack',
+        frames: anims.generateFrameNames(ASSETS.ENEMY_ATLAS, {
+            prefix: 'jumper-attack',
+            start: 1,
+            end: 6,
+            suffix: '.png'
+        }),
+        frameRate: 12,
+        repeat: 0
+    });
+}
+

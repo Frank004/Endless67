@@ -1,4 +1,4 @@
-import { JumperShooterEnemy } from '../../src/prefabs/Enemy.js';
+import { JumperShooterEnemy } from '../../src/entities/Enemy.js';
 import { ENEMY_CONFIG } from '../../src/config/EnemyConfig.js';
 
 // Mock Phaser
@@ -57,7 +57,7 @@ jest.mock('../../src/utils/platformRider.js', () => ({
 }));
 
 // Mock behaviors
-jest.mock('../../src/prefabs/behaviors/JumpBehavior.js', () => ({
+jest.mock('../../src/entities/behaviors/JumpBehavior.js', () => ({
     JumpBehavior: class {
         constructor(enemy, jumpForce) {
             this.enemy = enemy;
@@ -69,7 +69,7 @@ jest.mock('../../src/prefabs/behaviors/JumpBehavior.js', () => ({
     }
 }));
 
-jest.mock('../../src/prefabs/behaviors/ShootBehavior.js', () => ({
+jest.mock('../../src/entities/behaviors/ShootBehavior.js', () => ({
     ShootBehavior: class {
         constructor(enemy) {
             this.enemy = enemy;
@@ -145,7 +145,7 @@ describe('JumperShooterEnemy', () => {
         test('should configure body size correctly', () => {
             jumper.spawn(150, 250);
             // Body completo 32x32
-            expect(jumper.body.setSize).toHaveBeenCalledWith(32, 32);
+            expect(jumper.body.setSize).toHaveBeenCalledWith(29, 24);
         });
     });
 

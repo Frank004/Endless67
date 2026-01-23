@@ -6,14 +6,19 @@ import { LAYOUT_CONFIG } from '../../config/LayoutConfig.js';
 import RiserPipelineManager from './RiserPipelineManager.js';
 
 export class RiserManager {
-    constructor(scene, riserType = RISER_TYPES.LAVA) {
+    constructor(scene, riserType = null) {
         this.scene = scene;
         this.riser = null;
-        this.config = new RiserConfiguration(riserType);
+
+        // RANDOMIZE RISER TYPE if not specified
+        const types = Object.values(RISER_TYPES);
+        const selectedType = riserType || types[Math.floor(Math.random() * types.length)];
+
+        this.config = new RiserConfiguration(selectedType);
 
         this.currentSpeed = this.config.speedConfig.baseSpeed;
         this.isRising = false;
-        this.enabled = true;
+        this.enabled = false;
         this.riserHeight = null; // Se calculará dinámicamente en createRiser()
         this.lastChanceActive = false;
         this.lastChanceTimer = 0;
@@ -191,13 +196,17 @@ export class RiserManager {
 
         // Catch-up logic (if player is too far ahead, riser speeds up)
         // Only apply catch-up if NOT in last chance mode
+        // REFACTORED: Thresholds balanced.
         if (!inLastChance) {
-            if (distanceToRiser < -800) {
-                targetSpeed = this.config.speedConfig.maxSpeed * 1.5; // Super fast catchup
-            } else if (distanceToRiser < -500) {
-                targetSpeed = this.config.speedConfig.maxSpeed; // Full speed
-            } else if (distanceToRiser < -300) {
-                targetSpeed = this.config.speedConfig.maxSpeed * 0.7; // Moderate catchup
+            if (distanceToRiser < -1200) {
+                // > 2 screens ahead
+                targetSpeed = this.config.speedConfig.maxSpeed * 1.4; // Extreme catchup
+            } else if (distanceToRiser < -800) {
+                // > 1.3 screens ahead
+                targetSpeed = this.config.speedConfig.maxSpeed * 1.1; // Fast catchup
+            } else if (distanceToRiser < -450) {
+                // > 0.75 screen ahead
+                targetSpeed = this.config.speedConfig.maxSpeed * 0.75; // Moderate catchup
             }
         }
 

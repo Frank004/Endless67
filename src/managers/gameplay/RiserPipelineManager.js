@@ -26,8 +26,9 @@ export class RiserPipelineManager {
     getPipelineForType(riserType) {
         const category = this.pipelineMap[riserType];
         if (!category) {
-            console.warn(`Unknown riser type: ${riserType}, defaulting to Fluid pipeline`);
-            return 'FluidPipeline';
+            console.warn(`RiserPipelineManager: Unknown or unmapped riser type '${riserType}'`);
+            // If no pipeline mapped (e.g. FIRE), return null to use standard rendering
+            return null;
         }
         return `${category}Pipeline`;
     }

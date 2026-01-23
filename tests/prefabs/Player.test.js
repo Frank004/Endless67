@@ -1,5 +1,5 @@
 
-import { Player } from '../../src/prefabs/Player.js';
+import { Player } from '../../src/entities/player/Player.js';
 import EventBus, { Events } from '../../src/core/EventBus.js';
 
 describe('Player', () => {

@@ -1,0 +1,165 @@
+{
+  "version": 1,
+  "skins": [
+    {
+      "id": "default",
+      "name": "Default",
+      "rarity": "common",
+      "priceCoins": 0,
+      "preview": "assets/skins/default/preview.png",
+      "atlasKey": "player",
+      "multiatlasJson": "assets/skins/default/player.json",
+      "multiatlasBase": "assets/skins/default"
+    },
+    {
+      "id": "redjersey",
+      "name": "Red Jersey",
+      "rarity": "rare",
+      "priceCoins": 3500,
+      "preview": "",
+      "atlasKey": "player",
+      "multiatlasJson": "assets/skins/redjersey/player.json",
+      "multiatlasBase": "assets/skins/redjersey"
+    },
+    {
+      "id": "blackjersey",
+      "name": "Black Jersey",
+      "rarity": "rare",
+      "priceCoins": 3500,
+      "preview": "",
+      "atlasKey": "player",
+      "multiatlasJson": "assets/skins/blackjersey/player.json",
+      "multiatlasBase": "assets/skins/blackjersey"
+    },
+    {
+      "id": "probasketball",
+      "name": "Pro Basketball",
+      "rarity": "legendary",
+      "priceCoins": 15000,
+      "preview": "",
+      "atlasKey": "player",
+      "multiatlasJson": "assets/skins/probasketball/player.json",
+      "multiatlasBase": "assets/skins/probasketball"
+    },
+    {
+      "id": "playerhat",
+      "name": "Player Hat",
+      "rarity": "common",
+      "priceCoins": 500,
+      "preview": "",
+      "atlasKey": "player",
+      "multiatlasJson": "assets/skins/playerhat/player.json",
+      "multiatlasBase": "assets/skins/playerhat"
+    },
+    {
+      "id": "skin_mock_1",
+      "name": "Purple Storm",
+      "rarity": "rare",
+      "priceCoins": 3500,
+      "preview": "",
+      "atlasKey": "player",
+      "multiatlasJson": "assets/skins/default/player.json",
+      "multiatlasBase": "assets/skins/default"
+    },
+    {
+      "id": "skin_mock_2",
+      "name": "Cyber Ninja",
+      "rarity": "epic",
+      "priceCoins": 8000,
+      "preview": "",
+      "atlasKey": "player",
+      "multiatlasJson": "assets/skins/default/player.json",
+      "multiatlasBase": "assets/skins/default"
+    },
+    {
+      "id": "skin_mock_3",
+      "name": "Diamond",
+      "rarity": "legendary",
+      "priceCoins": 15000,
+      "preview": "",
+      "atlasKey": "player",
+      "multiatlasJson": "assets/skins/default/player.json",
+      "multiatlasBase": "assets/skins/default"
+    },
+    {
+      "id": "skin_mock_4",
+      "name": "Neon Rider",
+      "rarity": "common",
+      "priceCoins": 500,
+      "preview": "",
+      "atlasKey": "player",
+      "multiatlasJson": "assets/skins/default/player.json",
+      "multiatlasBase": "assets/skins/default"
+    },
+    {
+      "id": "skin_mock_5",
+      "name": "Shadow Ops",
+      "rarity": "rare",
+      "priceCoins": 2500,
+      "preview": "",
+      "atlasKey": "player",
+      "multiatlasJson": "assets/skins/default/player.json",
+      "multiatlasBase": "assets/skins/default"
+    },
+    {
+      "id": "skin_mock_6",
+      "name": "Magma Core",
+      "rarity": "epic",
+      "priceCoins": 9000,
+      "preview": "",
+      "atlasKey": "player",
+      "multiatlasJson": "assets/skins/default/player.json",
+      "multiatlasBase": "assets/skins/default"
+    },
+    {
+      "id": "skin_mock_7",
+      "name": "Frostbite",
+      "rarity": "legendary",
+      "priceCoins": 20000,
+      "preview": "",
+      "atlasKey": "player",
+      "multiatlasJson": "assets/skins/default/player.json",
+      "multiatlasBase": "assets/skins/default"
+    },
+    {
+      "id": "skin_mock_8",
+      "name": "Golden Boy",
+      "rarity": "rare",
+      "priceCoins": 4500,
+      "preview": "",
+      "atlasKey": "player",
+      "multiatlasJson": "assets/skins/default/player.json",
+      "multiatlasBase": "assets/skins/default"
+    },
+    {
+      "id": "skin_mock_9",
+      "name": "Toxic Hazard",
+      "rarity": "common",
+      "priceCoins": 800,
+      "preview": "",
+      "atlasKey": "player",
+      "multiatlasJson": "assets/skins/default/player.json",
+      "multiatlasBase": "assets/skins/default"
+    },
+    {
+      "id": "skin_mock_10",
+      "name": "Void Walker",
+      "rarity": "epic",
+      "priceCoins": 12000,
+      "preview": "",
+      "atlasKey": "player",
+      "multiatlasJson": "assets/skins/default/player.json",
+      "multiatlasBase": "assets/skins/default"
+    },
+    {
+      "id": "skin_mock_11",
+      "name": "Cyber Glitch",
+      "rarity": "blackmarket",
+      "priceCoins": 30000,
+      "preview": "",
+      "atlasKey": "player",
+      "multiatlasJson": "assets/skins/default/player.json",
+      "multiatlasBase": "assets/skins/default"
+    }
+  ]
+}

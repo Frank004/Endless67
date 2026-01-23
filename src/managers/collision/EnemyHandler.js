@@ -44,6 +44,10 @@ export class EnemyHandler {
             return;
         }
 
+        if (enemy.attack) {
+            enemy.attack();
+        }
+
         // Emit damage event
         EventBus.emit(Events.PLAYER_HIT);
 

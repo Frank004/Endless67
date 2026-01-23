@@ -70,7 +70,7 @@ describe('SlotGenerator edge diagnostics', () => {
             registry: { get: jest.fn(() => false) },
             player: { y: -10000 }, // fuerza generación inmediata
             physics: { add: { staticSprite: jest.fn(() => ({ setDisplaySize: jest.fn().mockReturnThis(), refreshBody: jest.fn().mockReturnThis() })) } },
-            levelManager: { spawnPlatform: jest.fn(() => ({ active: true })) },
+            levelManager: { spawnPlatform: jest.fn(() => ({ active: true })), cleanupOnly: jest.fn() },
             platforms: { add: jest.fn(), contains: jest.fn(() => false) },
             powerupPool: { spawn: jest.fn(() => ({})) },
             coinPool: { spawn: jest.fn(() => ({})) },

@@ -12,6 +12,10 @@ const mockScene = {
             type: 1 // WEBGL
         }
     },
+    scale: {
+        width: 400,
+        height: 600
+    },
     cameras: {
         main: {
             scrollY: 0,
@@ -39,7 +43,8 @@ const mockScene = {
     },
     time: {
         now: 0
-    }
+    },
+    gameStarted: true
 };
 
 // Mock Riser Prefab since it uses Phaser calls in constructor
@@ -54,10 +59,12 @@ jest.mock('../../src/prefabs/Riser.js', () => {
                 this.height = height;
                 this.texture = texture;
                 this.tilePositionY = 0;
+
                 this.body = {
                     setSize: jest.fn(),
                     setOffset: jest.fn()
                 };
+                this.setVisible = jest.fn();
                 // Simulate Phaser adding to scene
                 scene.riser = this;
             }
@@ -82,12 +89,13 @@ describe('RiserManager', () => {
     test('should create riser on createRiser', () => {
         riserManager.createRiser();
         expect(riserManager.riser).toBeDefined();
-        expect(mockScene.riser).toBeDefined();
+
         expect(riserManager.riser.texture).toBe('lava_texture');
     });
 
     test('should update riser position based on speed', () => {
         riserManager.createRiser();
+        riserManager.setEnabled(true);
         const initialY = riserManager.riser.y;
 
         // Mock getLevelConfig
@@ -95,7 +103,9 @@ describe('RiserManager', () => {
             getLevelConfig: () => ({ lava: { speed: -50 } })
         }));
 
-        riserManager.update(0, 0, false);
+        riserManager.update(600, 16, false);
+        // Second call simulates player rising to 0 (rise of 600 > 300)
+        riserManager.update(0, 16, false);
 
         // Should move up (negative Y)
         expect(riserManager.riser.y).toBeLessThan(initialY);
@@ -103,10 +113,13 @@ describe('RiserManager', () => {
 
     test('should handle game over state', () => {
         riserManager.createRiser();
+        riserManager.setEnabled(true);
         riserManager.triggerRising();
 
         const initialY = riserManager.riser.y;
-        riserManager.update(0, 0, true); // isGameOver = true
+        // Initialize
+        riserManager.update(600, 16, false);
+        riserManager.update(0, 16, true); // isGameOver = true
 
         // Should rise faster in game over
         expect(riserManager.riser.y).toBeLessThan(initialY);

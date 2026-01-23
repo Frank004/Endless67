@@ -99,7 +99,8 @@ export class UIHelpers {
 
         // Text
         const buttonText = scene.add.text(15, 0, text, {
-            fontSize: fontSize, color: textColor, fontStyle: 'bold'
+            fontSize: fontSize, color: textColor, fontFamily: 'Pixelify Sans',
+            stroke: '#000000', strokeThickness: 4
         }).setOrigin(0.5);
 
         // Icon
@@ -144,7 +145,8 @@ export class UIHelpers {
 
         const container = scene.add.container(x, y).setDepth(depth).setScrollFactor(0);
         const buttonText = scene.add.text(0, 0, text, {
-            fontSize: fontSize, color: textColor, fontStyle: 'bold'
+            fontSize: fontSize, color: textColor, fontFamily: 'Pixelify Sans',
+            stroke: '#000000', strokeThickness: 4
         }).setOrigin(0.5);
 
         const naturalWidth = buttonText.width + padding.x * 2;
@@ -161,5 +163,20 @@ export class UIHelpers {
         UIHelpers.setupButtonBehavior(buttonObj, { textColor, hoverColor, callback });
 
         return buttonObj;
+    }
+
+    /**
+     * Format large numbers into compact strings (e.g. 1.2k, 1M)
+     * @param {number} amount - The numeric amount
+     * @returns {string} - Formatted string
+     */
+    static formatCurrency(amount) {
+        if (amount >= 1000000) {
+            return (amount / 1000000).toFixed(1).replace(/\.0$/, '') + 'M';
+        }
+        if (amount >= 1000) {
+            return (amount / 1000).toFixed(1).replace(/\.0$/, '') + 'k';
+        }
+        return (amount || 0).toLocaleString();
     }
 }

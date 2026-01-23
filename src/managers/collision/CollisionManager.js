@@ -65,19 +65,21 @@ export class CollisionManager {
         this.scene.physics.add.overlap(player, riser, this.playerHandler.touchRiser, null, this.playerHandler);
         
         // --- STAGE PROPS ---
-        // Trashcan collision (only if collision is enabled)
-        if (this.scene.stageProps && this.scene.stageProps.rightProp) {
-            this.scene.physics.add.overlap(
-                player,
-                this.scene.stageProps.rightProp,
-                this.playerHandler.handleTrashcanCollision,
-                (player, trashcan) => {
-                    if (!trashcan) return false;
-                    if (trashcan.isCollisionEnabled) return trashcan.isCollisionEnabled();
-                    return trashcan.getData('collisionEnabled') === true;
-                },
-                this.playerHandler
-            );
+        // Trashcan collision (handled by InteractableManager)
+        if (this.scene.stageProps && this.scene.stageProps.trashcan && this.scene.interactableManager) {
+            const trashcanInteractable = this.scene.interactableManager.get('trashcan');
+            if (trashcanInteractable) {
+                this.scene.physics.add.overlap(
+                    player,
+                    this.scene.stageProps.trashcan,
+                    (player, trashcan) => trashcanInteractable.onCollision(player, trashcan),
+                    (player, trashcan) => {
+                        if (!trashcan) return false;
+                        if (trashcan.isCollisionEnabled) return trashcan.isCollisionEnabled();
+                        return trashcan.getData('collisionEnabled') === true;
+                    }
+                );
+            }
         }
         if (this.scene.stageProps && this.scene.stageProps.tires) {
             this.scene.physics.add.overlap(

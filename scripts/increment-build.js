@@ -28,11 +28,13 @@ try {
     let indexHtml = fs.readFileSync(indexHtmlPath, 'utf8');
     
     // Reemplazar build numbers en cache-busters (formato ?b=123)
-    indexHtml = indexHtml.replace(/\?b=\d+/g, `?b=${newBuild}`);
+    indexHtml = indexHtml.replace(/\?b=\d+(-\d+)?/g, `?b=${newBuild}`);
     
     // También actualizar formato antiguo ?v=0.0.35 si existe
     indexHtml = indexHtml.replace(/css\/style\.css\?v=[\d.]+/g, `css/style.css?b=${newBuild}`);
     indexHtml = indexHtml.replace(/src\/main\.js\?v=[\d.]+/g, `src/main.js?b=${newBuild}`);
+    // Actualizar formato timestamp ?v=20260111-2215
+    indexHtml = indexHtml.replace(/src\/main\.js\?v=\d{8}-\d{4}/g, `src/main.js?b=${newBuild}`);
     
     fs.writeFileSync(indexHtmlPath, indexHtml, 'utf8');
     

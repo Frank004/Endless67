@@ -1,3 +1,5 @@
+import { ASSETS } from '../../../config/AssetKeys.js';
+
 export class ControlsUI {
     constructor(scene) {
         this.scene = scene;
@@ -14,18 +16,28 @@ export class ControlsUI {
         const centerX = scene.cameras.main.centerX;
 
         // Joystick UI (created here but controlled by InputManager)
-        this.joystickBase = scene.add.image(0, 0, 'joystick_base').setAlpha(0.5).setScrollFactor(0).setDepth(999).setVisible(false);
-        this.joystickKnob = scene.add.image(0, 0, 'joystick_knob').setAlpha(0.8).setScrollFactor(0).setDepth(1000).setVisible(false);
+        this.joystickBase = scene.add.image(0, 0, ASSETS.JOYSTICK_BASE).setAlpha(0.5).setScrollFactor(0).setDepth(999).setVisible(false);
+        this.joystickKnob = scene.add.image(0, 0, ASSETS.JOYSTICK_KNOB).setAlpha(0.8).setScrollFactor(0).setDepth(1000).setVisible(false);
 
         // Alias for scene compatibility
         scene.joystickBase = this.joystickBase;
         scene.joystickKnob = this.joystickKnob;
 
-        // Positions based on the 32px Floor at the bottom of the gameplay stage
-        // Ad banner está arriba, así que el floor va al fondo sin restar adHeight
+        // Positions based on player position at start
+        // Calculate player spawn position (same as in LayoutConfig)
         const floorHeight = 32;
-        const effectiveHeight = scene.scale.height; // Ad banner está arriba, no resta altura
-        const controlY = effectiveHeight - (floorHeight / 2); // Center of the 32px floor
+        const effectiveHeight = scene.scale.height;
+        const floorY = effectiveHeight - floorHeight;
+        const playerSpawnY = floorY - 18; // Player spawn Y (centro del player sobre el floor)
+
+        // Calculate original control text position (center of floor)
+        const originalControlY = effectiveHeight - (floorHeight / 2);
+
+        // Calculate distance from player to original text position
+        const distanceFromPlayer = originalControlY - playerSpawnY; // ~34px
+
+        // New position: above player with same distance
+        const controlY = playerSpawnY - distanceFromPlayer;
 
         // Mobile Controls UI
         if (isMobile) {
@@ -64,7 +76,7 @@ export class ControlsUI {
 
     showJumpFeedback(x, y) {
         const scene = this.scene;
-        let feedback = scene.add.image(x, y, 'jump_feedback')
+        let feedback = scene.add.image(x, y, ASSETS.JUMP_FEEDBACK)
             .setAlpha(0.8).setDepth(1000).setScrollFactor(0);
         scene.tweens.add({
             targets: feedback,

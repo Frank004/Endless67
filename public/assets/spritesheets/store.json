@@ -1,0 +1,167 @@
+{
+	"textures": [
+		{
+			"image": "store.png",
+			"format": "RGBA8888",
+			"size": {
+				"w": 366,
+				"h": 1014
+			},
+			"scale": 1,
+			"frames": [
+				{
+					"filename": "storebg.png",
+					"rotated": false,
+					"trimmed": false,
+					"sourceSize": {
+						"w": 360,
+						"h": 640
+					},
+					"spriteSourceSize": {
+						"x": 0,
+						"y": 0,
+						"w": 360,
+						"h": 640
+					},
+					"frame": {
+						"x": 1,
+						"y": 1,
+						"w": 360,
+						"h": 640
+					}
+				},
+				{
+					"filename": "cardbox-blackmarket.png",
+					"rotated": false,
+					"trimmed": false,
+					"sourceSize": {
+						"w": 120,
+						"h": 184
+					},
+					"spriteSourceSize": {
+						"x": 0,
+						"y": 0,
+						"w": 120,
+						"h": 184
+					},
+					"frame": {
+						"x": 1,
+						"y": 643,
+						"w": 120,
+						"h": 184
+					}
+				},
+				{
+					"filename": "cardbox-common.png",
+					"rotated": false,
+					"trimmed": false,
+					"sourceSize": {
+						"w": 120,
+						"h": 184
+					},
+					"spriteSourceSize": {
+						"x": 0,
+						"y": 0,
+						"w": 120,
+						"h": 184
+					},
+					"frame": {
+						"x": 123,
+						"y": 643,
+						"w": 120,
+						"h": 184
+					}
+				},
+				{
+					"filename": "cardbox-epic.png",
+					"rotated": false,
+					"trimmed": false,
+					"sourceSize": {
+						"w": 120,
+						"h": 184
+					},
+					"spriteSourceSize": {
+						"x": 0,
+						"y": 0,
+						"w": 120,
+						"h": 184
+					},
+					"frame": {
+						"x": 245,
+						"y": 643,
+						"w": 120,
+						"h": 184
+					}
+				},
+				{
+					"filename": "cardbox-legend.png",
+					"rotated": false,
+					"trimmed": false,
+					"sourceSize": {
+						"w": 120,
+						"h": 184
+					},
+					"spriteSourceSize": {
+						"x": 0,
+						"y": 0,
+						"w": 120,
+						"h": 184
+					},
+					"frame": {
+						"x": 1,
+						"y": 829,
+						"w": 120,
+						"h": 184
+					}
+				},
+				{
+					"filename": "cardbox-rare.png",
+					"rotated": false,
+					"trimmed": false,
+					"sourceSize": {
+						"w": 120,
+						"h": 184
+					},
+					"spriteSourceSize": {
+						"x": 0,
+						"y": 0,
+						"w": 120,
+						"h": 184
+					},
+					"frame": {
+						"x": 123,
+						"y": 829,
+						"w": 120,
+						"h": 184
+					}
+				},
+				{
+					"filename": "lock.png",
+					"rotated": false,
+					"trimmed": false,
+					"sourceSize": {
+						"w": 17,
+						"h": 21
+					},
+					"spriteSourceSize": {
+						"x": 0,
+						"y": 0,
+						"w": 17,
+						"h": 21
+					},
+					"frame": {
+						"x": 245,
+						"y": 829,
+						"w": 17,
+						"h": 21
+					}
+				}
+			]
+		}
+	],
+	"meta": {
+		"app": "https://www.codeandweb.com/texturepacker",
+		"version": "3.0",
+		"smartupdate": "$TexturePacker:SmartUpdate:046bb07f9edb87de8cda872d20e38afa:02af8b0bb974ff968a9f6b0ce1377490:63f3262fe02996a7d1c4de18e76b3514$"
+	}
+}

@@ -7,7 +7,7 @@ import { GameOverMenu } from '../../src/managers/ui/menus/GameOverMenu.js';
 import EventBus, { Events } from '../../src/core/EventBus.js';
 import GameState from '../../src/core/GameState.js';
 import { UIHelpers } from '../../src/utils/UIHelpers.js';
-import { InputManager } from '../../src/managers/input/InputManager.js';
+import { InputSystem } from '../../src/core/systems/InputSystem.js';
 
 // Mock ScoreManager
 jest.mock('../../src/managers/gameplay/ScoreManager.js', () => ({
@@ -23,15 +23,17 @@ jest.mock('../../src/utils/UIHelpers.js', () => ({
 }));
 
 // Mock InputManager
-jest.mock('../../src/managers/input/InputManager.js', () => ({
-    InputManager: jest.fn().mockImplementation(() => ({
+jest.mock('../../src/core/systems/InputSystem.js', () => ({
+    InputSystem: jest.fn().mockImplementation(() => ({
         setupInputs: jest.fn(),
         update: jest.fn(),
         toggleJoystickVisual: jest.fn(),
         createMobileTextInput: jest.fn(),
         createTextInputListener: jest.fn(),
         removeTextInputListener: jest.fn(),
-        removeMobileTextInput: jest.fn()
+        removeTextInputListener: jest.fn(),
+        removeMobileTextInput: jest.fn(),
+        setExtendedCooldown: jest.fn()
     }))
 }));
 
@@ -139,13 +141,17 @@ describe('Menu Navigation Integration', () => {
             createMobileTextInput: jest.fn(),
             createTextInputListener: jest.fn(),
             removeTextInputListener: jest.fn(),
-            removeMobileTextInput: jest.fn()
+            removeMobileTextInput: jest.fn(),
+            setExtendedCooldown: jest.fn()
         };
 
         // Spy on EventBus
         jest.spyOn(EventBus, 'on');
         jest.spyOn(EventBus, 'off');
         jest.spyOn(EventBus, 'emit');
+
+        // Mock time.delayedCall
+        mockScene.time.delayedCall = jest.fn((delay, callback) => callback());
     });
 
     afterEach(() => {
@@ -155,7 +161,7 @@ describe('Menu Navigation Integration', () => {
 
     describe('MainMenu', () => {
         let mainMenu;
-        let startBtnContainer, leaderboardBtnContainer, settingsBtnContainer;
+        let startBtnContainer, leaderboardBtnContainer, storeBtnContainer, settingsBtnContainer;
 
         beforeEach(() => {
             mainMenu = new MainMenu();
@@ -171,11 +177,13 @@ describe('Menu Navigation Integration', () => {
             // Specific mocks for buttons
             startBtnContainer = { ...mockContainer };
             leaderboardBtnContainer = { ...mockContainer };
+            storeBtnContainer = { ...mockContainer };
             settingsBtnContainer = { ...mockContainer };
 
             UIHelpers.createTextButton
                 .mockImplementationOnce((s, x, y, t, o) => createMockButtonObj(startBtnContainer, mockText, null, o?.callback))
                 .mockImplementationOnce((s, x, y, t, o) => createMockButtonObj(leaderboardBtnContainer, mockText, null, o?.callback))
+                .mockImplementationOnce((s, x, y, t, o) => createMockButtonObj(storeBtnContainer, mockText, null, o?.callback))
                 .mockImplementationOnce((s, x, y, t, o) => createMockButtonObj(settingsBtnContainer, mockText, null, o?.callback));
 
             // For Dev Mode button if needed later
@@ -190,6 +198,9 @@ describe('Menu Navigation Integration', () => {
             EventBus.emit(Events.UI_NAV_DOWN);
             expect(leaderboardBtnContainer.setScale).toHaveBeenCalledWith(1.1);
             expect(startBtnContainer.setScale).toHaveBeenCalledWith(1.0); // Deselected
+
+            EventBus.emit(Events.UI_NAV_DOWN);
+            expect(storeBtnContainer.setScale).toHaveBeenCalledWith(1.1);
 
             EventBus.emit(Events.UI_NAV_DOWN);
             expect(settingsBtnContainer.setScale).toHaveBeenCalledWith(1.1);

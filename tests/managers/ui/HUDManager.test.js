@@ -55,7 +55,7 @@ describe('HUDManager', () => {
     test('updateScore should update text', () => {
         hud.create();
         hud.updateScore(500);
-        expect(mockText.setText).toHaveBeenCalledWith('SCORE: 500');
+        expect(mockText.setText).toHaveBeenCalledWith('COINS: 500');
     });
 
     test('updateHeight should update text', () => {
@@ -66,7 +66,7 @@ describe('HUDManager', () => {
 
     test('showGameOver should show game over text', () => {
         hud.create();
-        hud.showGameOver({ score: 999 });
+        hud.showGameOver({ height: 999 });
         expect(mockText.setVisible).toHaveBeenCalledWith(true);
         expect(mockText.setText).toHaveBeenCalledWith(expect.stringContaining('GAME OVER'));
         expect(mockText.setText).toHaveBeenCalledWith(expect.stringContaining('999'));

@@ -1,0 +1,31 @@
+{
+    "section1": {
+        "files": [
+            {
+                "type": "multiatlas",
+                "url": "public/assets/spritesheets/coins.json",
+                "path": "public/assets/spritesheets",
+                "key": "coins"
+            },
+            {
+                "type": "multiatlas",
+                "url": "public/assets/spritesheets/store.json",
+                "path": "public/assets/spritesheets",
+                "key": "store"
+            },
+            {
+                "url": "public/assets/the-vault-store.png",
+                "type": "image",
+                "key": "the-vault-store"
+            }
+        ]
+    },
+    "meta": {
+        "app": "Phaser Editor 2D - Asset Pack Editor",
+        "contentType": "phasereditor2d.pack.core.AssetContentType",
+        "url": "https://phasereditor2d.com",
+        "version": 2,
+        "showAllFilesInBlocks": false,
+        "visible": true
+    }
+}

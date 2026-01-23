@@ -1,4 +1,5 @@
 import { WALLS } from '../config/GameConstants.js';
+import { RiserVisualManager } from '../managers/gameplay/RiserVisualManager.js';
 
 export class Riser extends Phaser.GameObjects.TileSprite {
     constructor(scene, x, y, width, height, textureKey, pipelineName = 'RiserPipeline') {
@@ -29,9 +30,18 @@ export class Riser extends Phaser.GameObjects.TileSprite {
         // Offset negativo en X para centrar, offset positivo en Y para bajar la colisión
         this.body.setOffset(-waveOffset, bodyOffsetY);
 
-        // Pipeline - use the specified pipeline for this riser type
-        if (scene.game.renderer.type === Phaser.WEBGL) {
-            this.setPostPipeline(pipelineName);
+        // Visual Setup (Handled by Manager)
+        this.effect = RiserVisualManager.setup(scene, this, textureKey, pipelineName);
+    }
+
+    preUpdate(time, delta) {
+        if (super.preUpdate) {
+            super.preUpdate(time, delta);
+        }
+
+        // Update visual effect if present
+        if (this.effect && this.effect.update) {
+            this.effect.update(delta);
         }
     }
 }

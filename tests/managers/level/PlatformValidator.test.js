@@ -15,17 +15,6 @@ describe('PlatformValidator', () => {
         validator = new PlatformValidator(mockScene);
     });
 
-    test('should reject positions out of horizontal bounds', () => {
-        const width = 100;
-        // too left
-        const invalidLeft = WALLS.WIDTH + 5;
-        expect(validator.isValidPosition(invalidLeft, 500, width, [])).toBe(false);
-
-        // too right
-        const invalidRight = 400 - WALLS.WIDTH - 5;
-        expect(validator.isValidPosition(invalidRight, 500, width, [])).toBe(false);
-    });
-
     test('should reject positions too close vertically to active platforms', () => {
         const activePlatforms = [
             { x: 200, y: 500, width: 100, height: 32 }

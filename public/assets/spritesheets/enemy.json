@@ -1,0 +1,1007 @@
+{
+	"textures": [
+		{
+			"image": "enemy.png",
+			"format": "RGBA8888",
+			"size": {
+				"w": 278,
+				"h": 64
+			},
+			"scale": 1,
+			"frames": [
+				{
+					"filename": "jumper-jump2.png",
+					"rotated": false,
+					"trimmed": true,
+					"sourceSize": {
+						"w": 29,
+						"h": 24
+					},
+					"spriteSourceSize": {
+						"x": 6,
+						"y": 2,
+						"w": 17,
+						"h": 21
+					},
+					"frame": {
+						"x": 1,
+						"y": 1,
+						"w": 17,
+						"h": 21
+					}
+				},
+				{
+					"filename": "jumper-jump3.png",
+					"rotated": false,
+					"trimmed": true,
+					"sourceSize": {
+						"w": 29,
+						"h": 24
+					},
+					"spriteSourceSize": {
+						"x": 7,
+						"y": 0,
+						"w": 15,
+						"h": 20
+					},
+					"frame": {
+						"x": 1,
+						"y": 24,
+						"w": 15,
+						"h": 20
+					}
+				},
+				{
+					"filename": "jumper-run2.png",
+					"rotated": false,
+					"trimmed": true,
+					"sourceSize": {
+						"w": 29,
+						"h": 24
+					},
+					"spriteSourceSize": {
+						"x": 3,
+						"y": 7,
+						"w": 23,
+						"h": 17
+					},
+					"frame": {
+						"x": 1,
+						"y": 46,
+						"w": 23,
+						"h": 17
+					}
+				},
+				{
+					"filename": "jumper-idle1.png",
+					"rotated": false,
+					"trimmed": true,
+					"sourceSize": {
+						"w": 29,
+						"h": 24
+					},
+					"spriteSourceSize": {
+						"x": 4,
+						"y": 5,
+						"w": 21,
+						"h": 19
+					},
+					"frame": {
+						"x": 18,
+						"y": 24,
+						"w": 21,
+						"h": 19
+					}
+				},
+				{
+					"filename": "patrol-die5.png",
+					"rotated": false,
+					"trimmed": true,
+					"sourceSize": {
+						"w": 32,
+						"h": 25
+					},
+					"spriteSourceSize": {
+						"x": 0,
+						"y": 7,
+						"w": 31,
+						"h": 18
+					},
+					"frame": {
+						"x": 26,
+						"y": 45,
+						"w": 31,
+						"h": 18
+					}
+				},
+				{
+					"filename": "jumper-jump6.png",
+					"rotated": false,
+					"trimmed": true,
+					"sourceSize": {
+						"w": 29,
+						"h": 24
+					},
+					"spriteSourceSize": {
+						"x": 4,
+						"y": 4,
+						"w": 21,
+						"h": 19
+					},
+					"frame": {
+						"x": 20,
+						"y": 1,
+						"w": 21,
+						"h": 19
+					}
+				},
+				{
+					"filename": "jumper-jump7.png",
+					"rotated": false,
+					"trimmed": true,
+					"sourceSize": {
+						"w": 29,
+						"h": 24
+					},
+					"spriteSourceSize": {
+						"x": 4,
+						"y": 4,
+						"w": 21,
+						"h": 19
+					},
+					"frame": {
+						"x": 20,
+						"y": 1,
+						"w": 21,
+						"h": 19
+					}
+				},
+				{
+					"filename": "jumper-run1.png",
+					"rotated": false,
+					"trimmed": true,
+					"sourceSize": {
+						"w": 29,
+						"h": 24
+					},
+					"spriteSourceSize": {
+						"x": 4,
+						"y": 5,
+						"w": 21,
+						"h": 19
+					},
+					"frame": {
+						"x": 41,
+						"y": 22,
+						"w": 21,
+						"h": 19
+					}
+				},
+				{
+					"filename": "patrol-jump4.png",
+					"rotated": false,
+					"trimmed": true,
+					"sourceSize": {
+						"w": 32,
+						"h": 25
+					},
+					"spriteSourceSize": {
+						"x": 7,
+						"y": 5,
+						"w": 17,
+						"h": 19
+					},
+					"frame": {
+						"x": 43,
+						"y": 1,
+						"w": 17,
+						"h": 19
+					}
+				},
+				{
+					"filename": "patrol-jump5.png",
+					"rotated": false,
+					"trimmed": true,
+					"sourceSize": {
+						"w": 32,
+						"h": 25
+					},
+					"spriteSourceSize": {
+						"x": 7,
+						"y": 1,
+						"w": 17,
+						"h": 19
+					},
+					"frame": {
+						"x": 43,
+						"y": 1,
+						"w": 17,
+						"h": 19
+					}
+				},
+				{
+					"filename": "patrol-run5.png",
+					"rotated": false,
+					"trimmed": true,
+					"sourceSize": {
+						"w": 32,
+						"h": 25
+					},
+					"spriteSourceSize": {
+						"x": 7,
+						"y": 5,
+						"w": 17,
+						"h": 19
+					},
+					"frame": {
+						"x": 43,
+						"y": 1,
+						"w": 17,
+						"h": 19
+					}
+				},
+				{
+					"filename": "jumper-idle4.png",
+					"rotated": false,
+					"trimmed": true,
+					"sourceSize": {
+						"w": 29,
+						"h": 24
+					},
+					"spriteSourceSize": {
+						"x": 4,
+						"y": 6,
+						"w": 21,
+						"h": 18
+					},
+					"frame": {
+						"x": 62,
+						"y": 1,
+						"w": 21,
+						"h": 18
+					}
+				},
+				{
+					"filename": "patrol-jump8.png",
+					"rotated": false,
+					"trimmed": true,
+					"sourceSize": {
+						"w": 32,
+						"h": 25
+					},
+					"spriteSourceSize": {
+						"x": 5,
+						"y": 6,
+						"w": 21,
+						"h": 18
+					},
+					"frame": {
+						"x": 59,
+						"y": 43,
+						"w": 21,
+						"h": 18
+					}
+				},
+				{
+					"filename": "patrol-run6.png",
+					"rotated": false,
+					"trimmed": true,
+					"sourceSize": {
+						"w": 32,
+						"h": 25
+					},
+					"spriteSourceSize": {
+						"x": 5,
+						"y": 6,
+						"w": 21,
+						"h": 18
+					},
+					"frame": {
+						"x": 59,
+						"y": 43,
+						"w": 21,
+						"h": 18
+					}
+				},
+				{
+					"filename": "patrol-idle1.png",
+					"rotated": false,
+					"trimmed": true,
+					"sourceSize": {
+						"w": 32,
+						"h": 25
+					},
+					"spriteSourceSize": {
+						"x": 5,
+						"y": 8,
+						"w": 21,
+						"h": 17
+					},
+					"frame": {
+						"x": 64,
+						"y": 21,
+						"w": 21,
+						"h": 17
+					}
+				},
+				{
+					"filename": "patrol-jump7.png",
+					"rotated": false,
+					"trimmed": true,
+					"sourceSize": {
+						"w": 32,
+						"h": 25
+					},
+					"spriteSourceSize": {
+						"x": 5,
+						"y": 8,
+						"w": 21,
+						"h": 17
+					},
+					"frame": {
+						"x": 64,
+						"y": 21,
+						"w": 21,
+						"h": 17
+					}
+				},
+				{
+					"filename": "patrol-run1.png",
+					"rotated": false,
+					"trimmed": true,
+					"sourceSize": {
+						"w": 32,
+						"h": 25
+					},
+					"spriteSourceSize": {
+						"x": 5,
+						"y": 8,
+						"w": 21,
+						"h": 17
+					},
+					"frame": {
+						"x": 64,
+						"y": 21,
+						"w": 21,
+						"h": 17
+					}
+				},
+				{
+					"filename": "jumper-attack1.png",
+					"rotated": false,
+					"trimmed": true,
+					"sourceSize": {
+						"w": 29,
+						"h": 24
+					},
+					"spriteSourceSize": {
+						"x": 4,
+						"y": 7,
+						"w": 20,
+						"h": 17
+					},
+					"frame": {
+						"x": 85,
+						"y": 1,
+						"w": 20,
+						"h": 17
+					}
+				},
+				{
+					"filename": "patrol-die4.png",
+					"rotated": false,
+					"trimmed": true,
+					"sourceSize": {
+						"w": 32,
+						"h": 25
+					},
+					"spriteSourceSize": {
+						"x": 0,
+						"y": 9,
+						"w": 31,
+						"h": 16
+					},
+					"frame": {
+						"x": 82,
+						"y": 40,
+						"w": 31,
+						"h": 16
+					}
+				},
+				{
+					"filename": "jumper-idle2.png",
+					"rotated": false,
+					"trimmed": true,
+					"sourceSize": {
+						"w": 29,
+						"h": 24
+					},
+					"spriteSourceSize": {
+						"x": 0,
+						"y": 20,
+						"w": 29,
+						"h": 4
+					},
+					"frame": {
+						"x": 82,
+						"y": 58,
+						"w": 29,
+						"h": 4
+					}
+				},
+				{
+					"filename": "patrol-attack4.png",
+					"rotated": false,
+					"trimmed": true,
+					"sourceSize": {
+						"w": 32,
+						"h": 25
+					},
+					"spriteSourceSize": {
+						"x": 5,
+						"y": 9,
+						"w": 27,
+						"h": 16
+					},
+					"frame": {
+						"x": 87,
+						"y": 20,
+						"w": 27,
+						"h": 16
+					}
+				},
+				{
+					"filename": "jumper-jump5.png",
+					"rotated": false,
+					"trimmed": true,
+					"sourceSize": {
+						"w": 29,
+						"h": 24
+					},
+					"spriteSourceSize": {
+						"x": 3,
+						"y": 8,
+						"w": 23,
+						"h": 16
+					},
+					"frame": {
+						"x": 107,
+						"y": 1,
+						"w": 23,
+						"h": 16
+					}
+				},
+				{
+					"filename": "jumper-run3.png",
+					"rotated": false,
+					"trimmed": true,
+					"sourceSize": {
+						"w": 29,
+						"h": 24
+					},
+					"spriteSourceSize": {
+						"x": 3,
+						"y": 8,
+						"w": 23,
+						"h": 16
+					},
+					"frame": {
+						"x": 107,
+						"y": 1,
+						"w": 23,
+						"h": 16
+					}
+				},
+				{
+					"filename": "jumper-attack6.png",
+					"rotated": false,
+					"trimmed": true,
+					"sourceSize": {
+						"w": 29,
+						"h": 24
+					},
+					"spriteSourceSize": {
+						"x": 4,
+						"y": 8,
+						"w": 21,
+						"h": 16
+					},
+					"frame": {
+						"x": 115,
+						"y": 38,
+						"w": 21,
+						"h": 16
+					}
+				},
+				{
+					"filename": "jumper-idle3.png",
+					"rotated": false,
+					"trimmed": true,
+					"sourceSize": {
+						"w": 29,
+						"h": 24
+					},
+					"spriteSourceSize": {
+						"x": 4,
+						"y": 8,
+						"w": 21,
+						"h": 16
+					},
+					"frame": {
+						"x": 116,
+						"y": 19,
+						"w": 21,
+						"h": 16
+					}
+				},
+				{
+					"filename": "patrol-idle4.png",
+					"rotated": false,
+					"trimmed": true,
+					"sourceSize": {
+						"w": 32,
+						"h": 25
+					},
+					"spriteSourceSize": {
+						"x": 5,
+						"y": 9,
+						"w": 21,
+						"h": 16
+					},
+					"frame": {
+						"x": 132,
+						"y": 1,
+						"w": 21,
+						"h": 16
+					}
+				},
+				{
+					"filename": "patrol-die3.png",
+					"rotated": false,
+					"trimmed": true,
+					"sourceSize": {
+						"w": 32,
+						"h": 25
+					},
+					"spriteSourceSize": {
+						"x": 1,
+						"y": 10,
+						"w": 29,
+						"h": 15
+					},
+					"frame": {
+						"x": 138,
+						"y": 37,
+						"w": 29,
+						"h": 15
+					}
+				},
+				{
+					"filename": "patrol-die2.png",
+					"rotated": false,
+					"trimmed": true,
+					"sourceSize": {
+						"w": 32,
+						"h": 25
+					},
+					"spriteSourceSize": {
+						"x": 2,
+						"y": 10,
+						"w": 27,
+						"h": 15
+					},
+					"frame": {
+						"x": 139,
+						"y": 19,
+						"w": 27,
+						"h": 15
+					}
+				},
+				{
+					"filename": "jumper-jump1.png",
+					"rotated": false,
+					"trimmed": true,
+					"sourceSize": {
+						"w": 29,
+						"h": 24
+					},
+					"spriteSourceSize": {
+						"x": 3,
+						"y": 9,
+						"w": 23,
+						"h": 15
+					},
+					"frame": {
+						"x": 155,
+						"y": 1,
+						"w": 23,
+						"h": 15
+					}
+				},
+				{
+					"filename": "patrol-jump1.png",
+					"rotated": false,
+					"trimmed": true,
+					"sourceSize": {
+						"w": 32,
+						"h": 25
+					},
+					"spriteSourceSize": {
+						"x": 4,
+						"y": 10,
+						"w": 23,
+						"h": 15
+					},
+					"frame": {
+						"x": 168,
+						"y": 18,
+						"w": 23,
+						"h": 15
+					}
+				},
+				{
+					"filename": "patrol-run2.png",
+					"rotated": false,
+					"trimmed": true,
+					"sourceSize": {
+						"w": 32,
+						"h": 25
+					},
+					"spriteSourceSize": {
+						"x": 4,
+						"y": 10,
+						"w": 23,
+						"h": 15
+					},
+					"frame": {
+						"x": 168,
+						"y": 18,
+						"w": 23,
+						"h": 15
+					}
+				},
+				{
+					"filename": "patrol-die1.png",
+					"rotated": false,
+					"trimmed": true,
+					"sourceSize": {
+						"w": 32,
+						"h": 25
+					},
+					"spriteSourceSize": {
+						"x": 4,
+						"y": 10,
+						"w": 22,
+						"h": 15
+					},
+					"frame": {
+						"x": 180,
+						"y": 1,
+						"w": 22,
+						"h": 15
+					}
+				},
+				{
+					"filename": "jumper-attack2.png",
+					"rotated": false,
+					"trimmed": true,
+					"sourceSize": {
+						"w": 29,
+						"h": 24
+					},
+					"spriteSourceSize": {
+						"x": 2,
+						"y": 9,
+						"w": 21,
+						"h": 15
+					},
+					"frame": {
+						"x": 169,
+						"y": 35,
+						"w": 21,
+						"h": 15
+					}
+				},
+				{
+					"filename": "jumper-jump4.png",
+					"rotated": false,
+					"trimmed": true,
+					"sourceSize": {
+						"w": 29,
+						"h": 24
+					},
+					"spriteSourceSize": {
+						"x": 3,
+						"y": 0,
+						"w": 22,
+						"h": 10
+					},
+					"frame": {
+						"x": 169,
+						"y": 52,
+						"w": 22,
+						"h": 10
+					}
+				},
+				{
+					"filename": "patrol-idle2.png",
+					"rotated": false,
+					"trimmed": true,
+					"sourceSize": {
+						"w": 32,
+						"h": 25
+					},
+					"spriteSourceSize": {
+						"x": 5,
+						"y": 10,
+						"w": 21,
+						"h": 15
+					},
+					"frame": {
+						"x": 192,
+						"y": 35,
+						"w": 21,
+						"h": 15
+					}
+				},
+				{
+					"filename": "patrol-attack3.png",
+					"rotated": false,
+					"trimmed": true,
+					"sourceSize": {
+						"w": 32,
+						"h": 25
+					},
+					"spriteSourceSize": {
+						"x": 6,
+						"y": 11,
+						"w": 26,
+						"h": 14
+					},
+					"frame": {
+						"x": 193,
+						"y": 18,
+						"w": 26,
+						"h": 14
+					}
+				},
+				{
+					"filename": "patrol-attack2.png",
+					"rotated": false,
+					"trimmed": true,
+					"sourceSize": {
+						"w": 32,
+						"h": 25
+					},
+					"spriteSourceSize": {
+						"x": 7,
+						"y": 11,
+						"w": 25,
+						"h": 14
+					},
+					"frame": {
+						"x": 204,
+						"y": 1,
+						"w": 25,
+						"h": 14
+					}
+				},
+				{
+					"filename": "patrol-jump6.png",
+					"rotated": false,
+					"trimmed": true,
+					"sourceSize": {
+						"w": 32,
+						"h": 25
+					},
+					"spriteSourceSize": {
+						"x": 6,
+						"y": 0,
+						"w": 19,
+						"h": 10
+					},
+					"frame": {
+						"x": 193,
+						"y": 52,
+						"w": 19,
+						"h": 10
+					}
+				},
+				{
+					"filename": "jumper-attack4.png",
+					"rotated": false,
+					"trimmed": true,
+					"sourceSize": {
+						"w": 29,
+						"h": 24
+					},
+					"spriteSourceSize": {
+						"x": 6,
+						"y": 10,
+						"w": 23,
+						"h": 14
+					},
+					"frame": {
+						"x": 215,
+						"y": 34,
+						"w": 23,
+						"h": 14
+					}
+				},
+				{
+					"filename": "patrol-attack1.png",
+					"rotated": false,
+					"trimmed": true,
+					"sourceSize": {
+						"w": 32,
+						"h": 25
+					},
+					"spriteSourceSize": {
+						"x": 3,
+						"y": 11,
+						"w": 23,
+						"h": 14
+					},
+					"frame": {
+						"x": 221,
+						"y": 17,
+						"w": 23,
+						"h": 14
+					}
+				},
+				{
+					"filename": "patrol-jump2.png",
+					"rotated": false,
+					"trimmed": true,
+					"sourceSize": {
+						"w": 32,
+						"h": 25
+					},
+					"spriteSourceSize": {
+						"x": 4,
+						"y": 11,
+						"w": 23,
+						"h": 14
+					},
+					"frame": {
+						"x": 231,
+						"y": 1,
+						"w": 23,
+						"h": 14
+					}
+				},
+				{
+					"filename": "patrol-run3.png",
+					"rotated": false,
+					"trimmed": true,
+					"sourceSize": {
+						"w": 32,
+						"h": 25
+					},
+					"spriteSourceSize": {
+						"x": 4,
+						"y": 11,
+						"w": 23,
+						"h": 14
+					},
+					"frame": {
+						"x": 231,
+						"y": 1,
+						"w": 23,
+						"h": 14
+					}
+				},
+				{
+					"filename": "patrol-jump3.png",
+					"rotated": false,
+					"trimmed": true,
+					"sourceSize": {
+						"w": 32,
+						"h": 25
+					},
+					"spriteSourceSize": {
+						"x": 4,
+						"y": 11,
+						"w": 23,
+						"h": 14
+					},
+					"frame": {
+						"x": 240,
+						"y": 33,
+						"w": 23,
+						"h": 14
+					}
+				},
+				{
+					"filename": "patrol-run4.png",
+					"rotated": false,
+					"trimmed": true,
+					"sourceSize": {
+						"w": 32,
+						"h": 25
+					},
+					"spriteSourceSize": {
+						"x": 4,
+						"y": 11,
+						"w": 23,
+						"h": 14
+					},
+					"frame": {
+						"x": 240,
+						"y": 33,
+						"w": 23,
+						"h": 14
+					}
+				},
+				{
+					"filename": "jumper-attack3.png",
+					"rotated": false,
+					"trimmed": true,
+					"sourceSize": {
+						"w": 29,
+						"h": 24
+					},
+					"spriteSourceSize": {
+						"x": 2,
+						"y": 10,
+						"w": 21,
+						"h": 14
+					},
+					"frame": {
+						"x": 246,
+						"y": 17,
+						"w": 21,
+						"h": 14
+					}
+				},
+				{
+					"filename": "jumper-attack5.png",
+					"rotated": false,
+					"trimmed": true,
+					"sourceSize": {
+						"w": 29,
+						"h": 24
+					},
+					"spriteSourceSize": {
+						"x": 5,
+						"y": 10,
+						"w": 21,
+						"h": 14
+					},
+					"frame": {
+						"x": 256,
+						"y": 1,
+						"w": 21,
+						"h": 14
+					}
+				},
+				{
+					"filename": "patrol-idle3.png",
+					"rotated": false,
+					"trimmed": true,
+					"sourceSize": {
+						"w": 32,
+						"h": 25
+					},
+					"spriteSourceSize": {
+						"x": 5,
+						"y": 11,
+						"w": 21,
+						"h": 14
+					},
+					"frame": {
+						"x": 240,
+						"y": 49,
+						"w": 21,
+						"h": 14
+					}
+				}
+			]
+		}
+	],
+	"meta": {
+		"app": "https://www.codeandweb.com/texturepacker",
+		"version": "3.0",
+		"smartupdate": "$TexturePacker:SmartUpdate:b1f6c5e58a047b8756b5e5c28ea78d34:fa41f3edd677e82402f12566dbf435ba:a99356c10d69482e9bee53d25c3d05e1$"
+	}
+}

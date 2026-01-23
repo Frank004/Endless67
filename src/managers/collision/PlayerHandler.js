@@ -1,6 +1,6 @@
 import GameState from '../../core/GameState.js';
 import ScoreManager from '../gameplay/ScoreManager.js';
-import AudioManager from '../audio/AudioManager.js';
+import AudioSystem from '../../core/systems/AudioSystem.js';
 import { PLAYER_CONFIG } from '../../config/PlayerConfig.js';
 import { launchItem } from '../../utils/physicsUtils.js';
 
@@ -11,6 +11,11 @@ export class PlayerHandler {
 
     handlePlatformCollision(player, platform) {
         if (player.body.touching.down && platform.body.touching.up) {
+            // Actualizar timestamp de grounded (para distinguir de triggers)
+            if (player.lastGroundedTime !== undefined) {
+                player.lastGroundedTime = this.scene.time.now;
+            }
+
             // FSM/Context maneja el aterrizaje; sólo actualizamos plataforma y reseteos básicos
             if (player.setCurrentPlatform) {
                 player.setCurrentPlatform(platform);
@@ -58,6 +63,12 @@ export class PlayerHandler {
         if (!player.body?.touching?.down || !floor?.body?.touching?.up) {
             return;
         }
+
+        // Actualizar timestamp de grounded
+        if (player.lastGroundedTime !== undefined) {
+            player.lastGroundedTime = this.scene.time.now;
+        }
+
         if (player.setCurrentPlatform) {
             player.setCurrentPlatform(floor);
         }
@@ -120,19 +131,26 @@ export class PlayerHandler {
         // No invencible: entrar a estado de muerte en FSM y luego ejecutar flujo de game over
         player.enterDeathState?.();
         // Play riser drop sound
-        AudioManager.playLavaDropSound();
+        const riserConfig = scene.riserManager.config;
+        if (riserConfig && riserConfig.dropSoundKey) {
+            AudioSystem.playRiserDrop(riserConfig.dropSoundKey);
+        }
 
-        // NOTIFICAR AL ESTADO GLOBAL PARA PARAR AUDIO Y BLOQUEAR PAUSA
         // NOTIFICAR AL ESTADO GLOBAL PARA PARAR AUDIO Y BLOQUEAR PAUSA
         GameState.gameOver();
 
         scene.isGameOver = true;
         scene.burnEmitter.emitParticleAt(player.x, player.y, 50);
-        player.setVelocity(0, 0);
+
+        if (player.body) {
+            player.setVelocity(0, 0);
+        }
         player.setTint(0x000000);
         scene.time.delayedCall(300, () => {
-            player.setVisible(false);
-            player.setActive(false);
+            if (player && player.active) {
+                player.setVisible(false);
+                player.setActive(false);
+            }
         });
 
         scene.time.delayedCall(50, () => {
@@ -145,16 +163,9 @@ export class PlayerHandler {
         scene.uiText.setDepth(200);
         scene.scoreText.setDepth(200);
 
-        scene.time.delayedCall(1000, () => {
-            // Check for high score - only show name input if score qualifies for top 10
-            if (ScoreManager.isHighScore(scene.currentHeight, scene.totalScore)) {
-                // Show Input for Name - this score will enter the leaderboard
-                scene.uiManager.showNameInput(ScoreManager);
-            } else {
-                // Score doesn't qualify for top 10 - show options directly
-                scene.uiManager.showPostGameOptions();
-            }
-        });
+        // Note: High score check and UI display is now handled by UIManager
+        // through the GAME_OVER event (see UIManager.setupEventListeners)
+        // This prevents duplicate calls to showNameInput()
     }
 
     /**
@@ -190,7 +201,7 @@ export class PlayerHandler {
         }
 
         // Play SFX
-        AudioManager.playTrashcanHit();
+        AudioSystem.playTrashcanHit();
 
         // --- NEW LOGIC: Spawn Bouncing Item (Coin or Powerup) ---
         // Fix offset: Trashcan appears to offset coin to the right, adjusting spawnX left by 25px
@@ -285,7 +296,7 @@ export class PlayerHandler {
         player.setVelocityY(-bounceForce);
 
         // Play SFX
-        AudioManager.playTireBounce();
+        AudioSystem.playTireBounce();
 
         const ctx = player.controller?.context;
         if (ctx) {

@@ -2,6 +2,10 @@ import { ASSETS } from '../config/AssetKeys.js';
 import { Leaderboard } from './Leaderboard.js';
 import { Settings } from './Settings.js';
 import { Playground } from './Playground.js';
+import { WarmupManager } from '../managers/system/WarmupManager.js';
+import { registerEnemyAnimations } from '../utils/animations.js';
+import PlayerProfileService from '../managers/gameplay/PlayerProfileService.js';
+
 
 export class Preloader extends Phaser.Scene {
     constructor() {
@@ -9,18 +13,30 @@ export class Preloader extends Phaser.Scene {
     }
 
     preload() {
+        // Establecer ruta base relativa para asegurar carga en GitHub Pages / Netlify / Capacitor
+        this.load.setBaseURL('./');
+
+        // CACHE BUSTER
+        // Gets version from index.html (e.g., "v0.0.48") to force asset refresh
+        const v = window.GAME_VERSION ? `?v=${window.GAME_VERSION}` : '';
+
         // --- LOADING BAR UI ---
         const width = this.cameras.main.width;
         const height = this.cameras.main.height;
         const progressBar = this.add.graphics();
         const progressBox = this.add.graphics();
 
+        const barWidth = width * 0.7; // 70% of screen width
+        const barHeight = 50;
+        const barX = (width - barWidth) / 2;
+        const barY = (height - barHeight) / 2;
+
         progressBox.fillStyle(0x222222, 0.8);
-        progressBox.fillRect(width / 2 - 160, height / 2 - 25, 320, 50);
+        progressBox.fillRect(barX - 10, barY - 10, barWidth + 20, barHeight + 20);
 
         const loadingText = this.make.text({
             x: width / 2,
-            y: height / 2 - 50,
+            y: barY - 30, // Above bar
             text: 'Loading...',
             style: {
                 font: '20px monospace',
@@ -44,7 +60,7 @@ export class Preloader extends Phaser.Scene {
             percentText.setText(parseInt(value * 100) + '%');
             progressBar.clear();
             progressBar.fillStyle(0x00ff00, 1);
-            progressBar.fillRect(width / 2 - 150, height / 2 - 15, 300 * value, 30);
+            progressBar.fillRect(barX, barY, barWidth * value, barHeight);
         });
 
         this.load.on('complete', () => {
@@ -55,34 +71,73 @@ export class Preloader extends Phaser.Scene {
         });
 
         // --- AUDIO LOADING ---
-        this.load.audio(ASSETS.COIN_SFX_PREFIX + '1', 'assets/audio/collecting-coins/Several Coins 01.mp3');
-        this.load.audio(ASSETS.COIN_SFX_PREFIX + '2', 'assets/audio/collecting-coins/Several Coins 02.mp3');
-        this.load.audio(ASSETS.COIN_SFX_PREFIX + '3', 'assets/audio/collecting-coins/Several Coins 03.mp3');
-        this.load.audio(ASSETS.DAMAGE_SFX_PREFIX + '1', 'assets/audio/take-damage/Retro Game Low Take Damage.mp3');
-        this.load.audio(ASSETS.DAMAGE_SFX_PREFIX + '2', 'assets/audio/take-damage/Retro Game Low Take Damage 2.mp3');
-        this.load.audio(ASSETS.DAMAGE_SFX_PREFIX + '3', 'assets/audio/take-damage/Retro Game Low Take Damage 3.mp3');
-        this.load.audio(ASSETS.DAMAGE_SFX_PREFIX + '4', 'assets/audio/take-damage/Retro Game Low Take Damage 4.mp3');
-        this.load.audio(ASSETS.DAMAGE_SFX_PREFIX + '5', 'assets/audio/take-damage/Retro Game Low Take Damage 5.mp3');
-        this.load.audio(ASSETS.LAVA_AMBIENT, 'assets/audio/lava/Lava.mp3');
-        this.load.audio(ASSETS.BG_MUSIC, 'assets/audio/bg-music/retro-game-music/Retro hiphop.mp3');
-        this.load.audio(ASSETS.LAVA_DROP, 'assets/audio/lava-drop/lava-drop-in.mp3');
-        this.load.audio(ASSETS.JUMP_SFX, 'assets/audio/jumps/jumping.mp3');
-        this.load.audio(ASSETS.DESTROY_SFX, 'assets/audio/destroy/destroy.mp3');
-        this.load.audio(ASSETS.CELEBRATION_SFX, 'assets/audio/celebration/67.mp3');
-        this.load.audio(ASSETS.SHOE_BRAKE, 'assets/audio/shoes/shoe-brake.mp3');
-        this.load.audio(ASSETS.TRASHCAN_HIT, 'assets/audio/trashcan/trashcan.mp3');
-        this.load.audio(ASSETS.TIRE_BOUNCE, 'assets/audio/tire bounce/tirebounce.mp3');
-        this.load.audio(ASSETS.WALL_SLIDE, 'assets/audio/slide/slide.MP3');
+        this.load.audio(ASSETS.COIN_SFX_PREFIX + '1', 'assets/audio/collecting-coins/Several Coins 01.mp3' + v);
+        this.load.audio(ASSETS.COIN_SFX_PREFIX + '2', 'assets/audio/collecting-coins/Several Coins 02.mp3' + v);
+        this.load.audio(ASSETS.COIN_SFX_PREFIX + '3', 'assets/audio/collecting-coins/Several Coins 03.mp3' + v);
+        this.load.audio(ASSETS.DAMAGE_SFX_PREFIX + '1', 'assets/audio/take-damage/Retro Game Low Take Damage.mp3' + v);
+        this.load.audio(ASSETS.DAMAGE_SFX_PREFIX + '2', 'assets/audio/take-damage/Retro Game Low Take Damage 2.mp3' + v);
+        this.load.audio(ASSETS.DAMAGE_SFX_PREFIX + '3', 'assets/audio/take-damage/Retro Game Low Take Damage 3.mp3' + v);
+        this.load.audio(ASSETS.DAMAGE_SFX_PREFIX + '4', 'assets/audio/take-damage/Retro Game Low Take Damage 4.mp3' + v);
+        this.load.audio(ASSETS.DAMAGE_SFX_PREFIX + '5', 'assets/audio/take-damage/Retro Game Low Take Damage 5.mp3' + v);
+
+        // Riser Sounds
+        this.load.audio(ASSETS.LAVA_AMBIENT, 'assets/audio/riser/lava.mp3' + v);
+        this.load.audio(ASSETS.LAVA_DROP, 'assets/audio/riser/lava-drop.mp3' + v);
+        this.load.audio(ASSETS.ACID_AMBIENT, 'assets/audio/riser/acid.mp3' + v);
+        this.load.audio(ASSETS.ACID_DROP, 'assets/audio/riser/acid-drop.mp3' + v);
+        this.load.audio(ASSETS.FIRE_AMBIENT, 'assets/audio/riser/fire.mp3' + v);
+        this.load.audio(ASSETS.FIRE_DROP, 'assets/audio/riser/fire-drop.mp3' + v);
+        this.load.audio(ASSETS.WATER_AMBIENT, 'assets/audio/riser/water.mp3' + v);
+        this.load.audio(ASSETS.WATER_DROP, 'assets/audio/riser/water-drop.mp3' + v);
+
+        this.load.audio(ASSETS.BG_MUSIC, 'assets/audio/bg-music/retro-game-music/Retro_hiphop.mp3' + v);
+        this.load.audio(ASSETS.JUMP_SFX, 'assets/audio/jumps/jumping.mp3' + v);
+        this.load.audio(ASSETS.DESTROY_SFX, 'assets/audio/destroy/destroy.mp3' + v);
+        this.load.audio(ASSETS.CELEBRATION_SFX, 'assets/audio/celebration/67.mp3' + v);
+        this.load.audio(ASSETS.SHOE_BRAKE, 'assets/audio/shoes/shoe-brake.mp3' + v);
+        this.load.audio(ASSETS.TRASHCAN_HIT, 'assets/audio/trashcan/trashcan.mp3' + v);
+        this.load.audio(ASSETS.TIRE_BOUNCE, 'assets/audio/tire bounce/tirebounce.mp3' + v);
+        this.load.audio(ASSETS.WALL_SLIDE, 'assets/audio/slide/slide.mp3' + v);
 
         // --- ASSETS LOADING ---
-        this.load.atlas(ASSETS.UI_ICONS, 'assets/ui/icons.png', 'assets/ui/icons.json');
-        this.load.multiatlas(ASSETS.COINS, 'assets/spritesheets/coins.json', 'assets/spritesheets');
-        this.load.multiatlas('basketball', 'assets/spritesheets/basketball.json', 'assets/spritesheets');
-        this.load.multiatlas('walls', 'assets/spritesheets/walls.json', 'assets/spritesheets');
-        this.load.multiatlas('floor', 'assets/spritesheets/floor.json', 'assets/spritesheets');
-        this.load.multiatlas('platform', 'assets/spritesheets/platform.json', 'assets/spritesheets');
-        this.load.multiatlas(ASSETS.PROPS, 'assets/spritesheets/props.json', 'assets/spritesheets');
-        this.load.multiatlas(ASSETS.PLAYER, 'assets/spritesheets/player.json', 'assets/spritesheets');
+        // --- ASSETS LOADING ---
+        if (!this.textures.exists(ASSETS.GAME_LOGO)) this.load.image(ASSETS.GAME_LOGO, 'assets/logo.png' + v);
+        if (!this.textures.exists(ASSETS.STORE_LOGO)) this.load.image(ASSETS.STORE_LOGO, 'assets/the-vault-store.png' + v);
+        if (!this.textures.exists(ASSETS.UI_ICONS)) this.load.atlas(ASSETS.UI_ICONS, 'assets/ui/icons.png' + v, 'assets/ui/icons.json' + v);
+
+        if (!this.textures.exists(ASSETS.COINS)) this.load.multiatlas(ASSETS.COINS, 'assets/spritesheets/coins.json' + v, 'assets/spritesheets');
+        if (!this.textures.exists('basketball')) this.load.multiatlas('basketball', 'assets/spritesheets/basketball.json' + v, 'assets/spritesheets');
+        if (!this.textures.exists('walls')) this.load.multiatlas('walls', 'assets/spritesheets/walls.json' + v, 'assets/spritesheets');
+        if (!this.textures.exists('floor')) this.load.multiatlas('floor', 'assets/spritesheets/floor.json' + v, 'assets/spritesheets');
+        if (!this.textures.exists('platform')) this.load.multiatlas('platform', 'assets/spritesheets/platform.json' + v, 'assets/spritesheets');
+        if (!this.textures.exists(ASSETS.PROPS)) this.load.multiatlas(ASSETS.PROPS, 'assets/spritesheets/props.json' + v, 'assets/spritesheets');
+        if (!this.textures.exists(ASSETS.STORE)) this.load.multiatlas(ASSETS.STORE, 'assets/spritesheets/store.json' + v, 'assets/spritesheets');
+
+        // Player Skin - Force Reload to support skin changes
+        if (this.textures.exists(ASSETS.PLAYER)) {
+            this.textures.remove(ASSETS.PLAYER);
+        }
+
+        const profile = PlayerProfileService.loadOrCreate();
+        let skinId = profile?.skins?.equipped || 'default';
+
+        // Fallback for mock skins or missing folders
+        if (skinId.includes('mock')) {
+            skinId = 'default';
+        }
+        this._equippedSkinId = skinId;
+
+        let texturePath = `assets/skins/${skinId}`;
+        // Ensure texturePath has a trailing slash for multiatlas base path
+        if (!texturePath.endsWith('/')) {
+            texturePath += '/';
+        }
+        this.load.multiatlas(ASSETS.PLAYER, `${texturePath}player.json${v}`, texturePath);
+
+        if (!this.textures.exists(ASSETS.ENEMY_ATLAS)) this.load.atlas(ASSETS.ENEMY_ATLAS, 'assets/spritesheets/enemy.png' + v, 'assets/spritesheets/enemy.json' + v);
+        if (!this.textures.exists(ASSETS.EFFECTS)) this.load.atlas(ASSETS.EFFECTS, 'assets/spritesheets/effects.png' + v, 'assets/spritesheets/effects.json' + v);
+
+
     }
 
     create() {
@@ -100,22 +155,52 @@ export class Preloader extends Phaser.Scene {
             g.generateTexture(ASSETS.PLAYER_PLACEHOLDER, PLAYER_SIZE, PLAYER_SIZE);
         }
 
+        // Particle texture for milestone celebrations
+        g.clear();
+        g.fillStyle(0xffffff, 1);
+        g.fillCircle(4, 4, 4);
+        g.generateTexture(ASSETS.PARTICLE, 8, 8);
+
         // --- ANIMATIONS ---
         if (atlasLoaded && this.anims) {
             const playerTex = this.textures.get(ASSETS.PLAYER);
-            const findFrame = (f) => {
-                if (playerTex.has(f)) return f;
-                if (playerTex.has(f.trim())) return f.trim();
-                console.warn(`Frame no encontrado en Player Atlas: "${f}"`);
+            const allFrameNames = playerTex.getFrameNames();
+
+            // Robust Frame Finder
+            // Normalizes: "IDLE/idle_01.png" -> "idle01png"
+            const normalize = (name) => {
+                if (!name) return '';
+                // Get filename part, ignore folder
+                const filename = name.split('/').pop();
+                // Lowercase, remove underscores, dashes, spaces
+                return filename.toLowerCase().replace(/[\s\-_]/g, '');
+            };
+
+            const findFrame = (requestedName, silent = false) => {
+                // 1. Exact match (Fastest)
+                if (playerTex.has(requestedName)) return requestedName;
+                if (playerTex.has(requestedName.trim())) return requestedName.trim();
+
+                // 2. Normalized Fuzzy Match
+                // Matches "idle-01.png" with "IDLE/idle_01.png"
+                const reqNorm = normalize(requestedName);
+                if (!reqNorm) return null;
+
+                const found = allFrameNames.find(fn => normalize(fn) === reqNorm);
+
+                if (found) return found;
+
+                if (!silent) console.warn(`[Preloader] Frame not found in Player Atlas: "${requestedName}"`);
                 return null;
             };
-            const hasFrame = (f) => findFrame(f) !== null;
 
-            const makeAnim = (key, frameNames, frameRate = 10, repeat = -1) => {
+            const hasFrame = (f) => findFrame(f, true) !== null;
+
+            const makeAnim = (key, frameNames, frameRate = 10, repeat = -1, silent = false) => {
                 if (this.anims.exists(key)) return;
                 const frames = [];
                 frameNames.forEach(name => {
-                    const realName = findFrame(name);
+                    const realName = findFrame(name, silent);
                     if (realName) frames.push({ key: ASSETS.PLAYER, frame: realName });
                 });
                 if (frames.length > 0) {
@@ -123,36 +208,204 @@ export class Preloader extends Phaser.Scene {
                 }
             };
 
-            makeAnim('player_idle', ['IDLE 1.png', 'IDLE 2.png', 'IDLE 3.png'], 6, -1);
+            const requiredFrames = [
+                'idle-01.png',
+                'idle-02.png',
+                'running-01.png',
+                'running-02.png',
+                'running-03.png',
+                'running-04.png',
+                'running-05.png',
+                'running-06.png',
+                'running-07.png',
+                'running-08.png',
+                'stop-running-01.png',
+                'stop-running-02.png',
+                'stop-running-03.png',
+                'jump-01.png',
+                'jump-02.png',
+                'falling-01.png',
+                'falling-02.png',
+                'falling-03.png',
+                'falling-04.png',
+                'falling-05.png',
+                'falling-06.png',
+                'falling-07.png',
+                'falling-08.png',
+                'wallslide-01.png',
+                'wallslide-02.png',
+                'wallslide-03.png',
+                'wallslide-04.png',
+                'wallslide-05.png',
+                'wallslide-06.png',
+                'hit-01.png',
+                'hit-02.png',
+                'basketball-powerup-01.png',
+                'basketball-powerup-02.png',
+                'basketball-powerup-03.png',
+                'basketball-powerup-04.png',
+                'basketball-powerup-05.png',
+                'basketball-powerup-06.png',
+                'basketball-powerup-07.png',
+                'basketball-powerup-08.png',
+                'basketball-powerup-09.png'
+            ];
+
+            const missingFrames = requiredFrames.filter(frame => !hasFrame(frame));
+            const doubleJumpHyphen = ['double-jump-01.png', 'double-jump-02.png', 'double-jump-03.png'];
+            const doubleJumpUnderscore = ['double-jump_01.png', 'double-jump_02.png', 'double-jump_03.png'];
+            const hasDoubleJump = doubleJumpHyphen.every(hasFrame) || doubleJumpUnderscore.every(hasFrame);
+            if (!hasDoubleJump) {
+                missingFrames.push(...doubleJumpHyphen);
+            }
+            if (missingFrames.length) {
+                const skinId = this._equippedSkinId || 'default';
+                console.warn(`[Preloader] Missing frames for skin "${skinId}":`, missingFrames);
+                if (skinId !== 'default') {
+                    const fallbackProfile = PlayerProfileService.loadOrCreate();
+                    fallbackProfile.skins.equipped = 'default';
+                    PlayerProfileService.save(fallbackProfile);
+                    this.scene.restart();
+                    return;
+                }
+            }
+
+            const playerAnimKeys = [
+                'player_idle',
+                'player_run',
+                'player_run_stop',
+                'player_jump_up',
+                'player_jump_side',
+                'player_jump_wall',
+                'player_double_jump',
+                'player_fall_start',
+                'player_fall_loop',
+                'player_wall_slide_start',
+                'player_wall_slide_loop',
+                'player_hit',
+                ASSETS.POWERUP_ANIM,
+                'player_goal'
+            ];
+            playerAnimKeys.forEach((key) => {
+                if (this.anims.exists(key)) {
+                    this.anims.remove(key);
+                }
+            });
+
+            // IDLE: 2 frames, first one 500ms
+            if (!this.anims.exists('player_idle')) {
+                const idleDef = [
+                    { frame: 'idle-01.png', duration: 500 },
+                    { frame: 'idle-02.png' }
+                ];
+
+                const finalIdleFrames = [];
+                idleDef.forEach(def => {
+                    const realName = findFrame(def.frame);
+                    if (realName) {
+                        finalIdleFrames.push({ key: ASSETS.PLAYER, frame: realName, duration: def.duration });
+                    }
+                });
+
+                if (finalIdleFrames.length > 0) {
+                    this.anims.create({ key: 'player_idle', frames: finalIdleFrames, frameRate: 6, repeat: -1 });
+                }
+            }
+
+            // Standard Animations using normalized lookup
             makeAnim('player_run', ['running-01.png', 'running-02.png', 'running-03.png', 'running-04.png', 'running-05.png', 'running-06.png', 'running-07.png', 'running-08.png'], 12, -1);
             makeAnim('player_run_stop', ['stop-running-01.png', 'stop-running-02.png', 'stop-running-03.png'], 12, 0);
-            makeAnim('player_jump_up', ['jump-01.png', 'jump-02.png', 'jump-03.png'], 12, 0);
-            makeAnim('player_jump_side', ['jump-01.png', 'jump-02.png', 'jump-03.png'], 12, 0);
-            makeAnim('player_jump_wall', ['jump-03.png'], 10, 0);
-            makeAnim('player_double_jump', ['double-jump-01.png', 'double-jump-02.png', 'double-jump-03.png'], 12, 0);
+
+            // Jump animations with fallback for missing jump-03.png
+            const jump03Exists = findFrame('jump-03.png', true);
+            const jumpFrames = jump03Exists
+                ? ['jump-01.png', 'jump-02.png', 'jump-03.png']
+                : ['jump-01.png', 'jump-02.png'];
+            makeAnim('player_jump_up', jumpFrames, 12, 0);
+            makeAnim('player_jump_side', jumpFrames, 12, 0);
+
+            // Wall jump - use last available jump frame
+            const wallJumpFrame = jump03Exists ? 'jump-03.png' : 'jump-02.png';
+            makeAnim('player_jump_wall', [wallJumpFrame], 10, 0);
+
+            // Double jump with multiple fallback strategies
+            // Try with hyphens first, then underscores
+            let djFrames = ['double-jump-01.png', 'double-jump-02.png', 'double-jump-03.png'];
+            let djExists = djFrames.some(f => findFrame(f, true));
+
+            if (!djExists) {
+                // Try with underscores (redjersey skin uses this format)
+                djFrames = ['double-jump_01.png', 'double-jump_02.png', 'double-jump_03.png'];
+                djExists = djFrames.some(f => findFrame(f, true));
+            }
+
+            if (!djExists) {
+                // Reuse jump frames if double jump missing
+                makeAnim('player_double_jump', jumpFrames, 12, 0);
+            } else {
+                makeAnim('player_double_jump', djFrames, 12, 0);
+            }
+
             makeAnim('player_fall_start', ['falling-01.png', 'falling-02.png'], 12, 0);
-            makeAnim('player_fall_loop', ['falling-04.png', 'falling-05.png', 'falling-06.png', 'falling-07.png', 'falling-08.png', 'falling-09.png'], 12, -1);
+            makeAnim('player_fall_loop', ['falling-03.png', 'falling-04.png', 'falling-05.png', 'falling-06.png', 'falling-07.png', 'falling-08.png'], 12, -1);
             makeAnim('player_wall_slide_start', ['wallslide-01.png', 'wallslide-02.png', 'wallslide-03.png', 'wallslide-04.png', 'wallslide-05.png'], 12, 0);
-            makeAnim('player_wall_slide_loop', ['wallslide-06.png', 'wallslide-07.png', 'wallslide-08.png'], 12, -1);
+            makeAnim('player_wall_slide_loop', ['wallslide-04.png', 'wallslide-05.png', 'wallslide-06.png'], 12, -1, true);
             makeAnim('player_hit', ['hit-01.png', 'hit-02.png'], 10, 0);
 
-            // Powerup Animation
-            const powerFrameOrder = [
-                'basketball_powerup-01.png', 'basketball_powerup-02.png', 'basketball_powerup-03.png', 'basketball_powerup-04.png',
-                'basketball_powerup-05.png', 'basketball_powerup-06.png', 'basketball_powerup-07.png', 'basketball_powerup-08.png',
-                'basketball_powerup-09.png', 'basketball_powerup-10.png', 'basketball_powerup-11.png', 'basketball_powerup-12.png',
-                'basketball_powerup-13.png', 'basketball_powerup-14.png', 'basketball_powerup-15.png', 'basketball_powerup-16.png'
-            ];
-            const powerFrames = powerFrameOrder.filter(hasFrame).flatMap(f => {
-                if (f === 'basketball_powerup-05.png' || f === 'basketball_powerup-06.png') {
-                    return [{ key: ASSETS.PLAYER, frame: f }, { key: ASSETS.PLAYER, frame: f }];
+            // Effects Animations
+            if (this.textures.exists(ASSETS.EFFECTS)) {
+                // Ensure sorting correct 1-14
+                const fxFrames = [];
+                for (let i = 1; i <= 14; i++) {
+                    fxFrames.push({ key: ASSETS.EFFECTS, frame: `explotion${i}.png` });
                 }
-                return { key: ASSETS.PLAYER, frame: f };
+
+                if (!this.anims.exists(ASSETS.EXPLOSION_ANIM)) {
+                    this.anims.create({
+                        key: ASSETS.EXPLOSION_ANIM,
+                        frames: fxFrames,
+                        frameRate: 24,
+                        hideOnComplete: true,
+                        repeat: 0
+                    });
+                }
+            } else {
+                console.error('[Preloader] ❌ EFFECTS texture not found!');
+            }
+
+
+            // Powerup Animation (Refactored to 2000ms total)
+            const powerFrames = [];
+
+            // 1. INTRO: Frames 01-04 (150ms each = 600ms)
+            ['01', '02', '03', '04'].forEach(num => {
+                const real = findFrame(`basketball-powerup-${num}.png`);
+                if (real) powerFrames.push({ key: ASSETS.PLAYER, frame: real, duration: 150 });
             });
-            if (powerFrames.length > 0 && !this.anims.exists('player_powerup')) {
-                this.anims.create({ key: 'player_powerup', frames: powerFrames, frameRate: 10, repeat: 0 });
+
+            // 2. LOOP: Frames 05-07 (Repeated 2 times, 185ms each = 1110ms)
+            for (let i = 0; i < 2; i++) {
+                ['05', '06', '07'].forEach(num => {
+                    const real = findFrame(`basketball-powerup-${num}.png`);
+                    if (real) powerFrames.push({ key: ASSETS.PLAYER, frame: real, duration: 185 });
+                });
+            }
+
+            // 3. OUTRO: Frames 08-09 (145ms each = 290ms)
+            ['08', '09'].forEach(num => {
+                const real = findFrame(`basketball-powerup-${num}.png`);
+                if (real) powerFrames.push({ key: ASSETS.PLAYER, frame: real, duration: 145 });
+            });
+
+            // Total: 440 + 1320 + 240 = 2000ms
+
+            if (powerFrames.length > 0 && !this.anims.exists(ASSETS.POWERUP_ANIM)) {
+                this.anims.create({ key: ASSETS.POWERUP_ANIM, frames: powerFrames, frameRate: 10, repeat: 0 });
             }
         }
+
+        registerEnemyAnimations(this);
+
 
         // --- PROCEDURAL TEXTURES ---
         // Platform
@@ -198,7 +451,8 @@ export class Preloader extends Phaser.Scene {
         g.fillStyle(0xeeffaa, 0.4); for (let i = 0; i < 50; i++) g.fillCircle(Phaser.Math.Between(0, riserTextureWidth), Phaser.Math.Between(0, riserTextureHeight), Phaser.Math.Between(1, 4));
         g.generateTexture(ASSETS.ACID_TEXTURE, riserTextureWidth, riserTextureHeight);
 
-        // Fire
+        // Fire (Procedural disabled to use Sprite)
+        /*
         g.clear();
         const pixelSize = 8;
         const flameHeight = riserTextureHeight;
@@ -223,11 +477,42 @@ export class Preloader extends Phaser.Scene {
         g.fillStyle(0xffff00, 0.8); for (let i = 0; i < 50; i++) g.fillRect(Phaser.Math.Between(0, riserTextureWidth), Phaser.Math.Between(0, flameHeight), pixelSize / 2, pixelSize / 2);
         g.fillStyle(0xff4400, 0.7); for (let i = 0; i < 30; i++) g.fillRect(Phaser.Math.Between(0, riserTextureWidth), Phaser.Math.Between(0, flameHeight * 0.5), pixelSize / 3, pixelSize / 3);
         g.generateTexture(ASSETS.FIRE_TEXTURE, riserTextureWidth, riserTextureHeight);
+        */
+
+        // Fallback: Create a simple red texture if sprite fails or for solid body fill under the wave
+        // Fire Gradient Texture
+        g.clear();
+        // Draw Gradient
+        // Top: Hex #FFD700 (Gold/Yellow)
+        // Middle: Hex #FF8C00 (Dark Orange)
+        // Bottom: Hex #FF0000 (Red)
+
+        // We can draw small rects to simulate gradient or use fillGradientStyle if this was a GameObject, 
+        // but for generating a texture using Graphics, we have to draw lines or rects.
+        // Let's draw 1px high rects interpolating color.
+
+        for (let y = 0; y < riserTextureHeight; y++) {
+            const ratio = y / riserTextureHeight;
+            let r, gr, b;
+
+            // Interpolate colors: Red (Top) -> Orange (Bottom)
+            // Top: Red (255, 0, 0)
+            // Bottom: Orange (255, 140, 0)
+
+            r = 255;
+            // Green goes from 0 to 140
+            gr = Math.floor(ratio * 140);
+            b = 0;
+
+            g.fillStyle(Phaser.Display.Color.GetColor(r, gr, b), 1);
+            g.fillRect(0, y, riserTextureWidth, 1);
+        }
+        g.generateTexture(ASSETS.FIRE_TEXTURE, riserTextureWidth, riserTextureHeight);
 
         // UI & FX
-        g.clear(); g.lineStyle(4, 0xffffff, 0.3); g.strokeCircle(65, 65, 60); g.generateTexture('joystick_base', 130, 130);
-        g.clear(); g.fillStyle(0xffffff, 0.5); g.fillCircle(30, 30, 30); g.generateTexture('joystick_knob', 60, 60);
-        g.clear(); g.lineStyle(4, 0xffffff, 0.5); g.strokeCircle(40, 40, 38); g.generateTexture('jump_feedback', 80, 80);
+        g.clear(); g.lineStyle(4, 0xffffff, 0.3); g.strokeCircle(65, 65, 60); g.generateTexture(ASSETS.JOYSTICK_BASE, 130, 130);
+        g.clear(); g.fillStyle(0xffffff, 0.5); g.fillCircle(30, 30, 30); g.generateTexture(ASSETS.JOYSTICK_KNOB, 60, 60);
+        g.clear(); g.lineStyle(4, 0xffffff, 0.5); g.strokeCircle(40, 40, 38); g.generateTexture(ASSETS.JUMP_FEEDBACK, 80, 80);
         g.clear(); g.fillStyle(0xffffff, 1); g.fillRect(0, 0, 6, 6); g.generateTexture(ASSETS.PARTICLE_DUST, 6, 6);
         g.clear(); g.fillStyle(0xffff00, 1); g.fillCircle(3, 3, 3); g.generateTexture(ASSETS.PARTICLE_SPARK, 6, 6);
         g.clear(); g.fillStyle(0xff4400, 1); g.fillCircle(4, 4, 4); g.generateTexture(ASSETS.PARTICLE_BURN, 8, 8);
@@ -248,6 +533,10 @@ export class Preloader extends Phaser.Scene {
         if (!this.scene.get('Settings')) this.scene.add('Settings', Settings, false);
         if (!this.scene.get('Playground')) this.scene.add('Playground', Playground, false);
 
-        this.scene.start('MainMenu');
+        // Warmup Shaders & Particles
+        const warmup = new WarmupManager(this);
+        warmup.warmup().then(() => {
+            this.scene.start('MainMenu');
+        });
     }
 }

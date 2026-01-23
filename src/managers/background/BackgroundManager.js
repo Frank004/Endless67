@@ -1,5 +1,7 @@
 import { GAME_CONFIG } from '../../config/GameConstants.js';
 import { BACKGROUND_PATTERNS, DECO_FRAMES } from '../../data/BackgroundPatterns.js';
+import { WALL_DECOR_CONFIG, getRandomFrameForType, getWallInsetX } from '../../config/WallDecorConfig.js';
+import { WallDecorFactory } from '../visuals/decorations/WallDecorFactory.js';
 
 /**
  * BackgroundManager
@@ -19,7 +21,7 @@ export class BackgroundManager {
 
         // Parallax settings
         this.parallaxFactor = 0.5; // Moves at half the speed of the camera
-        this.baseTint = 0x1a1a1a; // Almost black/grey
+        this.baseTint = 0x004d4d; // Teal tone for brick background
 
         // Pooling logic
         this.segments = []; // Active segments
@@ -48,7 +50,7 @@ export class BackgroundManager {
         this.bgLayer = this.scene.add.tileSprite(0, 0, width, height, 'walls', 'wall-bg.png');
         this.bgLayer.setOrigin(0, 0);
         this.bgLayer.setScrollFactor(0); // Manually controlled for parallax
-        this.bgLayer.setDepth(-20);
+        this.bgLayer.setDepth(-100);
         this.bgLayer.setTint(this.baseTint);
 
         // 3. Deco Layer Group
@@ -72,8 +74,24 @@ export class BackgroundManager {
             runChildUpdate: false
         });
 
+        // 6. Silhouette Pipes (Deep Background) - Depth -19
+        this.silhouettePipeGroup = this.scene.add.group({
+            classType: Phaser.GameObjects.Container,
+            maxSize: 40,
+            runChildUpdate: false
+        });
+
+        // 7. Silhouette Signs (Mid Background) - Depth -18
+        this.silhouetteSignGroup = this.scene.add.group({
+            classType: Phaser.GameObjects.Image,
+            maxSize: 30,
+            runChildUpdate: false
+        });
+
         // 5. Side Shadows (Depth Dimension)
         this.createSideShadows(width, height);
+        // 6. Darker center overlay to separate gameplay from background.
+        this.createCenterDarken(width, height);
 
         this.initialized = true;
 
@@ -107,7 +125,45 @@ export class BackgroundManager {
 
         const shadows = this.scene.add.image(width / 2, height / 2, textureName);
         shadows.setScrollFactor(0);
-        shadows.setDepth(-4); // On top of BG and Vignette even
+        shadows.setDepth(-10); // On top of BG and Vignette even
+    }
+
+    createCenterDarken(width, height) {
+        const textureName = 'bg_center_darken_pixel_v2';
+        const scale = 12; // Increased Pixelation
+
+        if (!this.scene.textures.exists(textureName)) {
+            const smallW = Math.ceil(width / scale);
+            const smallH = Math.ceil(height / scale);
+
+            const canvas = this.scene.textures.createCanvas(textureName, smallW, smallH);
+            const ctx = canvas.context;
+            const radius = Math.max(smallW, smallH) * 0.9;
+
+            const gradient = ctx.createRadialGradient(
+                smallW / 2,
+                smallH / 2,
+                0,
+                smallW / 2,
+                smallH / 2,
+                radius
+            );
+            gradient.addColorStop(0, 'rgba(0, 0, 0, 0.95)');
+            gradient.addColorStop(0.4, 'rgba(0, 0, 0, 0.55)');
+            gradient.addColorStop(1, 'rgba(0, 0, 0, 0)');
+
+            ctx.fillStyle = gradient;
+            ctx.fillRect(0, 0, smallW, smallH);
+
+            canvas.refresh();
+            this.scene.textures.get(textureName).setFilter(Phaser.Textures.FilterMode.NEAREST);
+        }
+
+        const centerDarken = this.scene.add.image(width / 2, height / 2, textureName);
+        centerDarken.setScrollFactor(0);
+        centerDarken.setDepth(-12);
+        centerDarken.setScale(scale); // Scale up to pixelate
+        centerDarken.setBlendMode(Phaser.BlendModes.MULTIPLY);
     }
 
     /**
@@ -175,7 +231,7 @@ export class BackgroundManager {
 
             sprite.setTexture('walls', frame);
             sprite.setPosition(posX, posY);
-            sprite.setDepth(-15);
+            sprite.setDepth(-98); // Mid Background (Just above Base Wall)
             sprite.setTint(this.baseTint); // Match base layer tint
             sprite.setActive(true).setVisible(true);
 
@@ -205,6 +261,18 @@ export class BackgroundManager {
                 const fgCable = this.createFgCable(y + (this.segmentHeight * 0.5));
                 if (fgCable) items.push(fgCable);
             }
+
+            // 3. Silhouette Elements (Deep Background) - DISABLED PER USER
+            /*
+            // Strategy: Use Pre-defined Patterns + World Coordinates (Cable Logic)
+            // This prevents "bunching" at high altitudes by relying on Phaser's World Space.
+            
+            // Define Patterns (Weighted)
+            // yRatio: 0 to 1 (Relative to Segment Height)
+            // ... Patterns Definition ...
+            
+            // ... Spawning Logic ...
+            */
 
         } // End Cable Restriction
 
@@ -264,29 +332,149 @@ export class BackgroundManager {
         }
 
         const cam = this.scene.cameras.main;
-        // Project logical BG Y to Real World Y (y * 2)
-        sprite.setPosition(cam.width / 2, y * 2);
+        const bgScrollY = cam.scrollY * this.parallaxFactor;
+        const logicalY = y;
+        const parallaxFactor = 1.2;
+
+        sprite.setPosition(cam.width / 2, (logicalY - bgScrollY) * parallaxFactor);
         sprite.setDepth(150);
-        // FG: Faster than world (1.0) -> 1.1. Appears very close/passes quickly.
-        sprite.setScrollFactor(1.1);
+        // Use manual scroll to avoid drifting out of view on long climbs.
+        sprite.setScrollFactor(0);
         sprite.setActive(true).setVisible(true);
 
-        sprite.setData('logicalY', y);
-        sprite.setData('useManualScroll', false);
+        sprite.setData('logicalY', logicalY);
+        sprite.setData('parallaxFactor', parallaxFactor);
+        sprite.setData('useManualScroll', true);
 
         return sprite;
     }
 
+    createSilhouettePipe(bgY, forcedSide) {
+        const side = forcedSide || (Math.random() > 0.5 ? 'left' : 'right');
+        const typeConfig = WALL_DECOR_CONFIG.types.PIPE;
+
+        // Random Pattern from Config (Fix: Get directly from array)
+        const pattern = Phaser.Utils.Array.GetRandom(typeConfig.patterns);
+
+        const cam = this.scene.cameras.main;
+        // CORRECTED X POSITION: Use Wall Inset Logic
+        const x = getWallInsetX(side, cam.width);
+
+        // Convert BG Y to World Y (Cable Logic)
+        // bgY is compressed (0.5), so World Y is bgY * 2
+        // Dynamic formula: bgY * (1 / parallaxFactor)
+        const worldY = bgY * (1 / this.parallaxFactor);
+
+        // Force tint black (0x000000)
+        const wrapper = WallDecorFactory.getPipe(
+            this.scene,
+            typeConfig,
+            x,
+            worldY,
+            side,
+            pattern,
+            0x000000 // Black
+        );
+
+        // Adjust for Background Layering
+        const container = wrapper.visualObject;
+        container.setDepth(-50); // Silhouette Pipe Layer (Deep)
+
+        // CABLE STRATEGY: Use Native ScrollFactor
+        container.setScrollFactor(this.parallaxFactor); // 0.5
+
+        // Fix Tint: Container tint doesn't work, must tint children
+        container.each(child => {
+            if (child.setTintFill) child.setTintFill(0x000000);
+        });
+
+        // --- Phase B: Scale Adjustment ---
+        // User Feedback: 0.2 was "super chiquitos". 
+        // bumped to 0.6 to be visible but still background-y.
+        const scale = 0.6;
+        if (side === 'left') {
+            container.setScale(-scale, scale); // Mirror X
+        } else {
+            container.setScale(scale, scale);
+        }
+
+        // Tag for update loop
+        // Disable Manual Scroll
+        container.setData('useManualScroll', false);
+
+        // Return the wrapper (to handle proper cleanup via Factory)
+        return wrapper;
+    }
+
+    createSilhouetteSign(bgY, typeKey = 'LIGHTBOX', forcedSide) {
+        const side = forcedSide || (Math.random() > 0.5 ? 'left' : 'right');
+        const typeConfig = WALL_DECOR_CONFIG.types[typeKey]; // Support BIG or REGULAR
+        const frame = getRandomFrameForType(typeConfig, side);
+
+        const cam = this.scene.cameras.main;
+        // CORRECTED X POSITION: Use Wall Inset Logic
+        const x = getWallInsetX(side, cam.width);
+
+        // Convert BG Y to World Y
+        const worldY = bgY * (1 / this.parallaxFactor);
+
+        const wrapper = WallDecorFactory.getSign(
+            this.scene,
+            typeConfig,
+            x,
+            worldY,
+            side,
+            frame,
+            0x000000 // Black
+        );
+
+        const sprite = wrapper.visualObject;
+        sprite.setDepth(-40); // Silhouette Sign Layer (Mid-Deep)
+
+        // CABLE STRATEGY: Use Native ScrollFactor
+        sprite.setScrollFactor(this.parallaxFactor); // 0.5
+
+        // Fix Tint: Use setTintFill for solid silhouette
+        if (sprite.setTintFill) sprite.setTintFill(0x000000);
+
+        // --- Phase B: Scale Adjustment ---
+        // User Feedback: 1.2 looked "same size". 
+        // bumped to 1.5 to make them visibly larger/closer.
+        sprite.setScale(1.5);
+
+        // Disable Manual Scroll
+        sprite.setData('useManualScroll', false);
+
+        return wrapper;
+    }
+
     recycleSegment(seg) {
         seg.items.forEach(item => {
-            // Check which group it belongs to based on constructor type or simple check
-            if (this.decoGroup.contains(item)) {
+            // If item has a visualObject property, it's likely a Wrapper (from Factory)
+            if (item.visualObject && (item.reset && item.deactivate)) {
+                // It's a Factory Wrapper (PipeDecoration / SignDecoration)
+                // Use the factory release mechanism if available, or just deactivate it
+                // WallDecorFactory.release logic is implicit in pooling reset?
+                // Factory doesn't have a public 'release' method shown in previous view, 
+                // but we saw 'release' being used in WallDecorManager.
+                // Let's assume WallDecorFactory.release exists or we push back to pools manually.
+
+                // Checked WallDecorFactory previously: it didn't show 'release' explicitly in the snippet 
+                // but WallDecorManager used it: "WallDecorFactory.release(decor)".
+                // I will use that.
+
+                WallDecorFactory.release(item);
+            }
+            // Standard Phaser Group Items
+            else if (this.decoGroup.contains(item)) {
                 this.decoGroup.killAndHide(item);
             } else if (this.cableGroup.contains(item)) {
                 this.cableGroup.killAndHide(item);
             } else if (this.fgCableGroup.contains(item)) {
                 this.fgCableGroup.killAndHide(item);
             }
+            // Remove old check for separate groups as we now use Factory
+            // else if (this.silhouettePipeGroup.contains(item)) ...
         });
         seg.items = [];
     }
@@ -317,11 +505,16 @@ export class BackgroundManager {
         // 5. Render Positioning (Screen Space)
         // Only update Y positions for items marked for manual scroll (Walls)
         this.segments.forEach(seg => {
-            seg.items.forEach(sprite => {
-                if (sprite.getData('useManualScroll')) {
-                    const logicalY = sprite.getData('logicalY');
-                    const pFactor = sprite.getData('parallaxFactor') || 1.0;
-                    sprite.y = (logicalY - bgScrollY) * pFactor;
+            seg.items.forEach(item => {
+                // If it's a Factory Wrapper, the sprite is inside .visualObject
+                const sprite = item.visualObject || item;
+
+                if (sprite && sprite.active && sprite.getData) {
+                    if (sprite.getData('useManualScroll')) {
+                        const logicalY = sprite.getData('logicalY');
+                        const pFactor = sprite.getData('parallaxFactor') || 1.0;
+                        sprite.y = (logicalY - bgScrollY) * pFactor;
+                    }
                 }
             });
         });

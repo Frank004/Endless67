@@ -1,6 +1,9 @@
 import { LAYOUT_CONFIG } from '../config/LayoutConfig.js';
 import { ASSETS } from '../config/AssetKeys.js';
 import { WALLS } from '../config/GameConstants.js';
+import { getLightEmitterConfig } from '../config/LightEmitterConfig.js';
+import { LightEmitterComponent } from '../managers/visuals/decorations/LightEmitterComponent.js';
+import { LightBugInteractable } from '../managers/gameplay/interactables/LightBugInteractable.js';
 
 /**
  * StageFloor
@@ -44,6 +47,73 @@ export class StageFloor extends Phaser.GameObjects.TileSprite {
 
         scene.add.existing(this);
         scene.physics.add.existing(this, true);
-        this.setDepth(10);
+        this.setDepth(30); // Foreground: 30 (Above Player 20, Below Cables 40)
+
+        this.addStreetlight(scene);
+    }
+
+    addStreetlight(scene) {
+        if (!scene.textures.exists(ASSETS.PROPS)) return;
+
+        const frames = ['streetlight.png', 'streetlight-damage.png'];
+        const frame = Phaser.Utils.Array.GetRandom(frames);
+
+        const container = scene.add.container(0, 0);
+        const prop = scene.add.image(0, 0, ASSETS.PROPS, frame);
+        prop.setOrigin(0.5, 1); // Anchor Bottom-Center
+        container.add(prop);
+
+        // Floor Top Y
+        const floorTop = this.y - (this.height / 2);
+        container.y = floorTop + 6; // Embed slightly (6px) for solid look
+
+        // Side Logic
+        // Default Sprite assumed to look Good on Right Wall (Facing Left?)
+        // User requested Mirror on Left.
+        const isLeft = Math.random() > 0.5;
+        const wallWidth = WALLS.WIDTH || 32;
+        const offset = 24; // Offset into gameplay ("un poco de offset para dentro")
+
+        if (isLeft) {
+            prop.setFlipX(true); // Mirror for Left
+            // Position: Wall Edge + Offset
+            container.x = wallWidth + offset;
+        } else {
+            prop.setFlipX(false);
+            // Position: Screen Right - Wall Edge - Offset
+            container.x = scene.scale.width - wallWidth - offset;
+        }
+
+        container.setDepth(5); // Background (Behind Player)
+
+        const offsetX = (-prop.displayWidth / 2) + 6;
+        const offsetY = (-prop.displayHeight) + 8;
+        const emitterOffsetX = isLeft ? -offsetX : offsetX;
+        const lightEmitterConfig = getLightEmitterConfig('streetlightSmall', {
+            emitter: {
+                offset: { x: emitterOffsetX, y: offsetY },
+                mirrorX: false
+            }
+        });
+        const lightEmitter = new LightEmitterComponent(scene, lightEmitterConfig);
+        lightEmitter.create(container, 'left', { x: 0, y: 0 });
+        container.bringToTop(prop);
+
+        // Register streetlight as interactable for bug particle behavior
+        if (scene.interactableManager) {
+            // Crear objeto wrapper similar a LampDecoration para compatibilidad
+            const streetlightWrapper = {
+                lightEmitter: lightEmitter,
+                container: container,
+                visualObject: container,
+                x: container.x,
+                y: container.y
+            };
+            
+            const streetlightId = `streetlight_${container.x}_${container.y}_${Date.now()}`;
+            const lightBugInteractable = new LightBugInteractable(scene, streetlightWrapper);
+            scene.interactableManager.register(streetlightId, lightBugInteractable);
+            streetlightWrapper.interactableId = streetlightId;
+        }
     }
 }

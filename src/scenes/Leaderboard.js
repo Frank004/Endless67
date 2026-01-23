@@ -1,5 +1,5 @@
 import ScoreManager from '../managers/gameplay/ScoreManager.js';
-import { InputManager } from '../managers/input/InputManager.js';
+import { InputSystem } from '../core/systems/InputSystem.js';
 import { UIHelpers } from '../utils/UIHelpers.js';
 import { MenuNavigation } from '../managers/ui/MenuNavigation.js';
 import EventBus, { Events } from '../core/EventBus.js';
@@ -12,7 +12,7 @@ export class Leaderboard extends Phaser.Scene {
 
     create() {
         // --- INPUT MANAGER ---
-        this.inputManager = new InputManager(this);
+        this.inputManager = new InputSystem(this);
         this.inputManager.setupInputs();
 
         const width = this.cameras.main.width;

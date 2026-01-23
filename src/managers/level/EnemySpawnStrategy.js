@@ -66,6 +66,56 @@ export class EnemySpawnStrategy {
     }
 
     /**
+     * Spawns an enemy at a specific coordinate with optional constraints.
+     * Used by MazeSpawner or other coordinate-based systems.
+     * 
+     * @param {number} x - X position
+     * @param {number} y - Y position
+     * @param {string} type - Enemy type ('patrol', 'shooter', 'jumper')
+     * @param {Object} context - Optional context { minX, maxX } for patrols
+     * @returns {boolean} True if spawned
+     */
+    spawnInZone(x, y, type, context = {}) {
+        if (type === 'patrol') {
+            if (this.scene.patrolEnemyPool) {
+                const enemy = this.scene.patrolEnemyPool.spawn(x, y);
+                if (this.scene.patrolEnemies) this.scene.patrolEnemies.add(enemy, true);
+
+                if (enemy && enemy.active && enemy.setPatrolBounds) {
+                    const minX = context.minX ?? (x - 50);
+                    const maxX = context.maxX ?? (x + 50);
+                    const patrolSpeed = ENEMY_CONFIG.PATROL.SPEED;
+
+                    if (minX < maxX) {
+                        enemy.setPatrolBounds(minX, maxX, patrolSpeed);
+                        enemy.patrol(minX, maxX, patrolSpeed);
+                        return true;
+                    }
+                }
+            }
+        } else if (type === 'shooter') {
+            if (this.scene.shooterEnemyPool) {
+                const shooter = this.scene.shooterEnemyPool.spawn(x, y);
+                if (this.scene.shooterEnemies) this.scene.shooterEnemies.add(shooter, true);
+
+                const projectilesGroup = this.scene.projectilePool || this.scene.projectiles;
+                if (shooter?.startShooting) shooter.startShooting(projectilesGroup, this.scene.currentHeight);
+                return true;
+            }
+        } else if (type === 'jumper') {
+            if (this.scene.jumperShooterEnemyPool) {
+                const jumper = this.scene.jumperShooterEnemyPool.spawn(x, y);
+                if (this.scene.jumperShooterEnemies) this.scene.jumperShooterEnemies.add(jumper, true);
+
+                const projectilesGroup = this.scene.projectilePool || this.scene.projectiles;
+                if (jumper?.startShooting) jumper.startShooting(projectilesGroup, this.scene.currentHeight);
+                return true;
+            }
+        }
+        return false;
+    }
+
+    /**
      * Internal helper to spawn a patrol enemy.
      * @private
      */

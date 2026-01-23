@@ -31,31 +31,41 @@ describe('ScoreManager', () => {
         expect(scores[0]).toMatchObject({ name: 'ABC', coins: 100, height: 50 });
     });
 
-    test('should sort scores by coins then height', () => {
+    test('should sort scores by height then coins', () => {
         scoreManager.saveScore('A', 10, 100);
         scoreManager.saveScore('B', 20, 50);
         scoreManager.saveScore('C', 10, 200);
 
         const scores = scoreManager.getTopScores();
-        expect(scores[0].name).toBe('B'); // 20 coins
-        expect(scores[1].name).toBe('C'); // 10 coins, 200 height
-        expect(scores[2].name).toBe('A'); // 10 coins, 100 height
+        expect(scores[0].name).toBe('C'); // 200 height
+        expect(scores[1].name).toBe('A'); // 100 height
+        expect(scores[2].name).toBe('B'); // 50 height
     });
 
     test('should keep only top 10 scores', () => {
         for (let i = 0; i < 15; i++) {
-            scoreManager.saveScore(`P${i}`, i, i);
+            scoreManager.saveScore(`P${i}`, i, i * 10);
         }
         const scores = scoreManager.getTopScores();
         expect(scores).toHaveLength(10);
-        expect(scores[0].coins).toBe(14); // Highest score
+        expect(scores[0].height).toBe(140); // Highest score
     });
 
-    test('isHighScore should respect minimum requirements', () => {
-        // Min 1 coin AND 60m height
-        expect(scoreManager.isHighScore(59, 10)).toBe(false); // Height too low
-        expect(scoreManager.isHighScore(100, 0)).toBe(false); // No coins
-        expect(scoreManager.isHighScore(60, 1)).toBe(true); // Just enough
+    test('isHighScore should respect minimum requirements when full', () => {
+        // Fill leaderboard with very low valid scores to test the hard minimums
+        for (let i = 0; i < 10; i++) {
+            scoreManager.saveScore(`P${i}`, 1, 60 + i);
+        }
+        // Lowest score is 60 height, 1 coin.
+
+        // Even if it ties/beats the lowest score, it must meet min requirements?
+        // Code: if (coins < 1 || height < 60) return false;
+
+        expect(scoreManager.isHighScore(59, 10)).toBe(false); // Height 59 < 60 -> False (Strict Min)
+        expect(scoreManager.isHighScore(100, 0)).toBe(false); // Coins 0 < 1 -> False (Strict Min)
+
+        // 61 height, 2 coins -> Should be true (beats 60 height)
+        expect(scoreManager.isHighScore(61, 2)).toBe(true);
     });
 
     test('saveScore should uppercase and trim player names to 3 characters', () => {

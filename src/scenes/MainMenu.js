@@ -1,8 +1,10 @@
 import { UIHelpers } from '../utils/UIHelpers.js';
-import { InputManager } from '../managers/input/InputManager.js';
+import { InputSystem } from '../core/systems/InputSystem.js';
 import { MenuNavigation } from '../managers/ui/MenuNavigation.js';
 import EventBus, { Events } from '../core/EventBus.js';
+import AudioSystem from '../core/systems/AudioSystem.js';
 import GameState from '../core/GameState.js';
+import { ASSETS } from '../config/AssetKeys.js';
 
 export class MainMenu extends Phaser.Scene {
 	constructor() {
@@ -11,7 +13,11 @@ export class MainMenu extends Phaser.Scene {
 	}
 
 	create() {
-		this.inputManager = new InputManager(this);
+		// Initialize Audio Manager for this scene to capture interactions
+		AudioSystem.setScene(this);
+		AudioSystem.setupAudioContextResume();
+
+		this.inputManager = new InputSystem(this);
 		this.inputManager.setupInputs();
 
 		const width = this.cameras.main.width;
@@ -21,32 +27,33 @@ export class MainMenu extends Phaser.Scene {
 		this.add.rectangle(width / 2, height / 2, width, height, 0x050505);
 
 		// Title
-		this.add.text(width / 2, 120, 'ENDLESS 67', {
-			fontSize: '48px',
-			color: '#ffd700',
-			fontStyle: 'bold',
-			stroke: '#8B4500',
-			strokeThickness: 6
-		}).setOrigin(0.5);
+		this.add.image(width / 2, 120, ASSETS.GAME_LOGO).setScale(0.28);
 
 		// --- BUTTONS ---
 		this.buttons = [];
 
-		const startBtn = UIHelpers.createTextButton(this, width / 2, 250, 'START GAME', {
+		const startBtn = UIHelpers.createTextButton(this, width / 2, height / 2, 'START GAME', {
 			textColor: '#00ff00',
 			fontSize: '28px',
 			callback: () => this.scene.start('Game')
 		});
 		this.buttons.push(startBtn);
 
-		const leaderboardBtn = UIHelpers.createTextButton(this, width / 2, 330, 'LEADERBOARD', {
+		const leaderboardBtn = UIHelpers.createTextButton(this, width / 2, height / 2 + 80, 'LEADERBOARD', {
 			textColor: '#00ffff',
 			fontSize: '28px',
 			callback: () => this.scene.start('Leaderboard')
 		});
 		this.buttons.push(leaderboardBtn);
 
-		const settingsBtn = UIHelpers.createTextButton(this, width / 2, 410, 'SETTINGS', {
+		const skinsBtn = UIHelpers.createTextButton(this, width / 2, height / 2 + 160, 'STORE', {
+			textColor: '#ffff00',
+			fontSize: '28px',
+			callback: () => this.scene.start('Store')
+		});
+		this.buttons.push(skinsBtn);
+
+		const settingsBtn = UIHelpers.createTextButton(this, width / 2, height / 2 + 240, 'SETTINGS', {
 			textColor: '#ffffff',
 			fontSize: '28px',
 			callback: () => this.scene.start('Settings')
@@ -63,7 +70,7 @@ export class MainMenu extends Phaser.Scene {
 		});
 
 		// Version (visible text)
-		const versionText = this.add.text(width / 2, height - 30, 'v0.0.41', {
+		const versionText = this.add.text(width / 2, height - 30, 'v0.0.48', {
 			fontSize: '14px',
 			color: '#444'
 		}).setOrigin(0.5);
