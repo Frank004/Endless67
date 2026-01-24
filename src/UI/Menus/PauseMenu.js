@@ -22,7 +22,7 @@ export class PauseMenu {
         // Ad banner está arriba (50px), así que el gameplay empieza desde Y=50
         const adBannerHeight = 50;
         const pauseButtonY = 40 + adBannerHeight; // 50px debajo del ad banner
-        const pauseButtonX = gameWidth - 30; // Right margin
+        const pauseButtonX = gameWidth - 16; // Centered in 32px wall (16px from edge)
 
         this.pauseButton = scene.add.image(pauseButtonX, pauseButtonY, 'ui_hud', 'btn-smal-pause.png')
             .setScrollFactor(0).setDepth(201).setInteractive({ useHandCursor: true })
