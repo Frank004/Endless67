@@ -9,8 +9,8 @@ import { SLOT_CONFIG, getPlatformBounds, getItemBounds } from '../../Config/Slot
 import { getPlayableBounds } from '../../Utils/playableBounds.js';
 import { MAZE_ROW_HEIGHT } from '../../Data/MazePatterns.js';
 import { PatternTransformer } from '../../Utils/PatternTransformer.js';
-import { PlatformSlotStrategy } from './strategies/PlatformSlotStrategy.js';
-import { MazeSlotStrategy } from './strategies/MazeSlotStrategy.js';
+import { PlatformSlotStrategy } from './Strategies/PlatformSlotStrategy.js';
+import { MazeSlotStrategy } from './Strategies/MazeSlotStrategy.js';
 // Pure layout logic
 import { GridGenerator } from './GridGenerator.js';
 

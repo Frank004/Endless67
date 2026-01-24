@@ -1,9 +1,9 @@
 /* eslint-disable */
-import { EnemyDevHandler } from '../handlers/EnemyDevHandler.js';
-import { ItemDevHandler } from '../handlers/ItemDevHandler.js';
-import { PlatformDevHandler } from '../handlers/PlatformDevHandler.js';
-import { MazeDevHandler } from '../handlers/MazeDevHandler.js';
-import { RiserDevHandler } from '../handlers/RiserDevHandler.js';
+import { EnemyDevHandler } from '../Handlers/EnemyDevHandler.js';
+import { ItemDevHandler } from '../Handlers/ItemDevHandler.js';
+import { PlatformDevHandler } from '../Handlers/PlatformDevHandler.js';
+import { MazeDevHandler } from '../Handlers/MazeDevHandler.js';
+import { RiserDevHandler } from '../Handlers/RiserDevHandler.js';
 
 export class PlaygroundDevMenu {
     constructor(scene, cleanupModule) {
