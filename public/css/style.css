@@ -141,12 +141,21 @@ body.mobile canvas {
 .loader-bar-placeholder {
     position: absolute;
     top: 60%;
+    /* Match Phaser Y = height * 0.6 */
     left: 50%;
     transform: translateX(-50%);
-    width: 120px;
-    height: 8px;
-    background: rgba(255, 255, 255, 0.15);
-    border-radius: 4px;
+    width: auto;
+    height: auto;
+    background: none;
+    border: none;
+}
+
+.loader-bar-placeholder img {
+    /* Visual approximation of sprite scaling */
+    width: 200px;
+    max-width: 50vw;
+    height: auto;
+    display: block;
 }
 
 .loader-version {
