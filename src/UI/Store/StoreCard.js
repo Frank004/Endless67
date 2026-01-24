@@ -81,14 +81,42 @@ export class StoreCard extends Phaser.GameObjects.Container {
         if (this.scene.textures.exists(skinKey)) {
             const texture = this.scene.textures.get(skinKey);
             const frames = texture.getFrameNames();
-            // Find a frame that matches "idle" and "1" or "01", preventing matches like "10", "11", etc.
-            // Matches: "idle-01.png", "IDLE/IDLE 1.png", "IDLE_01.png"
-            const idleFrame = frames.find(f => f.match(/idle.*[^0-9]0?1\.png/i));
+
+            // Find idle frame with multiple fallback patterns
+            let idleFrame = null;
+
+            // Pattern 1: idle/idle-01.png or idle-01.png (hyphen)
+            idleFrame = frames.find(f => /idle.*-0?1\.png/i.test(f));
+
+            // Pattern 2: idle_01.png (underscore)
+            if (!idleFrame) {
+                idleFrame = frames.find(f => /idle.*_0?1\.png/i.test(f));
+            }
+
+            // Pattern 3: Any frame containing 'idle' and '1'
+            if (!idleFrame) {
+                idleFrame = frames.find(f => /idle.*1\.png/i.test(f));
+            }
+
+            // Pattern 4: Just the first frame as absolute fallback
+            if (!idleFrame && frames.length > 0) {
+                // Try to find any idle frame
+                idleFrame = frames.find(f => /idle/i.test(f));
+                // Or just use first frame
+                if (!idleFrame) {
+                    idleFrame = frames[0];
+                }
+            }
 
             if (idleFrame) {
                 this.previewSprite.setTexture(skinKey, idleFrame);
                 this.previewSprite.setVisible(true);
+                // Ensure animation is stopped (just show static frame)
+                if (this.previewSprite.anims) {
+                    this.previewSprite.anims.stop();
+                }
             } else {
+                console.warn(`[StoreCard] No idle frame found for skin: ${this.skinData.id}`);
                 this.previewSprite.setVisible(false);
             }
         } else {
