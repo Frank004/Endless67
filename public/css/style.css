@@ -92,13 +92,17 @@ body.mobile canvas {
     left: 0;
     width: 100%;
     height: 100%;
-    background: url('../assets/ui/main-bg.png') no-repeat center center;
-    background-size: cover;
+    /* Start with black background to match letterboxing */
+    background-color: #000000;
+    /* Use 'contain' to ensure the full image is visible without zooming/cropping, matching Phaser's probable fit logic */
+    background-image: url('../assets/ui/main-bg.png');
+    background-repeat: no-repeat;
+    background-position: center center;
+    background-size: contain;
     display: flex;
     flex-direction: column;
     align-items: center;
     justify-content: flex-start;
-    /* Align from top like Phaser */
     z-index: 10001;
     color: #fff;
     font-family: 'Pixelify Sans', monospace;
@@ -113,29 +117,22 @@ body.mobile canvas {
     /* Let children follow flex parent */
 }
 
-/* Logo: Try to match Phaser MainMenu Y=120 */
+/* Logo Removed from CSS logic (handled by Phaser) */
 .loader-title {
-    /* Ajuste para igualar posición visual de Phaser (que se ve más abajo) */
-    margin-top: 18vh;
-    margin-bottom: 0;
-}
-
-.loader-title img {
-    /* Ajuste de escala para igualar Phaser (que se ve más grande) */
-    width: 90vw;
-    max-width: 600px;
-    height: auto;
-    display: block;
+    display: none;
 }
 
 .loader-version {
     position: absolute;
     bottom: 30px;
-    font-size: 14px;
+    font-size: 20px;
+    /* Increased from 14px */
+    font-weight: bold;
     color: #aaaaaa;
     background: rgba(0, 0, 0, 0.6);
-    padding: 5px 15px;
-    border-radius: 15px;
+    padding: 8px 20px;
+    /* Increased padding */
+    border-radius: 20px;
     margin: 0;
     font-family: monospace;
 }
