@@ -1,7 +1,7 @@
 import { WALL_DECOR_CONFIG, getRandomDecorationType, getRandomFrameForType, getWallInsetX } from '../../Config/WallDecorConfig.js';
-import { WallDecorFactory } from './decorations/WallDecorFactory.js';
-import { DecorRules } from './rules/DecorRules.js';
-import { LightBugInteractable } from '../Gameplay/interactables/LightBugInteractable.js';
+import { WallDecorFactory } from './Decorations/WallDecorFactory.js';
+import { DecorRules } from './Rules/DecorRules.js';
+import { LightBugInteractable } from '../Gameplay/Interactables/LightBugInteractable.js';
 
 /**
  * WallDecorManager.js

@@ -2,7 +2,7 @@ import { LAYOUT_CONFIG } from '../../Config/LayoutConfig.js';
 import { WALLS } from '../../Config/GameConstants.js';
 import { Tires } from '../../Entities/Tires.js';
 import { Trashcan } from '../../Entities/Trashcan.js';
-import { TrashcanInteractable } from '../../Systems/Gameplay/interactables/TrashcanInteractable.js';
+import { TrashcanInteractable } from '../../Systems/Gameplay/Interactables/TrashcanInteractable.js';
 
 /**
  * StageProps

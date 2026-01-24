@@ -2,8 +2,8 @@ import { LAYOUT_CONFIG } from '../Config/LayoutConfig.js';
 import { ASSETS } from '../Config/AssetKeys.js';
 import { WALLS } from '../Config/GameConstants.js';
 import { getLightEmitterConfig } from '../Config/LightEmitterConfig.js';
-import { LightEmitterComponent } from '../Systems/Visuals/decorations/LightEmitterComponent.js';
-import { LightBugInteractable } from '../Systems/Gameplay/interactables/LightBugInteractable.js';
+import { LightEmitterComponent } from '../Systems/Visuals/Decorations/LightEmitterComponent.js';
+import { LightBugInteractable } from '../Systems/Gameplay/Interactables/LightBugInteractable.js';
 
 /**
  * StageFloor
@@ -109,7 +109,7 @@ export class StageFloor extends Phaser.GameObjects.TileSprite {
                 x: container.x,
                 y: container.y
             };
-            
+
             const streetlightId = `streetlight_${container.x}_${container.y}_${Date.now()}`;
             const lightBugInteractable = new LightBugInteractable(scene, streetlightWrapper);
             scene.interactableManager.register(streetlightId, lightBugInteractable);

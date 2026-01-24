@@ -1,7 +1,7 @@
 import { GAME_CONFIG } from '../../Config/GameConstants.js';
 import { BACKGROUND_PATTERNS, DECO_FRAMES } from '../../Data/BackgroundPatterns.js';
 import { WALL_DECOR_CONFIG, getRandomFrameForType, getWallInsetX } from '../../Config/WallDecorConfig.js';
-import { WallDecorFactory } from '../Visuals/decorations/WallDecorFactory.js';
+import { WallDecorFactory } from '../Visuals/Decorations/WallDecorFactory.js';
 
 /**
  * BackgroundManager
