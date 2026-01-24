@@ -121,8 +121,8 @@ body.mobile canvas {
 .loader-title {
     display: block;
     position: absolute;
-    top: 20%;
-    /* Adjusted from 120px to relative based on screens */
+    top: 22%;
+    /* Slightly lower */
     left: 50%;
     transform: translate(-50%, -50%);
     width: 100%;
@@ -132,9 +132,9 @@ body.mobile canvas {
 }
 
 .loader-title img {
-    /* Logo orig ~1290 * 0.28 = 361px ... but Phaser rendering looks bigger on mobile */
-    width: 90vw;
-    max-width: 600px;
+    /* Logo orig ~1290 * 0.28 = 361px ... adjusted to ~78vw */
+    width: 78vw;
+    max-width: 500px;
     height: auto;
     display: inline-block;
 }
@@ -153,8 +153,8 @@ body.mobile canvas {
 
 .loader-bar-placeholder img {
     /* Visual approximation of sprite scaling */
-    width: 60vw;
-    max-width: 300px;
+    width: 50vw;
+    max-width: 250px;
     height: auto;
     display: block;
 }
