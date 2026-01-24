@@ -13,6 +13,13 @@ export class MainMenu extends Phaser.Scene {
 	}
 
 	create() {
+		// Hide HTML Loader when Menu is actually ready
+		const htmlLoader = document.getElementById('loader');
+		if (htmlLoader) {
+			htmlLoader.style.display = 'none';
+			if (htmlLoader.parentNode) htmlLoader.parentNode.removeChild(htmlLoader);
+		}
+
 		// Initialize Audio Manager for this scene to capture interactions
 		AudioSystem.setScene(this);
 		AudioSystem.setupAudioContextResume();
@@ -69,10 +76,22 @@ export class MainMenu extends Phaser.Scene {
 		});
 
 		// Version (visible text)
-		const versionText = this.add.text(width / 2, height - 30, 'v0.0.50', {
+		// Version (visible text with background)
+		const versionStr = window.GAME_VERSION || 'v0.0.51';
+		const versionText = this.add.text(width / 2, height - 30, versionStr, {
 			fontSize: '14px',
-			color: '#444'
-		}).setOrigin(0.5);
+			color: '#aaaaaa',
+			fontFamily: 'monospace'
+		}).setOrigin(0.5).setDepth(20);
+
+		const versionBgWidth = versionText.width + 30;
+		const versionBgHeight = 26;
+
+		const vBg = this.add.graphics();
+		vBg.fillStyle(0x000000, 0.6);
+		vBg.fillRoundedRect(-versionBgWidth / 2, -versionBgHeight / 2, versionBgWidth, versionBgHeight, 13);
+		vBg.setPosition(width / 2, height - 30);
+		vBg.setDepth(19);
 
 		// Invisible larger touch area for easier mobile activation (increased size)
 		const touchArea = this.add.rectangle(width / 2, height - 30, 300, 120, 0x000000, 0)

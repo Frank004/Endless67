@@ -28,6 +28,7 @@ export class Boot extends Phaser.Scene {
     }
 
     create() {
+        // HTML Loader persists until Preloader finishes or MainMenu starts
         console.log('Boot sequence loaded - Starting Preloader');
         this.scene.start('Preloader');
     }

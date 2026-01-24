@@ -31,13 +31,9 @@
     <!-- Loader -->
     <div id="loader">
         <div class="loader-content">
-            <div class="loader-title">
-                <img src="./assets/logo.png" alt="ENDLESS67"
-                    style="width: 50vmin; height: auto; display: block; margin: 0 auto;">
-            </div>
-            <div id="loader-version" class="loader-version">v0.0.50</div>
-            <div class="loader-spinner"></div>
-            <div class="loader-text">Cargando<span id="loader-dots">...</span></div>
+            <!-- Logo removed to prevent jump. It will appear smoothly in Phaser -->
+            <div id="loader-version" class="loader-version">v0.0.51</div>
+            <!-- Text/Spinner removed per request -->
         </div>
     </div>
 
@@ -78,6 +74,15 @@
                 }, 500);
             }
         })();
+
+        // Robust Loader Handling: Hide when game signals readiness
+        window.addEventListener('game-ready', function () {
+            var loader = document.getElementById('loader');
+            if (loader) {
+                loader.style.display = 'none';
+                if (loader.parentNode) loader.parentNode.removeChild(loader);
+            }
+        });
     </script>
 
     <div id="game-container"></div>
@@ -117,7 +122,7 @@
     </script>
     <script>
         // Game Version - Updated automatically
-        window.GAME_VERSION = 'v0.0.50';
+        window.GAME_VERSION = 'v0.0.51';
         console.log(`🚀 ENDLESS67 ${window.GAME_VERSION} initialized`);
 
         // Mostrar versión en el loader
@@ -128,7 +133,7 @@
             }
         })();
     </script>
-    <script type="module" src="src/main.js?v=20260124-0250"></script>
+    <script type="module" src="src/main.js?v=20260124-1550"></script>
 
 </body>
 

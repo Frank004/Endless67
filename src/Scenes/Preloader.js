@@ -21,31 +21,35 @@ export class Preloader extends Phaser.Scene {
         const v = window.GAME_VERSION ? `?v=${window.GAME_VERSION}` : '';
 
         // --- CUSTOM LOADING SCREEN ---
+
+        // --- VISUAL LOADING SCREEN (PHASER) ---
+        // Since HTML loader is static, we switch to this animated one immediately.
+
         const width = this.cameras.main.width;
         const height = this.cameras.main.height;
 
-        // 1. Background
+        // 1. Background (Match MainMenu cover logic)
         if (this.textures.exists(ASSETS.MAIN_BG)) {
             const bg = this.add.image(width / 2, height / 2, ASSETS.MAIN_BG).setOrigin(0.5);
-            // Scale to cover
             const scaleX = width / bg.width;
             const scaleY = height / bg.height;
             bg.setScale(Math.max(scaleX, scaleY));
+        } else {
+            // Fallback if Boot failed to load bg
         }
 
-        // 2. Logo
+        // 2. Logo (Match MainMenu Y=120)
         if (this.textures.exists(ASSETS.GAME_LOGO)) {
-            this.add.image(width / 2, height * 0.3, ASSETS.GAME_LOGO).setScale(0.28).setOrigin(0.5);
+            this.add.image(width / 2, 120, ASSETS.GAME_LOGO).setScale(0.28).setOrigin(0.5);
         }
 
-        // 3. Loading Animation
+        // 3. Loading Animation (Sprites)
         if (this.textures.exists(ASSETS.UI_HUD)) {
-            // Create animation if it doesn't exist
             if (!this.anims.exists('loading_anim')) {
                 this.anims.create({
                     key: 'loading_anim',
                     frames: this.anims.generateFrameNames(ASSETS.UI_HUD, {
-                        prefix: 'loading/loading-', // Updated prefix
+                        prefix: 'loading/loading-',
                         start: 0,
                         end: 7,
                         suffix: '.png'
@@ -54,66 +58,38 @@ export class Preloader extends Phaser.Scene {
                     repeat: -1
                 });
             }
-
-            const loadingSprite = this.add.sprite(width / 2, height * 0.6, ASSETS.UI_HUD)
+            this.add.sprite(width / 2, height * 0.6, ASSETS.UI_HUD)
                 .play('loading_anim')
-                .setScale(0.5); // Adjust scale as needed
+                .setScale(0.5);
         }
 
-        // 4. Loading Text & Percent
-        const loadingText = this.make.text({
-            x: width / 2,
-            y: height * 0.7,
-            text: 'Loading...',
-            style: {
-                font: '16px "Pixelify Sans"',
-                fill: '#ffffff'
-            }
-        }).setOrigin(0.5);
-
-        const percentText = this.make.text({
-            x: width / 2,
-            y: height * 0.75,
-            text: '0%',
-            style: {
-                font: '16px "Pixelify Sans"',
-                fill: '#F9C150'
-            }
-        }).setOrigin(0.5);
-
-        // 5. Version with semi-transparent background
-        const versionStr = window.GAME_VERSION || 'v0.0.50';
+        // 4. Version (Match MainMenu Style)
+        const versionStr = window.GAME_VERSION || 'v0.0.51';
         const versionText = this.add.text(width / 2, height - 30, versionStr, {
             fontSize: '14px',
             color: '#aaaaaa',
             fontFamily: 'monospace'
         }).setOrigin(0.5).setDepth(20);
 
-        const versionBgWidth = versionText.width + 20;
-        const versionBg = this.add.rectangle(width / 2, height - 30, versionBgWidth, 24, 0x000000, 0.5)
-            .setOrigin(0.5).setDepth(19);
+        const versionBgWidth = versionText.width + 30;
+        const versionBgHeight = 26;
 
-        // --- HIDE HTML LOADER ---
+        const vBg = this.add.graphics();
+        vBg.fillStyle(0x000000, 0.6);
+        vBg.fillRoundedRect(-versionBgWidth / 2, -versionBgHeight / 2, versionBgWidth, versionBgHeight, 13);
+        vBg.setPosition(width / 2, height - 30);
+        vBg.setDepth(19);
+
+        // Progress events (No text update, just internal logic if needed)
+        this.load.on('progress', (value) => {
+            // No visual update requested
+        });
+
+        // --- HIDE HTML LOADER NOW ---
         const htmlLoader = document.getElementById('loader');
         if (htmlLoader) {
             htmlLoader.style.display = 'none';
         }
-
-        // Progress events
-        this.load.on('progress', (value) => {
-            percentText.setText(parseInt(value * 100) + '%');
-        });
-
-        this.load.on('complete', () => {
-            // Destroy custom loading elements?
-            // Actually, since we transition immediately to MainMenu, they will be destroyed with the scene.
-            // But for cleanliness:
-            loadingText.destroy();
-            percentText.destroy();
-            versionText.destroy();
-            versionBg.destroy();
-            // Sprites are automatically destroyed with scene shutdown
-        });
 
         // --- AUDIO LOADING ---
         this.load.audio(ASSETS.COIN_SFX_PREFIX + '1', 'assets/audio/collecting-coins/Several Coins 01.mp3' + v);

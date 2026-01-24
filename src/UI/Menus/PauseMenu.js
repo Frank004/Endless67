@@ -24,7 +24,7 @@ export class PauseMenu {
         const pauseButtonY = 40 + adBannerHeight; // 50px debajo del ad banner
         const pauseButtonX = gameWidth - 16; // Centered in 32px wall (16px from edge)
 
-        this.pauseButton = scene.add.image(pauseButtonX, pauseButtonY, 'ui_hud', 'btn-smal-pause.png')
+        this.pauseButton = scene.add.image(pauseButtonX, pauseButtonY, 'ui_hud', 'btn-small/btn-smal-pause.png')
             .setScrollFactor(0).setDepth(201).setInteractive({ useHandCursor: true })
             .setOrigin(0.5)
             .on('pointerdown', () => this.toggle())
@@ -141,7 +141,7 @@ export class PauseMenu {
         // Buttons visibility
         Object.values(this.buttons).forEach(btn => btn.container.setVisible(true));
 
-        this.pauseButton.setTexture('ui_hud', 'btn-smal-play.png'); // Play icon
+        this.pauseButton.setTexture('ui_hud', 'btn-small/btn-smal-play.png'); // Play icon
         // Removed pauseAll to prevent UI tween lockup
 
         this.menuNavigation.setup();
@@ -155,7 +155,7 @@ export class PauseMenu {
         // Buttons visibility
         Object.values(this.buttons).forEach(btn => btn.container.setVisible(false));
 
-        this.pauseButton.setTexture('ui_hud', 'btn-smal-pause.png'); // Pause icon
+        this.pauseButton.setTexture('ui_hud', 'btn-small/btn-smal-pause.png'); // Pause icon
         // Removed resumeAll
 
         this.menuNavigation.cleanup();
