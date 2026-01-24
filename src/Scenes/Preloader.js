@@ -58,7 +58,7 @@ export class Preloader extends Phaser.Scene {
                     repeat: -1
                 });
             }
-            this.add.sprite(width / 2, height * 0.6, ASSETS.UI_HUD)
+            this.add.sprite(width / 2, height * 0.65, ASSETS.UI_HUD)
                 .play('loading_anim')
                 .setScale(0.5);
         }

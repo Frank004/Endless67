@@ -121,7 +121,7 @@ body.mobile canvas {
 .loader-title {
     display: block;
     position: absolute;
-    top: 22%;
+    top: 21.5%;
     /* Slightly lower */
     left: 50%;
     transform: translate(-50%, -50%);
@@ -132,16 +132,16 @@ body.mobile canvas {
 }
 
 .loader-title img {
-    /* Logo orig ~1290 * 0.28 = 361px ... adjusted to ~78vw */
-    width: 78vw;
-    max-width: 500px;
+    /* Logo orig ~1290 * 0.28 = 361px ... adjusted to ~87vw per feedback (+3%) */
+    width: 85vw;
+    max-width: 569px;
     height: auto;
     display: inline-block;
 }
 
 .loader-bar-placeholder {
     position: absolute;
-    top: 60%;
+    top: 63%;
     /* Match Phaser Y = height * 0.6 */
     left: 50%;
     transform: translateX(-50%);
@@ -152,9 +152,9 @@ body.mobile canvas {
 }
 
 .loader-bar-placeholder img {
-    /* Visual approximation of sprite scaling */
-    width: 50vw;
-    max-width: 250px;
+    /* Visual approximation of sprite scaling. Reduced to 40vw (-10%) */
+    width: 40vw;
+    max-width: 28px;
     height: auto;
     display: block;
 }
@@ -162,7 +162,7 @@ body.mobile canvas {
 .loader-version {
     position: absolute;
     bottom: 30px;
-    font-size: 20px;
+    font-size: 28px;
     /* Increased from 14px */
     font-weight: bold;
     color: #aaaaaa;
