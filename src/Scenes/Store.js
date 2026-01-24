@@ -91,33 +91,28 @@ export class Store extends Phaser.Scene {
         // Header container (fixed)
         this.headerContainer = this.add.container(0, 0).setScrollFactor(0).setDepth(100);
 
-        // 1. Back Button (Top Left - Circle with Arrow)
-        const btnRadius = 24;
-        const btnX = 30 + btnRadius; // Margin left
-        const btnY = 35; // Top margin
+        // 1. Back Button (Top Left - Sprite)
+        const btnX = 45; // Margin left + half button width
+        const btnY = 45; // Top margin
 
-        const btnBg = this.add.circle(0, 0, btnRadius, 0x000000, 0.5)
-            .setStrokeStyle(2, 0xffffff);
-
-        const btnArrow = this.add.text(0, 0, '←', {
-            fontSize: '28px',
-            fontStyle: 'bold',
-            color: '#ffffff'
-        }).setOrigin(0.5, 0.55); // Visual center correction
-
-        const btnContainer = this.add.container(btnX, btnY, [btnBg, btnArrow])
-            .setSize(btnRadius * 2, btnRadius * 2)
+        const backBtn = this.add.image(btnX, btnY, 'ui_hud', 'btn-smal-back.png')
+            .setOrigin(0.5)
+            .setScrollFactor(0)
+            .setDepth(101)
             .setInteractive({ useHandCursor: true });
 
-        btnContainer.on('pointerdown', () => {
+        backBtn.on('pointerdown', () => {
             this.tweens.add({
-                targets: btnContainer,
+                targets: backBtn,
                 scale: 0.9,
                 duration: 50,
                 yoyo: true
             });
             this._handleBack();
         });
+
+        backBtn.on('pointerover', () => backBtn.setTint(0xcccccc));
+        backBtn.on('pointerout', () => backBtn.clearTint());
 
         // 2. Title: "THE VAULT" (Logo) - Moved Down
         // Center text closer to the grid start (visual balance)
@@ -146,7 +141,7 @@ export class Store extends Phaser.Scene {
         this.coinCounter.setPosition(counterX, btnY);
         this.coinCounter.setScrollFactor(0);
 
-        this.headerContainer.add([btnContainer, logo, this.coinCounter]);
+        this.headerContainer.add([backBtn, logo, this.coinCounter]);
 
         // Initial Layout
         // CoinCounter handles its own initial visual state

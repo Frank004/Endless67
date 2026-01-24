@@ -22,20 +22,17 @@ export class PauseMenu {
         // Ad banner está arriba (50px), así que el gameplay empieza desde Y=50
         const adBannerHeight = 50;
         const pauseButtonY = 40 + adBannerHeight; // 50px debajo del ad banner
-        this.pauseButtonBg = scene.add.circle(gameWidth - 16, pauseButtonY, 16, 0x000000, 0.5)
-            .setScrollFactor(0).setDepth(200);
+        const pauseButtonX = gameWidth - 30; // Right margin
 
-        this.pauseButton = scene.add.image(gameWidth - 16, pauseButtonY, 'ui_icons', 'pause')
+        this.pauseButton = scene.add.image(pauseButtonX, pauseButtonY, 'ui_hud', 'btn-smal-pause.png')
             .setScrollFactor(0).setDepth(201).setInteractive({ useHandCursor: true })
-            .setScale(0.375)
-            .setTint(0xffffff)
+            .setOrigin(0.5)
             .on('pointerdown', () => this.toggle())
-            .on('pointerover', () => this.pauseButtonBg.setFillStyle(0x333333, 0.7))
-            .on('pointerout', () => this.pauseButtonBg.setFillStyle(0x000000, 0.5));
+            .on('pointerover', () => this.pauseButton.setTint(0xcccccc))
+            .on('pointerout', () => this.pauseButton.clearTint());
 
         // Alias for compatibility if needed (scene.pauseButton used elsewhere?)
         scene.pauseButton = this.pauseButton;
-        scene.pauseButtonBg = this.pauseButtonBg;
 
         this.createMenuOverlay(centerX);
     }
@@ -144,7 +141,7 @@ export class PauseMenu {
         // Buttons visibility
         Object.values(this.buttons).forEach(btn => btn.container.setVisible(true));
 
-        this.pauseButton.setFrame('play'); // Play icon
+        this.pauseButton.setTexture('ui_hud', 'btn-smal-play.png'); // Play icon
         // Removed pauseAll to prevent UI tween lockup
 
         this.menuNavigation.setup();
@@ -158,7 +155,7 @@ export class PauseMenu {
         // Buttons visibility
         Object.values(this.buttons).forEach(btn => btn.container.setVisible(false));
 
-        this.pauseButton.setFrame('pause'); // Pause icon
+        this.pauseButton.setTexture('ui_hud', 'btn-smal-pause.png'); // Pause icon
         // Removed resumeAll
 
         this.menuNavigation.cleanup();
