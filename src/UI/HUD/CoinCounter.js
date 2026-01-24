@@ -9,7 +9,7 @@ export class CoinCounter extends Phaser.GameObjects.Container {
 
         // Background
         // Origin 0, 0.5 aligns left-center
-        this.bg = scene.add.image(0, 0, ASSETS.UI_HUD, 'coincounter.png').setOrigin(0, 0.5);
+        this.bg = scene.add.image(0, 0, ASSETS.UI_HUD, 'panels/coincounter.png').setOrigin(0, 0.5);
         this.add(this.bg);
 
         // Digits Container
@@ -45,13 +45,13 @@ export class CoinCounter extends Phaser.GameObjects.Container {
         let currentX = 0;
 
         // 1. Dollar Sign ($)
-        const dollar = this.scene.add.image(0, 0, ASSETS.UI_HUD, 'dollarsign.png').setOrigin(0, 0.5);
+        const dollar = this.scene.add.image(0, 0, ASSETS.UI_HUD, 'numbers/dollarsign.png').setOrigin(0, 0.5);
         this.digitsContainer.add(dollar);
         currentX += dollar.width + spacing;
 
         // 2. Digits
         for (let char of formatted) {
-            const digit = this.scene.add.image(currentX, 0, ASSETS.UI_HUD, `${char}.png`).setOrigin(0, 0.5);
+            const digit = this.scene.add.image(currentX, 0, ASSETS.UI_HUD, `numbers/${char}.png`).setOrigin(0, 0.5);
             this.digitsContainer.add(digit);
             currentX += digit.width + spacing;
         }
@@ -59,7 +59,7 @@ export class CoinCounter extends Phaser.GameObjects.Container {
         // 3. Suffix (K, M, B)
         if (suffix) {
             // Suffixes are lowercase in filename (k.png, m.png, b.png)
-            const s = this.scene.add.image(currentX, 0, ASSETS.UI_HUD, `${suffix}.png`).setOrigin(0, 0.5);
+            const s = this.scene.add.image(currentX, 0, ASSETS.UI_HUD, `numbers/${suffix}.png`).setOrigin(0, 0.5);
             this.digitsContainer.add(s);
             currentX += s.width + spacing;
         }

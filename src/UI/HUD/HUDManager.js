@@ -63,7 +63,7 @@ export class HUDManager {
 
         // --- PRIMARY: HEIGHT (Main metric for leaderboard) ---
         // Background Sprite
-        this.heightBg = scene.add.image(scoreX, heightCenterY, ASSETS.UI_HUD, 'metercounter.png')
+        this.heightBg = scene.add.image(scoreX, heightCenterY, ASSETS.UI_HUD, 'panels/metercounter.png')
             .setOrigin(0, 0.5)
             .setScrollFactor(0)
             .setDepth(200)

@@ -93,6 +93,12 @@ export class Preloader extends Phaser.Scene {
         const versionBg = this.add.rectangle(width / 2, height - 30, versionBgWidth, 24, 0x000000, 0.5)
             .setOrigin(0.5).setDepth(19);
 
+        // --- HIDE HTML LOADER ---
+        const htmlLoader = document.getElementById('loader');
+        if (htmlLoader) {
+            htmlLoader.style.display = 'none';
+        }
+
         // Progress events
         this.load.on('progress', (value) => {
             percentText.setText(parseInt(value * 100) + '%');
