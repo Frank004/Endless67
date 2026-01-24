@@ -39,6 +39,7 @@ export const ASSETS = {
     JOYSTICK_KNOB: 'joystick_knob',
     JUMP_FEEDBACK: 'jump_feedback',
     PARTICLE: 'particle',
+    MAIN_BG: 'main_bg',
 
     // Animations
     EXPLOSION_ANIM: 'explosion',

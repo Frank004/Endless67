@@ -24,7 +24,12 @@ export class MainMenu extends Phaser.Scene {
 		const height = this.cameras.main.height;
 
 		// Background
-		this.add.rectangle(width / 2, height / 2, width, height, 0x050505);
+		const bg = this.add.image(width / 2, height / 2, ASSETS.MAIN_BG)
+			.setOrigin(0.5);
+		// Scale to cover the screen
+		const scaleX = width / bg.width;
+		const scaleY = height / bg.height;
+		bg.setScale(Math.max(scaleX, scaleY));
 
 		// Title
 		this.add.image(width / 2, 120, ASSETS.GAME_LOGO).setScale(0.28);
