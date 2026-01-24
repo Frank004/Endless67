@@ -60,9 +60,7 @@ export class PauseMenu {
         let buttonY = 280;
 
         // Continue Button
-        this.buttons.continue = UIHelpers.createTextButton(scene, centerX, buttonY, 'CONTINUE', {
-            textColor: '#00ff00',
-            // hoverColor defaults to yellow now via UIHelpers
+        this.buttons.continue = UIHelpers.createSpriteButton(scene, centerX, buttonY, 'btn-continue.png', {
             callback: () => this.toggle()
         });
         this.buttons.continue.container.setVisible(false);
@@ -100,10 +98,7 @@ export class PauseMenu {
         buttonY += buttonSpacing;
 
         // Exit Button
-        this.buttons.exit = UIHelpers.createIconButton(scene, centerX, buttonY, 'door', 'EXIT TO MENU', {
-            textColor: '#ff6666',
-            hoverColor: '#ff0000',
-            iconTint: 0xff6666,
+        this.buttons.exit = UIHelpers.createSpriteButton(scene, centerX, buttonY, 'btn-exit.png', {
             callback: () => scene.scene.start('MainMenu')
         });
         this.buttons.exit.container.setVisible(false);

@@ -226,11 +226,10 @@ export class GameOverMenu {
 
         const centerX = scene.cameras.main.centerX;
         const startY = 350;
-        const spacing = 60;
+        const spacing = 65;
 
         // Restart Button
-        const restartBtn = UIHelpers.createTextButton(scene, centerX, startY, '🔄 RESTART', {
-            textColor: '#00ff00',
+        const restartBtn = UIHelpers.createSpriteButton(scene, centerX, startY, 'btn-restart.png', {
             callback: () => {
                 // Reset InputManager before restart
                 if (scene.inputManager) {
@@ -244,8 +243,7 @@ export class GameOverMenu {
         });
 
         // Leaderboard Button
-        const leaderboardBtn = UIHelpers.createTextButton(scene, centerX, startY + spacing, '🏆 LEADERBOARD', {
-            textColor: '#00ffff',
+        const leaderboardBtn = UIHelpers.createSpriteButton(scene, centerX, startY + spacing, 'btn-leaderboard.png', {
             callback: () => {
                 // Reset InputManager before scene transition
                 if (scene.inputManager) {
@@ -258,8 +256,7 @@ export class GameOverMenu {
         });
 
         // Menu Button
-        const menuBtn = UIHelpers.createTextButton(scene, centerX, startY + spacing * 2, '🏠 MAIN MENU', {
-            textColor: '#ffffff',
+        const menuBtn = UIHelpers.createSpriteButton(scene, centerX, startY + spacing * 2, 'btn-exit.png', {
             callback: () => {
                 // Reset InputManager to prevent inputs from carrying over to MainMenu
                 if (scene.inputManager) {

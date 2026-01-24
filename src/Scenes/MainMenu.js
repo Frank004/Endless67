@@ -31,31 +31,25 @@ export class MainMenu extends Phaser.Scene {
 
 		// --- BUTTONS ---
 		this.buttons = [];
+		const buttonSpacing = 65;
+		const startY = height / 2;
 
-		const startBtn = UIHelpers.createTextButton(this, width / 2, height / 2, 'START GAME', {
-			textColor: '#00ff00',
-			fontSize: '28px',
+		const startBtn = UIHelpers.createSpriteButton(this, width / 2, startY, 'btn-start.png', {
 			callback: () => this.scene.start('Game')
 		});
 		this.buttons.push(startBtn);
 
-		const leaderboardBtn = UIHelpers.createTextButton(this, width / 2, height / 2 + 80, 'LEADERBOARD', {
-			textColor: '#00ffff',
-			fontSize: '28px',
+		const leaderboardBtn = UIHelpers.createSpriteButton(this, width / 2, startY + buttonSpacing, 'btn-leaderboard.png', {
 			callback: () => this.scene.start('Leaderboard')
 		});
 		this.buttons.push(leaderboardBtn);
 
-		const skinsBtn = UIHelpers.createTextButton(this, width / 2, height / 2 + 160, 'STORE', {
-			textColor: '#ffff00',
-			fontSize: '28px',
+		const skinsBtn = UIHelpers.createSpriteButton(this, width / 2, startY + buttonSpacing * 2, 'btn-vault-store.png', {
 			callback: () => this.scene.start('Store')
 		});
 		this.buttons.push(skinsBtn);
 
-		const settingsBtn = UIHelpers.createTextButton(this, width / 2, height / 2 + 240, 'SETTINGS', {
-			textColor: '#ffffff',
-			fontSize: '28px',
+		const settingsBtn = UIHelpers.createSpriteButton(this, width / 2, startY + buttonSpacing * 3, 'btn-setting.png', {
 			callback: () => this.scene.start('Settings')
 		});
 		this.buttons.push(settingsBtn);

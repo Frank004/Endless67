@@ -4,11 +4,179 @@
 			"image": "ui.png",
 			"format": "RGBA8888",
 			"size": {
-				"w": 229,
-				"h": 85
+				"w": 1993,
+				"h": 55
 			},
 			"scale": 1,
 			"frames": [
+				{
+					"filename": "btn-confirm.png",
+					"rotated": false,
+					"trimmed": false,
+					"sourceSize": {
+						"w": 200,
+						"h": 53
+					},
+					"spriteSourceSize": {
+						"x": 0,
+						"y": 0,
+						"w": 200,
+						"h": 53
+					},
+					"frame": {
+						"x": 1,
+						"y": 1,
+						"w": 200,
+						"h": 53
+					}
+				},
+				{
+					"filename": "btn-continue.png",
+					"rotated": false,
+					"trimmed": false,
+					"sourceSize": {
+						"w": 200,
+						"h": 53
+					},
+					"spriteSourceSize": {
+						"x": 0,
+						"y": 0,
+						"w": 200,
+						"h": 53
+					},
+					"frame": {
+						"x": 203,
+						"y": 1,
+						"w": 200,
+						"h": 53
+					}
+				},
+				{
+					"filename": "btn-exit.png",
+					"rotated": false,
+					"trimmed": false,
+					"sourceSize": {
+						"w": 200,
+						"h": 53
+					},
+					"spriteSourceSize": {
+						"x": 0,
+						"y": 0,
+						"w": 200,
+						"h": 53
+					},
+					"frame": {
+						"x": 405,
+						"y": 1,
+						"w": 200,
+						"h": 53
+					}
+				},
+				{
+					"filename": "btn-leaderboard.png",
+					"rotated": false,
+					"trimmed": false,
+					"sourceSize": {
+						"w": 200,
+						"h": 53
+					},
+					"spriteSourceSize": {
+						"x": 0,
+						"y": 0,
+						"w": 200,
+						"h": 53
+					},
+					"frame": {
+						"x": 607,
+						"y": 1,
+						"w": 200,
+						"h": 53
+					}
+				},
+				{
+					"filename": "btn-restart.png",
+					"rotated": false,
+					"trimmed": false,
+					"sourceSize": {
+						"w": 200,
+						"h": 53
+					},
+					"spriteSourceSize": {
+						"x": 0,
+						"y": 0,
+						"w": 200,
+						"h": 53
+					},
+					"frame": {
+						"x": 809,
+						"y": 1,
+						"w": 200,
+						"h": 53
+					}
+				},
+				{
+					"filename": "btn-setting.png",
+					"rotated": false,
+					"trimmed": false,
+					"sourceSize": {
+						"w": 200,
+						"h": 53
+					},
+					"spriteSourceSize": {
+						"x": 0,
+						"y": 0,
+						"w": 200,
+						"h": 53
+					},
+					"frame": {
+						"x": 1011,
+						"y": 1,
+						"w": 200,
+						"h": 53
+					}
+				},
+				{
+					"filename": "btn-start.png",
+					"rotated": false,
+					"trimmed": false,
+					"sourceSize": {
+						"w": 200,
+						"h": 53
+					},
+					"spriteSourceSize": {
+						"x": 0,
+						"y": 0,
+						"w": 200,
+						"h": 53
+					},
+					"frame": {
+						"x": 1213,
+						"y": 1,
+						"w": 200,
+						"h": 53
+					}
+				},
+				{
+					"filename": "btn-vault-store.png",
+					"rotated": false,
+					"trimmed": false,
+					"sourceSize": {
+						"w": 200,
+						"h": 53
+					},
+					"spriteSourceSize": {
+						"x": 0,
+						"y": 0,
+						"w": 200,
+						"h": 53
+					},
+					"frame": {
+						"x": 1415,
+						"y": 1,
+						"w": 200,
+						"h": 53
+					}
+				},
 				{
 					"filename": "coincounter.png",
 					"rotated": false,
@@ -24,7 +192,7 @@
 						"h": 45
 					},
 					"frame": {
-						"x": 1,
+						"x": 1617,
 						"y": 1,
 						"w": 178,
 						"h": 45
@@ -45,10 +213,73 @@
 						"h": 33
 					},
 					"frame": {
-						"x": 1,
-						"y": 48,
+						"x": 1797,
+						"y": 1,
 						"w": 180,
 						"h": 33
+					}
+				},
+				{
+					"filename": "1.png",
+					"rotated": false,
+					"trimmed": true,
+					"sourceSize": {
+						"w": 15,
+						"h": 15
+					},
+					"spriteSourceSize": {
+						"x": 2,
+						"y": 0,
+						"w": 13,
+						"h": 15
+					},
+					"frame": {
+						"x": 1979,
+						"y": 1,
+						"w": 13,
+						"h": 15
+					}
+				},
+				{
+					"filename": "2.png",
+					"rotated": false,
+					"trimmed": true,
+					"sourceSize": {
+						"w": 15,
+						"h": 15
+					},
+					"spriteSourceSize": {
+						"x": 2,
+						"y": 0,
+						"w": 13,
+						"h": 15
+					},
+					"frame": {
+						"x": 1979,
+						"y": 18,
+						"w": 13,
+						"h": 15
+					}
+				},
+				{
+					"filename": "3.png",
+					"rotated": false,
+					"trimmed": true,
+					"sourceSize": {
+						"w": 15,
+						"h": 15
+					},
+					"spriteSourceSize": {
+						"x": 2,
+						"y": 0,
+						"w": 13,
+						"h": 15
+					},
+					"frame": {
+						"x": 1979,
+						"y": 35,
+						"w": 13,
+						"h": 15
 					}
 				},
 				{
@@ -66,8 +297,8 @@
 						"h": 18
 					},
 					"frame": {
-						"x": 181,
-						"y": 1,
+						"x": 1797,
+						"y": 36,
 						"w": 14,
 						"h": 18
 					}
@@ -87,8 +318,8 @@
 						"h": 15
 					},
 					"frame": {
-						"x": 181,
-						"y": 21,
+						"x": 1813,
+						"y": 36,
 						"w": 15,
 						"h": 15
 					}
@@ -108,30 +339,9 @@
 						"h": 15
 					},
 					"frame": {
-						"x": 197,
-						"y": 1,
+						"x": 1830,
+						"y": 36,
 						"w": 15,
-						"h": 15
-					}
-				},
-				{
-					"filename": "1.png",
-					"rotated": false,
-					"trimmed": true,
-					"sourceSize": {
-						"w": 15,
-						"h": 15
-					},
-					"spriteSourceSize": {
-						"x": 2,
-						"y": 0,
-						"w": 13,
-						"h": 15
-					},
-					"frame": {
-						"x": 214,
-						"y": 1,
-						"w": 13,
 						"h": 15
 					}
 				},
@@ -150,30 +360,9 @@
 						"h": 15
 					},
 					"frame": {
-						"x": 198,
-						"y": 18,
+						"x": 1847,
+						"y": 36,
 						"w": 15,
-						"h": 15
-					}
-				},
-				{
-					"filename": "2.png",
-					"rotated": false,
-					"trimmed": true,
-					"sourceSize": {
-						"w": 15,
-						"h": 15
-					},
-					"spriteSourceSize": {
-						"x": 2,
-						"y": 0,
-						"w": 13,
-						"h": 15
-					},
-					"frame": {
-						"x": 215,
-						"y": 18,
-						"w": 13,
 						"h": 15
 					}
 				},
@@ -192,51 +381,9 @@
 						"h": 15
 					},
 					"frame": {
-						"x": 198,
-						"y": 35,
+						"x": 1864,
+						"y": 36,
 						"w": 15,
-						"h": 15
-					}
-				},
-				{
-					"filename": "3.png",
-					"rotated": false,
-					"trimmed": true,
-					"sourceSize": {
-						"w": 15,
-						"h": 15
-					},
-					"spriteSourceSize": {
-						"x": 2,
-						"y": 0,
-						"w": 13,
-						"h": 15
-					},
-					"frame": {
-						"x": 183,
-						"y": 38,
-						"w": 13,
-						"h": 15
-					}
-				},
-				{
-					"filename": "5.png",
-					"rotated": false,
-					"trimmed": true,
-					"sourceSize": {
-						"w": 15,
-						"h": 15
-					},
-					"spriteSourceSize": {
-						"x": 2,
-						"y": 0,
-						"w": 13,
-						"h": 15
-					},
-					"frame": {
-						"x": 215,
-						"y": 35,
-						"w": 13,
 						"h": 15
 					}
 				},
@@ -255,9 +402,30 @@
 						"h": 15
 					},
 					"frame": {
-						"x": 198,
-						"y": 52,
+						"x": 1881,
+						"y": 36,
 						"w": 15,
+						"h": 15
+					}
+				},
+				{
+					"filename": "5.png",
+					"rotated": false,
+					"trimmed": true,
+					"sourceSize": {
+						"w": 15,
+						"h": 15
+					},
+					"spriteSourceSize": {
+						"x": 2,
+						"y": 0,
+						"w": 13,
+						"h": 15
+					},
+					"frame": {
+						"x": 1898,
+						"y": 36,
+						"w": 13,
 						"h": 15
 					}
 				},
@@ -276,8 +444,8 @@
 						"h": 15
 					},
 					"frame": {
-						"x": 183,
-						"y": 55,
+						"x": 1913,
+						"y": 36,
 						"w": 13,
 						"h": 15
 					}
@@ -297,8 +465,8 @@
 						"h": 15
 					},
 					"frame": {
-						"x": 215,
-						"y": 52,
+						"x": 1928,
+						"y": 36,
 						"w": 13,
 						"h": 15
 					}
@@ -318,8 +486,8 @@
 						"h": 15
 					},
 					"frame": {
-						"x": 198,
-						"y": 69,
+						"x": 1943,
+						"y": 36,
 						"w": 13,
 						"h": 15
 					}
@@ -339,8 +507,8 @@
 						"h": 15
 					},
 					"frame": {
-						"x": 213,
-						"y": 69,
+						"x": 1958,
+						"y": 36,
 						"w": 13,
 						"h": 15
 					}
@@ -351,6 +519,6 @@
 	"meta": {
 		"app": "https://www.codeandweb.com/texturepacker",
 		"version": "3.0",
-		"smartupdate": "$TexturePacker:SmartUpdate:be832285105024b1c93fb78ee8fecd68:3277578157641dd740069d5e4a448d93:5b04aa198265472a3c5f56958d78e97b$"
+		"smartupdate": "$TexturePacker:SmartUpdate:424fab80da922b10f4b6410ca8612f8e:dcdcbaf6cb6426d7897f68b755b1f60e:5b04aa198265472a3c5f56958d78e97b$"
 	}
 }

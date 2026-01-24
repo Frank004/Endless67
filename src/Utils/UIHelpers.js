@@ -166,6 +166,76 @@ export class UIHelpers {
     }
 
     /**
+     * Create a button using a sprite image from the ui_hud atlas
+     * @param {Phaser.Scene} scene - The scene to add the button to
+     * @param {number} x - X position (center)
+     * @param {number} y - Y position (center)
+     * @param {string} frame - Frame name from ui_hud atlas (e.g., 'btn-start.png')
+     * @param {object} options - Additional options
+     * @returns {object} - Object containing container and sprite references
+     */
+    static createSpriteButton(scene, x, y, frame, options = {}) {
+        const {
+            scale = 1,
+            depth = 201,
+            callback = null,
+            hoverScale = 1.1
+        } = options;
+
+        const container = scene.add.container(x, y).setDepth(depth).setScrollFactor(0);
+
+        // Create the button sprite from ui_hud atlas
+        const sprite = scene.add.image(0, 0, 'ui_hud', frame)
+            .setOrigin(0.5)
+            .setScale(scale);
+
+        container.add([sprite]);
+        container.setSize(sprite.displayWidth, sprite.displayHeight);
+        container.setInteractive({ useHandCursor: true });
+
+        const buttonObj = { container, sprite, text: null, bg: null };
+
+        // Define Actions
+        buttonObj.select = () => {
+            if (!container.scene) return;
+            container.setScale(hoverScale);
+        };
+
+        buttonObj.deselect = () => {
+            if (!container.scene) return;
+            container.setScale(1);
+        };
+
+        buttonObj.trigger = () => {
+            if (callback) callback();
+            if (!container.scene) return;
+
+            if (container.active) {
+                container.setScale(1.0);
+                container.scene.tweens.add({
+                    targets: container,
+                    scale: 0.95,
+                    duration: 50,
+                    yoyo: true,
+                    ignoreGlobalTimeScale: true
+                });
+            }
+        };
+
+        // Bind Pointer Events
+        container.on('pointerover', () => buttonObj.select());
+        container.on('pointerout', () => buttonObj.deselect());
+
+        if (callback) {
+            container.on('pointerdown', () => buttonObj.trigger());
+        }
+
+        container.uiWrapper = buttonObj;
+
+        return buttonObj;
+    }
+
+    /**
      * Format large numbers into compact strings (e.g. 1.2k, 1M)
      * @param {number} amount - The numeric amount
      * @returns {string} - Formatted string

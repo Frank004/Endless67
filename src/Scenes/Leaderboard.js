@@ -61,9 +61,7 @@ export class Leaderboard extends Phaser.Scene {
         }
 
         // Back Button
-        const backBtn = UIHelpers.createTextButton(this, width / 2, height - 60, 'BACK TO MENU', {
-            textColor: '#ffffff',
-            backgroundColor: '#333333',
+        const backBtn = UIHelpers.createSpriteButton(this, width / 2, height - 60, 'btn-exit.png', {
             callback: () => this.scene.start('MainMenu')
         });
 
