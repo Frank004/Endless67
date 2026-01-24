@@ -58,10 +58,10 @@ export class GameOverMenu {
 
         const bg = scene.add.rectangle(centerX, centerY, scene.cameras.main.width, scene.cameras.main.height, 0x000000, 0.9)
             .setOrigin(0.5).setDepth(300).setScrollFactor(0);
-        bg.setStrokeStyle(2, 0xffd700);
+        bg.setStrokeStyle(2, 0xF9C150);
 
         const title = scene.add.text(centerX, centerY - 90, 'NEW HIGH SCORE!', {
-            fontSize: '24px', color: '#ffd700', fontStyle: 'bold'
+            fontSize: '24px', color: '#F9C150', fontStyle: 'bold'
         }).setOrigin(0.5).setDepth(301).setScrollFactor(0);
 
         const isMobile = scene.isMobile;
