@@ -1,7 +1,7 @@
 /* eslint-disable */
 import { Game } from './Game.js';
-import { PlaygroundRules } from '../Playground/logic/PlaygroundRules.js';
-import { PlaygroundCleanup } from '../Playground/logic/PlaygroundCleanup.js';
+import { PlaygroundRules } from '../Playground/Logic/PlaygroundRules.js';
+import { PlaygroundCleanup } from '../Playground/Logic/PlaygroundCleanup.js';
 import { PlaygroundDevMenu } from '../Playground/UI/PlaygroundDevMenu.js';
 import EventBus, { Events } from '../Core/EventBus.js';
 
