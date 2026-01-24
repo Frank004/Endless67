@@ -19,6 +19,12 @@ export class Boot extends Phaser.Scene {
             this.renderer.pipelines.addPostPipeline('FluidPipeline', FluidPipeline);
             this.renderer.pipelines.addPostPipeline('FlamesPipeline', FlamesPipeline);
         }
+
+        // Pre-load loading screen assets
+        const v = window.GAME_VERSION ? `?v=${window.GAME_VERSION}` : '';
+        this.load.image('main_bg', 'assets/ui/main-bg.png' + v);
+        this.load.image('game_logo', 'assets/logo.png' + v);
+        this.load.atlas('ui_hud', 'assets/ui/ui.png' + v, 'assets/ui/ui.json' + v);
     }
 
     create() {

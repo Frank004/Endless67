@@ -20,54 +20,93 @@ export class Preloader extends Phaser.Scene {
         // Gets version from index.html (e.g., "v0.0.48") to force asset refresh
         const v = window.GAME_VERSION ? `?v=${window.GAME_VERSION}` : '';
 
-        // --- LOADING BAR UI ---
+        // --- CUSTOM LOADING SCREEN ---
         const width = this.cameras.main.width;
         const height = this.cameras.main.height;
-        const progressBar = this.add.graphics();
-        const progressBox = this.add.graphics();
 
-        const barWidth = width * 0.7; // 70% of screen width
-        const barHeight = 50;
-        const barX = (width - barWidth) / 2;
-        const barY = (height - barHeight) / 2;
+        // 1. Background
+        if (this.textures.exists(ASSETS.MAIN_BG)) {
+            const bg = this.add.image(width / 2, height / 2, ASSETS.MAIN_BG).setOrigin(0.5);
+            // Scale to cover
+            const scaleX = width / bg.width;
+            const scaleY = height / bg.height;
+            bg.setScale(Math.max(scaleX, scaleY));
+        }
 
-        progressBox.fillStyle(0x222222, 0.8);
-        progressBox.fillRect(barX - 10, barY - 10, barWidth + 20, barHeight + 20);
+        // 2. Logo
+        if (this.textures.exists(ASSETS.GAME_LOGO)) {
+            this.add.image(width / 2, height * 0.3, ASSETS.GAME_LOGO).setScale(0.28).setOrigin(0.5);
+        }
 
+        // 3. Loading Animation
+        if (this.textures.exists(ASSETS.UI_HUD)) {
+            // Create animation if it doesn't exist
+            if (!this.anims.exists('loading_anim')) {
+                this.anims.create({
+                    key: 'loading_anim',
+                    frames: this.anims.generateFrameNames(ASSETS.UI_HUD, {
+                        prefix: 'loading/loading-', // Updated prefix
+                        start: 0,
+                        end: 7,
+                        suffix: '.png'
+                    }),
+                    frameRate: 10,
+                    repeat: -1
+                });
+            }
+
+            const loadingSprite = this.add.sprite(width / 2, height * 0.6, ASSETS.UI_HUD)
+                .play('loading_anim')
+                .setScale(0.5); // Adjust scale as needed
+        }
+
+        // 4. Loading Text & Percent
         const loadingText = this.make.text({
             x: width / 2,
-            y: barY - 30, // Above bar
+            y: height * 0.7,
             text: 'Loading...',
             style: {
-                font: '20px monospace',
+                font: '16px "Pixelify Sans"',
                 fill: '#ffffff'
             }
-        });
-        loadingText.setOrigin(0.5, 0.5);
+        }).setOrigin(0.5);
 
         const percentText = this.make.text({
             x: width / 2,
-            y: height / 2,
+            y: height * 0.75,
             text: '0%',
             style: {
-                font: '18px monospace',
-                fill: '#ffffff'
+                font: '16px "Pixelify Sans"',
+                fill: '#F9C150'
             }
-        });
-        percentText.setOrigin(0.5, 0.5);
+        }).setOrigin(0.5);
 
+        // 5. Version with semi-transparent background
+        const versionStr = window.GAME_VERSION || 'v0.0.50';
+        const versionText = this.add.text(width / 2, height - 30, versionStr, {
+            fontSize: '14px',
+            color: '#aaaaaa',
+            fontFamily: 'monospace'
+        }).setOrigin(0.5).setDepth(20);
+
+        const versionBgWidth = versionText.width + 20;
+        const versionBg = this.add.rectangle(width / 2, height - 30, versionBgWidth, 24, 0x000000, 0.5)
+            .setOrigin(0.5).setDepth(19);
+
+        // Progress events
         this.load.on('progress', (value) => {
             percentText.setText(parseInt(value * 100) + '%');
-            progressBar.clear();
-            progressBar.fillStyle(0x00ff00, 1);
-            progressBar.fillRect(barX, barY, barWidth * value, barHeight);
         });
 
         this.load.on('complete', () => {
-            progressBar.destroy();
-            progressBox.destroy();
+            // Destroy custom loading elements?
+            // Actually, since we transition immediately to MainMenu, they will be destroyed with the scene.
+            // But for cleanliness:
             loadingText.destroy();
             percentText.destroy();
+            versionText.destroy();
+            versionBg.destroy();
+            // Sprites are automatically destroyed with scene shutdown
         });
 
         // --- AUDIO LOADING ---
@@ -103,7 +142,8 @@ export class Preloader extends Phaser.Scene {
         // --- ASSETS LOADING ---
         if (!this.textures.exists(ASSETS.GAME_LOGO)) this.load.image(ASSETS.GAME_LOGO, 'assets/logo.png' + v);
         if (!this.textures.exists(ASSETS.STORE_LOGO)) this.load.image(ASSETS.STORE_LOGO, 'assets/the-vault-store.png' + v);
-        if (!this.textures.exists(ASSETS.MAIN_BG)) this.load.image(ASSETS.MAIN_BG, 'assets/ui/main-bg.png' + v);
+        // MAIN_BG loaded in Boot
+        // UI_HUD loaded in Boot, checking anyway
         if (!this.textures.exists(ASSETS.UI_ICONS)) this.load.atlas(ASSETS.UI_ICONS, 'assets/ui/icons.png' + v, 'assets/ui/icons.json' + v);
         if (!this.textures.exists(ASSETS.UI_HUD)) this.load.atlas(ASSETS.UI_HUD, 'assets/ui/ui.png' + v, 'assets/ui/ui.json' + v);
 

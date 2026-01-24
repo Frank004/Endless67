@@ -57,7 +57,7 @@ export class PauseMenu {
         let buttonY = 280;
 
         // Continue Button
-        this.buttons.continue = UIHelpers.createSpriteButton(scene, centerX, buttonY, 'btn-continue.png', {
+        this.buttons.continue = UIHelpers.createSpriteButton(scene, centerX, buttonY, 'btn/btn-continue.png', {
             callback: () => this.toggle()
         });
         this.buttons.continue.container.setVisible(false);
@@ -95,7 +95,7 @@ export class PauseMenu {
         buttonY += buttonSpacing;
 
         // Exit Button
-        this.buttons.exit = UIHelpers.createSpriteButton(scene, centerX, buttonY, 'btn-exit.png', {
+        this.buttons.exit = UIHelpers.createSpriteButton(scene, centerX, buttonY, 'btn/btn-exit.png', {
             callback: () => scene.scene.start('MainMenu')
         });
         this.buttons.exit.container.setVisible(false);

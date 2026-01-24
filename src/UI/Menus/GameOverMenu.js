@@ -102,7 +102,7 @@ export class GameOverMenu {
             loop: true
         });
 
-        const confirmBtn = scene.add.image(centerX, centerY + 100, 'ui_hud', 'btn-confirm.png')
+        const confirmBtn = scene.add.image(centerX, centerY + 100, 'ui_hud', 'btn/btn-confirm.png')
             .setOrigin(0.5).setDepth(301).setScrollFactor(0).setInteractive({ useHandCursor: true });
 
         // Use InputManager to create mobile text input
@@ -225,7 +225,7 @@ export class GameOverMenu {
         const spacing = 65;
 
         // Restart Button
-        const restartBtn = UIHelpers.createSpriteButton(scene, centerX, startY, 'btn-restart.png', {
+        const restartBtn = UIHelpers.createSpriteButton(scene, centerX, startY, 'btn/btn-restart.png', {
             callback: () => {
                 // Reset InputManager before restart
                 if (scene.inputManager) {
@@ -239,7 +239,7 @@ export class GameOverMenu {
         });
 
         // Leaderboard Button
-        const leaderboardBtn = UIHelpers.createSpriteButton(scene, centerX, startY + spacing, 'btn-leaderboard.png', {
+        const leaderboardBtn = UIHelpers.createSpriteButton(scene, centerX, startY + spacing, 'btn/btn-leaderboard.png', {
             callback: () => {
                 // Reset InputManager before scene transition
                 if (scene.inputManager) {
@@ -252,7 +252,7 @@ export class GameOverMenu {
         });
 
         // Menu Button
-        const menuBtn = UIHelpers.createSpriteButton(scene, centerX, startY + spacing * 2, 'btn-exit.png', {
+        const menuBtn = UIHelpers.createSpriteButton(scene, centerX, startY + spacing * 2, 'btn/btn-exit.png', {
             callback: () => {
                 // Reset InputManager to prevent inputs from carrying over to MainMenu
                 if (scene.inputManager) {

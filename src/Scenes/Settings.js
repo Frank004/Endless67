@@ -71,7 +71,7 @@ export class Settings extends Phaser.Scene {
 
         // Back Button
         const backCallback = () => this.scene.start('MainMenu');
-        const backBtn = UIHelpers.createSpriteButton(this, width / 2, buttonY, 'btn-exit.png', {
+        const backBtn = UIHelpers.createSpriteButton(this, width / 2, buttonY, 'btn/btn-exit.png', {
             callback: backCallback
         });
 

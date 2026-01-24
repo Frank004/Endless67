@@ -39,22 +39,22 @@ export class MainMenu extends Phaser.Scene {
 		const buttonSpacing = 65;
 		const startY = height / 2;
 
-		const startBtn = UIHelpers.createSpriteButton(this, width / 2, startY, 'btn-start.png', {
+		const startBtn = UIHelpers.createSpriteButton(this, width / 2, startY, 'btn/btn-start.png', {
 			callback: () => this.scene.start('Game')
 		});
 		this.buttons.push(startBtn);
 
-		const leaderboardBtn = UIHelpers.createSpriteButton(this, width / 2, startY + buttonSpacing, 'btn-leaderboard.png', {
+		const leaderboardBtn = UIHelpers.createSpriteButton(this, width / 2, startY + buttonSpacing, 'btn/btn-leaderboard.png', {
 			callback: () => this.scene.start('Leaderboard')
 		});
 		this.buttons.push(leaderboardBtn);
 
-		const skinsBtn = UIHelpers.createSpriteButton(this, width / 2, startY + buttonSpacing * 2, 'btn-vault-store.png', {
+		const skinsBtn = UIHelpers.createSpriteButton(this, width / 2, startY + buttonSpacing * 2, 'btn/btn-vault-store.png', {
 			callback: () => this.scene.start('Store')
 		});
 		this.buttons.push(skinsBtn);
 
-		const settingsBtn = UIHelpers.createSpriteButton(this, width / 2, startY + buttonSpacing * 3, 'btn-setting.png', {
+		const settingsBtn = UIHelpers.createSpriteButton(this, width / 2, startY + buttonSpacing * 3, 'btn/btn-setting.png', {
 			callback: () => this.scene.start('Settings')
 		});
 		this.buttons.push(settingsBtn);

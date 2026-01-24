@@ -61,7 +61,7 @@ export class Leaderboard extends Phaser.Scene {
         }
 
         // Back Button
-        const backBtn = UIHelpers.createSpriteButton(this, width / 2, height - 60, 'btn-exit.png', {
+        const backBtn = UIHelpers.createSpriteButton(this, width / 2, height - 60, 'btn/btn-exit.png', {
             callback: () => this.scene.start('MainMenu')
         });
 

@@ -95,7 +95,7 @@ export class Store extends Phaser.Scene {
         const btnX = 30; // Margin left + half button width
         const btnY = 25; // Top margin
 
-        const backBtn = this.add.image(btnX, btnY, 'ui_hud', 'btn-smal-back.png')
+        const backBtn = this.add.image(btnX, btnY, 'ui_hud', 'btn-small/btn-smal-back.png')
             .setOrigin(0.5)
             .setScrollFactor(0)
             .setDepth(101)
