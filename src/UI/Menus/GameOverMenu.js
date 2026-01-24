@@ -102,12 +102,8 @@ export class GameOverMenu {
             loop: true
         });
 
-        const confirmBtn = scene.add.text(centerX, centerY + 100, 'CONFIRM', {
-            fontSize: '24px',
-            color: '#ffffff',
-            backgroundColor: '#00aa00',
-            padding: { x: 20, y: 10 }
-        }).setOrigin(0.5).setDepth(301).setScrollFactor(0).setInteractive({ useHandCursor: true });
+        const confirmBtn = scene.add.image(centerX, centerY + 100, 'ui_hud', 'btn-confirm.png')
+            .setOrigin(0.5).setDepth(301).setScrollFactor(0).setInteractive({ useHandCursor: true });
 
         // Use InputManager to create mobile text input
         const htmlInput = scene.inputManager.createMobileTextInput({
