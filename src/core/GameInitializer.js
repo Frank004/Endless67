@@ -1,7 +1,7 @@
-import { ManagerInitializer } from './initializers/ManagerInitializer.js';
-import { WorldInitializer } from './initializers/WorldInitializer.js';
-import { EventInitializer } from './initializers/EventInitializer.js';
-import { DeviceConfig } from './config/DeviceConfig.js';
+import { ManagerInitializer } from './Initializers/ManagerInitializer.js';
+import { WorldInitializer } from './Initializers/WorldInitializer.js';
+import { EventInitializer } from './Initializers/EventInitializer.js';
+import { DeviceConfig } from '../Config/DeviceConfig.js';
 
 export class GameInitializer {
     constructor(scene) {

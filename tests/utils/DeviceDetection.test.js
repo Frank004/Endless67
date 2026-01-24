@@ -3,7 +3,7 @@ import {
     isTouchDevice,
     getDeviceInfo,
     applyDeviceClasses
-} from '../../src/utils/DeviceDetection.js';
+} from '../../src/Utils/DeviceDetection.js';
 
 const originalNavigator = global.navigator;
 

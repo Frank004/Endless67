@@ -1,4 +1,4 @@
-import PoolManager, { poolRegistry } from '../../src/core/PoolManager.js';
+import PoolManager, { poolRegistry } from '../../src/Core/PoolManager.js';
 
 // Mock class para testing
 class MockPooledObject {

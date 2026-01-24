@@ -1,9 +1,9 @@
-import EventBus, { Events } from '../../core/EventBus.js';
+import EventBus, { Events } from '../../Core/EventBus.js';
 import { PlayerController } from './PlayerController.js';
 import { PlayerVisuals } from './PlayerVisuals.js';
 import { PlayerPhysics } from './PlayerPhysics.js';
-import { PLAYER_CONFIG } from '../../config/PlayerConfig.js';
-import { ASSETS } from '../../config/AssetKeys.js';
+import { PLAYER_CONFIG } from '../../Config/PlayerConfig.js';
+import { ASSETS } from '../../Config/AssetKeys.js';
 
 export class Player extends Phaser.Physics.Arcade.Sprite {
     constructor(scene, x, y) {

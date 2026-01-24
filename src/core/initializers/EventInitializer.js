@@ -1,5 +1,5 @@
 import EventBus, { Events } from '../EventBus.js';
-import { DeviceConfig } from '../config/DeviceConfig.js';
+import { DeviceConfig } from '../../Config/DeviceConfig.js';
 
 export class EventInitializer {
     static init(scene) {

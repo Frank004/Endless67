@@ -1,4 +1,4 @@
-import AudioSystem from '../../../src/core/systems/AudioSystem.js';
+import AudioSystem from '../../../src/Systems/Core/AudioSystem.js';
 
 describe('AudioSystem', () => {
     let scene;

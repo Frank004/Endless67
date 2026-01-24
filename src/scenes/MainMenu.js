@@ -1,10 +1,10 @@
-import { UIHelpers } from '../utils/UIHelpers.js';
-import { InputSystem } from '../core/systems/InputSystem.js';
-import { MenuNavigation } from '../managers/ui/MenuNavigation.js';
-import EventBus, { Events } from '../core/EventBus.js';
-import AudioSystem from '../core/systems/AudioSystem.js';
-import GameState from '../core/GameState.js';
-import { ASSETS } from '../config/AssetKeys.js';
+import { UIHelpers } from '../Utils/UIHelpers.js';
+import { InputSystem } from '../Systems/Core/InputSystem.js';
+import { MenuNavigation } from '../UI/Menus/MenuNavigation.js';
+import EventBus, { Events } from '../Core/EventBus.js';
+import AudioSystem from '../Systems/Core/AudioSystem.js';
+import GameState from '../Core/GameState.js';
+import { ASSETS } from '../Config/AssetKeys.js';
 
 export class MainMenu extends Phaser.Scene {
 	constructor() {
@@ -70,7 +70,7 @@ export class MainMenu extends Phaser.Scene {
 		});
 
 		// Version (visible text)
-		const versionText = this.add.text(width / 2, height - 30, 'v0.0.48', {
+		const versionText = this.add.text(width / 2, height - 30, 'v0.0.50', {
 			fontSize: '14px',
 			color: '#444'
 		}).setOrigin(0.5);

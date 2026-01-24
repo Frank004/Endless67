@@ -1,5 +1,5 @@
-import { ASSETS } from "../config/AssetKeys.js";
-import { FireParticleSystem } from "../managers/visuals/FireParticleSystem.js";
+import { ASSETS } from "../Config/AssetKeys.js";
+import { FireParticleSystem } from "../Systems/Visuals/FireParticleSystem.js";
 
 export class FireRiserEffect {
     /**

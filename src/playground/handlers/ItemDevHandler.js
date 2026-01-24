@@ -1,6 +1,6 @@
 import { DevHandler } from './DevHandler.js';
-import { enablePlatformRider } from '../../utils/platformRider.js';
-import { WALLS } from '../../config/GameConstants.js';
+import { enablePlatformRider } from '../../Utils/platformRider.js';
+import { WALLS } from '../../Config/GameConstants.js';
 
 export class ItemDevHandler extends DevHandler {
     getCategoryLabel() {

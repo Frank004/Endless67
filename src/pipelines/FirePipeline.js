@@ -1,4 +1,4 @@
-import { ASSETS } from "../config/AssetKeys.js";
+import { ASSETS } from "../Config/AssetKeys.js";
 
 export class FirePipeline extends Phaser.Renderer.WebGL.Pipelines.SinglePipeline {
   constructor(game) {

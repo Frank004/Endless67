@@ -1,5 +1,5 @@
-import { WALLS } from '../config/GameConstants.js';
-import { SLOT_CONFIG } from '../config/SlotConfig.js';
+import { WALLS } from '../Config/GameConstants.js';
+import { SLOT_CONFIG } from '../Config/SlotConfig.js';
 
 /**
  * Calcula límites X seguros dinámicos usando la vista de cámara.

@@ -1,5 +1,5 @@
 import { DevHandler } from './DevHandler.js';
-import { MAZE_PATTERNS } from '../../data/MazePatterns.js';
+import { MAZE_PATTERNS } from '../../Data/MazePatterns.js';
 
 export class MazeDevHandler extends DevHandler {
     getCategoryLabel() {

@@ -1,0 +1,101 @@
+---
+description: Phaser endless runner performance and architecture guardrails
+alwaysApply: true
+---
+
+# Phaser 3 Endless Runner Rule
+
+You are an expert in JavaScript (ES6+), Phaser 3, and high-performance 2D games.
+Favor stability, determinism, and long-session performance.
+
+## Core Principles
+- Prefer clarity and determinism over abstraction.
+- Avoid hidden behavior and unnecessary complexity.
+- Minimize GC: reuse objects/arrays, avoid per-frame allocations.
+- Never allocate objects, arrays, or closures inside `update()`.
+- Favor explicit logic over "magic" behavior.
+
+## Language & Style
+- JavaScript only (ES6 modules). No TypeScript.
+- PascalCase for core gameplay structures (Scenes, Systems, Entities, Managers).
+- camelCase for locals, args, helpers, internal instance properties.
+- UPPERCASE for constants/tuning values (e.g., GRAVITY_Y).
+- Avoid deep inheritance chains.
+
+## Project Structure (by responsibility)
+- `src/Scenes/` orchestration only
+- `src/Entities/` Player, Platforms, Enemies, Pickups
+- `src/Systems/` Chunk/Spawn/Pool/Collision systems
+- `src/UI/` HUD, Menus, Overlays
+- `src/Input/` Keyboard/Touch/Gestures
+- `src/Utils/` Math/Random/Bounds/Debug helpers
+- `src/Config/` constants, tuning, rules
+- `src/Assets/` asset keys and packs
+
+## Phaser 3 Best Practices
+- Use Arcade Physics unless Matter is required.
+- Scenes stay thin; gameplay logic lives in Systems/Entities.
+- Use Groups and pools for repeatable objects.
+- Disable instead of destroy: `setActive(false)`, `setVisible(false)`.
+- Remove all listeners on scene shutdown.
+- Avoid deep container nesting; control depth explicitly.
+
+## Game Loop Rules
+- `update()` minimal and predictable.
+- No allocations in `update()`.
+- Random generation only when guarded.
+- Use `delta` for movement only; logic is deterministic.
+- Delegate: `ChunkSystem.Update`, `SpawnSystem.Update`.
+
+## Procedural Generation & Chunking
+- Chunk generation is position-based, not frame-based.
+- Only one chunk generated per threshold.
+- Guard with explicit flags.
+- Track `lastChunkX`, `nextChunkTriggerX`.
+- Reuse pooled objects; recycle off-camera.
+
+## Rendering & Performance
+- Use texture atlases exclusively.
+- Avoid large transparent textures; crop UI assets tightly.
+- Never scale sprites every frame.
+- Cull off-screen objects when needed.
+- Prefer stable object counts over spikes.
+
+## Mobile Optimization
+- Mobile is primary target.
+- Use Phaser Scale Manager: FIT or ENVELOP + autoCenter.
+- Handle orientation changes and safe areas.
+- Reduce particles/effects on low-end devices.
+- Avoid heavy blend modes/filters on mobile.
+- Keep memory stable across long sessions.
+
+## Assets & Loading
+- Centralize asset keys; never hardcode in multiple files.
+- Preload only what is required for current flow.
+- Lazy-load optional content after gameplay starts.
+- Validate atlas frame names and keys.
+
+## State & Persistence
+- Avoid global mutable state.
+- Use a single `GameState` object for shared state.
+- Persist via a single Storage module.
+- Never access `localStorage` directly from gameplay code.
+
+## Debugging & Stability
+- Debug tools are toggleable; logging is dev-only.
+- Guard against duplicate spawns, double updates, repeated bindings.
+- Always clean up on Scene shutdown.
+
+## Code Suggestion Rules
+- Analyze existing Endless67 code before proposing changes.
+- Make minimal, surgical edits; no architecture rewrites unless asked.
+- Explain performance impact (CPU, memory, GC, draw calls).
+- Favor solutions that scale for endless gameplay.
+
+## Example (no allocations in update)
+```javascript
+// ✅ GOOD: reuse temp vectors
+update() {
+  this.playerVelocity.copy(this.player.body.velocity);
+}
+```

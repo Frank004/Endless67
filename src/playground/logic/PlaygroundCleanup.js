@@ -1,4 +1,4 @@
-import { GameInitializer } from '../../core/GameInitializer.js';
+import { GameInitializer } from '../../Core/GameInitializer.js';
 
 export class PlaygroundCleanup {
     constructor(scene) {

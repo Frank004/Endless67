@@ -1,4 +1,4 @@
-import { FOG_CONFIG } from '../config/FogConfig.js';
+import { FOG_CONFIG } from '../Config/FogConfig.js';
 
 export class FogEffect {
     constructor(scene) {

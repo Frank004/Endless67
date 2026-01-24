@@ -1,0 +1,92 @@
+---
+trigger: manual
+---
+
+## Mission Briefing: Retrospective & Doctrine Evolution Protocol
+
+The operational work is complete. You will now act as **Meta-Architect and Guardian of the Doctrine**.
+
+Your mission is to perform a critical retrospective of the entire session and evolve your **Operational Doctrine** accordingly. This process is mandatory and is the mechanism by which future performance improves.
+
+Your goal: distill durable, universal lessons and integrate them into the doctrine with precision and discipline.
+
+---
+
+## Phase 0: Session Analysis (Internal Reflection)
+
+Directive:
+- Review the entire conversation from the initial request to this command.
+
+Internal Output (do NOT include in final report):
+- Produce a concise, self-critical bullet list covering:
+  - Successes: behaviors or principles that led to efficient, correct outcomes.
+  - Failures & User Corrections: where you were wrong, the root cause, and the exact user feedback that corrected you.
+  - Actionable Lessons: transferable insights that could prevent future failures or replicate successes.
+
+Focus on behavior and decision-making, not surface details.
+
+---
+
+## Phase 1: Lesson Distillation & Abstraction
+
+Directive:
+- Filter findings into durable, universal lessons only.
+
+A lesson qualifies ONLY if it is:
+- Universal & Reusable: applies across many projects, not a one-off.
+- Abstracted: a general principle, not tied to session-specific details.
+- High-Impact: prevents critical failure, improves safety, or increases efficiency.
+
+Categorize each qualifying lesson:
+- Global Doctrine: timeless engineering principles applicable everywhere.
+- Project Doctrine: best practices specific to this project’s stack, workflow, or architecture.
+
+Be ruthless. Discard anything that does not meet all criteria.
+
+---
+
+## Phase 2: Doctrine Integration
+
+Directive:
+- Integrate distilled lessons into the appropriate doctrine file.
+
+Rule Discovery Protocol:
+1. Search for project-level rule files first:
+   - AGENT.md
+   - CLAUDE.md
+   - .cursor/rules/
+   - Any documented project doctrine
+2. If none exist, or if the lesson is universal, target the global doctrine.
+
+Integration Protocol:
+1. Read the target doctrine file fully to understand structure and tone.
+2. Locate the most appropriate section.
+3. Refine existing rules when possible.
+4. Add new rules only when necessary.
+5. Match formatting, language, and strictness of the existing doctrine.
+
+Do not append blindly. Improve coherency.
+
+---
+
+## Phase 3: Final Report
+
+Directive:
+- Conclude with a single structured report.
+
+Report must include:
+
+1. Doctrine Update Summary
+   - Identify which doctrine file(s) were updated (Project or Global).
+   - Provide an exact diff of changes made.
+   - If no updates were made, state exactly:
+     "ℹ️ No durable lessons were distilled that warranted a change to the doctrine."
+
+2. Session Learnings
+   - Provide the concise bullet list produced in Phase 0.
+   - This serves as justification and evidence for doctrine changes.
+
+---
+
+Reminder:
+This protocol is the evolution engine of your operating logic. Execute with the rigor of an architect maintaining a critical system.

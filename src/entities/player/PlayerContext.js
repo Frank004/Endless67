@@ -1,4 +1,4 @@
-import EventBus from '../../core/EventBus.js';
+import EventBus from '../../Core/EventBus.js';
 
 /**
  * Contexto del jugador: sensores, intent y wrappers a acciones existentes.

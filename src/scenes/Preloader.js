@@ -1,10 +1,10 @@
-import { ASSETS } from '../config/AssetKeys.js';
+import { ASSETS } from '../Config/AssetKeys.js';
 import { Leaderboard } from './Leaderboard.js';
 import { Settings } from './Settings.js';
 import { Playground } from './Playground.js';
-import { WarmupManager } from '../managers/system/WarmupManager.js';
-import { registerEnemyAnimations } from '../utils/animations.js';
-import PlayerProfileService from '../managers/gameplay/PlayerProfileService.js';
+import { WarmupManager } from '../Systems/Core/WarmupManager.js';
+import { registerEnemyAnimations } from '../Utils/animations.js';
+import PlayerProfileService from '../Systems/Gameplay/PlayerProfileService.js';
 
 
 export class Preloader extends Phaser.Scene {
@@ -81,14 +81,14 @@ export class Preloader extends Phaser.Scene {
         this.load.audio(ASSETS.DAMAGE_SFX_PREFIX + '5', 'assets/audio/take-damage/Retro Game Low Take Damage 5.mp3' + v);
 
         // Riser Sounds
-        this.load.audio(ASSETS.LAVA_AMBIENT, 'assets/audio/riser/lava.mp3' + v);
+        this.load.audio(ASSETS.LAVA_AMBIENT, 'assets/audio/riser/Lava.mp3' + v);
         this.load.audio(ASSETS.LAVA_DROP, 'assets/audio/riser/lava-drop.mp3' + v);
-        this.load.audio(ASSETS.ACID_AMBIENT, 'assets/audio/riser/acid.mp3' + v);
-        this.load.audio(ASSETS.ACID_DROP, 'assets/audio/riser/acid-drop.mp3' + v);
+        this.load.audio(ASSETS.ACID_AMBIENT, 'assets/audio/riser/acid.MP3' + v);
+        this.load.audio(ASSETS.ACID_DROP, 'assets/audio/riser/acid-drop.MP3' + v);
         this.load.audio(ASSETS.FIRE_AMBIENT, 'assets/audio/riser/fire.mp3' + v);
         this.load.audio(ASSETS.FIRE_DROP, 'assets/audio/riser/fire-drop.mp3' + v);
-        this.load.audio(ASSETS.WATER_AMBIENT, 'assets/audio/riser/water.mp3' + v);
-        this.load.audio(ASSETS.WATER_DROP, 'assets/audio/riser/water-drop.mp3' + v);
+        this.load.audio(ASSETS.WATER_AMBIENT, 'assets/audio/riser/water.MP3' + v);
+        this.load.audio(ASSETS.WATER_DROP, 'assets/audio/riser/water-drop.MP3' + v);
 
         this.load.audio(ASSETS.BG_MUSIC, 'assets/audio/bg-music/retro-game-music/Retro_hiphop.mp3' + v);
         this.load.audio(ASSETS.JUMP_SFX, 'assets/audio/jumps/jumping.mp3' + v);
@@ -97,13 +97,14 @@ export class Preloader extends Phaser.Scene {
         this.load.audio(ASSETS.SHOE_BRAKE, 'assets/audio/shoes/shoe-brake.mp3' + v);
         this.load.audio(ASSETS.TRASHCAN_HIT, 'assets/audio/trashcan/trashcan.mp3' + v);
         this.load.audio(ASSETS.TIRE_BOUNCE, 'assets/audio/tire bounce/tirebounce.mp3' + v);
-        this.load.audio(ASSETS.WALL_SLIDE, 'assets/audio/slide/slide.mp3' + v);
+        this.load.audio(ASSETS.WALL_SLIDE, 'assets/audio/slide/slide.MP3' + v);
 
         // --- ASSETS LOADING ---
         // --- ASSETS LOADING ---
         if (!this.textures.exists(ASSETS.GAME_LOGO)) this.load.image(ASSETS.GAME_LOGO, 'assets/logo.png' + v);
         if (!this.textures.exists(ASSETS.STORE_LOGO)) this.load.image(ASSETS.STORE_LOGO, 'assets/the-vault-store.png' + v);
         if (!this.textures.exists(ASSETS.UI_ICONS)) this.load.atlas(ASSETS.UI_ICONS, 'assets/ui/icons.png' + v, 'assets/ui/icons.json' + v);
+        if (!this.textures.exists(ASSETS.UI_HUD)) this.load.atlas(ASSETS.UI_HUD, 'assets/ui/ui.png' + v, 'assets/ui/ui.json' + v);
 
         if (!this.textures.exists(ASSETS.COINS)) this.load.multiatlas(ASSETS.COINS, 'assets/spritesheets/coins.json' + v, 'assets/spritesheets');
         if (!this.textures.exists('basketball')) this.load.multiatlas('basketball', 'assets/spritesheets/basketball.json' + v, 'assets/spritesheets');

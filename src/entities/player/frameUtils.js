@@ -1,4 +1,4 @@
-import { ASSETS } from '../../config/AssetKeys.js';
+import { ASSETS } from '../../Config/AssetKeys.js';
 
 /**
  * Utility to find frames in player atlas with robust normalization.

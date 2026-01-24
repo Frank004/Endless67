@@ -1,9 +1,10 @@
-import { ASSETS } from '../config/AssetKeys.js';
-import { StoreCard } from '../managers/ui/store/StoreCard.js';
-import { StoreManager } from '../managers/store/StoreManager.js';
-import { UIHelpers } from '../utils/UIHelpers.js';
-import SkinCatalogService from '../managers/gameplay/SkinCatalogService.js';
-import PlayerProfileService from '../managers/gameplay/PlayerProfileService.js';
+import { ASSETS } from '../Config/AssetKeys.js';
+import { StoreCard } from '../UI/Store/StoreCard.js';
+import { CoinCounter } from '../UI/HUD/CoinCounter.js';
+import { StoreManager } from '../Systems/Store/StoreManager.js';
+import { UIHelpers } from '../Utils/UIHelpers.js';
+import SkinCatalogService from '../Systems/Gameplay/SkinCatalogService.js';
+import PlayerProfileService from '../Systems/Gameplay/PlayerProfileService.js';
 
 /**
  * Store - "The Vault"
@@ -47,6 +48,7 @@ export class Store extends Phaser.Scene {
         // Setup store (async)
         this._setupStore();
 
+        this.input.on('pointerup', this._onPointerUp, this); // Remove this direct call I added by mistake
         // Setup input
         this.setupInput();
 
@@ -59,7 +61,7 @@ export class Store extends Phaser.Scene {
         // Debug
         window.STORE_DEBUG = {
             addCoins: (amount) => {
-                import('../managers/gameplay/PlayerProfileService.js').then(module => {
+                import('../Systems/Gameplay/PlayerProfileService.js').then(module => {
                     const service = module.default;
                     const newProfile = service.addCoins(amount);
                     console.log(`💰 Added ${amount} coins. New Balance: ${newProfile.currency.coins}`);
@@ -67,7 +69,7 @@ export class Store extends Phaser.Scene {
                 });
             },
             resetProfile: () => {
-                import('../managers/gameplay/PlayerProfileService.js').then(module => {
+                import('../Systems/Gameplay/PlayerProfileService.js').then(module => {
                     const service = module.default;
                     // Reset Skins
                     service.debugResetSkins();
@@ -131,79 +133,29 @@ export class Store extends Phaser.Scene {
 
         // 3. Coin Counter (Top Right)
         const cardMargin = 20;
-        this.coinCounterContainer = this.add.container(width - cardMargin, btnY).setScrollFactor(0);
 
-        this.coinBg = this.add.rectangle(0, 0, 100, 36, 0x000000, 0.85).setOrigin(1, 0.5);
+        this.coinCounter = new CoinCounter(this, 0, 0);
+        // Position: Right edge should be at (width - cardMargin)
+        // Dimensions: CoinCounter uses a background image.
+        const bgWidth = this.coinCounter.bg.width || 200; // Expected width around 180-200px
+        const scale = this.coinCounter.scaleX;
 
-        const textPaddingRight = 15;
-        this.coinText = this.add.text(-textPaddingRight, 0, '0', {
-            fontSize: '20px',
-            fontFamily: 'monospace',
-            color: '#ffdd00',
-            fontStyle: 'bold'
-        }).setOrigin(1, 0.5);
+        // Calculate X to align the right edge of CoinCounter to the desired margin
+        const counterX = width - cardMargin - (bgWidth * scale);
 
-        this.coinIcon = this.add.image(0, 0, ASSETS.COINS, 'coin-01.png')
-            .setOrigin(0.5, 0.5)
-            .setScale(2.5);
+        this.coinCounter.setPosition(counterX, btnY);
+        this.coinCounter.setScrollFactor(0);
 
-        this.coinCounterContainer.add([this.coinBg, this.coinText, this.coinIcon]);
-
-        this.headerContainer.add([btnContainer, logo, this.coinCounterContainer]);
+        this.headerContainer.add([btnContainer, logo, this.coinCounter]);
 
         // Initial Layout
-        this.updateCoinVisuals();
-    }
-
-    updateCoinVisuals() {
-        if (!this.coinText || !this.coinIcon || !this.coinBg) return;
-
-        this.coinText.updateText();
-
-        // --- LAYOUT CONSTANTS ---
-        const PADDING_RIGHT = 15; // Space from right container edge to text
-        const PADDING_LEFT = 10;  // Space from left container edge to icon
-        const GAP = 10;           // Space between Text and Icon
-
-        // --- SIZES ---
-        const textWidth = this.coinText.width;
-        const iconDisplayWidth = this.coinIcon.displayWidth || (16 * 2.5); // Fallback if not loaded
-
-        // --- POSITIONS (Right to Left Calculation) ---
-
-        // 1. Text (Origin 1, 0.5) -> Anchor is Right-Center
-        // Positioned at -PADDING_RIGHT
-        const textX = -PADDING_RIGHT;
-
-        // 2. Icon (Origin 0.5, 0.5) -> Anchor is Center
-        // Icon Center X = (Text Left Edge) - GAP - (Half Icon Width)
-        // Text Left Edge = textX - textWidth
-        const iconCenterX = (textX - textWidth) - GAP - (iconDisplayWidth / 2);
-
-        // --- APPLY POSITIONS ---
-        this.coinText.x = textX;
-        this.coinText.y = 0; // Vertically centered
-
-        this.coinIcon.x = iconCenterX;
-        this.coinIcon.y = 0; // Vertically centered using origin 0.5
-
-        // --- BACKGROUND SIZE ---
-        // Total Width = PADDING_RIGHT + textWidth + GAP + iconWidth + PADDING_LEFT
-        // Or calculated from positions: ABS(Icon Left Edge) + PADDING_LEFT
-        const iconLeftEdge = iconCenterX - (iconDisplayWidth / 2);
-        const totalWidth = Math.abs(iconLeftEdge) + PADDING_LEFT;
-
-        this.coinBg.width = totalWidth;
-
-        // Verify container position in createHeader is correct (Top Right)
+        // CoinCounter handles its own initial visual state
     }
 
     updateCoins(amount) {
         this.headerCoins = amount;
-        if (this.coinText) {
-            const formatted = UIHelpers.formatCurrency(amount);
-            this.coinText.setText(formatted);
-            this.updateCoinVisuals();
+        if (this.coinCounter) {
+            this.coinCounter.setValue(amount);
         }
     }
 
@@ -256,11 +208,17 @@ export class Store extends Phaser.Scene {
         const coins = this.storeManager.getCoins();
         const skinsWithState = this.storeManager.getSkinsWithState();
 
+        console.log('[Store] Refreshing UI. Coins:', coins, 'Skins:', skinsWithState.length);
+        if (skinsWithState.length === 0) {
+            console.warn('[Store] No skins found to display!');
+        }
+
         this.updateCoins(coins);
 
         if (this.cards && this.cards.length > 0) {
             this._updateExistingCards(skinsWithState, coins);
         } else {
+            console.log('[Store] Creating initial grid for skins:', skinsWithState);
             this.createPagedGrid(skinsWithState);
         }
     }
@@ -444,10 +402,14 @@ export class Store extends Phaser.Scene {
         this.input.on('pointerdown', this._onPointerDown, this);
         this.input.on('pointermove', this._onPointerMove, this);
         this.input.on('pointerup', this._onPointerUp, this);
+        this.input.on('pointerupoutside', this._onPointerUp, this);
     }
 
     _onPointerDown(pointer) {
         if (this._isModalOpen) return;
+
+        // Safety check: gridContainer might not be initialized yet
+        if (!this.gridContainer) return;
 
         // Prevent interfering with UI buttons that claimed interaction
         if (this._blockSwipe) {
@@ -502,6 +464,10 @@ export class Store extends Phaser.Scene {
             this.time.delayedCall(50, () => this.isDragging = false);
         } else {
             this.isDragging = false;
+            // Always ensure we snap back if we werent dragging but somehow offset
+            if (this.gridContainer) {
+                this._snapToPage(this.currentPage);
+            }
         }
     }
 

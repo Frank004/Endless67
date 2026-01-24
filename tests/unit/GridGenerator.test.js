@@ -1,7 +1,7 @@
 
-import { GridGenerator } from '../../src/managers/level/GridGenerator.js';
-import { SLOT_CONFIG } from '../../src/config/SlotConfig.js';
-import { GAME_CONFIG } from '../../src/config/GameConstants.js';
+import { GridGenerator } from '../../src/Systems/Level/GridGenerator.js';
+import { SLOT_CONFIG } from '../../src/Config/SlotConfig.js';
+import { GAME_CONFIG } from '../../src/Config/GameConstants.js';
 
 // Mock dependencies if needed (PatternTransformer is largely pure, but imports SlotConfig)
 // We rely on real PatternTransformer logic here as it's pure enough.

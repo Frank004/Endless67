@@ -1,5 +1,5 @@
 import { DevHandler } from './DevHandler.js';
-import { RiserConfiguration, RISER_TYPES } from '../../config/RiserConfig.js';
+import { RiserConfiguration, RISER_TYPES } from '../../Config/RiserConfig.js';
 
 export class RiserDevHandler extends DevHandler {
     getCategoryLabel() {

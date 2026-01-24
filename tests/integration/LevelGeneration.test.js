@@ -1,7 +1,7 @@
 
-import { SlotGenerator } from '../../src/managers/level/SlotGenerator.js';
-import { SLOT_CONFIG } from '../../src/config/SlotConfig.js';
-import { PatternTransformer } from '../../src/utils/PatternTransformer.js';
+import { SlotGenerator } from '../../src/Systems/Level/SlotGenerator.js';
+import { SLOT_CONFIG } from '../../src/Config/SlotConfig.js';
+import { PatternTransformer } from '../../src/Utils/PatternTransformer.js';
 
 // Partially mock dependencies to isolate logic issues from Phaser internals
 const mockScene = {

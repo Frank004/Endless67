@@ -1,8 +1,8 @@
-import { WALLS, PHYSICS } from '../../config/GameConstants.js';
-import { ASSETS } from '../../config/AssetKeys.js';
+import { WALLS, PHYSICS } from '../../Config/GameConstants.js';
+import { ASSETS } from '../../Config/AssetKeys.js';
 import { PoolInitializer } from './PoolInitializer.js';
-import { BackgroundManager } from '../../managers/background/BackgroundManager.js';
-import { FogEffect } from '../../effects/FogEffect.js';
+import { BackgroundManager } from '../../Systems/Background/BackgroundManager.js';
+import { FogEffect } from '../../Effects/FogEffect.js';
 
 export class WorldInitializer {
     static init(scene) {

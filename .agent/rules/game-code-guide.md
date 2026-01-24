@@ -2,59 +2,83 @@
 trigger: always_on
 ---
 
-REGLAS GENERALES
-	1.	Siempre que propongas arquitectura, prefiere soluciones simples adecuadas para un juego básico.
-	•	Si la solución que propones es muy compleja para un juego pequeño, explícitamente sugiere una versión más simple.
-	2.	Evita patrones avanzados innecesarios (Clean Architecture extrema, DDD pesado, etc.) para prototipos.
-	3.	Cuando tengas dudas entre algo muy elaborado o algo directo, elige la opción más simple pero escalable.
-	4.	No crees documentación al menos que yo te lo pida.
+ARCHITECTURE DECISION RULES (ADD-ON)
 
-⸻
+These rules complement the main project guidelines.
+They exist to prevent over-architecture and unnecessary patterns.
 
-REGLAS PARA SINGLETON
-	1.	Sugiere o usa Singleton solo para cosas verdaderamente globales:
-	•	Estado global de juego (nivel actual, modo, dificultad).
-	•	Gestor de audio (AudioManager).
-	•	Gestor de guardado (SaveManager).
-	•	Bus de eventos (EventBus) si hace sentido.
-	2.	No conviertas en singleton:
-	•	Enemigos, plataformas, balas o entidades del nivel.
-	•	UI específica de una escena.
-	3.	Cuando propongas un Singleton:
-	•	Manténlo con responsabilidad única clara.
-	•	Muestra siempre un ejemplo de cómo se accede: GameState.instance, AudioManager.instance, etc.
-	4.	Si el uso de Singleton podría causar acoplamiento innecesario, explícalo y ofrece una alternativa (por ejemplo, inyección por constructor, pasar referencia en el scene).
+---
 
-⸻
+GENERAL DECISION RULES
+1. When proposing architecture, always assume this is a small-to-medium game.
+2. Prefer the simplest solution that can still scale if needed.
+3. If a proposed solution feels too complex for a prototype:
+   - Explicitly suggest a simpler alternative.
+4. Never introduce a pattern “just in case”.
+5. Do not create documentation unless explicitly requested.
 
-REGLAS PARA OBSERVER / EVENTOS
-	1.	Usa o sugiere el Observer Pattern (EventBus, EventEmitter, Signals, etc.) para:
-	•	Eventos de gameplay: player muere, recoge moneda, sube score, termina nivel, etc.
-	•	Comunicación entre sistemas desacoplados: Player → UI, Enemigo → Score, PowerUp → Player / HUD.
-	2.	No uses el sistema de eventos para cosas triviales que pueden llamarse directo.
-	3.	Cuando propongas eventos:
-	•	Usa nombres claros y consistentes: "PLAYER_DIED", "COIN_COLLECTED", "SCORE_UPDATED".
-	•	Incluye el tipo de payload esperado.
-	•	Muestra ejemplo de emit y de on (suscripción).
-	4.	Procura centralizar los eventos en un EventBus (que puede ser singleton) en lugar de múltiples emisores repartidos sin control.
-	5.	Si la arquitectura de eventos empieza a verse muy cargada para un juego simple, advierte y sugiere simplificar.
+---
 
-⸻
+SINGLETON USAGE RULES
+1. Suggest or use a Singleton only for truly global concerns:
+   - Global game state (current mode, difficulty, progression).
+   - Audio manager.
+   - Save / persistence manager.
+   - Central EventBus (if justified).
 
-CUANDO EL PATRÓN ES DEMASIADO PARA EL CASO
-	1.	Si la funcionalidad se resuelve de forma sencilla con:
-	•	Una función directa.
-	•	Una referencia pasada por parámetros.
-	•	O una variable local de escena/nivel.
-Entonces dilo explícitamente:
-“Para un prototipo simple, esto puede ser una función directa en la escena sin necesidad de Singleton/Observer”.
-	2.	Si detectas que estoy pidiendo algo que amerita un patrón (por ejemplo, muchos sistemas escuchando al mismo evento):
-	•	Sugiere:
-“Aquí conviene introducir un EventBus / Observer para que el código no se acople demasiado”.
+2. Never use Singletons for:
+   - Enemies, platforms, bullets, or level entities.
+   - Scene-specific UI or logic.
+   - Systems that belong to a single Scene lifecycle.
 
-⸻
+3. When proposing a Singleton:
+   - Clearly state why global access is required.
+   - Keep a single, well-defined responsibility.
+   - Always show how it is accessed (GameState.instance, AudioManager.instance).
 
-ESTILO DE CÓDIGO
-	1.	Prefiere ejemplos en TypeScript/JavaScript para juegos 2D (por ejemplo Phaser, o motor genérico) a menos que pida otra cosa.
-	2.	Comenta brevemente por qué usas Singleton u Observer en cada ejemplo.
-	3.	Mantén los ejemplos cortos y aplicables a juegos: player, score, enemigos, UI, etc.
+4. If a Singleton introduces unnecessary coupling:
+   - Explain the tradeoff.
+   - Propose an alternative (passing references, constructor injection, Scene ownership).
+
+---
+
+OBSERVER / EVENT RULES
+1. Use the Observer pattern only when multiple systems must react to the same event:
+   - Gameplay events (PLAYER_DIED, COIN_COLLECTED, SCORE_UPDATED).
+   - Decoupled communication (Player → UI, Enemy → Score).
+
+2. Do not use events for:
+   - Simple one-to-one calls.
+   - Logic that can be handled directly in the same system.
+
+3. When proposing events:
+   - Use clear, constant-style names.
+   - Specify expected payload shape.
+   - Show both emit and subscribe examples.
+
+4. Prefer a single, centralized EventBus over scattered emitters.
+
+5. If the event system starts adding mental overhead:
+   - Warn explicitly.
+   - Suggest reverting to direct calls.
+
+---
+
+WHEN A PATTERN IS NOT JUSTIFIED
+1. If the problem can be solved with:
+   - A direct function call.
+   - A reference passed as a parameter.
+   - A Scene-local variable.
+
+   Then explicitly say:
+   “For a simple prototype, this can be handled directly without introducing a pattern.”
+
+2. If multiple systems begin reacting to the same behavior:
+   - Explicitly suggest introducing an Observer/EventBus to reduce coupling.
+
+---
+
+CODE EXAMPLES
+- Prefer short JavaScript / TypeScript examples.
+- Keep examples game-focused (player, score, enemies, UI).
+- Briefly explain why a pattern is used or avoided.

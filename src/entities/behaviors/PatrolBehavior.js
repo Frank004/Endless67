@@ -1,4 +1,4 @@
-import { updatePlatformRider } from '../../utils/platformRider.js';
+import { updatePlatformRider } from '../../Utils/platformRider.js';
 
 /**
  * PatrolBehavior - Strategy Pattern para comportamiento de patrullaje

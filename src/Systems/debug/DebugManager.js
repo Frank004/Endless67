@@ -1,0 +1,347 @@
+import DebugRuler from './DebugRuler.js';
+
+export class DebugManager {
+    constructor(scene) {
+        this.scene = scene;
+        // DEBUG SETTINGS
+        this.debugStartHeight = 0; // Set to > 0 to start at that height
+        this.enableTestEnemies = false; // Set to true to spawn test enemies
+        this.enableLavaDelay = false; // Give player time to react at start
+
+
+        // PLAYER HITBOX VISUAL DEBUG
+        // true = mostrar hitbox rosa del player
+        // false = ocultar hitbox
+        this.showPlayerHitbox = false; // Cambiar a false para ocultar hitbox
+
+        // HITBOX VISUAL PARA ITEMS (coins/powerups)
+        this.showItemHitbox = false;
+
+        // LOGS VERBOSE (desactivados por defecto para mejor rendimiento en mobile)
+        this.showPatrolLogs = false;
+        this.showSlotLogs = false;
+
+        // Ruler overlay (líneas verdes): OFF por defecto
+        this.rulerEnabled = false;
+        this.ruler = null;
+
+        // Overlay de errores
+        this.errorOverlay = null;
+        this._errorsInitialized = false;
+
+        // Setup keyboard shortcuts
+        this.setupKeyboardShortcuts();
+    }
+
+    setupGlobalErrorHandlers() {
+        if (this._errorsInitialized) return;
+        this._errorsInitialized = true;
+
+        // DISABLED BY USER REQUEST: No on-screen error overlay.
+        // Console errors will remain in console.
+    }
+
+    /**
+     * Setup keyboard shortcuts for debug toggles
+     */
+    setupKeyboardShortcuts() {
+        const scene = this.scene;
+
+        // Shift + H: Toggle coin hitbox visibility
+        scene.input.keyboard.on('keydown', (event) => {
+            if (event.shiftKey && event.key.toLowerCase() === 'h') {
+                event.preventDefault();
+                this.toggleCoinHitbox();
+            }
+
+            // Shift + D: Toggle debug mode (ruler, lines, coordinates)
+            if (event.shiftKey && event.key.toLowerCase() === 'd') {
+                event.preventDefault();
+                this.toggleDebugMode();
+            }
+        });
+    }
+
+    /**
+     * Exposes game diagnostics to the console via window.__slotDiag
+     */
+    setupDiagnosticTool() {
+        if (typeof window !== 'undefined') {
+            window.__slotDiag = () => {
+                const cam = this.scene.cameras.main;
+                const stats = this.scene.platformPool?.getStats?.();
+                const slots = this.scene.slotGenerator?.slots || [];
+                const activePlatforms = this.scene.platformPool?.getActive?.() || [];
+                const inView = activePlatforms.filter(p => p.y <= cam.scrollY + cam.height + 200 && p.y >= cam.scrollY - 200);
+                const nearestAbove = activePlatforms
+                    .filter(p => p.y < this.scene.player?.y)
+                    .map(p => ({ y: p.y, dy: this.scene.player.y - p.y }))
+                    .sort((a, b) => a.dy - b.dy)[0];
+                const nearestBelow = activePlatforms
+                    .filter(p => p.y >= this.scene.player?.y)
+                    .map(p => ({ y: p.y, dy: p.y - this.scene.player.y }))
+                    .sort((a, b) => a.dy - b.dy)[0];
+                const platformInfo = activePlatforms
+                    .map(p => ({
+                        x: p.x,
+                        y: p.y,
+                        initX: p.initialX ?? null,
+                        initY: p.initialY ?? null
+                    }))
+                    .sort((a, b) => a.y - b.y);
+                console.log('[slotDiag] playerY=', this.scene.player?.y, 'cameraTop=', cam.scrollY, 'height=', cam.height);
+                console.log('[slotDiag] slots count=', slots.length, 'last=', slots[slots.length - 1]);
+                console.log('[slotDiag] platformPool stats=', stats);
+                console.log('[slotDiag] active platforms:', activePlatforms.length, 'inView:', inView.length, 'nearestAbove:', nearestAbove, 'nearestBelow:', nearestBelow);
+                console.table(platformInfo);
+
+                // Visual overlay for platform positions (outline colliders)
+                if (!this.scene._slotDiagGfx) {
+                    this.scene._slotDiagGfx = this.scene.add.graphics().setDepth(9999).setScrollFactor(0);
+                }
+                const g = this.scene._slotDiagGfx;
+                g.clear();
+                g.lineStyle(2, 0x00ff00, 0.6);
+                activePlatforms.forEach(p => {
+                    const halfW = p?.body?.width ? p.body.width / 2 : 64;
+                    const halfH = p?.body?.height ? p.body.height / 2 : 16;
+                    g.strokeRect(p.x - halfW - cam.scrollX, p.y - halfH - cam.scrollY, halfW * 2, halfH * 2);
+                    g.strokeCircle((p.x - cam.scrollX), (p.y - cam.scrollY), 4);
+                });
+            };
+        }
+    }
+
+    /**
+     * Toggle coin hitbox visibility
+     */
+    toggleCoinHitbox() {
+        this.showCoinHitbox = !this.showCoinHitbox;
+        this.scene.registry.set('showCoinHitbox', this.showCoinHitbox);
+
+        // Update all active coins
+        if (this.scene.coins && this.scene.coins.children) {
+            this.scene.coins.children.entries.forEach(coin => {
+                if (coin && coin.active) {
+                    coin.showHitbox = this.showCoinHitbox;
+
+                    if (this.showCoinHitbox) {
+                        // Create hitbox if it doesn't exist
+                        if (!coin.hitboxGraphics) {
+                            coin.createHitboxVisual();
+                        }
+                    } else {
+                        // Destroy hitbox if it exists
+                        if (coin.hitboxGraphics) {
+                            coin.hitboxGraphics.destroy();
+                            coin.hitboxGraphics = null;
+                        }
+                    }
+                }
+            });
+        }
+
+        console.log(`🎯 Coin hitbox: ${this.showCoinHitbox ? 'ON' : 'OFF'}`);
+    }
+
+    /**
+     * Toggle debug mode (ruler, lines, coordinates)
+     */
+    toggleDebugMode() {
+        this.rulerEnabled = !this.rulerEnabled;
+
+        if (this.ruler) {
+            this.ruler.setEnabled(this.rulerEnabled);
+        } else if (this.rulerEnabled) {
+            this.ensureRuler();
+            this.ruler.setEnabled(true);
+        }
+
+        console.log(`🔧 Debug mode: ${this.rulerEnabled ? 'ON' : 'OFF'}`);
+    }
+
+    applyDebugSettings() {
+        const scene = this.scene;
+
+        // Flags globales de debug en registry para acceso ligero
+        scene.registry.set('showCoinHitbox', this.showItemHitbox);
+        scene.registry.set('showItemHitbox', this.showItemHitbox);
+        scene.registry.set('showPatrolLogs', this.showPatrolLogs);
+        scene.registry.set('showSlotLogs', this.showSlotLogs);
+
+        // Force immediate log to verify it's working
+        if (this.showSlotLogs) {
+            console.log('✅ DebugManager: Slot Logs ENABLED via registry');
+        }
+
+        // Apply Height Offset
+        if (this.debugStartHeight > 0) {
+            scene.heightOffset = this.debugStartHeight;
+            scene.currentHeight = this.debugStartHeight;
+        }
+
+        // Apply Lava Delay
+        if (this.enableLavaDelay && scene.riserManager && scene.riserManager.riser) {
+            // Move lava further down (e.g., 1500px below player instead of 500px)
+            // This gives the player a few seconds while the lava catches up
+            scene.riserManager.riser.y = scene.player.y + 1500;
+        }
+
+        // Spawn Test Enemies if enabled
+        if (this.enableTestEnemies) {
+            this.spawnTestEnemies();
+        }
+
+        // Setup Player Hitbox Visual Debug
+        if (this.showPlayerHitbox && scene.player) {
+            this.setupPlayerHitboxVisual(scene.player);
+        }
+
+        // Setup Ruler (lineas verdes de altura). Respetar toggle; no forzar.
+        if (this.rulerEnabled) {
+            this.ensureRuler();
+            this.ruler.setEnabled(true);
+        } else if (this.ruler) {
+            this.ruler.setEnabled(false);
+        }
+
+        // Setup global error handling
+        this.setupGlobalErrorHandlers();
+    }
+
+    setupPlayerHitboxVisual(player) {
+        const scene = this.scene;
+
+        // Crear gráfico para el hitbox visual
+        const hitboxGraphics = scene.add.graphics();
+        hitboxGraphics.setDepth(1000); // Por encima del player (depth 20)
+
+        // Función para actualizar el hitbox visual
+        const updateHitbox = () => {
+            if (!player || !player.active || !player.body) {
+                hitboxGraphics.clear();
+                return;
+            }
+
+            hitboxGraphics.clear();
+
+            // Dibujar el hitbox del body de física en color rosa
+            const body = player.body;
+            const x = body.x;
+            const y = body.y;
+            const width = body.width;
+            const height = body.height;
+
+            // Color rosa/rosa (#FF69B4 o similar)
+            hitboxGraphics.lineStyle(2, 0xFF69B4, 1); // Rosa brillante, 2px de grosor
+            hitboxGraphics.strokeRect(x, y, width, height);
+
+            // Opcional: relleno semi-transparente para mejor visibilidad
+            hitboxGraphics.fillStyle(0xFF69B4, 0.2); // Rosa con 20% de opacidad
+            hitboxGraphics.fillRect(x, y, width, height);
+
+            // Dibujar el tamaño del sprite visual también (opcional, en otro color)
+            const spriteX = player.x - (player.width / 2);
+            const spriteY = player.y - (player.height / 2);
+            hitboxGraphics.lineStyle(1, 0x00FFFF, 0.5); // Cian para el sprite visual
+            hitboxGraphics.strokeRect(spriteX, spriteY, player.width, player.height);
+        };
+
+        // Guardar referencia para actualizar en el update loop
+        this.playerHitboxGraphics = hitboxGraphics;
+        this.updateHitboxCallback = updateHitbox;
+
+        // Actualizar inmediatamente
+        updateHitbox();
+    }
+
+    updateHitboxVisual() {
+        if (this.showPlayerHitbox && this.updateHitboxCallback && this.scene.player) {
+            this.updateHitboxCallback();
+        } else if (this.playerHitboxGraphics) {
+            this.playerHitboxGraphics.clear();
+        }
+    }
+
+    togglePlayerHitbox(show) {
+        this.showPlayerHitbox = show;
+        const scene = this.scene;
+
+        if (show && scene.player && !this.playerHitboxGraphics) {
+            this.setupPlayerHitboxVisual(scene.player);
+        } else if (!show && this.playerHitboxGraphics) {
+            this.playerHitboxGraphics.destroy();
+            if (this.updateHitboxCallback) {
+                scene.events.off('update', this.updateHitboxCallback);
+            }
+            this.playerHitboxGraphics = null;
+            this.updateHitboxCallback = null;
+        }
+    }
+
+    spawnTestEnemies() {
+        const scene = this.scene;
+        const levelManager = scene.levelManager;
+
+        // Start generating much higher to leave room for test enemies
+        levelManager.lastPlatformY = -500;
+
+        let platforms = [];
+        let attempts = 0;
+
+        // Generate rows until we have at least 3 platforms
+        while (platforms.length < 3 && attempts < 10) {
+            // We need generateNextRow to return the platform it created.
+            // Currently LevelManager.generateNextRow returns 'null' or doesn't return the platform explicitly 
+            // if it spawns a coin or gap.
+            // We might need to modify LevelManager or just inspect the group.
+
+            let initialCount = scene.platforms.getLength();
+            levelManager.generateNextRow();
+            let newCount = scene.platforms.getLength();
+
+            if (newCount > initialCount) {
+                // A platform was added
+                platforms.push(scene.platforms.getLast(true));
+            }
+            attempts++;
+        }
+
+        // --- TEST ENEMIES ---
+        // Spawn enemies on the generated platforms
+        if (platforms.length > 0) {
+            // Jumper Shooter Enemy (Closest to player)
+            levelManager.spawnJumperShooter(platforms[0]);
+        }
+
+        if (platforms.length > 1) {
+            // Shooter Enemy (Middle)
+            levelManager.spawnShooter(platforms[1]);
+        }
+
+        if (platforms.length > 2) {
+            // Spike Enemy (Highest)
+            levelManager.spawnSpike(platforms[2]);
+        }
+    }
+
+    ensureRuler() {
+        if (!this.ruler) {
+            this.ruler = new DebugRuler(this.scene);
+        }
+        return this.ruler;
+    }
+
+    updateRuler() {
+        if (!this.rulerEnabled) return;
+        const ruler = this.ensureRuler();
+        ruler.update(this.scene.platforms?.getChildren?.() || [], this.scene.player);
+    }
+
+    toggleRuler(force = null) {
+        this.rulerEnabled = force !== null ? force : !this.rulerEnabled;
+        const ruler = this.ensureRuler();
+        ruler.setEnabled(this.rulerEnabled);
+        console.log(`[DebugRuler] ${this.rulerEnabled ? 'ON' : 'OFF'}`);
+    }
+}

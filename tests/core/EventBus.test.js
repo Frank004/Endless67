@@ -1,4 +1,4 @@
-import EventBus, { Events } from '../../src/core/EventBus.js';
+import EventBus, { Events } from '../../src/Core/EventBus.js';
 
 describe('EventBus', () => {
     beforeEach(() => {

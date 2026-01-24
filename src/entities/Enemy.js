@@ -1,12 +1,12 @@
-import { enablePlatformRider, updatePlatformRider } from '../utils/platformRider.js';
-import StateMachine from '../utils/StateMachine.js'; // Import StateMachine
-import { PatrolBehavior } from './behaviors/PatrolBehavior.js';
+import { enablePlatformRider, updatePlatformRider } from '../Utils/platformRider.js';
+import StateMachine from '../Utils/StateMachine.js'; // Import StateMachine
+import { PatrolBehavior } from './Behaviors/PatrolBehavior.js';
 
-import { ShootBehavior } from './behaviors/ShootBehavior.js';
-import { JumpBehavior } from './behaviors/JumpBehavior.js';
+import { ShootBehavior } from './Behaviors/ShootBehavior.js';
+import { JumpBehavior } from './Behaviors/JumpBehavior.js';
 
-import { ENEMY_CONFIG } from '../config/EnemyConfig.js';
-import { ASSETS } from '../config/AssetKeys.js';
+import { ENEMY_CONFIG } from '../Config/EnemyConfig.js';
+import { ASSETS } from '../Config/AssetKeys.js';
 
 export class PatrolEnemy extends Phaser.Physics.Arcade.Sprite {
     constructor(scene, x = 0, y = 0) {

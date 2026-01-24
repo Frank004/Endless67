@@ -1,13 +1,13 @@
-import { Boot } from './scenes/Boot.js';
-import { Preloader } from './scenes/Preloader.js';
-import { Game } from './scenes/Game.js';
-import { MainMenu } from './scenes/MainMenu.js';
-import { Leaderboard } from './scenes/Leaderboard.js';
-import { Settings } from './scenes/Settings.js';
-import { Playground } from './scenes/Playground.js';
-import { Store } from './scenes/Store.js';
-import { GAME_CONFIG } from './config/GameConstants.js';
-import { isMobileDevice, getResolution, getHiDpiScale } from './utils/DeviceDetection.js';
+import { Boot } from './Scenes/Boot.js';
+import { Preloader } from './Scenes/Preloader.js';
+import { Game } from './Scenes/Game.js';
+import { MainMenu } from './Scenes/MainMenu.js';
+import { Leaderboard } from './Scenes/Leaderboard.js';
+import { Settings } from './Scenes/Settings.js';
+import { Playground } from './Scenes/Playground.js';
+import { Store } from './Scenes/Store.js';
+import { GAME_CONFIG } from './Config/GameConstants.js';
+import { isMobileDevice, getResolution, getHiDpiScale } from './Utils/DeviceDetection.js';
 
 // ─────────────────────────────────────────────────────────────
 // Disable verbose logs in production build

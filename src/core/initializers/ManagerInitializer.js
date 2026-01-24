@@ -1,18 +1,19 @@
-import { CollisionManager } from '../../managers/collision/CollisionManager.js';
-import { LevelManager } from '../../managers/level/LevelManager.js';
-import { SlotGenerator } from '../../managers/level/SlotGenerator.js';
-import { InputSystem } from '../systems/InputSystem.js';
-import { UIManager } from '../../managers/ui/UIManager.js';
-import { AudioSystem } from '../systems/AudioSystem.js';
-import { ParticleManager } from '../../managers/gameplay/ParticleManager.js';
-import { RiserManager } from '../../managers/gameplay/RiserManager.js';
-import { DebugManager } from '../../managers/debug/DebugManager.js';
-import { WallDecorator } from '../../managers/level/WallDecorator.js';
-import { InteractableManager } from '../../managers/gameplay/InteractableManager.js';
-import { initializePlatformTextureCache } from '../../prefabs/Platform.js';
-import { RISER_TYPES } from '../../config/RiserConfig.js';
-import { WallDecorManager } from '../../managers/visuals/WallDecorManager.js';
-import { DifficultyManager } from '../../managers/level/DifficultyManager.js';
+import { CleanupSystem } from '../../Systems/Core/CleanupSystem.js';
+import { CollisionManager } from '../../Systems/Collision/CollisionManager.js';
+import { LevelManager } from '../../Systems/Level/LevelManager.js';
+import { SlotGenerator } from '../../Systems/Level/SlotGenerator.js';
+import { InputSystem } from '../../Systems/Core/InputSystem.js';
+import { UIManager } from '../../Systems/UI/UIManager.js';
+import { AudioSystem } from '../../Systems/Core/AudioSystem.js';
+import { ParticleManager } from '../../Systems/Gameplay/ParticleManager.js';
+import { RiserManager } from '../../Systems/Gameplay/RiserManager.js';
+import { DebugManager } from '../../Systems/Debug/DebugManager.js';
+import { WallDecorator } from '../../Systems/Level/WallDecorator.js';
+import { InteractableManager } from '../../Systems/Gameplay/InteractableManager.js';
+import { initializePlatformTextureCache } from '../../Entities/Platform.js';
+import { RISER_TYPES } from '../../Config/RiserConfig.js';
+import { WallDecorManager } from '../../Systems/Visuals/WallDecorManager.js';
+import { DifficultyManager } from '../../Systems/Level/DifficultyManager.js';
 
 export class ManagerInitializer {
     /**
@@ -22,6 +23,7 @@ export class ManagerInitializer {
     static init(scene) {
         // Core Systems (Source of Truth)
         scene.difficultyManager = new DifficultyManager(scene);
+        scene.cleanupSystem = new CleanupSystem(scene);
 
         // Gameplay Managers
         scene.collisionManager = new CollisionManager(scene);

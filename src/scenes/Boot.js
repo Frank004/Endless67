@@ -1,5 +1,5 @@
-import FluidPipeline from '../pipelines/FluidPipeline.js';
-import FlamesPipeline from '../pipelines/FlamesPipeline.js';
+import FluidPipeline from '../Pipelines/FluidPipeline.js';
+import FlamesPipeline from '../Pipelines/FlamesPipeline.js';
 
 /**
  * @phasereditor

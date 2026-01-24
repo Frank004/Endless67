@@ -1,9 +1,9 @@
 /* eslint-disable */
 import { Game } from './Game.js';
-import { PlaygroundRules } from '../playground/logic/PlaygroundRules.js';
-import { PlaygroundCleanup } from '../playground/logic/PlaygroundCleanup.js';
-import { PlaygroundDevMenu } from '../playground/ui/PlaygroundDevMenu.js';
-import EventBus, { Events } from '../core/EventBus.js';
+import { PlaygroundRules } from '../Playground/logic/PlaygroundRules.js';
+import { PlaygroundCleanup } from '../Playground/logic/PlaygroundCleanup.js';
+import { PlaygroundDevMenu } from '../Playground/UI/PlaygroundDevMenu.js';
+import EventBus, { Events } from '../Core/EventBus.js';
 
 export class Playground extends Game {
     constructor() {

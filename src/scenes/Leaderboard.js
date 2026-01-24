@@ -1,8 +1,8 @@
-import ScoreManager from '../managers/gameplay/ScoreManager.js';
-import { InputSystem } from '../core/systems/InputSystem.js';
-import { UIHelpers } from '../utils/UIHelpers.js';
-import { MenuNavigation } from '../managers/ui/MenuNavigation.js';
-import EventBus, { Events } from '../core/EventBus.js';
+import ScoreManager from '../Systems/Gameplay/ScoreManager.js';
+import { InputSystem } from '../Systems/Core/InputSystem.js';
+import { UIHelpers } from '../Utils/UIHelpers.js';
+import { MenuNavigation } from '../UI/Menus/MenuNavigation.js';
+import EventBus, { Events } from '../Core/EventBus.js';
 
 export class Leaderboard extends Phaser.Scene {
     constructor() {

@@ -1,5 +1,5 @@
-import GameState from '../../src/core/GameState.js';
-import EventBus, { Events } from '../../src/core/EventBus.js';
+import GameState from '../../src/Core/GameState.js';
+import EventBus, { Events } from '../../src/Core/EventBus.js';
 
 describe('GameState', () => {
     beforeEach(() => {

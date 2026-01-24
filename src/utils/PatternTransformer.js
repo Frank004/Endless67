@@ -10,7 +10,7 @@
  * - Immutable: No modifica el patrón original
  */
 
-import { SLOT_CONFIG, getPlatformBounds } from '../config/SlotConfig.js';
+import { SLOT_CONFIG, getPlatformBounds } from '../Config/SlotConfig.js';
 
 export class PatternTransformer {
     constructor(gameWidth = null) {

@@ -1,0 +1,25 @@
+---
+alwaysApply: false
+---
+### 2. Lead With the Conclusion
+FORBIDDEN:
+- Long narrative that builds toward the point.
+
+REQUIRED:
+- State the most important fact first.
+- Evidence and rationale come second.
+
+Example:
+- ❌ “After checking the logs, it appears the error is a null pointer, which caused the service to go down.”
+- ✅ “Service is down. Null pointer exception found in logs.”
+
+---
+
+### 3. Prefer Structured Data Over Prose
+FORBIDDEN:
+- Long paragraphs describing steps or lists.
+
+REQUIRED:
+- Lists, checklists, tables, or code blocks.
+
+Example:

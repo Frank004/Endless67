@@ -1,8 +1,8 @@
-import GameState from '../core/GameState.js';
-import { UIHelpers } from '../utils/UIHelpers.js';
-import { InputSystem } from '../core/systems/InputSystem.js';
-import EventBus, { Events } from '../core/EventBus.js';
-import { MenuNavigation } from '../managers/ui/MenuNavigation.js';
+import GameState from '../Core/GameState.js';
+import { UIHelpers } from '../Utils/UIHelpers.js';
+import { InputSystem } from '../Systems/Core/InputSystem.js';
+import EventBus, { Events } from '../Core/EventBus.js';
+import { MenuNavigation } from '../UI/Menus/MenuNavigation.js';
 
 export class Settings extends Phaser.Scene {
     constructor() {
@@ -60,7 +60,8 @@ export class Settings extends Phaser.Scene {
 
         const joystickButton = UIHelpers.createIconButton(this, width / 2, buttonY, 'gamepad', joystickTextStr, {
             callback: () => {
-                const newState = !this.registry.get('showJoystick');
+                const currentState = this.registry.get('showJoystick') !== false;
+                const newState = !currentState;
                 this.registry.set('showJoystick', newState);
                 joystickButton.text.setText(newState ? 'JOYSTICK: ON' : 'JOYSTICK: OFF');
             }

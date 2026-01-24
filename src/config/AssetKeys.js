@@ -67,5 +67,6 @@ export const ASSETS = {
     DAMAGE_SFX_PREFIX: 'damage_sfx_',
 
     // Store
-    STORE_LOGO: 'store_logo'
+    STORE_LOGO: 'store_logo',
+    UI_HUD: 'ui_hud'
 };

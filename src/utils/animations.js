@@ -1,4 +1,4 @@
-import { ASSETS } from '../config/AssetKeys.js';
+import { ASSETS } from '../Config/AssetKeys.js';
 /**
 
  * Registro centralizado de animaciones.

@@ -1,5 +1,5 @@
-import { InputSystem } from '../../../src/core/systems/InputSystem.js';
-import EventBus, { Events } from '../../../src/core/EventBus.js';
+import { InputSystem } from '../../../src/Systems/Core/InputSystem.js';
+import EventBus, { Events } from '../../../src/Core/EventBus.js';
 
 describe('InputSystem', () => {
     let scene;

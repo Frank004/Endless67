@@ -2,20 +2,20 @@
 import { Settings } from '../../src/scenes/Settings.js';
 import { MainMenu } from '../../src/scenes/MainMenu.js';
 import { Leaderboard } from '../../src/scenes/Leaderboard.js';
-import { PauseMenu } from '../../src/managers/ui/menus/PauseMenu.js';
-import { GameOverMenu } from '../../src/managers/ui/menus/GameOverMenu.js';
-import EventBus, { Events } from '../../src/core/EventBus.js';
-import GameState from '../../src/core/GameState.js';
-import { UIHelpers } from '../../src/utils/UIHelpers.js';
-import { InputSystem } from '../../src/core/systems/InputSystem.js';
+import { PauseMenu } from '../../src/UI/Menus/PauseMenu.js';
+import { GameOverMenu } from '../../src/UI/Menus/GameOverMenu.js';
+import EventBus, { Events } from '../../src/Core/EventBus.js';
+import GameState from '../../src/Core/GameState.js';
+import { UIHelpers } from '../../src/Utils/UIHelpers.js';
+import { InputSystem } from '../../src/Systems/Core/InputSystem.js';
 
 // Mock ScoreManager
-jest.mock('../../src/managers/gameplay/ScoreManager.js', () => ({
+jest.mock('../../src/Systems/Gameplay/ScoreManager.js', () => ({
     getTopScores: jest.fn().mockReturnValue([])
 }));
 
 // Mock UIHelpers
-jest.mock('../../src/utils/UIHelpers.js', () => ({
+jest.mock('../../src/Utils/UIHelpers.js', () => ({
     UIHelpers: {
         createTextButton: jest.fn(),
         createIconButton: jest.fn()
@@ -23,7 +23,7 @@ jest.mock('../../src/utils/UIHelpers.js', () => ({
 }));
 
 // Mock InputManager
-jest.mock('../../src/core/systems/InputSystem.js', () => ({
+jest.mock('../../src/Systems/Core/InputSystem.js', () => ({
     InputSystem: jest.fn().mockImplementation(() => ({
         setupInputs: jest.fn(),
         update: jest.fn(),

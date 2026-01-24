@@ -1,5 +1,5 @@
-import { PLATFORM_WIDTH, PLATFORM_HEIGHT } from '../prefabs/Platform.js';
-import { MAZE_ROW_HEIGHT, MAZE_ROW_GAP, MAZE_ROW_COUNT } from '../data/MazePatterns.js';
+import { PLATFORM_WIDTH, PLATFORM_HEIGHT } from '../Entities/Platform.js';
+import { MAZE_ROW_HEIGHT, MAZE_ROW_GAP, MAZE_ROW_COUNT } from '../Data/MazePatterns.js';
 import { WALLS } from './GameConstants.js';
 
 /**

@@ -1,5 +1,5 @@
 
-import { enablePlatformRider, handlePlatformRiderCollision, updatePlatformRider } from '../../src/utils/platformRider.js';
+import { enablePlatformRider, handlePlatformRiderCollision, updatePlatformRider } from '../../src/Utils/platformRider.js';
 
 describe('platformRider', () => {
     let rider;
