@@ -117,9 +117,36 @@ body.mobile canvas {
     /* Let children follow flex parent */
 }
 
-/* Logo Removed from CSS logic (handled by Phaser) */
+/* Logo: Exact fixed match for Phaser (Y=120 Center, Scale=0.28) */
 .loader-title {
-    display: none;
+    display: block;
+    position: absolute;
+    top: 120px;
+    left: 50%;
+    transform: translate(-50%, -50%);
+    /* Centered on Y=120 */
+    width: auto;
+    margin: 0;
+    pointer-events: none;
+}
+
+.loader-title img {
+    /* Logo orig ~1290 * 0.28 = 361px */
+    width: 360px;
+    max-width: 90vw;
+    height: auto;
+    display: block;
+}
+
+.loader-bar-placeholder {
+    position: absolute;
+    top: 60%;
+    left: 50%;
+    transform: translateX(-50%);
+    width: 120px;
+    height: 8px;
+    background: rgba(255, 255, 255, 0.15);
+    border-radius: 4px;
 }
 
 .loader-version {
@@ -137,28 +164,7 @@ body.mobile canvas {
     font-family: monospace;
 }
 
-/* Placeholder Animation Container - Centered approx where sprites go */
-.loader-spinner {
-    margin-top: 20vh;
-    /* Push down */
-    width: 50px;
-    height: 50px;
-    border: 3px solid rgba(255, 255, 255, 0.2);
-    border-top-color: #ffd700;
-    border-radius: 50%;
-    animation: spin 1s linear infinite;
-}
-
-.loader-text {
-    display: none;
-    /* User requested removal */
-}
-
-@keyframes spin {
-    to {
-        transform: rotate(360deg);
-    }
-}
+/* Spinner removed */
 
 .loader-text {
     font-size: 4vmin;
