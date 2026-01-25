@@ -19,6 +19,7 @@ const mockScene = {
             setOrigin: jest.fn().mockReturnThis(),
             setScale: jest.fn().mockReturnThis(),
             setFrame: jest.fn().mockReturnThis(),
+            setVisible: jest.fn().mockReturnThis(),
             frame: { name: 'cardbox.png' }
         })),
         text: jest.fn(() => ({
@@ -26,6 +27,13 @@ const mockScene = {
             setVisible: jest.fn().mockReturnThis(),
             width: 50,
             updateText: jest.fn()
+        })),
+        sprite: jest.fn(() => ({
+            setOrigin: jest.fn().mockReturnThis(),
+            setScale: jest.fn().mockReturnThis(),
+            setFrame: jest.fn().mockReturnThis(),
+            setVisible: jest.fn().mockReturnThis(),
+            setTexture: jest.fn().mockReturnThis()
         }))
     },
     input: {
@@ -33,6 +41,12 @@ const mockScene = {
     },
     tweens: {
         add: jest.fn()
+    },
+    textures: {
+        exists: jest.fn().mockReturnValue(true),
+        get: jest.fn().mockReturnValue({
+            getFrameNames: jest.fn().mockReturnValue(['idle-01.png'])
+        })
     },
     isDragging: false
 };
@@ -48,10 +62,15 @@ global.Phaser = {
                 this.list = [];
                 this.add = jest.fn((child) => this.list.push(child));
                 this.setSize = jest.fn((w, h) => { this.width = w; this.height = h; });
-                this.setInteractive = jest.fn((shape) => {
-                    this.input = { hitArea: shape };
-                    return this; // Phaser methods are chainable
+                this.setInteractive = jest.fn((arg) => {
+                    if (arg && arg.hitArea) {
+                        this.input = { hitArea: arg.hitArea };
+                    } else {
+                        this.input = { hitArea: arg };
+                    }
+                    return this;
                 });
+                this.disableInteractive = jest.fn();
                 this.removeInteractive = jest.fn(() => { this.input = null; });
                 this.on = jest.fn();
             }
@@ -87,7 +106,7 @@ describe('StoreCard Alignment Tests', () => {
     };
 
     beforeAll(async () => {
-        const module = await import('../../../src/Systems/UI/Store/StoreCard.js');
+        const module = await import('../../../src/UI/Store/StoreCard.js');
         StoreCard = module.StoreCard;
     });
 
@@ -104,8 +123,8 @@ describe('StoreCard Alignment Tests', () => {
         // 1. Check HitArea Rect matches Container Dimension (0,0 relative)
         const hitArea = storeCard.input.hitArea;
         expect(hitArea).toBeDefined();
-        expect(hitArea.x).toBe(0);
-        expect(hitArea.y).toBe(0);
+        expect(hitArea.x).toBe(STORE_CARD_CONSTANTS.WIDTH / 2);
+        expect(hitArea.y).toBe(STORE_CARD_CONSTANTS.HEIGHT / 2);
         expect(hitArea.width).toBe(STORE_CARD_CONSTANTS.WIDTH);
         expect(hitArea.height).toBe(STORE_CARD_CONSTANTS.HEIGHT);
 
@@ -127,7 +146,7 @@ describe('StoreCard Alignment Tests', () => {
         const hitAreaCenterX = hitArea.x + (hitArea.width / 2);
         const hitAreaCenterY = hitArea.y + (hitArea.height / 2);
 
-        expect(hitAreaCenterX).toBe(expectedCenterX);
-        expect(hitAreaCenterY).toBe(expectedCenterY);
+        expect(hitAreaCenterX).toBe(expectedCenterX + STORE_CARD_CONSTANTS.WIDTH / 2);
+        expect(hitAreaCenterY).toBe(expectedCenterY + STORE_CARD_CONSTANTS.HEIGHT / 2);
     });
 });

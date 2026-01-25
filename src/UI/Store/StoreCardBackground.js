@@ -41,9 +41,6 @@ export class StoreCardBackground {
 
         let texture = STORE_CARD_CONSTANTS.TEXTURES.COMMON;
 
-        // if (owned) {
-        //    texture = STORE_CARD_CONSTANTS.TEXTURES.OWNED;
-        // } else {
         switch (rarity) {
             case 'rare': texture = STORE_CARD_CONSTANTS.TEXTURES.RARE; break;
             case 'epic': texture = STORE_CARD_CONSTANTS.TEXTURES.EPIC; break;
@@ -51,7 +48,6 @@ export class StoreCardBackground {
             case 'blackmarket': texture = STORE_CARD_CONSTANTS.TEXTURES.BLACKMARKET; break;
             default: texture = STORE_CARD_CONSTANTS.TEXTURES.COMMON; break;
         }
-        // }
 
         if (this.image.frame.name !== texture) {
             this.image.setFrame(texture);

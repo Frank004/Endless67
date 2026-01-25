@@ -36,7 +36,6 @@ export const STORE_CARD_CONSTANTS = {
         EPIC: 'cardbox-epic.png',
         LEGENDARY: 'cardbox-legend.png',
         BLACKMARKET: 'cardbox-blackmarket.png',
-        OWNED: 'cardbox-own.png',
         LOCK: 'lock.png'
     }
 };
