@@ -23,7 +23,8 @@ export class HUDManager {
 
         // Clean up existing elements to prevent duplication
         // 1. Aggressive Cleanup: Find ALL containers with this name (not just the first one)
-        const existingContainers = scene.children.list.filter(child => child.name === 'hud_score_container');
+        const displayList = scene.children?.list || [];
+        const existingContainers = displayList.filter(child => child.name === 'hud_score_container');
         existingContainers.forEach(container => container.destroy());
 
         // 2. Check by Scene Property (Persistence Safety)
@@ -83,7 +84,9 @@ export class HUDManager {
         // New Sprite-based Implementation using CoinCounter component
         this.scoreContainer = new CoinCounter(scene, scoreX, scoreCenterY);
         this.scoreContainer.setDepth(201).setScrollFactor(0);
-        this.scoreContainer.setName('hud_score_container'); // Prevent duplication
+        if (typeof this.scoreContainer.setName === 'function') {
+            this.scoreContainer.setName('hud_score_container'); // Prevent duplication
+        }
         scene._hudScoreContainer = this.scoreContainer; // Store reference for robust cleanup
 
         // Initial Update

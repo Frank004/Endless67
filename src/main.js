@@ -6,7 +6,7 @@ import { Leaderboard } from './Scenes/Leaderboard.js';
 import { Settings } from './Scenes/Settings.js';
 import { Playground } from './Scenes/Playground.js';
 import { Store } from './Scenes/Store.js';
-import { GAME_CONFIG } from './Config/GameConstants.js';
+import { GAME_CONFIG, UI } from './Config/GameConstants.js';
 import { isMobileDevice, getResolution, getHiDpiScale } from './Utils/DeviceDetection.js';
 
 // ─────────────────────────────────────────────────────────────
@@ -45,6 +45,16 @@ if (isMobile && typeof window !== 'undefined') {
 }
 // Usa DPR para render más nítido sin cambiar el tamaño lógico del juego
 const DPR = getHiDpiScale();
+
+if (typeof document !== 'undefined') {
+    const rootStyle = document.documentElement?.style;
+    if (rootStyle) {
+        rootStyle.setProperty('--loader-logo-top', `${UI.LOGO.LOADER_TOP_PERCENT}%`);
+        rootStyle.setProperty('--loader-logo-offset', `${UI.LOGO.LOADER_OFFSET_PX}px`);
+        rootStyle.setProperty('--loader-logo-width', `${UI.LOGO.HTML_WIDTH_VW}vw`);
+        rootStyle.setProperty('--loader-logo-max-width', `${UI.LOGO.HTML_MAX_WIDTH_PX}px`);
+    }
+}
 
 const config = {
     type: Phaser.AUTO,

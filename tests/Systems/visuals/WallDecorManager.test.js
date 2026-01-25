@@ -1,14 +1,15 @@
 
 import { WallDecorManager } from '../../../src/Systems/Visuals/WallDecorManager.js';
-import { WallDecorFactory } from '../../../src/Systems/Visuals/decorations/WallDecorFactory.js';
-import { DecorRules } from '../../../src/Systems/Visuals/rules/DecorRules.js';
+import { WallDecorFactory } from '../../../src/Systems/Visuals/Decorations/WallDecorFactory.js';
+import { DecorRules } from '../../../src/Systems/Visuals/Rules/DecorRules.js';
 
 // Mock dependencias
-jest.mock('../../../src/Systems/Visuals/decorations/WallDecorFactory.js');
-jest.mock('../../../src/Systems/Visuals/rules/DecorRules.js');
+jest.mock('../../../src/Systems/Visuals/Decorations/WallDecorFactory.js');
+jest.mock('../../../src/Systems/Visuals/Rules/DecorRules.js');
 jest.mock('../../../src/Config/WallDecorConfig.js', () => ({
     WALL_DECOR_CONFIG: {
-        ENABLED: true
+        ENABLED: true,
+        wallDistribution: { left: 0.5 }
     },
     getWallInsetX: jest.fn(() => 100),
     getRandomDecorationType: jest.fn(() => ({ name: 'SIGN_A', depth: 2, frames: { left: [], right: [] } })),
@@ -56,7 +57,7 @@ describe('WallDecorManager', () => {
         const slotDecorations = [];
         const usedFrames = new Set();
 
-        manager.spawnDecoration(decorType, 100, 100, 'left', slotDecorations, usedFrames);
+        manager.spawnDecoration(100, 100, 0, 1, slotDecorations, usedFrames);
 
         expect(WallDecorFactory.getSign).toHaveBeenCalled();
         expect(mockDecor.initParallax).toHaveBeenCalled();
@@ -71,7 +72,7 @@ describe('WallDecorManager', () => {
         const slotDecorations = [];
         const usedFrames = new Set();
 
-        manager.spawnDecoration(decorType, 100, 100, 'left', slotDecorations, usedFrames);
+        manager.spawnDecoration(100, 100, 0, 1, slotDecorations, usedFrames);
 
         expect(WallDecorFactory.getSign).not.toHaveBeenCalled();
         expect(manager.decorations.length).toBe(0);
@@ -86,7 +87,7 @@ describe('WallDecorManager', () => {
         const usedFrames = new Set();
         const distanceFromFloor = 0; // Very low
 
-        manager.spawnDecoration(decorType, 100, 100, 'left', slotDecorations, usedFrames, distanceFromFloor);
+        manager.spawnDecoration(100, 100, 0, 1, slotDecorations, usedFrames, distanceFromFloor);
 
         expect(DecorRules.hasEnoughHeight).toHaveBeenCalled();
         expect(WallDecorFactory.getSign).not.toHaveBeenCalled();
@@ -96,7 +97,8 @@ describe('WallDecorManager', () => {
     test('should cleanup decorations outside range', () => {
         const mockDecor = {
             shouldCleanup: jest.fn(() => true),
-            y: 3000
+            y: 3000,
+            deactivate: jest.fn()
         };
         manager.decorations = [mockDecor];
 

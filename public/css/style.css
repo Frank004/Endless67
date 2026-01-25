@@ -117,11 +117,11 @@ body.mobile canvas {
     /* Let children follow flex parent */
 }
 
-/* Logo: Exact fixed match for Phaser (Y=120 Center, Scale=0.28) */
+/* Logo: Exact fixed match for Phaser (Y=120 Center, Scale=0.24) */
 .loader-title {
     display: block;
     position: absolute;
-    top: 21.5%;
+    top: calc(var(--loader-logo-top, 21.5%) - var(--loader-logo-offset, 20px));
     /* Slightly lower */
     left: 50%;
     transform: translate(-50%, -50%);
@@ -132,9 +132,9 @@ body.mobile canvas {
 }
 
 .loader-title img {
-    /* Logo orig ~1290 * 0.28 = 361px ... adjusted to ~87vw per feedback (+3%) */
-    width: 85vw;
-    max-width: 569px;
+    /* Logo size controlled by CSS variables to match Phaser */
+    width: var(--loader-logo-width, 73vw);
+    max-width: var(--loader-logo-max-width, 488px);
     height: auto;
     display: inline-block;
 }

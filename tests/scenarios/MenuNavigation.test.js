@@ -18,7 +18,8 @@ jest.mock('../../src/Systems/Gameplay/ScoreManager.js', () => ({
 jest.mock('../../src/Utils/UIHelpers.js', () => ({
     UIHelpers: {
         createTextButton: jest.fn(),
-        createIconButton: jest.fn()
+        createIconButton: jest.fn(),
+        createSpriteButton: jest.fn() // Added missing mock
     }
 }));
 
@@ -107,12 +108,22 @@ describe('Menu Navigation Integration', () => {
             setScrollFactor: jest.fn().mockReturnThis(),
             setInteractive: jest.fn().mockReturnThis(),
             setScale: jest.fn().mockReturnThis(),
+            setOrigin: jest.fn().mockReturnThis(), // Added missing method
+            setTexture: jest.fn().mockReturnThis(), // Added
             on: jest.fn().mockReturnThis(),
             clearTint: jest.fn()
         };
 
         mockScene = new PhaserMock.Scene('MockScene');
         mockScene.add = {
+            graphics: jest.fn().mockReturnValue({
+                fillStyle: jest.fn().mockReturnThis(),
+                fillRoundedRect: jest.fn().mockReturnThis(),
+                setPosition: jest.fn().mockReturnThis(),
+                setScrollFactor: jest.fn().mockReturnThis(),
+                setDepth: jest.fn().mockReturnThis(),
+                destroy: jest.fn()
+            }),
             rectangle: jest.fn().mockReturnValue({
                 setOrigin: jest.fn().mockReturnThis(),
                 setScrollFactor: jest.fn().mockReturnThis(),
@@ -230,7 +241,7 @@ describe('Menu Navigation Integration', () => {
             leaderboardScene.input = mockScene.input;
 
             backBtnContainer = { ...mockContainer };
-            UIHelpers.createTextButton.mockImplementation((s, x, y, t, o) =>
+            UIHelpers.createSpriteButton.mockImplementation((s, x, y, t, o) =>
                 createMockButtonObj(backBtnContainer, mockText, null, o?.callback));
         });
 
@@ -276,7 +287,7 @@ describe('Menu Navigation Integration', () => {
                 .mockImplementationOnce((s, x, y, f, t, o) => createMockButtonObj(joystickBtnContainer, mockText, mockIcon, o?.callback));
 
             // Back button
-            UIHelpers.createTextButton.mockImplementation((s, x, y, t, o) => createMockButtonObj(backBtnContainer, mockText, null, o?.callback));
+            UIHelpers.createSpriteButton.mockImplementation((s, x, y, t, o) => createMockButtonObj(backBtnContainer, mockText, null, o?.callback));
         });
 
         test('should navigate and toggle settings', () => {
@@ -358,8 +369,8 @@ describe('Menu Navigation Integration', () => {
             menuBtnContainer = { ...mockContainer };
 
             // Mock UIHelpers for GameOverMenu
-            // NOTE: showPostGameOptions calls UIHelpers.createTextButton 3 times.
-            UIHelpers.createTextButton
+            // NOTE: showPostGameOptions calls UIHelpers.createSpriteButton 3 times.
+            UIHelpers.createSpriteButton
                 .mockImplementationOnce((s, x, y, t, o) => createMockButtonObj(restartBtnContainer, mockText, null, o?.callback))
                 .mockImplementationOnce((s, x, y, t, o) => createMockButtonObj(leaderboardBtnContainer, mockText, null, o?.callback))
                 .mockImplementationOnce((s, x, y, t, o) => createMockButtonObj(menuBtnContainer, mockText, null, o?.callback));

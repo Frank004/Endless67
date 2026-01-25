@@ -1,4 +1,5 @@
 import { UIHelpers } from '../Utils/UIHelpers.js';
+import { UI } from '../Config/GameConstants.js';
 import { InputSystem } from '../Systems/Core/InputSystem.js';
 import { MenuNavigation } from '../UI/Menus/MenuNavigation.js';
 import EventBus, { Events } from '../Core/EventBus.js';
@@ -39,12 +40,12 @@ export class MainMenu extends Phaser.Scene {
 		bg.setScale(Math.max(scaleX, scaleY));
 
 		// Title
-		this.add.image(width / 2, 120, ASSETS.GAME_LOGO).setScale(0.28);
+		this.add.image(width / 2, UI.LOGO.Y, ASSETS.GAME_LOGO).setScale(UI.LOGO.SCALE);
 
 		// --- BUTTONS ---
 		this.buttons = [];
 		const buttonSpacing = 65;
-		const startY = height / 2;
+		const startY = height / 2 - 50;
 
 		const startBtn = UIHelpers.createSpriteButton(this, width / 2, startY, 'btn/btn-start.png', {
 			callback: () => this.scene.start('Game')

@@ -121,6 +121,14 @@ export const UI = {
         },
     },
     PADDING: 20,
+    LOGO: {
+        SCALE: 0.24,
+        Y: 100,
+        LOADER_TOP_PERCENT: 21.5,
+        LOADER_OFFSET_PX: 20,
+        HTML_WIDTH_VW: 73,
+        HTML_MAX_WIDTH_PX: 488,
+    },
 };
 
 export const AUDIO = {

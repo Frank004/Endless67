@@ -69,7 +69,7 @@ describe('PlayerVisuals', () => {
         playerVisuals.init();
 
         expect(mockPlayer.setTexture).toHaveBeenCalledWith(ASSETS.PLAYER);
-        expect(mockPlayer.setFrame).toHaveBeenCalledWith('IDLE 1.png');
+        expect(mockPlayer.setFrame).toHaveBeenCalledWith('idle-01.png');
     });
 
     test('should handle flipX', () => {

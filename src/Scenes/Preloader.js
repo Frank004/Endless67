@@ -1,4 +1,5 @@
 import { ASSETS } from '../Config/AssetKeys.js';
+import { UI } from '../Config/GameConstants.js';
 import { Leaderboard } from './Leaderboard.js';
 import { Settings } from './Settings.js';
 import { Playground } from './Playground.js';
@@ -38,9 +39,9 @@ export class Preloader extends Phaser.Scene {
             // Fallback if Boot failed to load bg
         }
 
-        // 2. Logo (Match MainMenu Y=120)
+        // 2. Logo (Match MainMenu)
         if (this.textures.exists(ASSETS.GAME_LOGO)) {
-            this.add.image(width / 2, 120, ASSETS.GAME_LOGO).setScale(0.28).setOrigin(0.5);
+            this.add.image(width / 2, UI.LOGO.Y, ASSETS.GAME_LOGO).setScale(UI.LOGO.SCALE).setOrigin(0.5);
         }
 
         // 3. Loading Animation (Sprites)
