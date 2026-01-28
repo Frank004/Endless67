@@ -50,19 +50,22 @@ export class Preloader extends Phaser.Scene {
                 });
             }
 
-            const introSprite = this.add.sprite(width / 2, height / 2, ASSETS.INTRO_ANIM, 'intro-frame-01.png')
-                .setOrigin(0.5)
-                .play('intro_play');
+            this.introSprite = this.add.sprite(width / 2, height / 2, ASSETS.INTRO_ANIM, 'intro-frame-01.png')
+                .setOrigin(0.5);
+            // .play('intro_play'); // DEFERRED: Play in create() after load
 
             // Fit/Cover logic
-            const scaleX = width / introSprite.width;
-            const scaleY = height / introSprite.height;
-            introSprite.setScale(Math.max(scaleX, scaleY));
+            const scaleX = width / this.introSprite.width;
+            const scaleY = height / this.introSprite.height;
+            this.introSprite.setScale(Math.max(scaleX, scaleY));
 
-            introSprite.on('animationcomplete', () => {
+            this.introSprite.on('animationcomplete', () => {
                 this.introAnimComplete = true;
-                this.checkLoadComplete();
+                this.scene.start('MainMenu');
             });
+
+            // Keep flag false initially
+            this.introAnimComplete = false;
         } else if (this.textures.exists(ASSETS.MAIN_BG)) {
             // Fallback
             const bg = this.add.image(width / 2, height / 2, ASSETS.MAIN_BG).setOrigin(0.5);
@@ -127,10 +130,9 @@ export class Preloader extends Phaser.Scene {
         });
 
         // --- HIDE HTML LOADER NOW ---
-        const htmlLoader = document.getElementById('loader');
-        if (htmlLoader) {
-            htmlLoader.style.display = 'none';
-        }
+        // --- HIDE HTML LOADER (Deferred to create) ---
+        // const htmlLoader = document.getElementById('loader');
+        // if (htmlLoader) htmlLoader.style.display = 'none';
 
         // --- AUDIO LOADING ---
         this.load.audio(ASSETS.COIN_SFX_PREFIX + '1', 'assets/audio/collecting-coins/Several Coins 01.mp3' + v);
@@ -588,10 +590,9 @@ export class Preloader extends Phaser.Scene {
         g.clear(); g.fillStyle(0xffffff, 1); g.fillRect(0, 0, 8, 8); g.generateTexture(ASSETS.CONFETTI, 8, 8);
 
         // Hide HTML Loader
-        const loader = document.getElementById('loader');
-        if (loader) {
-            loader.classList.add('hidden');
-        }
+        // Hide HTML Loader - Handled in warmup.then()
+        // const loader = document.getElementById('loader');
+        // if (loader) loader.classList.add('hidden');
 
         // Register Scenes safely
         if (!this.scene.get('Leaderboard')) this.scene.add('Leaderboard', Leaderboard, false);
@@ -603,12 +604,23 @@ export class Preloader extends Phaser.Scene {
         warmup.warmup().then(() => {
             this.isLoadingComplete = true;
 
-            // If intro animation (if exists) has finished, go to menu.
-            // If not, the 'animationcomplete' event will call this.
-            if (!this.textures.exists(ASSETS.INTRO_ANIM)) {
-                this.scene.start('MainMenu');
+            // --- ALL LOADING DONE ---
+
+            // 1. Hide HTML Loader finally
+            const loader = document.getElementById('loader');
+            if (loader) {
+                // Force hide with style to override any CSS
+                loader.style.display = 'none';
+                loader.classList.add('hidden');
+            }
+
+            // 2. Start Animation
+            if (this.introSprite && this.textures.exists(ASSETS.INTRO_ANIM)) {
+                this.introSprite.play('intro_play');
+                // The 'animationcomplete' listener set in preload will handle scene switch
             } else {
-                this.checkLoadComplete();
+                // Fallback: Immediate start if no anim
+                this.scene.start('MainMenu');
             }
         });
     }
