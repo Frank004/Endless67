@@ -161,12 +161,12 @@ body.mobile canvas {
 
 .loader-version {
     position: absolute;
-    bottom: 30px;
-    font-size: 14px;
+    bottom: 23px;
+    font-size: 18px;
     color: #aaaaaa;
-    background: rgba(0, 0, 0, 0.4);
-    padding: 4px 15px;
-    border-radius: 13px;
+    background: rgba(0, 0, 0, 0.6);
+    padding: 6px 20px;
+    border-radius: 20px;
     margin: 0;
     font-family: monospace;
 }
