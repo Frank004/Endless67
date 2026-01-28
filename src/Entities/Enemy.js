@@ -349,6 +349,12 @@ export class ShooterEnemy extends Phaser.Physics.Arcade.Sprite {
 
     preUpdate(time, delta) {
         super.preUpdate(time, delta);
+
+        // Face Player
+        if (this.scene && this.scene.player && this.scene.player.active && !this.isDead) {
+            this.setFlipX(this.scene.player.x < this.x);
+        }
+
         // Update physics/logic
         updatePlatformRider(this);
         // Update State Machine
@@ -486,6 +492,11 @@ export class JumperShooterEnemy extends Phaser.Physics.Arcade.Sprite {
 
     preUpdate(time, delta) {
         super.preUpdate(time, delta);
+
+        // Face Player
+        if (this.scene && this.scene.player && this.scene.player.active && !this.isDead) {
+            this.setFlipX(this.scene.player.x < this.x);
+        }
 
         // Efecto visual dinámico: squash and stretch basado en velocidad
         /*
