@@ -130,11 +130,12 @@ export class Preloader extends Phaser.Scene {
         });
 
         // --- HIDE HTML LOADER NOW ---
-        // --- HIDE HTML LOADER (Deferred to create) ---
-        // const htmlLoader = document.getElementById('loader');
-        // if (htmlLoader) htmlLoader.style.display = 'none';
-
-        // --- AUDIO LOADING ---
+        // Reveal the Phaser Preloader (Intro Frame 1 + Loading Spinner)
+        const htmlLoader = document.getElementById('loader');
+        if (htmlLoader) {
+            htmlLoader.style.display = 'none';
+            htmlLoader.classList.add('hidden');
+        }
         this.load.audio(ASSETS.COIN_SFX_PREFIX + '1', 'assets/audio/collecting-coins/Several Coins 01.mp3' + v);
         this.load.audio(ASSETS.COIN_SFX_PREFIX + '2', 'assets/audio/collecting-coins/Several Coins 02.mp3' + v);
         this.load.audio(ASSETS.COIN_SFX_PREFIX + '3', 'assets/audio/collecting-coins/Several Coins 03.mp3' + v);
@@ -589,11 +590,6 @@ export class Preloader extends Phaser.Scene {
         g.clear(); g.fillStyle(0xffdd00, 0.8); g.fillCircle(4, 4, 4); g.generateTexture(ASSETS.PARTICLE_AURA, 8, 8);
         g.clear(); g.fillStyle(0xffffff, 1); g.fillRect(0, 0, 8, 8); g.generateTexture(ASSETS.CONFETTI, 8, 8);
 
-        // Hide HTML Loader
-        // Hide HTML Loader - Handled in warmup.then()
-        // const loader = document.getElementById('loader');
-        // if (loader) loader.classList.add('hidden');
-
         // Register Scenes safely
         if (!this.scene.get('Leaderboard')) this.scene.add('Leaderboard', Leaderboard, false);
         if (!this.scene.get('Settings')) this.scene.add('Settings', Settings, false);
@@ -605,14 +601,6 @@ export class Preloader extends Phaser.Scene {
             this.isLoadingComplete = true;
 
             // --- ALL LOADING DONE ---
-
-            // 1. Hide HTML Loader finally
-            const loader = document.getElementById('loader');
-            if (loader) {
-                // Force hide with style to override any CSS
-                loader.style.display = 'none';
-                loader.classList.add('hidden');
-            }
 
             // 1.5 Hide Phaser Loading Sprite
             if (this.loadingSprite) {
