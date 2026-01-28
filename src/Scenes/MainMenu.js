@@ -36,7 +36,7 @@ export class MainMenu extends Phaser.Scene {
 		let bg;
 		if (this.textures.exists(ASSETS.INTRO_ANIM)) {
 			// Use the last frame of the intro animation
-			bg = this.add.image(width / 2, height / 2, ASSETS.INTRO_ANIM, 'ezgif-frame-016.png')
+			bg = this.add.image(width / 2, height / 2, ASSETS.INTRO_ANIM, 'intro-frame-16.png')
 				.setOrigin(0.5);
 		} else if (this.textures.exists(ASSETS.MAIN_BG)) {
 			bg = this.add.image(width / 2, height / 2, ASSETS.MAIN_BG)

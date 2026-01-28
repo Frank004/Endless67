@@ -36,29 +36,21 @@ export class Preloader extends Phaser.Scene {
         if (this.textures.exists(ASSETS.INTRO_ANIM)) {
             // Create animation if not exists
             if (!this.anims.exists('intro_play')) {
-                // Manual frame construction due to inconsistent naming in JSON (001-007, 08-09, 010-016)
-                const frames = [];
-                // 001 - 007
-                for (let i = 1; i <= 7; i++) {
-                    frames.push({ key: ASSETS.INTRO_ANIM, frame: `ezgif-frame-00${i}.png` });
-                }
-                // 08 - 09
-                frames.push({ key: ASSETS.INTRO_ANIM, frame: 'ezgif-frame-08.png' });
-                frames.push({ key: ASSETS.INTRO_ANIM, frame: 'ezgif-frame-09.png' });
-                // 010 - 016
-                for (let i = 10; i <= 16; i++) {
-                    frames.push({ key: ASSETS.INTRO_ANIM, frame: `ezgif-frame-0${i}.png` });
-                }
-
                 this.anims.create({
                     key: 'intro_play',
-                    frames: frames,
+                    frames: this.anims.generateFrameNames(ASSETS.INTRO_ANIM, {
+                        prefix: 'intro-frame-',
+                        start: 1,
+                        end: 16,
+                        zeroPad: 2,
+                        suffix: '.png'
+                    }),
                     frameRate: 12, // Adjust speed as needed
                     repeat: 0
                 });
             }
 
-            const introSprite = this.add.sprite(width / 2, height / 2, ASSETS.INTRO_ANIM, 'ezgif-frame-001.png')
+            const introSprite = this.add.sprite(width / 2, height / 2, ASSETS.INTRO_ANIM, 'intro-frame-01.png')
                 .setOrigin(0.5)
                 .play('intro_play');
 
