@@ -95,7 +95,7 @@ body.mobile canvas {
     /* Start with black background to match letterboxing */
     background-color: #000000;
     /* Use 'contain' to ensure the full image is visible without zooming/cropping, matching Phaser's probable fit logic */
-    background-image: url('../assets/ui/main-bg.png');
+    background-image: url('../assets/ui/intro-animation-0.png');
     background-repeat: no-repeat;
     background-position: center center;
     background-size: contain;
