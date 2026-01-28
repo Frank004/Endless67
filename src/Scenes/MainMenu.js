@@ -51,12 +51,27 @@ export class MainMenu extends Phaser.Scene {
 		}
 
 		// Title
-		this.add.image(width / 2, UI.LOGO.Y, ASSETS.GAME_LOGO).setScale(UI.LOGO.SCALE);
+		const logo = this.add.image(width / 2, UI.LOGO.Y, ASSETS.GAME_LOGO).setScale(UI.LOGO.SCALE);
+		logo.setAlpha(0); // Start invisible
+
+		this.tweens.add({
+			targets: logo,
+			alpha: 1,
+			y: UI.LOGO.Y + 10, // Slight drop effect
+			duration: 800,
+			ease: 'Power2',
+			yoyo: true, // Only for subtle floating later? No, Entrance.
+			// Let's do a simple fade in + slide down
+			onStart: () => {
+				logo.y -= 20;
+			}
+		});
 
 		// --- BUTTONS ---
 		this.buttons = [];
 		const buttonSpacing = 65;
 		const startY = height / 2 - 50;
+		const btnDelayBase = 300; // Wait for logo a bit
 
 		const startBtn = UIHelpers.createSpriteButton(this, width / 2, startY, 'btn/btn-start.png', {
 			callback: () => this.scene.start('Game')
@@ -77,6 +92,21 @@ export class MainMenu extends Phaser.Scene {
 			callback: () => this.scene.start('Settings')
 		});
 		this.buttons.push(settingsBtn);
+
+		// Animate Buttons Entrance
+		this.buttons.forEach((btn, index) => {
+			btn.container.setAlpha(0);
+			btn.container.y += 20; // Start slightly lower
+
+			this.tweens.add({
+				targets: btn.container,
+				alpha: 1,
+				y: btn.container.y - 20, // Move back up
+				duration: 500,
+				delay: btnDelayBase + (index * 100), // Staggered entrance
+				ease: 'Back.out'
+			});
+		});
 
 		// --- NAVIGATION ---
 		this.menuNavigation = new MenuNavigation(this, this.buttons);
