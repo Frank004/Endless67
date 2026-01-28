@@ -21,7 +21,7 @@ export class RiserConfiguration {
         this.texture = 'lava_texture';
         this.soundKey = ASSETS.LAVA_AMBIENT;
         this.dropSoundKey = ASSETS.LAVA_DROP;
-        this.speedConfig = new RiserSpeedConfig(-54, -180, 0.02);
+        this.speedConfig = new RiserSpeedConfig(-54, -180, 0.08);
         this.displayName = 'LAVA';
         this.color = '#ff6600'; // Orange-red
 
@@ -61,6 +61,6 @@ export class RiserConfiguration {
         }
 
         // Force a single speed profile across all riser types for now.
-        this.speedConfig = new RiserSpeedConfig(-54, -180, 0.02);
+        this.speedConfig = new RiserSpeedConfig(-54, -180, 0.08);
     }
 }

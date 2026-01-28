@@ -35,7 +35,7 @@ export const LEVEL_CONFIG = {
                 platforms: { staticOnly: false, movingChance: 40, movingSpeed: 80, width: 140, zigzagChance: 20 },
                 enemies: { spawnChance: 0, types: [] },
                 maze: { enabled: false },
-                lava: { speed: -41 },
+                lava: { speed: -42 },
                 mechanics: { powerups: false, coins: true, coinChance: 60 }
             },
             // 3. Powerups Introduction
@@ -46,7 +46,7 @@ export const LEVEL_CONFIG = {
                 platforms: { staticOnly: false, movingChance: 40, movingSpeed: 90, width: 140, zigzagChance: 30 },
                 enemies: { spawnChance: 0, types: [] },
                 maze: { enabled: false },
-                lava: { speed: -42 },
+                lava: { speed: -48 }, // Increased from -42
                 mechanics: { powerups: true, powerupChance: 20, coins: true, coinChance: 60 } // High chance to intro
             },
             // 4. Patrol Enemies
@@ -61,7 +61,8 @@ export const LEVEL_CONFIG = {
                     distribution: { patrol: 100, shooter: 0, jumper: 0 }
                 },
                 maze: { enabled: false },
-                lava: { speed: -43 }, // Was -55
+                maze: { enabled: false },
+                lava: { speed: -52 }, // Increased from -43
                 mechanics: { powerups: true, powerupChance: 10, coins: true, coinChance: 60 }
             },
             // 5. Safe Zone / Slow Riser Phase
@@ -76,7 +77,8 @@ export const LEVEL_CONFIG = {
                     distribution: { patrol: 100, shooter: 0, jumper: 0 }
                 },
                 maze: { enabled: false },
-                lava: { speed: -35 }, // SLOWER LAVA (RELIEF) - Kept same
+                maze: { enabled: false },
+                lava: { speed: -40 }, // Increased from -35
                 mechanics: { powerups: true, powerupChance: 15, coins: true, coinChance: 60 }
             },
             // 6. Maze Tutorial (No Enemies)
@@ -91,7 +93,7 @@ export const LEVEL_CONFIG = {
                     distribution: { patrol: 100, shooter: 0, jumper: 0 }
                 },
                 maze: { enabled: true, chance: 15, patterns: 'easy', allowEnemies: false },
-                lava: { speed: -45 }, // Was -60
+                lava: { speed: -58 }, // Increased from -45
                 mechanics: { powerups: true, powerupChance: 10, coins: true, coinChance: 60 }
             },
             // 7. Full Pool (Moving + Maze + Patrols)
@@ -106,7 +108,7 @@ export const LEVEL_CONFIG = {
                     distribution: { patrol: 100, shooter: 0, jumper: 0 }
                 },
                 maze: { enabled: true, chance: 20, patterns: 'easy', allowEnemies: false },
-                lava: { speed: -46 }, // Was -70
+                lava: { speed: -62 }, // Increased from -46
                 mechanics: { powerups: true, powerupChance: 10, coins: true, coinChance: 50 }
             },
             // 8. Maze Enemies Enabled
@@ -121,7 +123,7 @@ export const LEVEL_CONFIG = {
                     distribution: { patrol: 100, shooter: 0, jumper: 0 }
                 },
                 maze: { enabled: true, chance: 25, patterns: 'medium', allowEnemies: true },
-                lava: { speed: -47 }, // Was -80
+                lava: { speed: -65 }, // Increased from -47
                 mechanics: { powerups: true, powerupChance: 10, coins: true, coinChance: 50 }
             },
             // 9. More Patrols
