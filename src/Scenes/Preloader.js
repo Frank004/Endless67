@@ -102,7 +102,7 @@ export class Preloader extends Phaser.Scene {
                     repeat: -1
                 });
             }
-            this.add.sprite(width / 2, height * 0.65, ASSETS.UI_HUD)
+            this.loadingSprite = this.add.sprite(width / 2, height * 0.65, ASSETS.UI_HUD)
                 .play('loading_anim')
                 .setScale(0.5);
         }
@@ -612,6 +612,12 @@ export class Preloader extends Phaser.Scene {
                 // Force hide with style to override any CSS
                 loader.style.display = 'none';
                 loader.classList.add('hidden');
+            }
+
+            // 1.5 Hide Phaser Loading Sprite
+            if (this.loadingSprite) {
+                this.loadingSprite.destroy();
+                this.loadingSprite = null;
             }
 
             // 2. Start Animation
