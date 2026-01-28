@@ -45,7 +45,7 @@ export class Preloader extends Phaser.Scene {
                         zeroPad: 2,
                         suffix: '.png'
                     }),
-                    frameRate: 12, // Adjust speed as needed
+                    frameRate: 24, // Optimized for smoother intro
                     repeat: 0
                 });
             }
@@ -102,13 +102,13 @@ export class Preloader extends Phaser.Scene {
                     repeat: -1
                 });
             }
-            this.loadingSprite = this.add.sprite(width / 2, height * 0.65, ASSETS.UI_HUD)
+            this.loadingSprite = this.add.sprite(width / 2, (height * 0.40) - 30, ASSETS.UI_HUD)
                 .play('loading_anim')
                 .setScale(0.5);
         }
 
         // 4. Version (Match MainMenu Style)
-        const versionStr = window.GAME_VERSION || 'v0.0.51';
+        const versionStr = window.GAME_VERSION || 'v0.0.52';
         const versionText = this.add.text(width / 2, height - 30, versionStr, {
             fontSize: '14px',
             color: '#aaaaaa',
@@ -129,13 +129,11 @@ export class Preloader extends Phaser.Scene {
             // No visual update requested
         });
 
-        // --- HIDE HTML LOADER NOW ---
-        // Reveal the Phaser Preloader (Intro Frame 1 + Loading Spinner)
-        const htmlLoader = document.getElementById('loader');
-        if (htmlLoader) {
-            htmlLoader.style.display = 'none';
-            htmlLoader.classList.add('hidden');
-        }
+        this.isLoadingComplete = true;
+
+        // --- ALL LOADING DONE ---
+
+        // 1.5 Hide Phaser Loading Sprite
         this.load.audio(ASSETS.COIN_SFX_PREFIX + '1', 'assets/audio/collecting-coins/Several Coins 01.mp3' + v);
         this.load.audio(ASSETS.COIN_SFX_PREFIX + '2', 'assets/audio/collecting-coins/Several Coins 02.mp3' + v);
         this.load.audio(ASSETS.COIN_SFX_PREFIX + '3', 'assets/audio/collecting-coins/Several Coins 03.mp3' + v);
@@ -590,7 +588,15 @@ export class Preloader extends Phaser.Scene {
         g.clear(); g.fillStyle(0xffdd00, 0.8); g.fillCircle(4, 4, 4); g.generateTexture(ASSETS.PARTICLE_AURA, 8, 8);
         g.clear(); g.fillStyle(0xffffff, 1); g.fillRect(0, 0, 8, 8); g.generateTexture(ASSETS.CONFETTI, 8, 8);
 
-        // Register Scenes safely
+        // --- HIDE HTML LOADER NOW ---
+        // Reveal the Phaser Preloader (Intro Frame 1 + Loading Spinner)
+        const htmlLoader = document.getElementById('loader');
+        if (htmlLoader) {
+            htmlLoader.style.display = 'none';
+            htmlLoader.classList.add('hidden');
+        }
+
+        // --- AUDIO LOADING ---safely
         if (!this.scene.get('Leaderboard')) this.scene.add('Leaderboard', Leaderboard, false);
         if (!this.scene.get('Settings')) this.scene.add('Settings', Settings, false);
         if (!this.scene.get('Playground')) this.scene.add('Playground', Playground, false);

@@ -141,10 +141,10 @@ body.mobile canvas {
 
 .loader-bar-placeholder {
     position: absolute;
-    top: 63%;
-    /* Match Phaser Y = height * 0.6 */
+    top: calc(40% - 30px);
+    /* Match Phaser Y = height * 0.40 (Above head) */
     left: 50%;
-    transform: translateX(-50%);
+    transform: translate(-50%, -50%);
     width: auto;
     height: auto;
     background: none;
@@ -152,9 +152,8 @@ body.mobile canvas {
 }
 
 .loader-bar-placeholder img {
-    /* Visual approximation of sprite scaling. Reduced to 40vw (-10%) */
-    width: 40vw;
-    max-width: 28px;
+    width: 150px;
+    /* Match Phaser scale 1.0 (Original size) */
     height: auto;
     display: block;
 }

@@ -176,6 +176,11 @@ export class Game extends Phaser.Scene {
 
         // Game Over Logic
         if (this.isGameOver) {
+            // FIX: Ensure Riser triggers on ANY game over (Enemy, Projectile, etc.)
+            if (this.riserManager && !this.riserManager.isRising) {
+                this.riserManager.triggerRising();
+            }
+
             if (this.riserManager) {
                 this.riserManager.update(this.player.y, this.currentHeight, true, this.game.loop.delta);
             }
