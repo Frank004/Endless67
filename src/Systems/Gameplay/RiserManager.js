@@ -238,28 +238,21 @@ export class RiserManager {
             // El top del riser debe estar abajo del cameraBottom (con margen)
             // Como el riser es muy alto (2.5x pantalla), esto garantiza cobertura completa
 
-            const safetyMargin = Math.max(cameraHeight * 0.3, 150); // 30% de la altura de la cámara o mínimo 150px
-
-            // Target 1: Bottom del riser arriba del cameraTop
-            const targetBottomY = cameraTop - safetyMargin;
-            const targetTopY1 = targetBottomY - riserHeight;
-
-            // Target 2: Top del riser abajo del cameraBottom (para cubrir el bottom de la pantalla)
-            const targetTopY2 = cameraBottom + safetyMargin - riserHeight;
-
-            // Usar el target más bajo para asegurar que cubra tanto arriba como abajo
-            // Esto garantiza cobertura completa en cualquier posición de la cámara
-            const targetTopY = Math.min(targetTopY1, targetTopY2);
+            // Strategy: We want the riser to RISE until it fully covers the screen.
+            // Since riserHeight is > screenHeight, we just need the TOP of the riser to reach the TOP of the camera (minus margin).
+            const safetyMargin = 50;
+            const targetTopY = cameraTop - safetyMargin;
 
             if (this.riser.y > targetTopY) {
-                // Subir rápidamente para cubrir la pantalla
-                this.riser.y -= 30; // Velocidad rápida de subida
-                // Asegurar que no pase del target
+                // Rising up to cover screen
+                this.riser.y -= 25; // Fast speed
+
+                // Clamp
                 if (this.riser.y < targetTopY) {
                     this.riser.y = targetTopY;
                 }
             } else {
-                // Ya cubrió la pantalla completamente, mantener posición
+                // Already covered/above target, maintain position relative to camera
                 this.riser.y = targetTopY;
             }
         } else {
