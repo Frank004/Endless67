@@ -162,14 +162,11 @@ body.mobile canvas {
 .loader-version {
     position: absolute;
     bottom: 30px;
-    font-size: 28px;
-    /* Increased from 14px */
-    font-weight: bold;
+    font-size: 14px;
     color: #aaaaaa;
-    background: rgba(0, 0, 0, 0.6);
-    padding: 8px 20px;
-    /* Increased padding */
-    border-radius: 20px;
+    background: rgba(0, 0, 0, 0.4);
+    padding: 4px 15px;
+    border-radius: 13px;
     margin: 0;
     font-family: monospace;
 }
