@@ -57,11 +57,9 @@ export class MainMenu extends Phaser.Scene {
 		this.tweens.add({
 			targets: logo,
 			alpha: 1,
-			y: UI.LOGO.Y + 10, // Slight drop effect
+			y: UI.LOGO.Y,
 			duration: 800,
 			ease: 'Power2',
-			yoyo: true, // Only for subtle floating later? No, Entrance.
-			// Let's do a simple fade in + slide down
 			onStart: () => {
 				logo.y -= 20;
 			}
