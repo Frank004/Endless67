@@ -29,20 +29,68 @@ export class Preloader extends Phaser.Scene {
         const width = this.cameras.main.width;
         const height = this.cameras.main.height;
 
-        // 1. Background (Match MainMenu cover logic)
-        if (this.textures.exists(ASSETS.MAIN_BG)) {
+        // 1. Background / Intro Animation
+        // Instead of static bg, we play the intro animation
+        let introAnimComplete = false;
+
+        if (this.textures.exists(ASSETS.INTRO_ANIM)) {
+            // Create animation if not exists
+            if (!this.anims.exists('intro_play')) {
+                // Manual frame construction due to inconsistent naming in JSON (001-007, 08-09, 010-016)
+                const frames = [];
+                // 001 - 007
+                for (let i = 1; i <= 7; i++) {
+                    frames.push({ key: ASSETS.INTRO_ANIM, frame: `ezgif-frame-00${i}.png` });
+                }
+                // 08 - 09
+                frames.push({ key: ASSETS.INTRO_ANIM, frame: 'ezgif-frame-08.png' });
+                frames.push({ key: ASSETS.INTRO_ANIM, frame: 'ezgif-frame-09.png' });
+                // 010 - 016
+                for (let i = 10; i <= 16; i++) {
+                    frames.push({ key: ASSETS.INTRO_ANIM, frame: `ezgif-frame-0${i}.png` });
+                }
+
+                this.anims.create({
+                    key: 'intro_play',
+                    frames: frames,
+                    frameRate: 12, // Adjust speed as needed
+                    repeat: 0
+                });
+            }
+
+            const introSprite = this.add.sprite(width / 2, height / 2, ASSETS.INTRO_ANIM, 'ezgif-frame-001.png')
+                .setOrigin(0.5)
+                .play('intro_play');
+
+            // Fit/Cover logic
+            const scaleX = width / introSprite.width;
+            const scaleY = height / introSprite.height;
+            introSprite.setScale(Math.max(scaleX, scaleY));
+
+            introSprite.on('animationcomplete', () => {
+                this.introAnimComplete = true;
+                this.checkLoadComplete();
+            });
+        } else if (this.textures.exists(ASSETS.MAIN_BG)) {
+            // Fallback
             const bg = this.add.image(width / 2, height / 2, ASSETS.MAIN_BG).setOrigin(0.5);
             const scaleX = width / bg.width;
             const scaleY = height / bg.height;
             bg.setScale(Math.max(scaleX, scaleY));
+            introAnimComplete = true; // No anim to wait for
         } else {
-            // Fallback if Boot failed to load bg
+            introAnimComplete = true;
         }
 
-        // 2. Logo (Match MainMenu)
-        if (this.textures.exists(ASSETS.GAME_LOGO)) {
-            this.add.image(width / 2, UI.LOGO.Y, ASSETS.GAME_LOGO).setScale(UI.LOGO.SCALE).setOrigin(0.5);
-        }
+        // We attach this flag to the scene to check it later
+        this.introAnimComplete = introAnimComplete;
+        this.isLoadingComplete = false;
+
+        this.checkLoadComplete = () => {
+            if (this.isLoadingComplete && (this.introAnimComplete || !this.textures.exists(ASSETS.INTRO_ANIM))) {
+                this.scene.start('MainMenu');
+            }
+        };
 
         // 3. Loading Animation (Sprites)
         if (this.textures.exists(ASSETS.UI_HUD)) {
@@ -561,7 +609,15 @@ export class Preloader extends Phaser.Scene {
         // Warmup Shaders & Particles
         const warmup = new WarmupManager(this);
         warmup.warmup().then(() => {
-            this.scene.start('MainMenu');
+            this.isLoadingComplete = true;
+
+            // If intro animation (if exists) has finished, go to menu.
+            // If not, the 'animationcomplete' event will call this.
+            if (!this.textures.exists(ASSETS.INTRO_ANIM)) {
+                this.scene.start('MainMenu');
+            } else {
+                this.checkLoadComplete();
+            }
         });
     }
 }

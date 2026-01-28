@@ -44,6 +44,7 @@ export const ASSETS = {
     // Animations
     EXPLOSION_ANIM: 'explosion',
     POWERUP_ANIM: 'player_powerup',
+    INTRO_ANIM: 'intro_anim',
 
     // Audio
     BG_MUSIC: 'bg_music',

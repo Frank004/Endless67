@@ -32,12 +32,23 @@ export class MainMenu extends Phaser.Scene {
 		const height = this.cameras.main.height;
 
 		// Background
-		const bg = this.add.image(width / 2, height / 2, ASSETS.MAIN_BG)
-			.setOrigin(0.5);
-		// Scale to cover the screen
-		const scaleX = width / bg.width;
-		const scaleY = height / bg.height;
-		bg.setScale(Math.max(scaleX, scaleY));
+
+		let bg;
+		if (this.textures.exists(ASSETS.INTRO_ANIM)) {
+			// Use the last frame of the intro animation
+			bg = this.add.image(width / 2, height / 2, ASSETS.INTRO_ANIM, 'ezgif-frame-016.png')
+				.setOrigin(0.5);
+		} else if (this.textures.exists(ASSETS.MAIN_BG)) {
+			bg = this.add.image(width / 2, height / 2, ASSETS.MAIN_BG)
+				.setOrigin(0.5);
+		}
+
+		if (bg) {
+			// Scale to cover the screen
+			const scaleX = width / bg.width;
+			const scaleY = height / bg.height;
+			bg.setScale(Math.max(scaleX, scaleY));
+		}
 
 		// Title
 		this.add.image(width / 2, UI.LOGO.Y, ASSETS.GAME_LOGO).setScale(UI.LOGO.SCALE);

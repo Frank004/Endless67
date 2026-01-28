@@ -25,6 +25,7 @@ export class Boot extends Phaser.Scene {
         this.load.image('main_bg', 'assets/ui/main-bg.png' + v);
         this.load.image('game_logo', 'assets/logo.png' + v);
         this.load.atlas('ui_hud', 'assets/ui/ui.png' + v, 'assets/ui/ui.json' + v);
+        this.load.multiatlas('intro_anim', 'assets/ui/intro-animation.json' + v, 'assets/ui');
     }
 
     create() {
