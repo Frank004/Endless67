@@ -93,10 +93,9 @@ export class ControlsUI {
         if (this.joystickBase && this.joystickKnob) {
             this.joystickBase.setPosition(x, y);
             this.joystickKnob.setPosition(x, y);
-            if (visible) {
-                this.joystickBase.setVisible(true);
-                this.joystickKnob.setVisible(true);
-            }
+
+            this.joystickBase.setVisible(visible);
+            this.joystickKnob.setVisible(visible);
         }
     }
 

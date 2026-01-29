@@ -28,44 +28,17 @@ export class Settings extends Phaser.Scene {
             fontStyle: 'bold'
         }).setOrigin(0.5);
 
-        // --- SOUND TOGGLE ---
-        const soundEnabled = this.registry.get('soundEnabled') !== false;
-        const soundTextStr = soundEnabled ? 'SOUND: ON' : 'SOUND: OFF';
-        const soundIconFrame = soundEnabled ? 'volume-up' : 'volume-mute';
+        // --- AUDIO CONTROLS (Split Music & SFX) ---
+        // Music Button (Left)
+        const musicButton = UIHelpers.createMusicButton(this, width / 2 - 54, buttonY, { scale: 0.42 });
 
-        const soundButton = UIHelpers.createIconButton(this, width / 2, buttonY, soundIconFrame, soundTextStr, {
-            callback: () => {
-                const newState = !GameState.soundEnabled;
-
-                // 1. Update GameState (Source of Truth)
-                GameState.setSoundEnabled(newState);
-
-                // 2. Update Registry
-                this.registry.set('soundEnabled', newState);
-
-                // 3. Update Phaser Sound Manager
-                this.sound.mute = !newState;
-
-                // 4. Update UI
-                soundButton.text.setText(newState ? 'SOUND: ON' : 'SOUND: OFF');
-                soundButton.icon.setFrame(newState ? 'volume-up' : 'volume-mute');
-            }
-        });
+        // SFX Button (Right)
+        const sfxButton = UIHelpers.createSFXButton(this, width / 2 + 54, buttonY, { scale: 0.42 });
 
         buttonY += buttonSpacing;
 
         // --- JOYSTICK TOGGLE ---
-        const showJoystick = this.registry.get('showJoystick') !== false;
-        const joystickTextStr = showJoystick ? 'JOYSTICK: ON' : 'JOYSTICK: OFF';
-
-        const joystickButton = UIHelpers.createIconButton(this, width / 2, buttonY, 'gamepad', joystickTextStr, {
-            callback: () => {
-                const currentState = this.registry.get('showJoystick') !== false;
-                const newState = !currentState;
-                this.registry.set('showJoystick', newState);
-                joystickButton.text.setText(newState ? 'JOYSTICK: ON' : 'JOYSTICK: OFF');
-            }
-        });
+        const joystickButton = UIHelpers.createJoystickButton(this, width / 2, buttonY);
 
         buttonY += buttonSpacing;
 
@@ -77,7 +50,8 @@ export class Settings extends Phaser.Scene {
 
         // --- MENU NAVIGATION ---
         this.menuNavigation = new MenuNavigation(this, [
-            soundButton,
+            musicButton, // Nav order: Music -> SFX -> Joystick -> Back
+            sfxButton,
             joystickButton,
             backBtn
         ]);

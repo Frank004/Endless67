@@ -249,4 +249,95 @@ export class UIHelpers {
         }
         return (amount || 0).toLocaleString();
     }
+    /**
+     * Create a standardized Music toggle button
+     */
+    static createMusicButton(scene, x, y, options = {}) {
+        const { scale = 1.0 } = options;
+        const isEnabled = scene.registry.get('musicEnabled') !== false;
+        const frame = isEnabled ? 'btn-mid/music-on.png' : 'btn-mid/music-off.png';
+        const GameState = scene.sys.game.gameState; // Access singleton if available via game instance or import
+
+        const btn = this.createSpriteButton(scene, x, y, frame, {
+            scale,
+            callback: () => {
+                const current = scene.registry.get('musicEnabled') !== false;
+                const newState = !current;
+
+                // Update Registry
+                scene.registry.set('musicEnabled', newState);
+
+                // Update GameState if available (it should be)
+                if (window.GameStateInstance) {
+                    window.GameStateInstance.setMusicEnabled(newState);
+                } else {
+                    // Fallback using events if GameState instance not global
+                    const Events = scene.events ? scene.events.constructor : null;
+                    if (scene.game.events) scene.game.events.emit('MUSIC_TOGGLED', { enabled: newState });
+                }
+
+                // Update Visual
+                const newFrame = newState ? 'btn-mid/music-on.png' : 'btn-mid/music-off.png';
+                btn.sprite.setFrame(newFrame);
+
+                if (options.callback) options.callback(newState);
+            }
+        });
+        return btn;
+    }
+
+    /**
+     * Create a standardized SFX toggle button
+     */
+    static createSFXButton(scene, x, y, options = {}) {
+        const { scale = 1.0 } = options;
+        const isEnabled = scene.registry.get('sfxEnabled') !== false;
+        const frame = isEnabled ? 'btn-mid/sfx-on.png' : 'btn-mid/sfx-off.png';
+
+        const btn = this.createSpriteButton(scene, x, y, frame, {
+            scale,
+            callback: () => {
+                const current = scene.registry.get('sfxEnabled') !== false;
+                const newState = !current;
+
+                scene.registry.set('sfxEnabled', newState);
+
+                if (window.GameStateInstance) {
+                    window.GameStateInstance.setSFXEnabled(newState);
+                }
+
+                const newFrame = newState ? 'btn-mid/sfx-on.png' : 'btn-mid/sfx-off.png';
+                btn.sprite.setFrame(newFrame);
+
+                if (options.callback) options.callback(newState);
+            }
+        });
+        return btn;
+    }
+
+    /**
+     * Create a standardized Joystick toggle button
+     */
+    static createJoystickButton(scene, x, y, options = {}) {
+        const { scale = 1.0 } = options;
+        const isEnabled = scene.registry.get('showJoystick') !== false;
+        const frame = isEnabled ? 'btn/btn-joystick-on.png' : 'btn/btn-joystick-off.png';
+
+        const btn = this.createSpriteButton(scene, x, y, frame, {
+            scale,
+            callback: () => {
+                const current = scene.registry.get('showJoystick') !== false;
+                const newState = !current;
+
+                scene.registry.set('showJoystick', newState);
+
+                // Update Visual
+                const newFrame = newState ? 'btn/btn-joystick-on.png' : 'btn/btn-joystick-off.png';
+                btn.sprite.setFrame(newFrame);
+
+                if (options.callback) options.callback(newState);
+            }
+        });
+        return btn;
+    }
 }

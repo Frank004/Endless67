@@ -48,7 +48,7 @@ export class Store extends Phaser.Scene {
         // Setup store (async)
         this._setupStore();
 
-        this.input.on('pointerup', this._onPointerUp, this); // Remove this direct call I added by mistake
+
         // Setup input
         this.setupInput();
 
@@ -95,7 +95,7 @@ export class Store extends Phaser.Scene {
         const btnX = 30; // Margin left + half button width
         const btnY = 25; // Top margin
 
-        const backBtn = this.add.image(btnX, btnY, 'ui_hud', 'btn-small/btn-smal-back.png')
+        const backBtn = this.add.image(btnX, btnY, 'ui_hud', 'btn-small/btn-small-back.png')
             .setOrigin(0.5)
             .setScrollFactor(0)
             .setDepth(101)
@@ -206,6 +206,9 @@ export class Store extends Phaser.Scene {
         console.log('[Store] Refreshing UI. Coins:', coins, 'Skins:', skinsWithState.length);
         if (skinsWithState.length === 0) {
             console.warn('[Store] No skins found to display!');
+            this.add.text(this.cameras.main.centerX, this.cameras.main.centerY, 'STORE UNAVAILABLE\n(Check connection)', {
+                fontFamily: 'monospace', fontSize: '24px', color: '#ff0000', align: 'center'
+            }).setOrigin(0.5).setScrollFactor(0);
         }
 
         this.updateCoins(coins);

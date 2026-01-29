@@ -13,7 +13,9 @@ export class AudioSystem {
         this.scene = null;
         this.bgMusic = null;
         this.lavaSound = null;
-        this.soundEnabled = true;
+        this.soundEnabled = true; // Legacy master
+        this.musicEnabled = true;
+        this.sfxEnabled = true;
         this.shoeBrakeInstance = null;
         this.wallSlideSound = null;
     }
@@ -25,9 +27,15 @@ export class AudioSystem {
         const soundEnabledFromRegistry = scene.registry.get('soundEnabled');
         this.soundEnabled = soundEnabledFromRegistry !== undefined ? soundEnabledFromRegistry : true;
 
-        // Sync Phaser's sound mute state with registry
+        const musicEnabledFromRegistry = scene.registry.get('musicEnabled');
+        this.musicEnabled = musicEnabledFromRegistry !== undefined ? musicEnabledFromRegistry : true;
+
+        const sfxEnabledFromRegistry = scene.registry.get('sfxEnabled');
+        this.sfxEnabled = sfxEnabledFromRegistry !== undefined ? sfxEnabledFromRegistry : true;
+
+        // No longer using global mute for granular control, but respecting master soundEnabled if used
         if (scene.sound) {
-            scene.sound.mute = !this.soundEnabled;
+            // scene.sound.mute = !this.soundEnabled; // Removed to allow granular control
         }
 
         // Resume audio context on user interaction
@@ -66,6 +74,8 @@ export class AudioSystem {
         EventBus.on(Events.PLAYER_JUMPED, this.playJumpSound, this);
         EventBus.on(Events.COIN_COLLECTED, this.playCoinSound, this);
         EventBus.on(Events.SOUND_TOGGLED, this.toggleSound, this);
+        EventBus.on(Events.MUSIC_TOGGLED, this.toggleMusic, this);
+        EventBus.on(Events.SFX_TOGGLED, this.toggleSFX, this);
         EventBus.on(Events.PLAYER_HIT, this.playDamageSound, this);
         EventBus.on(Events.POWERUP_COLLECTED, this.playCelebrationSound, this);
         EventBus.on(Events.ENEMY_DESTROYED, this.playDestroySound, this);
@@ -77,6 +87,8 @@ export class AudioSystem {
         EventBus.off(Events.PLAYER_JUMPED, this.playJumpSound, this);
         EventBus.off(Events.COIN_COLLECTED, this.playCoinSound, this);
         EventBus.off(Events.SOUND_TOGGLED, this.toggleSound, this);
+        EventBus.off(Events.MUSIC_TOGGLED, this.toggleMusic, this);
+        EventBus.off(Events.SFX_TOGGLED, this.toggleSFX, this);
         EventBus.off(Events.PLAYER_HIT, this.playDamageSound, this);
         EventBus.off(Events.POWERUP_COLLECTED, this.playCelebrationSound, this);
         EventBus.off(Events.ENEMY_DESTROYED, this.playDestroySound, this);
@@ -165,6 +177,7 @@ export class AudioSystem {
     startMusic() {
         const scene = this.scene;
         if (!scene) return;
+        if (!this.musicEnabled) return;
 
         try {
             // Check if audio context is suspended
@@ -238,29 +251,89 @@ export class AudioSystem {
         console.log('Sound toggled:', newState ? 'ON' : 'OFF');
     }
 
+    toggleMusic(data) {
+        if (!this.scene) return;
+
+        let newState;
+        if (data && typeof data.enabled === 'boolean') {
+            newState = data.enabled;
+        } else {
+            const currentState = this.scene.registry.get('musicEnabled') !== false;
+            newState = !currentState;
+        }
+
+        this.scene.registry.set('musicEnabled', newState);
+        this.musicEnabled = newState;
+
+        if (this.musicEnabled) {
+            this.startMusic();
+        } else {
+            if (this.bgMusic && this.bgMusic.isPlaying) {
+                this.bgMusic.stop();
+            }
+        }
+        console.log('Music toggled:', newState ? 'ON' : 'OFF');
+    }
+
+    toggleSFX(data) {
+        if (!this.scene) return;
+
+        let newState;
+        if (data && typeof data.enabled === 'boolean') {
+            newState = data.enabled;
+        } else {
+            const currentState = this.scene.registry.get('sfxEnabled') !== false;
+            newState = !currentState;
+        }
+
+        this.scene.registry.set('sfxEnabled', newState);
+        this.sfxEnabled = newState;
+
+        // Immediately stop/mute active loops if disabled
+        if (!this.sfxEnabled) {
+            if (this.riserAmbientSound && this.riserAmbientSound.isPlaying) {
+                this.riserAmbientSound.setVolume(0);
+            }
+            if (this.wallSlideSound && this.wallSlideSound.isPlaying) {
+                this.wallSlideSound.stop();
+            }
+        }
+
+        console.log('SFX toggled:', newState ? 'ON' : 'OFF');
+    }
+
     updateAudio(playerY, riserY) {
         const scene = this.scene;
         if (!scene) return;
 
         let distanceToRiser = playerY - riserY;
 
-        // Update Riser Sound
-        if (this.riserAmbientSound && this.riserAmbientSound.isPlaying) {
-            const cameraBottom = scene.cameras.main.scrollY + scene.cameras.main.height;
-            const riserVisible = riserY < cameraBottom + 200;
-
-            let riserTargetVolume = 0;
-            if (riserVisible) {
-                if (distanceToRiser < 100) {
-                    riserTargetVolume = 0.55; // Reduced from 0.85 for more subtle sound
-                } else if (distanceToRiser < 200) {
-                    riserTargetVolume = 0.55 * (1 - (distanceToRiser - 100) / 100); // Reduced from 0.85
-                }
+        // If SFX disabled, ensure ambient element sounds are muted
+        if (!this.sfxEnabled) {
+            if (this.riserAmbientSound && this.riserAmbientSound.volume > 0) {
+                this.riserAmbientSound.setVolume(0);
             }
-            const currentRiserVolume = this.riserAmbientSound.volume;
-            const newRiserVolume = Phaser.Math.Linear(currentRiserVolume, riserTargetVolume, 0.05);
-            this.riserAmbientSound.setVolume(newRiserVolume);
+        } else {
+            // Update Riser Sound
+            if (this.riserAmbientSound && this.riserAmbientSound.isPlaying) {
+                const cameraBottom = scene.cameras.main.scrollY + scene.cameras.main.height;
+                const riserVisible = riserY < cameraBottom + 200;
+
+                let riserTargetVolume = 0;
+                if (riserVisible) {
+                    if (distanceToRiser < 100) {
+                        riserTargetVolume = 0.55; // Reduced from 0.85 for more subtle sound
+                    } else if (distanceToRiser < 200) {
+                        riserTargetVolume = 0.55 * (1 - (distanceToRiser - 100) / 100); // Reduced from 0.85
+                    }
+                }
+                const currentRiserVolume = this.riserAmbientSound.volume;
+                const newRiserVolume = Phaser.Math.Linear(currentRiserVolume, riserTargetVolume, 0.05);
+                this.riserAmbientSound.setVolume(newRiserVolume);
+            }
         }
+
+
 
         // Update Music Ducking
         if (this.bgMusic && this.bgMusic.isPlaying) {
@@ -280,7 +353,7 @@ export class AudioSystem {
      */
     playJumpSound() {
         const scene = this.scene;
-        if (!scene) return;
+        if (!scene || !this.sfxEnabled) return;
         try {
             if (scene.sound && scene.cache.audio.exists(ASSETS.JUMP_SFX)) {
                 const randomDetune = Phaser.Math.Between(-300, 300);
@@ -296,7 +369,7 @@ export class AudioSystem {
      */
     playShoeBrake() {
         const scene = this.scene;
-        if (!scene) return;
+        if (!scene || !this.sfxEnabled) return;
         try {
             if (scene.sound && scene.cache.audio.exists(ASSETS.SHOE_BRAKE)) {
                 // Stop any existing instance to avoid overlap
@@ -334,7 +407,7 @@ export class AudioSystem {
      */
     playCoinSound() {
         const scene = this.scene;
-        if (!scene) return;
+        if (!scene || !this.sfxEnabled) return;
         try {
             const soundKeys = [
                 ASSETS.COIN_SFX_PREFIX + '1',
@@ -356,7 +429,7 @@ export class AudioSystem {
      */
     playDamageSound() {
         const scene = this.scene;
-        if (!scene) return;
+        if (!scene || !this.sfxEnabled) return;
         try {
             const damageKeys = [
                 ASSETS.DAMAGE_SFX_PREFIX + '1',
@@ -379,7 +452,7 @@ export class AudioSystem {
      */
     playDestroySound() {
         const scene = this.scene;
-        if (!scene) return;
+        if (!scene || !this.sfxEnabled) return;
         try {
             if (scene.sound && scene.cache.audio.exists(ASSETS.DESTROY_SFX)) {
                 scene.sound.play(ASSETS.DESTROY_SFX, { volume: 0.5 });
@@ -394,7 +467,7 @@ export class AudioSystem {
      */
     playCelebrationSound() {
         const scene = this.scene;
-        if (!scene) return;
+        if (!scene || !this.sfxEnabled) return;
         try {
             if (scene.sound && scene.cache.audio.exists(ASSETS.CELEBRATION_SFX)) {
                 scene.sound.play(ASSETS.CELEBRATION_SFX, { volume: 0.6 });
@@ -409,7 +482,7 @@ export class AudioSystem {
      */
     playTrashcanHit() {
         const scene = this.scene;
-        if (!scene) return;
+        if (!scene || !this.sfxEnabled) return;
         try {
             if (scene.sound && scene.cache.audio.exists(ASSETS.TRASHCAN_HIT)) {
                 const randomDetune = Phaser.Math.Between(-300, 300);
@@ -425,7 +498,7 @@ export class AudioSystem {
      */
     playTireBounce() {
         const scene = this.scene;
-        if (!scene) return;
+        if (!scene || !this.sfxEnabled) return;
         try {
             if (scene.sound && scene.cache.audio.exists(ASSETS.TIRE_BOUNCE)) {
                 const randomDetune = Phaser.Math.Between(-200, 200);
@@ -440,6 +513,7 @@ export class AudioSystem {
      * Play wall slide sound (looping)
      */
     playWallSlide() {
+        if (!this.sfxEnabled) return;
         if (this.wallSlideSound && !this.wallSlideSound.isPlaying) {
             // console.log('🔊 AudioManager: Playing wall slide sound');
             this.wallSlideSound.play();
@@ -463,7 +537,7 @@ export class AudioSystem {
      */
     playRiserDrop(soundKey) {
         const scene = this.scene;
-        if (!scene || !soundKey) return;
+        if (!scene || !soundKey || !this.sfxEnabled) return;
         try {
             if (scene.sound && scene.cache.audio.exists(soundKey)) {
                 // Reduced volume by ~15% (from 0.7 to 0.6)

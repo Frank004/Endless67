@@ -29,6 +29,23 @@ export class InputSystem {
         this.resumeListener = () => this.trackResume();
         EventBus.on(Events.GAME_RESUMED, this.resumeListener);
 
+        // Listen for joystick toggle in registry
+        if (this.joystickListener) {
+            scene.registry.events.off('changedata-showJoystick', this.joystickListener);
+        }
+        this.joystickListener = (parent, value) => {
+            this.joystickVisible = value;
+            if (this.scene.uiManager) {
+                if (!this.joystickVisible) {
+                    this.scene.uiManager.hideJoystick();
+                    this.moveAnchorX = null;
+                } else {
+                    // Update internal state but wait for input to show
+                }
+            }
+        };
+        scene.registry.events.on('changedata-showJoystick', this.joystickListener);
+
         // Clean up on shutdown
         scene.events.once('shutdown', () => this.destroy());
     }
@@ -376,7 +393,9 @@ export class InputSystem {
             if (this.moveAnchorX === null) {
                 this.moveAnchorX = movePointer.x;
                 this.moveAnchorY = movePointer.y;
-                if (scene.uiManager) scene.uiManager.showJoystick(this.moveAnchorX, this.moveAnchorY, this.joystickVisible);
+                if (scene.uiManager) {
+                    scene.uiManager.showJoystick(this.moveAnchorX, this.moveAnchorY, this.joystickVisible);
+                }
             }
 
             const dx = movePointer.x - this.moveAnchorX;
@@ -599,6 +618,9 @@ export class InputSystem {
     destroy() {
         if (this.resumeListener) {
             EventBus.off(Events.GAME_RESUMED, this.resumeListener);
+        }
+        if (this.joystickListener && this.scene) {
+            this.scene.registry.events.off('changedata-showJoystick', this.joystickListener);
         }
     }
 }
