@@ -52,6 +52,16 @@
       "multiatlasBase": "assets/skins/playerhat"
     },
     {
+      "id": "patriot",
+      "name": "Patriot",
+      "rarity": "blackmarket",
+      "priceCoins": 30000,
+      "preview": "",
+      "atlasKey": "player",
+      "multiatlasJson": "assets/skins/patriot/player.json",
+      "multiatlasBase": "assets/skins/patriot"
+    },
+    {
       "id": "skin_mock_1",
       "name": "Purple Storm",
       "rarity": "rare",

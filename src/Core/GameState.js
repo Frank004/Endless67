@@ -31,8 +31,11 @@ class GameState {
         this._isPaused = false;
         this._isGameOver = false;
         this._soundEnabled = true;
+        this._musicEnabled = true;
+        this._sfxEnabled = true;
 
         GameState.instance = this;
+        window.GameStateInstance = this;
     }
 
     /**
@@ -180,9 +183,42 @@ class GameState {
 
     setSoundEnabled(enabled) {
         this._soundEnabled = enabled;
-        EventBus.emit(Events.SOUND_TOGGLED, {
-            enabled: this._soundEnabled
-        });
+        // Legacy support: toggle both
+        this._musicEnabled = enabled;
+        this._sfxEnabled = enabled;
+        EventBus.emit(Events.SOUND_TOGGLED, { enabled: this._soundEnabled });
+        EventBus.emit(Events.MUSIC_TOGGLED, { enabled: this._musicEnabled });
+        EventBus.emit(Events.SFX_TOGGLED, { enabled: this._sfxEnabled });
+    }
+
+    // Music Management
+    get musicEnabled() {
+        return this._musicEnabled;
+    }
+
+    toggleMusic() {
+        this._musicEnabled = !this._musicEnabled;
+        EventBus.emit(Events.MUSIC_TOGGLED, { enabled: this._musicEnabled });
+    }
+
+    setMusicEnabled(enabled) {
+        this._musicEnabled = enabled;
+        EventBus.emit(Events.MUSIC_TOGGLED, { enabled: this._musicEnabled });
+    }
+
+    // SFX Management
+    get sfxEnabled() {
+        return this._sfxEnabled;
+    }
+
+    toggleSFX() {
+        this._sfxEnabled = !this._sfxEnabled;
+        EventBus.emit(Events.SFX_TOGGLED, { enabled: this._sfxEnabled });
+    }
+
+    setSFXEnabled(enabled) {
+        this._sfxEnabled = enabled;
+        EventBus.emit(Events.SFX_TOGGLED, { enabled: this._sfxEnabled });
     }
 
     // Utility

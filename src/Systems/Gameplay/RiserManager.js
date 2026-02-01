@@ -201,15 +201,15 @@ export class RiserManager {
         // Only apply catch-up if NOT in last chance mode
         // REFACTORED: Thresholds balanced.
         if (!inLastChance) {
-            if (distanceToRiser < -1200) {
-                // > 2 screens ahead
-                targetSpeed = this.config.speedConfig.maxSpeed * 1.4; // Extreme catchup
-            } else if (distanceToRiser < -800) {
-                // > 1.3 screens ahead
-                targetSpeed = this.config.speedConfig.maxSpeed * 1.1; // Fast catchup
-            } else if (distanceToRiser < -450) {
-                // > 0.75 screen ahead
-                targetSpeed = this.config.speedConfig.maxSpeed * 0.75; // Moderate catchup
+            if (distanceToRiser < -1000) {
+                // > 1.5 screens ahead - EXTREME TURBO
+                targetSpeed = this.config.speedConfig.maxSpeed * 3.0;
+            } else if (distanceToRiser < -700) {
+                // > 1 screen ahead - HARD CATCHUP
+                targetSpeed = this.config.speedConfig.maxSpeed * 2.0;
+            } else if (distanceToRiser < -400) {
+                // > 0.5 screen ahead - MODERATE CATCHUP
+                targetSpeed = this.config.speedConfig.maxSpeed * 1.2;
             }
         }
 

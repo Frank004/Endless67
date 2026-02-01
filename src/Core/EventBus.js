@@ -51,6 +51,8 @@ export const Events = {
 
     // Audio Events
     SOUND_TOGGLED: 'SOUND_TOGGLED',
+    MUSIC_TOGGLED: 'MUSIC_TOGGLED',
+    SFX_TOGGLED: 'SFX_TOGGLED',
     PLAY_SFX: 'PLAY_SFX',
 
     // Level Events

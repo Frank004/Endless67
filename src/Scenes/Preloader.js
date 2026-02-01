@@ -108,7 +108,7 @@ export class Preloader extends Phaser.Scene {
         }
 
         // 4. Version (Match MainMenu Style)
-        const versionStr = window.GAME_VERSION || 'v0.0.52';
+        const versionStr = window.GAME_VERSION || 'v0.0.53';
         const versionText = this.add.text(width / 2, height - 30, versionStr, {
             fontSize: '14px',
             color: '#aaaaaa',

@@ -24,7 +24,7 @@ export const LEVEL_CONFIG = {
                 platforms: { staticOnly: true, movingChance: 0, width: 150, zigzagChance: 0 },
                 enemies: { spawnChance: 0, types: [] },
                 maze: { enabled: false },
-                lava: { speed: -40 },
+                lava: { speed: -50 },
                 mechanics: { powerups: false, coins: true, coinChance: 60 }
             },
             // 2. Moving Platforms
@@ -35,7 +35,7 @@ export const LEVEL_CONFIG = {
                 platforms: { staticOnly: false, movingChance: 40, movingSpeed: 80, width: 140, zigzagChance: 20 },
                 enemies: { spawnChance: 0, types: [] },
                 maze: { enabled: false },
-                lava: { speed: -42 },
+                lava: { speed: -55 },
                 mechanics: { powerups: false, coins: true, coinChance: 60 }
             },
             // 3. Powerups Introduction
@@ -46,8 +46,8 @@ export const LEVEL_CONFIG = {
                 platforms: { staticOnly: false, movingChance: 40, movingSpeed: 90, width: 140, zigzagChance: 30 },
                 enemies: { spawnChance: 0, types: [] },
                 maze: { enabled: false },
-                lava: { speed: -48 }, // Increased from -42
-                mechanics: { powerups: true, powerupChance: 20, coins: true, coinChance: 60 } // High chance to intro
+                lava: { speed: -60 },
+                mechanics: { powerups: true, powerupChance: 20, coins: true, coinChance: 60 }
             },
             // 4. Patrol Enemies
             {
@@ -61,8 +61,7 @@ export const LEVEL_CONFIG = {
                     distribution: { patrol: 100, shooter: 0, jumper: 0 }
                 },
                 maze: { enabled: false },
-                maze: { enabled: false },
-                lava: { speed: -52 }, // Increased from -43
+                lava: { speed: -65 },
                 mechanics: { powerups: true, powerupChance: 10, coins: true, coinChance: 60 }
             },
             // 5. Safe Zone / Slow Riser Phase
@@ -77,8 +76,7 @@ export const LEVEL_CONFIG = {
                     distribution: { patrol: 100, shooter: 0, jumper: 0 }
                 },
                 maze: { enabled: false },
-                maze: { enabled: false },
-                lava: { speed: -40 }, // Increased from -35
+                lava: { speed: -50 },
                 mechanics: { powerups: true, powerupChance: 15, coins: true, coinChance: 60 }
             },
             // 6. Maze Tutorial (No Enemies)
@@ -93,7 +91,7 @@ export const LEVEL_CONFIG = {
                     distribution: { patrol: 100, shooter: 0, jumper: 0 }
                 },
                 maze: { enabled: true, chance: 15, patterns: 'easy', allowEnemies: false },
-                lava: { speed: -58 }, // Increased from -45
+                lava: { speed: -70 },
                 mechanics: { powerups: true, powerupChance: 10, coins: true, coinChance: 60 }
             },
             // 7. Full Pool (Moving + Maze + Patrols)
@@ -108,7 +106,7 @@ export const LEVEL_CONFIG = {
                     distribution: { patrol: 100, shooter: 0, jumper: 0 }
                 },
                 maze: { enabled: true, chance: 20, patterns: 'easy', allowEnemies: false },
-                lava: { speed: -62 }, // Increased from -46
+                lava: { speed: -75 },
                 mechanics: { powerups: true, powerupChance: 10, coins: true, coinChance: 50 }
             },
             // 8. Maze Enemies Enabled
@@ -123,7 +121,7 @@ export const LEVEL_CONFIG = {
                     distribution: { patrol: 100, shooter: 0, jumper: 0 }
                 },
                 maze: { enabled: true, chance: 25, patterns: 'medium', allowEnemies: true },
-                lava: { speed: -65 }, // Increased from -47
+                lava: { speed: -80 },
                 mechanics: { powerups: true, powerupChance: 10, coins: true, coinChance: 50 }
             },
             // 9. More Patrols
@@ -138,7 +136,7 @@ export const LEVEL_CONFIG = {
                     distribution: { patrol: 100, shooter: 0, jumper: 0 }
                 },
                 maze: { enabled: true, chance: 25, patterns: 'medium', allowEnemies: true },
-                lava: { speed: -48 }, // Was -83
+                lava: { speed: -85 },
                 mechanics: { powerups: true, powerupChance: 8, coins: true, coinChance: 40 }
             },
             // 10. Shooter Introduction
@@ -154,7 +152,7 @@ export const LEVEL_CONFIG = {
                     projectiles: { count: 1, speed: 'normal' }
                 },
                 maze: { enabled: true, chance: 30, patterns: 'medium', allowEnemies: true },
-                lava: { speed: -49 }, // Was -88
+                lava: { speed: -88 },
                 mechanics: { powerups: true, powerupChance: 8, coins: true, coinChance: 40 }
             },
             // 11. More Shooters
@@ -170,7 +168,7 @@ export const LEVEL_CONFIG = {
                     projectiles: { count: 2, speed: 'fast' }
                 },
                 maze: { enabled: true, chance: 30, patterns: 'medium', allowEnemies: true },
-                lava: { speed: -50 }, // Was -92
+                lava: { speed: -92 },
                 mechanics: { powerups: true, powerupChance: 8, coins: true, coinChance: 40 }
             },
             // 12. Shooter + Patrol
@@ -185,7 +183,7 @@ export const LEVEL_CONFIG = {
                     distribution: { patrol: 50, shooter: 50, jumper: 0 }
                 },
                 maze: { enabled: true, chance: 30, patterns: 'medium', allowEnemies: true },
-                lava: { speed: -52 }, // Was -96
+                lava: { speed: -96 },
                 mechanics: { powerups: true, powerupChance: 8, coins: true, coinChance: 30 }
             },
             // 13. Jumper Introduction
@@ -200,7 +198,7 @@ export const LEVEL_CONFIG = {
                     distribution: { patrol: 0, shooter: 0, jumper: 100 } // Exclusive
                 },
                 maze: { enabled: true, chance: 35, patterns: 'hard', allowEnemies: true },
-                lava: { speed: -54 }, // Was -100
+                lava: { speed: -100 },
                 mechanics: { powerups: true, powerupChance: 8, coins: true, coinChance: 30 }
             },
             // 14. More Jumpers
@@ -215,7 +213,7 @@ export const LEVEL_CONFIG = {
                     distribution: { patrol: 0, shooter: 0, jumper: 100 }
                 },
                 maze: { enabled: true, chance: 35, patterns: 'hard', allowEnemies: true },
-                lava: { speed: -56 }, // Was -102
+                lava: { speed: -102 },
                 mechanics: { powerups: true, powerupChance: 8, coins: true, coinChance: 30 }
             },
             // 15. Jumper + Patrol
@@ -230,7 +228,7 @@ export const LEVEL_CONFIG = {
                     distribution: { patrol: 50, shooter: 0, jumper: 50 }
                 },
                 maze: { enabled: true, chance: 35, patterns: 'hard', allowEnemies: true },
-                lava: { speed: -57 }, // Was -104
+                lava: { speed: -104 },
                 mechanics: { powerups: true, powerupChance: 8, coins: true, coinChance: 30 }
             },
             // 16. Jumper + Shooter
@@ -246,7 +244,7 @@ export const LEVEL_CONFIG = {
                     projectiles: { count: 2, speed: 'fast' }
                 },
                 maze: { enabled: true, chance: 35, patterns: 'hard', allowEnemies: true },
-                lava: { speed: -58 }, // Was -105
+                lava: { speed: -106 },
                 mechanics: { powerups: true, powerupChance: 8, coins: true, coinChance: 30 }
             },
             // 17. Chaos (All)
@@ -262,7 +260,7 @@ export const LEVEL_CONFIG = {
                     projectiles: { count: 3, speed: 'extreme' }
                 },
                 maze: { enabled: true, chance: 40, patterns: 'hard', allowEnemies: true },
-                lava: { speed: -60 }, // Max speed cap
+                lava: { speed: -110 },
                 mechanics: { powerups: true, powerupChance: 5, coins: true, coinChance: 25 }
             }
         ]
