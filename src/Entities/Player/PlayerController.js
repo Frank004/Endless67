@@ -36,6 +36,12 @@ export class PlayerController {
         this.sprite.setAcceleration(0, 0);
     }
 
+    unlockInput() {
+        this.context.flags.dead = false;
+        this.context.flags.inputLocked = false;
+        this.fsm.state = 'AIR'; // Reset to AIR state so they can fall/move
+    }
+
     /**
      * Actualiza sensores e intenta deducir intent del body (placeholder).
      * Integra con FSM sin modificar la lógica de movimiento existente.

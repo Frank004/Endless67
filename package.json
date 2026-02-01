@@ -9,6 +9,9 @@
 		"test": "jest"
 	},
 	"dependencies": {
+		"@capacitor-community/admob": "^8.0.0",
+		"@capacitor/cli": "^6.2.1",
+		"@capacitor/core": "^6.2.1",
 		"remixicon": "^4.7.0"
 	},
 	"devDependencies": {

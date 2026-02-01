@@ -1,6 +1,7 @@
 import EventBus, { Events } from '../../Core/EventBus.js';
 import { UIHelpers } from '../../Utils/UIHelpers.js';
 import { MenuNavigation } from './MenuNavigation.js';
+import AdsManager from '../../Systems/Core/AdsManager.js';
 
 export class GameOverMenu {
     constructor(scene) {
@@ -52,6 +53,29 @@ export class GameOverMenu {
         // Temporarily hide generic Game Over text handled by HUDManager if possible
         if (scene.uiText) scene.uiText.setVisible(false);
 
+        // Hide HUD elements (score, height, pause button)
+        if (scene.uiManager) {
+            // Hide height display
+            if (scene.uiManager.hud && scene.uiManager.hud.heightText) {
+                scene.uiManager.hud.heightText.setVisible(false);
+            }
+
+            // Hide height background panel
+            if (scene.uiManager.hud && scene.uiManager.hud.heightBg) {
+                scene.uiManager.hud.heightBg.setVisible(false);
+            }
+
+            // Hide coin counter
+            if (scene.uiManager.hud && scene.uiManager.hud.scoreContainer) {
+                scene.uiManager.hud.scoreContainer.setVisible(false);
+            }
+        }
+
+        // Hide pause button
+        if (scene.pauseButton) {
+            scene.pauseButton.setVisible(false);
+        }
+
         // Background for input
         const centerX = scene.cameras.main.centerX;
         const centerY = scene.cameras.main.centerY;
@@ -64,10 +88,28 @@ export class GameOverMenu {
             fontSize: '24px', color: '#F9C150', fontStyle: 'bold'
         }).setOrigin(0.5).setDepth(301).setScrollFactor(0);
 
+        // Display score stats (two lines)
+        const height = scene.currentHeight || 0;
+        const coins = scene.totalScore || 0;
+
+        const heightText = scene.add.text(centerX, centerY - 65,
+            `Height: ${height}m`, {
+            fontSize: '16px',
+            color: '#ffffff',
+            align: 'center'
+        }).setOrigin(0.5).setDepth(301).setScrollFactor(0);
+
+        const coinsText = scene.add.text(centerX, centerY - 45,
+            `Coins: ${coins}`, {
+            fontSize: '16px',
+            color: '#ffffff',
+            align: 'center'
+        }).setOrigin(0.5).setDepth(301).setScrollFactor(0);
+
         const isMobile = scene.isMobile;
         const promptText = isMobile ? 'TAP TO ENTER INITIALS' : 'ENTER 3 INITIALS:';
 
-        const prompt = scene.add.text(centerX, centerY - 50, promptText, {
+        const prompt = scene.add.text(centerX, centerY - 25, promptText, {
             fontSize: '16px', color: '#fff'
         }).setOrigin(0.5).setDepth(301).setScrollFactor(0);
 
@@ -158,7 +200,7 @@ export class GameOverMenu {
             onEnter: () => {
                 // Submit name
                 if (this.blinkInterval) this.blinkInterval.remove();
-                this.confirmScore(scoreManager, name, keyListener, [bg, title, prompt, nameText, confirmBtn], htmlInput);
+                this.confirmScore(scoreManager, name, keyListener, [bg, title, heightText, coinsText, prompt, nameText, confirmBtn], htmlInput);
             },
             onKeyPress: (key) => {
                 if (name.length < 3 && /[a-zA-Z0-9]/.test(key)) {
@@ -171,7 +213,7 @@ export class GameOverMenu {
         // Pointer support for confirm button
         confirmBtn.on('pointerdown', () => {
             if (this.blinkInterval) this.blinkInterval.remove();
-            this.confirmScore(scoreManager, name, keyListener, [bg, title, prompt, nameText, confirmBtn], htmlInput);
+            this.confirmScore(scoreManager, name, keyListener, [bg, title, heightText, coinsText, prompt, nameText, confirmBtn], htmlInput);
         });
     }
 
@@ -209,6 +251,24 @@ export class GameOverMenu {
 
         const scene = this.scene;
 
+        // Hide HUD elements during post-game menu
+        if (scene.uiManager) {
+            if (scene.uiManager.hud && scene.uiManager.hud.heightText) {
+                scene.uiManager.hud.heightText.setVisible(false);
+            }
+            if (scene.uiManager.hud && scene.uiManager.hud.heightBg) {
+                scene.uiManager.hud.heightBg.setVisible(false);
+            }
+            if (scene.uiManager.hud && scene.uiManager.hud.scoreContainer) {
+                scene.uiManager.hud.scoreContainer.setVisible(false);
+            }
+        }
+
+        // Hide pause button
+        if (scene.pauseButton) {
+            scene.pauseButton.setVisible(false);
+        }
+
         // Set extended cooldown to prevent accidental restart
         if (scene.inputManager) {
             scene.inputManager.setExtendedCooldown(800); // 800ms cooldown for Game Over
@@ -223,6 +283,8 @@ export class GameOverMenu {
         const centerX = scene.cameras.main.centerX;
         const startY = 350;
         const spacing = 65;
+
+
 
         // Restart Button
         const restartBtn = UIHelpers.createSpriteButton(scene, centerX, startY, 'btn/btn-restart.png', {

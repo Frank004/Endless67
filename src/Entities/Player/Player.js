@@ -94,8 +94,9 @@ export class Player extends Phaser.Physics.Arcade.Sprite {
      */
     /**
      * Activates invincibility powerup.
+     * @param {number} customDuration - Optional custom duration in ms (default: 12000)
      */
-    activateInvincibility() {
+    activateInvincibility(customDuration = null) {
         this.isInvincible = true;
 
         // Reset blinking/timers if re-acquired while active
@@ -111,7 +112,7 @@ export class Player extends Phaser.Physics.Arcade.Sprite {
             this.scene.particleManager.startAura();
         }
 
-        const DURATION = 12000;
+        const DURATION = customDuration !== null ? customDuration : 12000;
         const BLINK_START_DELAY = DURATION - 2000; // Start blinking 2 seconds before end
 
         // Schedule blinking
@@ -132,10 +133,15 @@ export class Player extends Phaser.Physics.Arcade.Sprite {
             }
         });
 
-        // Start blinking 2 seconds before end
-        this.startBlinkTimer = this.scene.time.delayedCall(BLINK_START_DELAY, () => {
+        // Start blinking 2 seconds before end (only if duration is long enough)
+        if (BLINK_START_DELAY > 0) {
+            this.startBlinkTimer = this.scene.time.delayedCall(BLINK_START_DELAY, () => {
+                if (this.blinkTimer) this.blinkTimer.paused = false;
+            });
+        } else {
+            // For short durations, start blinking immediately
             if (this.blinkTimer) this.blinkTimer.paused = false;
-        });
+        }
 
         // Schedule deactivation
         this.powerupTimer = this.scene.time.delayedCall(DURATION, () => {
