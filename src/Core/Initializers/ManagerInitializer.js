@@ -14,6 +14,7 @@ import { initializePlatformTextureCache } from '../../Entities/Platform.js';
 import { RISER_TYPES } from '../../Config/RiserConfig.js';
 import { WallDecorManager } from '../../Systems/Visuals/WallDecorManager.js';
 import { DifficultyManager } from '../../Systems/Level/DifficultyManager.js';
+import { ReviveService } from '../../Systems/Gameplay/ReviveService.js';
 
 export class ManagerInitializer {
     /**
@@ -58,6 +59,7 @@ export class ManagerInitializer {
 
         scene.debugManager = new DebugManager(scene);
         scene.wallDecorator = new WallDecorator(scene);
+        scene.reviveService = new ReviveService(scene);
 
         // Create InteractableManager
         scene.interactableManager = new InteractableManager(scene);

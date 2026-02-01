@@ -19,11 +19,13 @@ export class ExtraLifeModal extends Phaser.GameObjects.Container {
         const centerY = this.scene.cameras.main.centerY;
 
         // Overlay (Darken background)
-        // Note: Not interactive to avoid blocking clicks underneath, but the modal bg will block.
+        // Overlay (Darken background & Block Inputs)
+        // Interactive to explicitly BLOCK clicks from passing through
         const overlay = this.scene.add.rectangle(centerX, centerY,
             this.scene.cameras.main.width, this.scene.cameras.main.height,
             0x000000, 0.85
         );
+        overlay.setInteractive(); // Blocks input to game below
         this.add(overlay);
 
         // Modal Background (Dark Cyberpunk Style)
@@ -136,7 +138,7 @@ export class ExtraLifeModal extends Phaser.GameObjects.Container {
                 duration: 100,
                 yoyo: true,
                 onComplete: () => {
-                    if (this.onReviveCallback) this.onReviveCallback();
+                    this.handleReviveClick();
                 }
             });
         });
@@ -159,56 +161,13 @@ export class ExtraLifeModal extends Phaser.GameObjects.Container {
             duration: 200,
             ease: 'Back.out'
         });
-
-        // --- MANUAL FAILSAFE INPUT ---
-        // Register a direct global listener to bypass any propagation issues
-        if (this.failSafeListener) {
-            this.scene.input.off('pointerdown', this.failSafeListener);
-        }
-
-        const width = 320;
-        const height = 450;
-        const cx = this.scene.cameras.main.centerX;
-        const cy = this.scene.cameras.main.centerY;
-
-        this.failSafeListener = (pointer) => {
-            if (!this.visible) return;
-
-            // Check Revive Button (Center Bottom)
-            // Center: cx, cy + 150. Size: 220x70
-            const rx = cx;
-            const ry = cy + 150;
-            const rw = 220;
-            const rh = 70;
-
-            if (pointer.x >= rx - rw / 2 && pointer.x <= rx + rw / 2 &&
-                pointer.y >= ry - rh / 2 && pointer.y <= ry + rh / 2) {
-                console.log('✅ [ExtraLifeModal] Failsafe Click: Revive');
-                this.handleReviveClick();
-                return;
-            }
-
-            // Check Close Button (Top Right)
-            // Center: cx + 135, cy - 200. Radius ~30
-            const closeX = cx + (width / 2) - 25;
-            const closeY = cy - (height / 2) + 25;
-            const dx = pointer.x - closeX;
-            const dy = pointer.y - closeY;
-            if (dx * dx + dy * dy <= 40 * 40) { // Generous 40px radius
-                console.log('✅ [ExtraLifeModal] Failsafe Click: Close');
-                this.handleCloseClick();
-                return;
-            }
-        };
-
-        this.scene.input.on('pointerdown', this.failSafeListener);
     }
 
     handleReviveClick() {
         if (this.clicked) return; // Debounce
         this.clicked = true;
 
-        console.log('[ExtraLifeModal] Triggering Callback...');
+        console.log('[ExtraLifeModal] ✅ Processing Revive Click');
         if (this.onReviveCallback) this.onReviveCallback();
 
         // Clean up input immediately
@@ -224,10 +183,6 @@ export class ExtraLifeModal extends Phaser.GameObjects.Container {
     }
 
     cleanupInput() {
-        if (this.failSafeListener) {
-            this.scene.input.off('pointerdown', this.failSafeListener);
-            this.failSafeListener = null;
-        }
         this.clicked = false;
     }
 

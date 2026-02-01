@@ -124,6 +124,9 @@ export class UIManager {
     hideExtraLifeModal() {
         if (this.extraLifeModal) {
             this.extraLifeModal.setVisible(false);
+            if (this.extraLifeModal.cleanupInput) {
+                this.extraLifeModal.cleanupInput();
+            }
         }
     }
 
@@ -174,7 +177,9 @@ export class UIManager {
 
                 // CHECK FOR REVIVE ELIGIBILITY
                 // If player hasn't revived yet, offer Extra Life
-                if (!this.scene.hasRevived) {
+                // CHECK FOR REVIVE ELIGIBILITY
+                // If player hasn't revived yet, offer Extra Life
+                if (this.scene.reviveService && this.scene.reviveService.canRevive()) {
                     console.log('💖 [UIManager] Offering Extra Life...');
                     this.scene.isReviveOffer = true; // FREEZE GAMEPLAY
 
@@ -184,7 +189,9 @@ export class UIManager {
                             console.log('💖 [UIManager] User chose to revive!');
                             this.scene.isReviveOffer = false; // UNFREEZE for setup
                             this.extraLifeModal.startCloseAnimation();
-                            this.scene.reviveLogic(); // Call scene wrapper to handle ads/logic
+                            if (this.scene.reviveService) {
+                                this.scene.reviveService.initiateRevive();
+                            }
                         },
                         // On Close/Skip
                         () => {
