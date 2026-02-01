@@ -128,6 +128,10 @@ export class PlayerHandler {
             return;
         }
 
+        // CAPTURAR POSICIÓN DE MUERTE INMEDIATAMENTE (para revive)
+        scene.deathPosition = { x: player.x, y: player.y };
+        console.log(`💀 [Death] Captured death position: (${player.x}, ${player.y})`);
+
         // No invencible: entrar a estado de muerte en FSM y luego ejecutar flujo de game over
         player.enterDeathState?.();
         // Play riser drop sound
@@ -157,7 +161,8 @@ export class PlayerHandler {
             scene.riserManager.triggerRising();
         });
 
-        scene.physics.pause();
+        // DON'T pause physics yet - wait for revive decision
+        // scene.physics.pause(); // ← REMOVED
         scene.uiText.setText(`GAME OVER\nScore: ${scene.totalScore}`);
         scene.uiText.setVisible(true);
         scene.uiText.setDepth(200);

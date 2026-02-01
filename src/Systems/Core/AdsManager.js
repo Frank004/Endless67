@@ -9,7 +9,7 @@
  * - Handle "Mock" ads for Web/Dev environment
  */
 
-import { AdMob, BannerAdSize, BannerAdPosition, RewardAdPluginEvents, AdMobError } from '@capacitor-community/admob';
+import { AdMob, BannerAdSize, BannerAdPosition, RewardAdPluginEvents } from '@capacitor-community/admob';
 import { Capacitor } from '@capacitor/core';
 
 class AdsManager {

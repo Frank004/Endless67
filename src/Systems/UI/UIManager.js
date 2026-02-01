@@ -1,13 +1,13 @@
-import EventBus, { Events } from '../../Core/EventBus.js';
-import GameState from '../../Core/GameState.js';
-import ScoreManager from '../Gameplay/ScoreManager.js';
-import CurrencyRunService from '../Gameplay/CurrencyRunService.js';
+import { ExtraLifeModal } from '../../UI/Modals/ExtraLifeModal.js';
 import { HUDManager } from '../../UI/HUD/HUDManager.js';
 import { PauseMenu } from '../../UI/Menus/PauseMenu.js';
 import { ControlsUI } from '../../UI/Controls/ControlsUI.js';
 import { NotificationsUI } from '../../UI/Notifications/NotificationsUI.js';
 import { GameOverMenu } from '../../UI/Menus/GameOverMenu.js';
 import { MilestoneIndicatorManager } from '../../UI/HUD/MilestoneIndicatorManager.js';
+import EventBus, { Events } from '../../Core/EventBus.js';
+import ScoreManager from '../Gameplay/ScoreManager.js';
+import CurrencyRunService from '../Gameplay/CurrencyRunService.js';
 
 export class UIManager {
     constructor(scene) {
@@ -21,12 +21,20 @@ export class UIManager {
         this.notifications = new NotificationsUI(scene);
         this.gameOverMenu = new GameOverMenu(scene);
         this.milestoneIndicators = new MilestoneIndicatorManager(scene);
+
+        // Initialize Modals
+        this.extraLifeModal = new ExtraLifeModal(scene);
     }
 
     createUI() {
         this.hud.create();
         this.pauseMenu.create();
         this.controls.create();
+
+        // Ensure modal is top-most
+        if (this.extraLifeModal) {
+            this.extraLifeModal.setDepth(1000);
+        }
 
         // Initialize milestones
         if (this.milestoneIndicators) {
@@ -35,75 +43,88 @@ export class UIManager {
         }
     }
 
-    setGameStartUI() {
-        this.hud.hideUIText();
-        this.controls.setGameStartUI();
-    }
+    // --- PROXY METHODS (Delegate to sub-managers) ---
 
-    // Proxy methods for HUD
+    // HUD Delegates
     updateScore(score) {
-        this.hud.updateScore(score);
+        if (this.hud) this.hud.updateScore(score);
     }
 
     updateHeight(height) {
-        this.hud.updateHeight(height);
+        if (this.hud) this.hud.updateHeight(height);
     }
 
-    // Proxy methods for Pause Menu
-    togglePauseMenu() {
-        this.pauseMenu.toggle();
+    showGameOver(data) {
+        // Show HUD text "GAME OVER"
+        if (this.hud) this.hud.showGameOver(data);
     }
 
-    showPauseMenu() {
-        this.pauseMenu.show();
+    hideGameOver() {
+        if (this.hud) this.hud.hideUIText();
     }
 
-    hidePauseMenu() {
-        this.pauseMenu.hide();
+    // Controls Delegates
+    setGameStartUI() {
+        if (this.controls) this.controls.setGameStartUI();
+        if (this.hud) this.hud.hideUIText();
     }
 
-    // Proxy methods for Controls
     showJoystick(x, y, visible) {
-        this.controls.showJoystick(x, y, visible);
+        if (this.controls) this.controls.showJoystick(x, y, visible);
     }
 
     updateJoystickKnob(x, y) {
-        this.controls.updateJoystickKnob(x, y);
+        if (this.controls) this.controls.updateJoystickKnob(x, y);
     }
 
     hideJoystick() {
-        this.controls.hideJoystick();
+        if (this.controls) this.controls.hideJoystick();
     }
 
     showJumpFeedback(x, y) {
-        this.controls.showJumpFeedback(x, y);
+        if (this.controls) this.controls.showJumpFeedback(x, y);
     }
 
-    // Proxy methods for Notifications
+    // Pause Menu Delegates
+    showPauseMenu() {
+        if (this.pauseMenu) this.pauseMenu.show();
+    }
+
+    hidePauseMenu() {
+        if (this.pauseMenu) this.pauseMenu.hide();
+    }
+
+    // Milestone Delegates
+    updateMilestones(playerY) {
+        if (this.milestoneIndicators) this.milestoneIndicators.update(playerY);
+    }
+
+    // Notification Delegates
     trigger67Celebration() {
-        this.notifications.trigger67Celebration();
+        if (this.notifications) this.notifications.trigger67Celebration();
     }
 
-    // Proxy methods for Game Over
-    showGameOver(data) {
-        this.hud.showGameOver(data);
-    }
-
+    // Game Over Menu / High Score Delegates
     showNameInput(scoreManager) {
-        this.gameOverMenu.showNameInput(scoreManager);
+        if (this.gameOverMenu) this.gameOverMenu.showNameInput(scoreManager);
     }
 
     showPostGameOptions() {
-        this.gameOverMenu.showPostGameOptions();
+        if (this.gameOverMenu) this.gameOverMenu.showPostGameOptions();
     }
 
-    // Proxy methods for Milestone Indicators
-    updateMilestones(playerHeight) {
-        this.milestoneIndicators.update(playerHeight);
+    // --- MODAL METHODS ---
+
+    showExtraLifeModal(onRevive, onClose) {
+        if (this.extraLifeModal) {
+            this.extraLifeModal.show(onRevive, onClose);
+        }
     }
 
-    refreshMilestones() {
-        this.milestoneIndicators.refresh();
+    hideExtraLifeModal() {
+        if (this.extraLifeModal) {
+            this.extraLifeModal.setVisible(false);
+        }
     }
 
     /**
@@ -141,29 +162,68 @@ export class UIManager {
         // Listen to game over
         const gameOverListener = (data) => {
             console.log('🎮 [UIManager] Game Over Event Received:', data);
-            console.log('🎮 [UIManager] Checking high score with height:', data.height, 'score:', data.score);
+
+            // Commit coins first
             CurrencyRunService.commitRunCoinsToProfile();
+
+            // Always show "Game Over" HUD text initially
             this.showGameOver(data);
 
             // Delay before showing UI to allow game over animation to play
             this.scene.time.delayedCall(1000, () => {
-                // Check for High Score
-                // Note: GameState emits { score, height }. ScoreManager expects isHighScore(height, coins).
-                // Assuming data.score represents coins/points collected.
-                const isHigh = ScoreManager.isHighScore(data.height, data.score);
-                console.log('🎮 [UIManager] isHighScore result:', isHigh);
 
-                if (isHigh) {
-                    console.log('✅ [UIManager] High Score detected! Showing Name Input.');
-                    this.showNameInput(ScoreManager);
+                // CHECK FOR REVIVE ELIGIBILITY
+                // If player hasn't revived yet, offer Extra Life
+                if (!this.scene.hasRevived) {
+                    console.log('💖 [UIManager] Offering Extra Life...');
+                    this.scene.isReviveOffer = true; // FREEZE GAMEPLAY
+
+                    this.showExtraLifeModal(
+                        // On Revive (Ad watched)
+                        () => {
+                            console.log('💖 [UIManager] User chose to revive!');
+                            this.scene.isReviveOffer = false; // UNFREEZE for setup
+                            this.extraLifeModal.startCloseAnimation();
+                            this.scene.reviveLogic(); // Call scene wrapper to handle ads/logic
+                        },
+                        // On Close/Skip
+                        () => {
+                            console.log('❌ [UIManager] User skipped revive.');
+                            this.scene.isReviveOffer = false; // UNFREEZE to allow Game Over to continue
+
+                            // NOW pause physics (wasn't paused during decision to keep platforms alive)
+                            if (this.scene.physics) {
+                                this.scene.physics.pause();
+                            }
+
+                            this.proceedToPostGame(data);
+                        }
+                    );
                 } else {
-                    console.log('❌ [UIManager] No High Score. Showing Options.');
-                    this.showPostGameOptions();
+                    // Already revived once, proceed to standard Game Over
+                    console.log('💀 [UIManager] Already revived once. Game Over.');
+                    this.proceedToPostGame(data);
                 }
             });
         };
         EventBus.on(Events.GAME_OVER, gameOverListener);
         this.eventListeners.push({ event: Events.GAME_OVER, listener: gameOverListener });
+    }
+
+    proceedToPostGame(data) {
+        // Check for High Score
+        // Note: GameState emits { score, height }. ScoreManager expects isHighScore(height, coins).
+        // Assuming data.score represents coins/points collected.
+        const isHigh = ScoreManager.isHighScore(data.height, data.score);
+        console.log('🎮 [UIManager] isHighScore result:', isHigh);
+
+        if (isHigh) {
+            console.log('✅ [UIManager] High Score detected! Showing Name Input.');
+            this.showNameInput(ScoreManager);
+        } else {
+            console.log('❌ [UIManager] No High Score. Showing Options.');
+            this.showPostGameOptions();
+        }
     }
 
     /**

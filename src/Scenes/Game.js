@@ -13,6 +13,7 @@ import { StageFloor } from '../Entities/StageFloor.js';
 import { AdBanner } from '../Entities/AdBanner.js';
 import { StageProps } from '../UI/Visuals/StageProps.js';
 import CurrencyRunService from '../Systems/Gameplay/CurrencyRunService.js';
+import AdsManager from '../Systems/Core/AdsManager.js';
 
 
 /**
@@ -65,6 +66,8 @@ export class Game extends Phaser.Scene {
         // --- GAME STATE VARIABLES ---
         this.gameStarted = false;
         this.isGameOver = false;
+        this.hasRevived = false; // Track if player has already used revive
+        this.isReviveOffer = false; // NEW: Track if waiting for revive decision
         this.isPausedEvent = false;
         this.isPaused = false;
         this.isDevMenuOpen = false;
@@ -171,6 +174,15 @@ export class Game extends Phaser.Scene {
         }
 
         if (!this.player || !this.player.active || !this.player.scene) {
+            return;
+        }
+
+        // Revive Offer State - Freeze Gameplay but allow UI Input
+        if (this.isReviveOffer) {
+            if (this.riserManager) {
+                // Keep riser visuals updating if needed, or freeze
+                // For now, freeze gameplay logic
+            }
             return;
         }
 
@@ -300,6 +312,9 @@ export class Game extends Phaser.Scene {
 
         // Activar lava cuando el juego comienza
 
+        // Show Banner Ad
+        AdsManager.showBanner('TOP_CENTER').catch(e => console.error('[Game] Banner Error:', e));
+
 
         if (this.player?.controller?.resetState) {
             this.player.controller.resetState();
@@ -311,6 +326,11 @@ export class Game extends Phaser.Scene {
 
         // Asegurar que las paredes se rendericen al iniciar el juego
         GameInitializer.updateWalls(this);
+
+        // Initialize milestone positions (so they appear at correct spots from start)
+        if (this.uiManager && this.player) {
+            this.uiManager.updateMilestones(this.player.y);
+        }
     }
 
     /**
@@ -355,4 +375,200 @@ export class Game extends Phaser.Scene {
     trigger67Celebration() {
         this.uiManager.trigger67Celebration();
     }
+
+    /**
+     * Handles the revive flow: shows ad, checks success, then calls revivePlayer.
+     */
+    async reviveLogic() {
+        if (this.hasRevived) return;
+
+        // Show Ad
+        try {
+            const success = await AdsManager.showReviveReward();
+            if (success) {
+                this.revivePlayer();
+            } else {
+                // Failed or skipped
+                console.log('[Game] Ad skipped or failed.');
+                this.uiManager.proceedToPostGame({ height: this.currentHeight, score: this.totalScore });
+            }
+        } catch (e) {
+            console.error('[Game] Error in reviveLogic:', e);
+            this.uiManager.proceedToPostGame({ height: this.currentHeight, score: this.totalScore });
+        }
+    }
+
+    /**
+     * Revives the player after a successful ad watch.
+     * Grants invincibility, resets velocity, safe teleport, and resets game over state.
+     */
+    revivePlayer() {
+        console.log('[Game] Reviving Player... 💫');
+        this.hasRevived = true;
+
+        // 1. UNPAUSE SCENE FIRST
+        if (this.scene.isPaused('Game')) {
+            console.log('[Revive] Scene was paused, resuming...');
+            this.scene.resume('Game');
+        }
+
+        // 2. Reset Game Flags
+        this.isGameOver = false;
+        this.isPaused = false;
+        this.gameStarted = true;
+        this.isReviveOffer = false;
+
+        // 3. Hide UI & Restore Game UI State
+        if (this.uiManager) {
+            this.uiManager.hideGameOver();
+            this.uiManager.hideExtraLifeModal();
+
+            // Restore game UI (hide control texts that might have appeared)
+            this.uiManager.setGameStartUI();
+        }
+
+        // 4. Restore Audio & Physics
+        // CRITICAL: stopAudio() destroys bgMusic and stops all sounds
+        // We need to RESTART music, not just resume it
+        if (this.audioManager) {
+            console.log('[Revive] Restarting audio system...');
+
+            // Re-setup event listeners (were removed by stopAudio)
+            this.audioManager.setupEventListeners();
+
+            // Restart background music (was destroyed by stopAudio)
+            this.audioManager.startMusic();
+
+            // Resume any paused sounds
+            if (this.sound) this.sound.resumeAll();
+        }
+
+        // Resume physics (may have been paused if user clicked revive very late)
+        if (this.physics && this.physics.world.isPaused) {
+            console.log('[Revive] Resuming physics...');
+            this.physics.resume();
+        }
+
+        // CRITICAL: Reset GameState flags (pause button checks these)
+        GameState._isGameOver = false;
+        GameState._isPaused = false;
+        console.log('[Revive] GameState flags reset: isGameOver=false, isPaused=false');
+
+        // 5. PLATFORM SEARCH - Use death position (captured BEFORE recycling)
+        const cam = this.cameras.main;
+        const riserY = this.riserManager?.riser?.y || Infinity;
+
+        // Use DEATH POSITION (captured immediately on death) instead of current cam position
+        const deathY = this.deathPosition?.y || cam.scrollY;
+        const deathX = this.deathPosition?.x || cam.centerX;
+
+        // console.log('=== PLATFORM SEARCH (REVIVE) ===');
+        // console.log(`Death Position: (${deathX}, ${deathY})`);
+        // console.log(`Camera Y: ${cam.scrollY} (may have scrolled during ad)`);
+        // console.log(`Riser Y: ${riserY}`);
+
+        const platforms = this.platformPool ? this.platformPool.getActive() : [];
+        // console.log(`Total Active Platforms: ${platforms.length}`);
+
+        let bestPlatform = null;
+        let minDistance = Infinity;
+
+
+        // Find platform NEAR death position (within 200px = ~20m)
+        const MAX_DISTANCE = 200; // Max 20m away from death position
+
+        platforms.forEach(platform => {
+            if (!platform.body || !platform.active) return;
+
+            const aboveLava = platform.y < riserY - 150;
+
+            if (aboveLava) {
+                // Distance to death position
+                const dist = Math.abs(platform.y - deathY);
+
+                // Only consider platforms within 200px (20m) of death
+                if (dist <= MAX_DISTANCE && dist < minDistance) {
+                    minDistance = dist;
+                    bestPlatform = platform;
+                    // console.log(`  ✅ Platform at Y=${platform.y}, X=${platform.x}, dist from death=${dist}px (WITHIN 20m)`);
+                } else if (dist > MAX_DISTANCE) {
+                    // console.log(`  ⚠️ Platform at Y=${platform.y} TOO FAR (${dist}px > ${MAX_DISTANCE}px)`);
+                } else {
+                    // console.log(`  ✅ Platform at Y=${platform.y}, X=${platform.x}, dist from death=${dist}px`);
+                }
+            } else {
+                // console.log(`  ⚠️ Platform at Y=${platform.y} BELOW LAVA`);
+            }
+        });
+
+        // console.log(`Best platform: ${bestPlatform ? `Y=${bestPlatform.y} (${minDistance}px from death)` : 'NONE - will create safe spawn'}`);
+
+        // 6. Setup Player - NO COUNTDOWN (diagnostic)
+        if (this.player && this.player.body) {
+            this.player.active = true;
+            this.player.visible = true;
+            this.player.setVelocity(0, 0);
+            this.player.setAcceleration(0, 0);
+            this.player.clearTint();
+            this.player.play('player_idle', true);
+
+            // Clear controller
+            if (this.player.controller) {
+                const ctx = this.player.controller.context;
+                ctx.resetState();
+                ctx.flags.inputLocked = false; // UNLOCK IMMEDIATELY
+                ctx.flags.dead = false;
+            }
+
+            // Position
+            if (bestPlatform) {
+                console.log(`✅ [Revive] Spawning on platform at Y=${bestPlatform.y}, X=${bestPlatform.x} (${minDistance}px from death)`);
+                this.player.setPosition(bestPlatform.x, bestPlatform.y - 70);
+            } else {
+                // No platform nearby - spawn at death position (player will fall but has invincibility)
+                // console.warn(`⚠️ [Revive] NO PLATFORM WITHIN 20m! Spawning at death position (${deathX}, ${deathY})`);
+                this.player.setPosition(deathX, deathY - 50); // Slightly above death position
+            }
+
+            // ACTIVATE PHYSICS IMMEDIATELY (no freeze)
+            this.player.body.allowGravity = true;
+
+            // ACTIVATE INVINCIBILITY IMMEDIATELY
+            if (this.player.activateInvincibility) {
+                this.player.activateInvincibility();
+
+                if (this.player.powerupTimer) {
+                    this.player.powerupTimer.remove();
+                }
+
+                this.player.powerupTimer = this.time.delayedCall(3000, () => {
+                    if (this.player && this.player.deactivatePowerup) {
+                        this.player.deactivatePowerup();
+                    }
+                });
+            }
+
+            // UNLOCK INPUT IMMEDIATELY
+            if (this.player.controller) {
+                this.player.controller.unlockInput();
+            }
+
+            console.log(`[Revive] Player state: pos=(${this.player.x}, ${this.player.y}), gravity=${this.player.body.allowGravity}, inputLocked=${this.player.controller?.context.flags.inputLocked}`);
+        }
+
+        // 7. Riser Reset
+        if (this.riserManager && this.riserManager.riser) {
+            this.riserManager.riser.y = cam.scrollY + cam.height + 500;
+            this.riserManager.isRising = true; // Start rising immediately
+            console.log(`[Revive] Riser reset to Y=${this.riserManager.riser.y}`);
+        }
+
+        // 8. Update Milestones (so they appear at correct positions)
+        if (this.uiManager && this.player) {
+            this.uiManager.updateMilestones(this.player.y);
+        }
+
+        console.log('=== REVIVE COMPLETE (NO COUNTDOWN) ===');
+    }
+
 }

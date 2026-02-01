@@ -1,3 +1,4 @@
+import AdsManager from '../Systems/Core/AdsManager.js';
 import { ASSETS } from '../Config/AssetKeys.js';
 import { UI } from '../Config/GameConstants.js';
 import { Leaderboard } from './Leaderboard.js';
@@ -14,6 +15,9 @@ export class Preloader extends Phaser.Scene {
     }
 
     preload() {
+        // Initialize Ads Manager
+        AdsManager.init().catch(e => console.error('[Preloader] Ads Init Failed:', e));
+
         // Establecer ruta base relativa para asegurar carga en GitHub Pages / Netlify / Capacitor
         this.load.setBaseURL('./');
 
@@ -108,7 +112,7 @@ export class Preloader extends Phaser.Scene {
         }
 
         // 4. Version (Match MainMenu Style)
-        const versionStr = window.GAME_VERSION || 'v0.0.53';
+        const versionStr = window.GAME_VERSION || 'v0.0.54';
         const versionText = this.add.text(width / 2, height - 30, versionStr, {
             fontSize: '14px',
             color: '#aaaaaa',

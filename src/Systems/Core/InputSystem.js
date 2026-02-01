@@ -172,6 +172,10 @@ export class InputSystem {
             return true;
         }
 
+        // Allow input during Revive Offer to let the UI Modal handle it, 
+        // BUT we must ensure we don't trigger "Jump".
+        // The caller of this function (pointerdown listener) triggers handleJump().
+        // So we WANT to return true (ignore jump) if isReviveOffer is true.
         return scene.isGameOver || scene.isPausedEvent || scene.isDevMenuOpen || scene.isPaused;
     }
 
