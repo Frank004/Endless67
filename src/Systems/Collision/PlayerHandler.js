@@ -141,6 +141,7 @@ export class PlayerHandler {
         }
 
         // NOTIFICAR AL ESTADO GLOBAL PARA PARAR AUDIO Y BLOQUEAR PAUSA
+        console.warn('🚨 [Death Trace] touchRiser() calling GameState.gameOver()');
         GameState.gameOver();
 
         scene.isGameOver = true;

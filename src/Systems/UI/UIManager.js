@@ -131,6 +131,84 @@ export class UIManager {
     }
 
     /**
+     * Shows a 3-2-1-GO countdown sequence
+     * @param {Function} onComplete Callback when countdown finishes
+     */
+    showReviveCountdown(onComplete) {
+        const scene = this.scene;
+        const width = scene.scale.width;
+        const height = scene.scale.height;
+        const cx = width / 2;
+        const cy = height / 2;
+
+        console.log('[UIManager] Starting Revive Countdown 3-2-1...');
+
+        // Create large countdown text
+        const countText = scene.add.text(cx, cy, '3', {
+            fontSize: '120px',
+            fontFamily: 'Arial',
+            fontStyle: 'bold',
+            color: '#ffffff',
+            stroke: '#000000',
+            strokeThickness: 8
+        }).setOrigin(0.5)
+            .setScrollFactor(0)
+            .setDepth(2000)
+            .setScale(0);
+
+        // Sequence: 3 -> 2 -> 1 -> GO!
+        const sequence = ['3', '2', '1', 'GO!'];
+        let currentIndex = 0;
+
+        const playNextNumber = () => {
+            if (currentIndex >= sequence.length) {
+                // Done
+                countText.destroy();
+                if (onComplete) onComplete();
+                return;
+            }
+
+            const text = sequence[currentIndex];
+            countText.setText(text);
+            countText.setScale(0);
+            countText.setAlpha(1);
+
+            // Special color for GO!
+            if (text === 'GO!') {
+                countText.setColor('#00ff00');
+            } else {
+                countText.setColor('#ffffff');
+            }
+
+            // Punchy animation: Pop in -> Pause -> Pop out
+            scene.tweens.add({
+                targets: countText,
+                scale: 1,
+                duration: 200,
+                ease: 'Back.out', // Pop effect
+                onComplete: () => {
+                    // Hold
+                    scene.time.delayedCall(500, () => {
+                        // Fade out / scale up slightly
+                        scene.tweens.add({
+                            targets: countText,
+                            scale: 1.5,
+                            alpha: 0,
+                            duration: 200,
+                            onComplete: () => {
+                                currentIndex++;
+                                playNextNumber();
+                            }
+                        });
+                    });
+                }
+            });
+        };
+
+        playNextNumber();
+    }
+
+    /**
      * Setup EventBus listeners for UI updates
      */
     setupEventListeners() {
@@ -172,46 +250,8 @@ export class UIManager {
             // Always show "Game Over" HUD text initially
             this.showGameOver(data);
 
-            // Delay before showing UI to allow game over animation to play
-            this.scene.time.delayedCall(1000, () => {
-
-                // CHECK FOR REVIVE ELIGIBILITY
-                // If player hasn't revived yet, offer Extra Life
-                // CHECK FOR REVIVE ELIGIBILITY
-                // If player hasn't revived yet, offer Extra Life
-                if (this.scene.reviveService && this.scene.reviveService.canRevive()) {
-                    console.log('💖 [UIManager] Offering Extra Life...');
-                    this.scene.isReviveOffer = true; // FREEZE GAMEPLAY
-
-                    this.showExtraLifeModal(
-                        // On Revive (Ad watched)
-                        () => {
-                            console.log('💖 [UIManager] User chose to revive!');
-                            this.scene.isReviveOffer = false; // UNFREEZE for setup
-                            this.extraLifeModal.startCloseAnimation();
-                            if (this.scene.reviveService) {
-                                this.scene.reviveService.initiateRevive();
-                            }
-                        },
-                        // On Close/Skip
-                        () => {
-                            console.log('❌ [UIManager] User skipped revive.');
-                            this.scene.isReviveOffer = false; // UNFREEZE to allow Game Over to continue
-
-                            // NOW pause physics (wasn't paused during decision to keep platforms alive)
-                            if (this.scene.physics) {
-                                this.scene.physics.pause();
-                            }
-
-                            this.proceedToPostGame(data);
-                        }
-                    );
-                } else {
-                    // Already revived once, proceed to standard Game Over
-                    console.log('💀 [UIManager] Already revived once. Game Over.');
-                    this.proceedToPostGame(data);
-                }
-            });
+            // Flow Control is now handled by ReviveSystem (listens to GAME_OVER)
+            // It will decide whether to offer revive or proceed to post-game.
         };
         EventBus.on(Events.GAME_OVER, gameOverListener);
         this.eventListeners.push({ event: Events.GAME_OVER, listener: gameOverListener });

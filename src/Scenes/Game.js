@@ -14,6 +14,7 @@ import { AdBanner } from '../Entities/AdBanner.js';
 import { StageProps } from '../UI/Visuals/StageProps.js';
 import CurrencyRunService from '../Systems/Gameplay/CurrencyRunService.js';
 import AdsManager from '../Systems/Core/AdsManager.js';
+import { SafetyPlatform } from '../Entities/SafetyPlatform.js';
 
 
 /**
@@ -64,10 +65,9 @@ export class Game extends Phaser.Scene {
         });
 
         // --- GAME STATE VARIABLES ---
+        // Game State
         this.gameStarted = false;
         this.isGameOver = false;
-        this.hasRevived = false; // Track if player has already used revive
-        this.isReviveOffer = false; // NEW: Track if waiting for revive decision
         this.isPausedEvent = false;
         this.isPaused = false;
         this.isDevMenuOpen = false;
@@ -177,14 +177,7 @@ export class Game extends Phaser.Scene {
             return;
         }
 
-        // Revive Offer State - Freeze Gameplay but allow UI Input
-        if (this.isReviveOffer) {
-            if (this.riserManager) {
-                // Keep riser visuals updating if needed, or freeze
-                // For now, freeze gameplay logic
-            }
-            return;
-        }
+
 
         // Game Over Logic
         if (this.isGameOver) {
@@ -372,8 +365,135 @@ export class Game extends Phaser.Scene {
     /**
      * Triggers the "67" celebration effect.
      */
-    trigger67Celebration() {
-        this.uiManager.trigger67Celebration();
+    /**
+     * Respawns the player physically in the world.
+     * Called by ReviveSystem when a revive is successful.
+     */
+    respawnPlayer() {
+        try {
+            console.log('[Game] Respawn Player Requested... 💫');
+
+            // 1. UNPAUSE SCENE FIRST & RESET FLAGS
+            if (this.scene.isPaused('Game')) this.scene.resume('Game');
+            this.isGameOver = false;
+            this.isPaused = false;
+            this.gameStarted = true;
+
+            // 2. Hide UI & Restore State
+            if (this.uiManager) {
+                this.uiManager.hideGameOver();
+                this.uiManager.hideExtraLifeModal();
+                this.uiManager.setGameStartUI();
+            }
+
+            // 3. Restore Systems (Audio, Physics)
+            if (this.audioManager) {
+                this.audioManager.setupEventListeners();
+                this.audioManager.startMusic();
+                if (this.sound) this.sound.resumeAll();
+            }
+            if (this.physics && this.physics.world.isPaused) this.physics.resume();
+
+            if (GameState) {
+                GameState._isGameOver = false;
+                GameState._isPaused = false;
+            }
+
+            // 4. DETERMINE SPAWN POSITION
+            // Use Death Position or Camera Center
+            const cam = this.cameras.main;
+            const spawnX = (this.deathPosition && this.deathPosition.x !== undefined) ? this.deathPosition.x : cam.centerX;
+            const deathY = (this.deathPosition && this.deathPosition.y !== undefined) ? this.deathPosition.y : cam.scrollY;
+
+            // Adjust spawn Y slightly above death point to land on platform
+            const spawnY = deathY - 100;
+
+            // 5. SETUP PLAYER
+            if (this.player && this.player.body) {
+                this.player.active = true;
+                this.player.visible = true;
+                this.player.setVelocity(0, 0);
+                this.player.setAcceleration(0, 0);
+                this.player.clearTint();
+                this.player.play('player_idle', true);
+                this.player.setPosition(spawnX, spawnY);
+                this.player.body.allowGravity = true; // Gravity ON so they fall onto platform
+
+                // LOCK INPUT INITIALLY
+                if (this.player.controller) {
+                    const ctx = this.player.controller.context;
+                    if (ctx) {
+                        ctx.resetState();
+                        ctx.flags.inputLocked = true; // LOCK!
+                        ctx.flags.dead = false;
+                    }
+                }
+            }
+
+            // 6. CREATE SAFETY PLATFORM & TELEPORT EFFECT
+            const safetyPlatform = new SafetyPlatform(this, spawnX, spawnY + 50);
+            safetyPlatform.spawn(this.player, this.player.depth);
+
+            // Player teleport flash effect
+            if (this.player) {
+                this.player.setAlpha(0);
+                this.tweens.add({
+                    targets: this.player,
+                    alpha: 1,
+                    duration: 300,
+                    ease: 'Cubic.out'
+                });
+
+                // Quick tint flash for teleport effect
+                this.player.setTint(0x00ffff);
+                this.time.delayedCall(300, () => {
+                    if (this.player) this.player.clearTint();
+                });
+            }
+
+            // 7. RISER RESET
+            if (this.riserManager && this.riserManager.riser) {
+                this.riserManager.riser.y = cam.scrollY + cam.height + 600; // Push well below
+                this.riserManager.isRising = false; // Stop rising during countdown
+
+                // Resume rising after countdown
+                this.time.delayedCall(3000, () => {
+                    if (this.riserManager) this.riserManager.isRising = true;
+                });
+            }
+
+
+
+            // 8. START COUNTDOWN SEQUENCE
+            if (this.uiManager) {
+                this.uiManager.showReviveCountdown(() => {
+                    console.log('✅ [Respawn] Countdown Complete! GO!');
+
+                    // UNLOCK INPUT
+                    if (this.player && this.player.controller) {
+                        this.player.controller.unlockInput();
+                    }
+
+                    // ACTIVATE INVINCIBILITY (3s starts NOW, after GO!)
+                    if (this.player && this.player.activateInvincibility) {
+                        this.player.activateInvincibility(3000);
+                    }
+                });
+            }
+
+        } catch (error) {
+            console.error('❌ [Game] CRITICAL ERROR in respawnPlayer:', error);
+            throw error;
+        }
+    }
+
+    /**
+     * Triggers the "67" celebration effect.
+     * @param {number} x The x coordinate of the celebration.
+     * @param {number} y The y coordinate of the celebration.
+     */
+    trigger67Celebration(x, y) {
+        this.uiManager.trigger67Celebration(x, y);
     }
 
     /**

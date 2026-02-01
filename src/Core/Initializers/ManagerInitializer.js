@@ -14,7 +14,7 @@ import { initializePlatformTextureCache } from '../../Entities/Platform.js';
 import { RISER_TYPES } from '../../Config/RiserConfig.js';
 import { WallDecorManager } from '../../Systems/Visuals/WallDecorManager.js';
 import { DifficultyManager } from '../../Systems/Level/DifficultyManager.js';
-import { ReviveService } from '../../Systems/Gameplay/ReviveService.js';
+import { ReviveSystem } from '../../Systems/Gameplay/ReviveSystem.js';
 
 export class ManagerInitializer {
     /**
@@ -33,6 +33,7 @@ export class ManagerInitializer {
         scene.slotGenerator = new SlotGenerator(scene);
         scene.inputManager = new InputSystem(scene);
         scene.uiManager = new UIManager(scene);
+        scene.reviveSystem = new ReviveSystem(scene);
 
         scene.audioManager = new AudioSystem(); // Using new() to get the singleton (safe)
         scene.audioManager.setScene(scene);
@@ -59,7 +60,6 @@ export class ManagerInitializer {
 
         scene.debugManager = new DebugManager(scene);
         scene.wallDecorator = new WallDecorator(scene);
-        scene.reviveService = new ReviveService(scene);
 
         // Create InteractableManager
         scene.interactableManager = new InteractableManager(scene);
