@@ -1,0 +1,46 @@
+PODS:
+  - Capacitor (7.4.5):
+    - CapacitorCordova
+  - CapacitorCommunityAdmob (7.2.0):
+    - Capacitor
+    - Google-Mobile-Ads-SDK (= 12.12.0)
+    - GoogleUserMessagingPlatform (= 3.0.0)
+  - CapacitorCordova (7.4.5)
+  - CapacitorSplashScreen (7.0.4):
+    - Capacitor
+  - Google-Mobile-Ads-SDK (12.12.0):
+    - GoogleUserMessagingPlatform (>= 1.1)
+  - GoogleUserMessagingPlatform (3.0.0)
+
+DEPENDENCIES:
+  - "Capacitor (from `../../node_modules/.pnpm/@capacitor+ios@7.4.5_@capacitor+core@7.4.5/node_modules/@capacitor/ios`)"
+  - "CapacitorCommunityAdmob (from `../../node_modules/.pnpm/@capacitor-community+admob@7.2.0/node_modules/@capacitor-community/admob`)"
+  - "CapacitorCordova (from `../../node_modules/.pnpm/@capacitor+ios@7.4.5_@capacitor+core@7.4.5/node_modules/@capacitor/ios`)"
+  - "CapacitorSplashScreen (from `../../node_modules/.pnpm/@capacitor+splash-screen@7.0.4_@capacitor+core@7.4.5/node_modules/@capacitor/splash-screen`)"
+
+SPEC REPOS:
+  trunk:
+    - Google-Mobile-Ads-SDK
+    - GoogleUserMessagingPlatform
+
+EXTERNAL SOURCES:
+  Capacitor:
+    :path: "../../node_modules/.pnpm/@capacitor+ios@7.4.5_@capacitor+core@7.4.5/node_modules/@capacitor/ios"
+  CapacitorCommunityAdmob:
+    :path: "../../node_modules/.pnpm/@capacitor-community+admob@7.2.0/node_modules/@capacitor-community/admob"
+  CapacitorCordova:
+    :path: "../../node_modules/.pnpm/@capacitor+ios@7.4.5_@capacitor+core@7.4.5/node_modules/@capacitor/ios"
+  CapacitorSplashScreen:
+    :path: "../../node_modules/.pnpm/@capacitor+splash-screen@7.0.4_@capacitor+core@7.4.5/node_modules/@capacitor/splash-screen"
+
+SPEC CHECKSUMS:
+  Capacitor: 12914e6f1b7835e161a74ebd19cb361efa37a7dd
+  CapacitorCommunityAdmob: 04498ca8d01a097aa7d9d80584094b6b3419ec3f
+  CapacitorCordova: 31bbe4466000c6b86d9b7f1181ee286cff0205aa
+  CapacitorSplashScreen: 000f7591d546907dda5cbb514bd6b6d9e6048cf8
+  Google-Mobile-Ads-SDK: 4dde70a8c18d96b14f9548759b8cec6ecb0bc3e6
+  GoogleUserMessagingPlatform: f8d0cdad3ca835406755d0a69aa634f00e76d576
+
+PODFILE CHECKSUM: ad889f921b3ee71b960d0cf88a21cada21001a2a
+
+COCOAPODS: 1.16.2

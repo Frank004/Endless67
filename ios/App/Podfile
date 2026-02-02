@@ -1,0 +1,35 @@
+require_relative '../../node_modules/.pnpm/@capacitor+ios@7.4.5_@capacitor+core@7.4.5/node_modules/@capacitor/ios/scripts/pods_helpers'
+
+platform :ios, '14.0'
+project 'Endless67Runner.xcodeproj'
+use_frameworks!
+
+# workaround to avoid Xcode caching of Pods that requires
+# Product -> Clean Build Folder after new Cordova plugins installed
+# Requires CocoaPods 1.6 or newer
+install! 'cocoapods', :disable_input_output_paths => true
+
+def capacitor_pods
+  pod 'Capacitor', :path => '../../node_modules/.pnpm/@capacitor+ios@7.4.5_@capacitor+core@7.4.5/node_modules/@capacitor/ios'
+  pod 'CapacitorCordova', :path => '../../node_modules/.pnpm/@capacitor+ios@7.4.5_@capacitor+core@7.4.5/node_modules/@capacitor/ios'
+  pod 'CapacitorCommunityAdmob', :path => '../../node_modules/.pnpm/@capacitor-community+admob@7.2.0/node_modules/@capacitor-community/admob'
+  pod 'CapacitorSplashScreen', :path => '../../node_modules/.pnpm/@capacitor+splash-screen@7.0.4_@capacitor+core@7.4.5/node_modules/@capacitor/splash-screen'
+end
+
+target 'Endless67Runner' do
+  capacitor_pods
+  # Add your Pods here
+end
+
+post_install do |installer|
+  assertDeploymentTarget(installer)
+  
+  installer.pods_project.targets.each do |target|
+    target.build_configurations.each do |config|
+      # Fix for "double-quoted include" error in Xcode 15+
+      config.build_settings['CLANG_WARN_QUOTED_INCLUDE_IN_FRAMEWORK_HEADER'] = 'NO'
+      # Allow non-modular includes (Fixes 'Cordova' module not found errors)
+      config.build_settings['CLANG_ALLOW_NON_MODULAR_INCLUDES_IN_FRAMEWORK_MODULES'] = 'YES'
+    end
+  end
+end
