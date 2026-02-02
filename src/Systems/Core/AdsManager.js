@@ -45,7 +45,7 @@ class AdsManager {
 
         if (!this.isNative) {
             this.initialized = true;
-            console.log('[AdsManager] Running in WEB mode. Ads will be mocked.');
+            console.log('[AdsManager] Running in WEB mode. Ads will be mocked visually.');
             return;
         }
 
@@ -71,8 +71,8 @@ class AdsManager {
 
         if (!this.isNative) {
             this.bannerActive = true;
-            // The AdBanner prefab in Game.js already handles the visual placeholder
-            console.log(`[AdsManager] [MOCK] Native Banner would populate TOP area`);
+            // The AdBanner entity in Game.js handles the visual mock
+            console.log(`[AdsManager] [MOCK] Banner ad displayed at top`);
             return;
         }
 
@@ -122,20 +122,8 @@ class AdsManager {
         console.log('[AdsManager] Requesting Rewarded Video');
 
         if (!this.isNative) {
-            // MOCK IMPLEMENTATION
-            return new Promise((resolve) => {
-                const confirmed = window.confirm("[DEV MOCK] Watch Ad to Revive?\n\n(Click OK to simulate 'Watched', Cancel to simulate 'Skipped')");
-                if (confirmed) {
-                    console.log('[AdsManager] [MOCK] Ad Loading...');
-                    setTimeout(() => {
-                        console.log('[AdsManager] [MOCK] Ad Finished! Reward Granted.');
-                        resolve(true); // User watched
-                    }, 1500); // Fake load time
-                } else {
-                    console.log('[AdsManager] [MOCK] Ad Cancelled.');
-                    resolve(false);
-                }
-            });
+            // VISUAL MOCK IMPLEMENTATION FOR WEB
+            return this.showMockRewardedAd();
         }
 
         // NATIVE IMPLEMENTATION
@@ -180,6 +168,182 @@ class AdsManager {
                 console.error('[AdsManager] Error showing rewarded ad', e);
                 resolve(false);
             }
+        });
+    }
+
+    /**
+     * Visual mock for rewarded ads (Web only)
+     * @private
+     */
+    showMockRewardedAd() {
+        return new Promise((resolve) => {
+            console.log('[AdsManager] [MOCK] Showing Visual Ad Overlay...');
+
+            // Create overlay
+            const overlay = document.createElement('div');
+            overlay.style.cssText = `
+                position: fixed;
+                top: 0;
+                left: 0;
+                width: 100%;
+                height: 100%;
+                background: rgba(0, 0, 0, 0.95);
+                z-index: 999999;
+                display: flex;
+                flex-direction: column;
+                align-items: center;
+                justify-content: center;
+                font-family: Arial, sans-serif;
+            `;
+
+            // Ad label
+            const adLabel = document.createElement('div');
+            adLabel.textContent = 'Ad';
+            adLabel.style.cssText = `
+                position: absolute;
+                top: 10px;
+                left: 10px;
+                background: #ffeb3b;
+                color: #000;
+                padding: 4px 8px;
+                font-size: 12px;
+                font-weight: bold;
+                border-radius: 3px;
+            `;
+
+            // Video container
+            const videoBox = document.createElement('div');
+            videoBox.style.cssText = `
+                background: #1a1a1a;
+                width: 80%;
+                max-width: 400px;
+                aspect-ratio: 16/9;
+                border-radius: 8px;
+                display: flex;
+                align-items: center;
+                justify-content: center;
+                margin-bottom: 20px;
+                position: relative;
+                overflow: hidden;
+            `;
+
+            // Animated "playing video" effect
+            const videoText = document.createElement('div');
+            videoText.innerHTML = '▶️ TEST REWARDED AD<br><small style="color: #999">Playing automatically...</small>';
+            videoText.style.cssText = `
+                color: white;
+                font-size: 18px;
+                text-align: center;
+                padding: 20px;
+            `;
+
+            // Countdown timer
+            const countdown = document.createElement('div');
+            countdown.style.cssText = `
+                position: absolute;
+                bottom: 10px;
+                right: 10px;
+                background: rgba(0, 0, 0, 0.7);
+                color: white;
+                padding: 8px 12px;
+                border-radius: 4px;
+                font-size: 14px;
+                font-weight: bold;
+            `;
+            let timeLeft = 15; // AdMob typical duration
+            countdown.textContent = `${timeLeft}s`;
+
+            // Close button (X) - Initially hidden
+            const closeBtn = document.createElement('button');
+            closeBtn.textContent = '✕';
+            closeBtn.style.cssText = `
+                position: absolute;
+                top: 10px;
+                right: 10px;
+                background: rgba(255, 255, 255, 0.3);
+                color: white;
+                border: none;
+                width: 40px;
+                height: 40px;
+                font-size: 24px;
+                border-radius: 50%;
+                cursor: pointer;
+                display: none;
+                align-items: center;
+                justify-content: center;
+                transition: all 0.3s;
+            `;
+
+            closeBtn.onmouseover = () => {
+                closeBtn.style.background = 'rgba(255, 255, 255, 0.5)';
+            };
+            closeBtn.onmouseout = () => {
+                closeBtn.style.background = 'rgba(255, 255, 255, 0.3)';
+            };
+
+            // Info text
+            const infoText = document.createElement('div');
+            infoText.textContent = 'Watch the full ad to earn your reward';
+            infoText.style.cssText = `
+                color: #999;
+                font-size: 14px;
+                margin-top: 10px;
+            `;
+
+            videoBox.appendChild(videoText);
+            videoBox.appendChild(countdown);
+            overlay.appendChild(adLabel);
+            overlay.appendChild(videoBox);
+            overlay.appendChild(closeBtn);
+            overlay.appendChild(infoText);
+            document.body.appendChild(overlay);
+
+            let canClose = false;
+
+            // Countdown logic
+            const countdownInterval = setInterval(() => {
+                timeLeft--;
+                countdown.textContent = `${timeLeft}s`;
+
+                if (timeLeft <= 0) {
+                    clearInterval(countdownInterval);
+                    countdown.textContent = '✓ Complete';
+                    countdown.style.background = 'rgba(76, 175, 80, 0.9)';
+
+                    // Show close button
+                    closeBtn.style.display = 'flex';
+                    canClose = true;
+
+                    // Update info
+                    infoText.textContent = 'Reward earned! Tap X to close';
+                    infoText.style.color = '#4CAF50';
+                }
+            }, 1000);
+
+            // Event handlers
+            const cleanup = (success) => {
+                clearInterval(countdownInterval);
+                if (document.body.contains(overlay)) {
+                    document.body.removeChild(overlay);
+                }
+                console.log(`[AdsManager] [MOCK] Ad ${success ? 'Completed - Reward Granted' : 'Closed Early - No Reward'}`);
+                resolve(success);
+            };
+
+            closeBtn.onclick = () => {
+                cleanup(canClose); // Only grant reward if ad completed
+            };
+
+            // Prevent closing early (optional - simulate real ad behavior)
+            overlay.onclick = (e) => {
+                if (e.target === overlay && !canClose) {
+                    // Shake effect to indicate can't close yet
+                    overlay.style.animation = 'shake 0.3s';
+                    setTimeout(() => {
+                        overlay.style.animation = '';
+                    }, 300);
+                }
+            };
         });
     }
 }
