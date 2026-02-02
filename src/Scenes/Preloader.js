@@ -7,6 +7,7 @@ import { Playground } from './Playground.js';
 import { WarmupManager } from '../Systems/Core/WarmupManager.js';
 import { registerEnemyAnimations } from '../Utils/animations.js';
 import PlayerProfileService from '../Systems/Gameplay/PlayerProfileService.js';
+import { SplashScreen } from '@capacitor/splash-screen';
 
 
 export class Preloader extends Phaser.Scene {
@@ -29,6 +30,7 @@ export class Preloader extends Phaser.Scene {
 
         // --- VISUAL LOADING SCREEN (PHASER) ---
         // Since HTML loader is static, we switch to this animated one immediately.
+
 
         const width = this.cameras.main.width;
         const height = this.cameras.main.height;
@@ -55,18 +57,35 @@ export class Preloader extends Phaser.Scene {
             }
 
             this.introSprite = this.add.sprite(width / 2, height / 2, ASSETS.INTRO_ANIM, 'intro-frame-01.png')
-                .setOrigin(0.5);
-            // .play('intro_play'); // DEFERRED: Play in create() after load
+                .setOrigin(0.5)
+                .setScrollFactor(0);
 
-            // Fit/Cover logic
+            // COVER STRATEGY: Scale to fit canvas like MainMenu does
+            // Asset is 1082x1920, canvas is ~360x640, needs ~0.33 scale
             const scaleX = width / this.introSprite.width;
             const scaleY = height / this.introSprite.height;
-            this.introSprite.setScale(Math.max(scaleX, scaleY));
+            const scale = Math.max(scaleX, scaleY);
+            this.introSprite.setScale(scale);
 
+            // TESTING: Animation disabled to verify frame consistency
+            // .play('intro_play'); // DEFERRED: Play in create() after load
+
+            // Hide Native Splash NOW - Phaser has taken over rendering
+            // This creates a seamless transition: Native Splash (same image) → Phaser Intro
+            SplashScreen.hide().catch(() => { });
+
+            // TESTING: Skip animation, go straight to completion after delay
+            this.time.delayedCall(1500, () => {
+                this.introAnimComplete = true;
+                this.checkLoadComplete();
+            });
+
+            /* ORIGINAL animation complete handler - DISABLED FOR TESTING
             this.introSprite.on('animationcomplete', () => {
                 this.introAnimComplete = true;
                 this.scene.start('MainMenu');
             });
+            */
 
             // Keep flag false initially
             this.introAnimComplete = false;

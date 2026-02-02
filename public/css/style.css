@@ -12,24 +12,11 @@ body {
     height: 100vh;
     height: 100dvh;
     /* Dynamic viewport height para móviles */
+
+    /* Prevent scrolling/bouncing */
+    overscroll-behavior: none;
     overflow: hidden;
-    touch-action: none;
-    font-family: 'Pixelify Sans', monospace;
-    user-select: none;
-    -webkit-user-select: none;
-    -moz-user-select: none;
-    -ms-user-select: none;
-    position: fixed;
-    width: 100%;
-    top: 0;
-    left: 0;
-
-    /* Safe area para notch de iPhone */
-    padding: env(safe-area-inset-top) env(safe-area-inset-right) env(safe-area-inset-bottom) env(safe-area-inset-left);
-
-    /* Prevenir pull-to-refresh en Chrome mobile */
-    overscroll-behavior-y: contain;
-    overscroll-behavior-x: none;
+    box-sizing: border-box;
 }
 
 /* Prevenir tap highlight en todos los elementos */
@@ -92,13 +79,14 @@ body.mobile canvas {
     left: 0;
     width: 100%;
     height: 100%;
-    /* Start with black background to match letterboxing */
+    /* Start with black background */
     background-color: #000000;
-    /* Use 'contain' to ensure the full image is visible without zooming/cropping, matching Phaser's probable fit logic */
+    /* Scale to cover like Phaser does - asset is 1082x1922 for 360px canvas */
     background-image: url('../assets/ui/intro-animation-0.png');
     background-repeat: no-repeat;
     background-position: center center;
-    background-size: contain;
+    background-size: cover;
+    /* Match Phaser's Math.max scaling */
     display: flex;
     flex-direction: column;
     align-items: center;
