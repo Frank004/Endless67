@@ -35,7 +35,10 @@ let GAME_HEIGHT = baseResolution.height;
 // FIX: Dynamic Height for Mobile to avoid letterboxing (black bars)
 // iPhone 14+ and modern Androids are taller than 16:9. We extend the height to fit.
 if (isMobile && typeof window !== 'undefined') {
-    const windowRatio = window.innerHeight / window.innerWidth;
+    // Use window.inner dimensions (more reliable than body.client in webviews)
+    const visibleHeight = window.innerHeight;
+    const visibleWidth = window.innerWidth;
+    const windowRatio = visibleHeight / visibleWidth;
     const targetHeight = Math.ceil(GAME_WIDTH * windowRatio);
     // Only extend if taller than base (avoid squashing on weird small screens)
     if (targetHeight > GAME_HEIGHT) {
@@ -84,4 +87,11 @@ const config = {
     scene: [Boot, Preloader, MainMenu, Game, Leaderboard, Settings, Playground, Store]
 };
 
-const game = new Phaser.Game(config);
+// Defer Game Initialization to ensure DOM/Viewport is stable (fixes layout glitches)
+// 50ms delay helps mobile webviews settle their safe-areas/nav-bars
+window.addEventListener('load', () => {
+    setTimeout(() => {
+        // Start Game with pre-calculated dimensions
+        new Phaser.Game(config);
+    }, 50);
+});

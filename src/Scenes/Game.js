@@ -306,7 +306,13 @@ export class Game extends Phaser.Scene {
         // Activar lava cuando el juego comienza
 
         // Show Banner Ad
+        // Show Banner Ad at TOP
         AdsManager.showBanner('TOP_CENTER').catch(e => console.error('[Game] Banner Error:', e));
+
+        // Cleanup banner on scene exit
+        this.events.once('shutdown', () => {
+            AdsManager.hideBanner().catch(() => { });
+        });
 
 
         if (this.player?.controller?.resetState) {

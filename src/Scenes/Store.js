@@ -27,6 +27,24 @@ export class Store extends Phaser.Scene {
         this._profile = null;
     }
 
+    /**
+     * Get safe-area-inset value for iOS notch/status bar
+     * @param {string} side - 'top', 'bottom', 'left', or 'right'
+     * @param {number} fallback - Default value if env() not available
+     * @returns {number} Safe area inset in pixels
+     */
+    getSafeAreaInset(side, fallback = 0) {
+        if (typeof window === 'undefined') return fallback;
+        try {
+            const style = getComputedStyle(document.documentElement);
+            const value = style.getPropertyValue(`env(safe-area-inset-${side})`);
+            const parsed = parseInt(value);
+            return isNaN(parsed) ? fallback : parsed;
+        } catch (e) {
+            return fallback;
+        }
+    }
+
     create() {
         this.cards = [];
         const { width, height } = this.cameras.main;
@@ -88,12 +106,15 @@ export class Store extends Phaser.Scene {
     createHeader() {
         const { width } = this.cameras.main;
 
+        // Get safe-area offset for iOS notch
+        const safeAreaTop = this.getSafeAreaInset('top', 47);
+
         // Header container (fixed)
         this.headerContainer = this.add.container(0, 0).setScrollFactor(0).setDepth(100);
 
         // 1. Back Button (Top Left - Sprite)
         const btnX = 30; // Margin left + half button width
-        const btnY = 25; // Top margin
+        const btnY = 65 + safeAreaTop; // Top margin + safe area for notch
 
         const backBtn = this.add.image(btnX, btnY, 'ui_hud', 'btn-small/btn-small-back.png')
             .setOrigin(0.5)
@@ -114,9 +135,8 @@ export class Store extends Phaser.Scene {
         backBtn.on('pointerover', () => backBtn.setTint(0xcccccc));
         backBtn.on('pointerout', () => backBtn.clearTint());
 
-        // 2. Title: "THE VAULT" (Logo) - Moved Down
-        // Center text closer to the grid start (visual balance)
-        const logoY = 100;
+        // 2. Title: "THE VAULT" (Logo) - Adjusted for safe area
+        const logoY = 130 + safeAreaTop;
         const logo = this.add.image(width / 2, logoY, ASSETS.STORE_LOGO)
             .setOrigin(0.5)
             .setScrollFactor(0)

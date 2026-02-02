@@ -13,6 +13,24 @@ export class MainMenu extends Phaser.Scene {
 		this.menuNavigation = null;
 	}
 
+	/**
+	 * Get safe-area-inset value for iOS notch/status bar
+	 * @param {string} side - 'top', 'bottom', 'left', or 'right'
+	 * @param {number} fallback - Default value if env() not available
+	 * @returns {number} Safe area inset in pixels
+	 */
+	getSafeAreaInset(side, fallback = 0) {
+		if (typeof window === 'undefined') return fallback;
+		try {
+			const style = getComputedStyle(document.documentElement);
+			const value = style.getPropertyValue(`env(safe-area-inset-${side})`);
+			const parsed = parseInt(value);
+			return isNaN(parsed) ? fallback : parsed;
+		} catch (e) {
+			return fallback;
+		}
+	}
+
 	create() {
 		// Hide HTML Loader when Menu is actually ready
 		const htmlLoader = document.getElementById('loader');
@@ -28,11 +46,14 @@ export class MainMenu extends Phaser.Scene {
 		this.inputManager = new InputSystem(this);
 		this.inputManager.setupInputs();
 
+
 		const width = this.cameras.main.width;
 		const height = this.cameras.main.height;
 
-		// Background
+		// Get safe-area offset for iOS notch
+		const safeAreaTop = this.getSafeAreaInset('top', 47);
 
+		// Background
 		let bg;
 		if (this.textures.exists(ASSETS.INTRO_ANIM)) {
 			// Use the last frame of the intro animation
@@ -44,14 +65,16 @@ export class MainMenu extends Phaser.Scene {
 		}
 
 		if (bg) {
-			// Scale to cover the screen
+			// COVER STRATEGY: Ensures image covers the entire screen without black bars,
+			// even if it means cropping edges slightly. Preferable to "shrunk sides".
 			const scaleX = width / bg.width;
 			const scaleY = height / bg.height;
-			bg.setScale(Math.max(scaleX, scaleY));
+			const scale = Math.max(scaleX, scaleY);
+			bg.setScale(scale).setScrollFactor(0);
 		}
 
-		// Title
-		const logo = this.add.image(width / 2, UI.LOGO.Y, ASSETS.GAME_LOGO).setScale(UI.LOGO.SCALE);
+		// Title (adjusted for safe area)
+		const logo = this.add.image(width / 2, UI.LOGO.Y + safeAreaTop, ASSETS.GAME_LOGO).setScale(UI.LOGO.SCALE);
 		logo.setAlpha(0); // Start invisible
 
 		this.tweens.add({
@@ -68,7 +91,7 @@ export class MainMenu extends Phaser.Scene {
 		// --- BUTTONS ---
 		this.buttons = [];
 		const buttonSpacing = 65;
-		const startY = height / 2 - 50;
+		const startY = height / 2 - 50 + safeAreaTop;  // Adjust for safe area
 		const btnDelayBase = 300; // Wait for logo a bit
 
 		const startBtn = UIHelpers.createSpriteButton(this, width / 2, startY, 'btn/btn-start.png', {
@@ -117,8 +140,8 @@ export class MainMenu extends Phaser.Scene {
 
 		// Version (visible text)
 		// Version (visible text with background)
-		const versionStr = window.GAME_VERSION || 'v0.0.53';
-		const versionText = this.add.text(width / 2, height - 30, versionStr, {
+		const versionStr = window.GAME_VERSION || 'v0.0.54';
+		const versionText = this.add.text(width / 2, height - 60, versionStr, {
 			fontSize: '14px',
 			color: '#aaaaaa',
 			fontFamily: 'monospace'
@@ -130,7 +153,7 @@ export class MainMenu extends Phaser.Scene {
 		const vBg = this.add.graphics();
 		vBg.fillStyle(0x000000, 0.6);
 		vBg.fillRoundedRect(-versionBgWidth / 2, -versionBgHeight / 2, versionBgWidth, versionBgHeight, 13);
-		vBg.setPosition(width / 2, height - 30);
+		vBg.setPosition(width / 2, height - 60);
 		vBg.setDepth(19);
 
 		// Invisible larger touch area for easier mobile activation (increased size)

@@ -39,60 +39,90 @@ export class HUDManager {
         if (this.uiText) this.uiText.destroy();
 
         // UI - Position away from left wall
-        // Ad banner está arriba (50px), así que el gameplay empieza desde Y=50
-        const adBannerHeight = 50;
-        const scoreX = 15; // Align with wall (Requested: 15px from edge)
+        // Ad banner está arriba (Top Banner), necesitamos dejar espacio
+        const adBannerHeight = 80;
+        const hudBaseY = 90; // Moved UP (was 110) to reduce gap with Ad
+        const marginX = 15;
 
-        // Positioning Calculations
-        // 1. Height Counter: 10px padding from banner
-        const heightY = adBannerHeight + 10;
+        // 0. Top Gradient for readability (Premium Shadow / Vignette)
+        const width = scene.cameras.main.width;
+        const shadowHeight = 220; // Más alto para un fade más suave
 
-        // 2. Coin Counter: 5px padding below Height Counter
-        // metercounter.png is 33px tall.
-        // If heightY is the top-left (Origin 0,0), then bottom is heightY + 33.
-        // If heightY is center (Origin 0, 0.5), it's harder. Let's use Origin(0, 0.5) for consistency with Coin.
-        // Center Y: Banner(50) + 10(pad) + 16.5(half height) = 76.5
-        const heightCenterY = adBannerHeight + 10 + 16.5;
+        // Generar textura procedural si no existe (Efficient 1-time texturing)
+        const textureKey = 'hud_shadow_vignette';
+        if (!scene.textures.exists(textureKey)) {
+            const texture = scene.textures.createCanvas(textureKey, 2, shadowHeight);
+            const ctx = texture.context;
 
-        // Coin Counter Y
-        // Start after Height: (50 + 10 + 33) + 5(pad) = 98 (Top edge)
-        // coincounter.png is 45px tall. Half is 22.5.
-        // Center Y: 98 + 22.5 = 120.5
-        const scoreCenterY = (adBannerHeight + 10 + 33 + 5) + 22.5;
+            // Linear Gradient Vertical
+            const grd = ctx.createLinearGradient(0, 0, 0, shadowHeight);
+            grd.addColorStop(0, 'rgba(0,0,0,0.9)');     // Muy oscuro arriba
+            grd.addColorStop(0.3, 'rgba(0,0,0,0.6)');   // Oscuridad media en zona Ad
+            grd.addColorStop(0.6, 'rgba(0,0,0,0.3)');   // Suave tras el HUD
+            grd.addColorStop(1, 'rgba(0,0,0,0)');       // Transparente final
 
-        const centerX = scene.cameras.main.centerX;
+            ctx.fillStyle = grd;
+            ctx.fillRect(0, 0, 2, shadowHeight);
+            texture.refresh();
+        }
 
-        // --- PRIMARY: HEIGHT (Main metric for leaderboard) ---
+        // Add Image stretching the procedural texture
+        const gradient = scene.add.image(0, 0, textureKey)
+            .setOrigin(0, 0)
+            .setDisplaySize(width, shadowHeight) // Estirar a todo el ancho
+            .setScrollFactor(0)
+            .setDepth(199)
+            .setAlpha(0.95);
+
+        this.hudGradient = gradient;
+
+        // 1. COINS (Currency) - Left
+        // CoinCounter internal coords logic: x, y is using SCALE inside? 
+        // CoinCounter.js seems to apply scale to the container or children.
+        // Assuming we set scale on children or pass scale via constructor NOT possible here.
+        // We set scale on container.
+
+        // Scale 0.6 calculation:
+        // Original H ~45px -> Scaled ~27px. Half = 13.5.
+        // Internal origin is (0, 0.5) so Y IS THE CENTER.
+        // We want Center Y to be hudBaseY (110).
+        const coinScale = 0.6;
+        const coinY = hudBaseY;
+
+        this.scoreContainer = new CoinCounter(scene, marginX, coinY);
+        this.scoreContainer.setDepth(201).setScrollFactor(0);
+        this.scoreContainer.setScale(coinScale); // Apply scale to container
+
+        if (typeof this.scoreContainer.setName === 'function') {
+            this.scoreContainer.setName('hud_score_container');
+        }
+        scene._hudScoreContainer = this.scoreContainer;
+
+        // 2. HEIGHT (Leaderboard Metric) - Right of Coins
+        // Estimate Coin Width Scaled: ~180px * 0.6 = 108px.
+        // Let's bring it closer.
+        const heightX = marginX + 115;
+
         // Background Sprite
-        this.heightBg = scene.add.image(scoreX, heightCenterY, ASSETS.UI_HUD, 'panels/metercounter.png')
-            .setOrigin(0, 0.5)
+        this.heightBg = scene.add.image(heightX, hudBaseY, ASSETS.UI_HUD, 'panels/metercounter.png')
+            .setOrigin(0, 0.5) // Left-Center origin
             .setScrollFactor(0)
             .setDepth(200)
-            .setScale(0.8); // Matching requested scale of coin counter
+            .setScale(0.6); // Escala reducida a 0.6
 
         // Height Text
-        // Align inside the sprite. Sprite is 180px wide * 0.8 = 144px.
-        // Text should be left-aligned with some padding.
-        this.heightText = scene.add.text(scoreX + 8, heightCenterY, 'HEIGHT: ' + (scene.currentHeight || 0) + 'm', {
-            fontSize: '12px', // Reduced to fit
-            color: '#ffffff', // White
+        this.heightText = scene.add.text(heightX + 10, hudBaseY, 'HEIGHT: ' + (scene.currentHeight || 0) + 'm', {
+            fontSize: '10px', // Smaller Font
+            color: '#ffffff',
             fontFamily: 'Arial',
             fontStyle: 'bold'
-        }).setOrigin(0, 0.45).setScrollFactor(0).setDepth(201);
-
-        // --- SECONDARY: COINS (Currency) ---
-        // New Sprite-based Implementation using CoinCounter component
-        this.scoreContainer = new CoinCounter(scene, scoreX, scoreCenterY);
-        this.scoreContainer.setDepth(201).setScrollFactor(0);
-        if (typeof this.scoreContainer.setName === 'function') {
-            this.scoreContainer.setName('hud_score_container'); // Prevent duplication
-        }
-        scene._hudScoreContainer = this.scoreContainer; // Store reference for robust cleanup
+        }).setOrigin(0, 0.5).setScrollFactor(0).setDepth(201);
 
         // Initial Update
         this.updateScore(scene.totalScore || 0);
 
         // UI text también debe estar 50px más abajo
+        const centerX = scene.cameras.main.centerX;
         this.uiText = scene.add.text(centerX, 200 + adBannerHeight, 'JUMP!', {
             fontSize: '18px',
             color: '#00ffff',

@@ -21,7 +21,7 @@ export class PauseMenu {
         // --- PAUSE BUTTON ---
         // Ad banner está arriba (50px), así que el gameplay empieza desde Y=50
         const adBannerHeight = 50;
-        const pauseButtonY = 40 + adBannerHeight; // 50px debajo del ad banner
+        const pauseButtonY = 90; // Aligned with HUD elements (was 110)
         const pauseButtonX = gameWidth - 16; // Centered in 32px wall (16px from edge)
 
         this.pauseButton = scene.add.image(pauseButtonX, pauseButtonY, 'ui_hud', 'btn-small/btn-small-pause.png')
@@ -48,7 +48,7 @@ export class PauseMenu {
             fontSize: '48px', color: '#ffd700', fontStyle: 'bold'
         }).setOrigin(0.5).setScrollFactor(0).setDepth(201).setVisible(false);
 
-        this.versionText = scene.add.text(centerX, 220, window.GAME_VERSION || 'v0.0.52', {
+        this.versionText = scene.add.text(centerX, 220, window.GAME_VERSION || 'v0.0.54', {
             fontSize: '14px', color: '#888888'
         }).setOrigin(0.5).setScrollFactor(0).setDepth(201).setVisible(false);
 
