@@ -547,14 +547,8 @@ export class InputSystem {
         });
 
         // Also listen to focus events to retry if needed
-        htmlInput.addEventListener('blur', () => {
-            // If input loses focus too quickly, try to refocus
-            setTimeout(() => {
-                if (htmlInput && document.body.contains(htmlInput)) {
-                    htmlInput.focus();
-                }
-            }, 100);
-        });
+        // Listen to focus events - REMOVED aggressive refocus on blur to allow user to hide keyboard
+        // htmlInput.addEventListener('blur', () => { ... });
 
         // Make clickable text trigger input focus if provided
         if (clickableText) {

@@ -172,7 +172,7 @@ export class GameOverMenu {
                 }
             };
 
-            bg.setInteractive({ useHandCursor: true }).on('pointerdown', focusInput);
+            // bg.setInteractive({ useHandCursor: true }).on('pointerdown', focusInput);
             title.setInteractive({ useHandCursor: true }).on('pointerdown', focusInput);
             prompt.setInteractive({ useHandCursor: true }).on('pointerdown', focusInput);
 
