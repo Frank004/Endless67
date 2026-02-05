@@ -32,6 +32,8 @@ class AdsManager {
         };
 
         this.platform = Capacitor.getPlatform() === 'ios' ? 'ios' : 'android';
+        this.rewardedAdLoaded = false;
+        this.isLoadingAd = false;
     }
 
     /**
@@ -52,13 +54,45 @@ class AdsManager {
         try {
             await AdMob.initialize({
                 requestTrackingAuthorization: true,
-                testingDevices: ['YOUR_DEVICE_ID_IF_NEEDED'], // Optional: Add device ID for real ads in test mode
+                testingDevices: ['YOUR_DEVICE_ID_IF_NEEDED'],
                 initializeForTesting: true,
             });
             this.initialized = true;
             console.log('[AdsManager] AdMob Initialized Successfully');
+
+            // Preload the first reward ad
+            this.preloadRewardAd();
+
         } catch (e) {
             console.error('[AdsManager] Failed to initialize AdMob', e);
+        }
+    }
+
+    /**
+     * Preloads a Rewarded Video Ad so it's ready instantly.
+     */
+    async preloadRewardAd() {
+        if (!this.isNative || this.rewardedAdLoaded || this.isLoadingAd) return;
+
+        this.isLoadingAd = true;
+        console.log('[AdsManager] Preloading Rewarded Ad...');
+
+        try {
+            const adId = this.adUnitIds[this.platform].rewarded;
+
+            await AdMob.prepareRewardVideoAd({
+                adId,
+                isTesting: true
+            });
+
+            this.rewardedAdLoaded = true;
+            this.isLoadingAd = false;
+            console.log('[AdsManager] Rewarded Ad Preloaded and Ready ✅');
+
+        } catch (e) {
+            console.error('[AdsManager] Failed to preload reward ad', e);
+            this.isLoadingAd = false;
+            // Retry logic could go here (e.g. timeout)
         }
     }
 
@@ -144,12 +178,16 @@ class AdsManager {
                 const onDismiss = await AdMob.addListener(RewardAdPluginEvents.Dismissed, () => {
                     console.log('[AdsManager] Ad dismissed');
                     cleanup();
+                    // Mark as used and try to preload next one
+                    this.rewardedAdLoaded = false;
+                    this.preloadRewardAd();
                     resolve(rewardEarned);
                 });
 
                 const onFailed = await AdMob.addListener(RewardAdPluginEvents.FailedToLoad, (error) => {
-                    console.error('[AdsManager] Ad failed to load', error);
+                    console.error('[AdsManager] Ad failed to load/show', error);
                     cleanup();
+                    this.rewardedAdLoaded = false;
                     resolve(false); // Fail safe
                 });
 
@@ -160,12 +198,20 @@ class AdsManager {
                     onFailed.remove();
                 };
 
-                // Load and Show
-                await AdMob.prepareRewardVideoAd({ adId, isTesting: true });
+                // Check if loaded, if not try to load NOW (panic load)
+                if (!this.rewardedAdLoaded) {
+                    console.warn('[AdsManager] Ad not preloaded. Attempting panic load...');
+                    await AdMob.prepareRewardVideoAd({ adId, isTesting: true });
+                }
+
+                // Show
                 await AdMob.showRewardVideoAd();
 
             } catch (e) {
                 console.error('[AdsManager] Error showing rewarded ad', e);
+                // Try to preload again for next time
+                this.rewardedAdLoaded = false;
+                this.preloadRewardAd();
                 resolve(false);
             }
         });
