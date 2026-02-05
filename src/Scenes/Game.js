@@ -193,7 +193,8 @@ export class Game extends Phaser.Scene {
         }
 
         // Pause Logic
-        if (this.isPausedEvent || this.isPaused) return;
+        // isPowerupAnimation: Stops update loop but does NOT trigger Pause Menu logic
+        if (this.isPowerupAnimation || this.isPaused) return;
         if (!this.gameStarted) return;
 
         // Player Update

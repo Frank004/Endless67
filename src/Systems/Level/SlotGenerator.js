@@ -373,10 +373,10 @@ export class SlotGenerator {
         const cameraY = this.scene.cameras.main.scrollY;
         this.scene.wallDecorManager?.updateParallax(cameraY);
 
-        // Safety: enforce original position for platforms to avoid drift (opt-in via enablePlatformLock)
-        if (this.scene.registry?.get('enablePlatformLock')) {
-            this.restorePlatformPositions();
-        }
+        // Platform Lock removed: Physics engine should handle this naturally with immovable=true
+        // if (this.scene.registry?.get('enablePlatformLock')) {
+        //     this.restorePlatformPositions();
+        // }
 
         // Debug: report transformer width vs camera
         if (this.scene.registry?.get('showSlotLogs') && this.scene.registry?.get('logBounds')) {
@@ -384,31 +384,9 @@ export class SlotGenerator {
             console.log('[SlotGenerator] widths => transformer:', this.transformer.gameWidth, 'camera:', camWidth);
         }
 
-        // Debug: log if any platform drifted (position != initial)
-        // Only check drift if debug flags are enabled (throttled check)
+        // Drift debug logic removed or kept purely for logging
         if (this.scene.registry?.get('showSlotLogs') && this.scene.registry?.get('logPlatformDrift')) {
-            // Throttle drift checks to every 60 frames (1 second at 60fps) to reduce CPU usage
-            if (!this._driftCheckFrame) this._driftCheckFrame = 0;
-            this._driftCheckFrame++;
-            if (this._driftCheckFrame >= 60) {
-                this._driftCheckFrame = 0;
-                const activePlatforms = this.scene.platformPool?.getActive?.() || [];
-                const drifted = [];
-                // Use simple loop instead of filter
-                for (let i = 0; i < activePlatforms.length; i++) {
-                    const p = activePlatforms[i];
-                    if ((p.initialY !== undefined && p.y !== p.initialY) ||
-                        (p.initialX !== undefined && p.x !== p.initialX)) {
-                        drifted.push(p);
-                    }
-                }
-                if (drifted.length > 0) {
-                    console.warn('[SlotGenerator] Drift detected on platforms:', drifted.map(p => ({
-                        x: p.x, y: p.y, initX: p.initialX, initY: p.initialY
-                    })));
-                    console.trace('[SlotGenerator] Drift stack trace');
-                }
-            }
+            // ... logs kept for verification, but active correction is gone
         }
     }
 
@@ -494,26 +472,9 @@ export class SlotGenerator {
     }
 
     /**
-     * Reestablece la posición Y de las plataformas activas a su valor inicial para evitar desplazamientos
+     * @deprecated Platform drift is now handled by correct physics body settings (immovable=true)
      */
     restorePlatformPositions() {
-        const active = this.scene.platformPool?.getActive?.();
-        if (!active) return;
-        active.forEach(p => {
-            if (p.initialY !== undefined && p.y !== p.initialY) {
-                p.y = p.initialY;
-                if (p.body) {
-                    p.body.updateFromGameObject();
-                    p.body.velocity.y = 0;
-                }
-            }
-            if (p.initialX !== undefined && p.x !== p.initialX) {
-                p.x = p.initialX;
-                if (p.body) {
-                    p.body.updateFromGameObject();
-                    p.body.velocity.x = 0;
-                }
-            }
-        });
+        // Removed manual overrides.
     }
 }

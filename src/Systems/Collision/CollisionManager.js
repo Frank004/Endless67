@@ -63,7 +63,7 @@ export class CollisionManager {
         this.scene.physics.add.overlap(player, coins, this.itemHandler.collectCoin, null, this.itemHandler);
         this.scene.physics.add.overlap(player, powerups, this.itemHandler.collectPowerup, null, this.itemHandler);
         this.scene.physics.add.overlap(player, riser, this.playerHandler.touchRiser, null, this.playerHandler);
-        
+
         // --- STAGE PROPS ---
         // Trashcan collision (handled by InteractableManager)
         if (this.scene.stageProps && this.scene.stageProps.trashcan && this.scene.interactableManager) {
@@ -99,8 +99,9 @@ export class CollisionManager {
         }
 
         // Coins and powerups use platformRider to stay on moving platforms
-        this.scene.physics.add.collider(coins, platforms, this.itemHandler.handleItemPlatformCollision, null, this.itemHandler);
-        this.scene.physics.add.collider(powerups, platforms, this.itemHandler.handleItemPlatformCollision, null, this.itemHandler);
+        // Changed to OVERLAP because they are now sensors (no physical separation)
+        this.scene.physics.add.overlap(coins, platforms, this.itemHandler.handleItemPlatformCollision, null, this.itemHandler);
+        this.scene.physics.add.overlap(powerups, platforms, this.itemHandler.handleItemPlatformCollision, null, this.itemHandler);
 
         // --- PROJECTILES ---
         this.scene.physics.add.overlap(

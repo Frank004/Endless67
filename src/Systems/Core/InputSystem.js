@@ -176,7 +176,11 @@ export class InputSystem {
         // BUT we must ensure we don't trigger "Jump".
         // The caller of this function (pointerdown listener) triggers handleJump().
         // So we WANT to return true (ignore jump) if isReviveOffer is true.
-        return scene.isGameOver || scene.isPausedEvent || scene.isDevMenuOpen || scene.isPaused;
+        // Allow input during Revive Offer to let the UI Modal handle it, 
+        // BUT we must ensure we don't trigger "Jump".
+        // The caller of this function (pointerdown listener) triggers handleJump().
+        // So we WANT to return true (ignore jump) if isReviveOffer is true.
+        return scene.isGameOver || scene.isPowerupAnimation || scene.isDevMenuOpen || scene.isPaused;
     }
 
     handleJump() {
@@ -189,11 +193,11 @@ export class InputSystem {
     update(time, delta) {
         const scene = this.scene;
 
-        // 1. Dev Menu blocks everything
-        if (scene.isDevMenuOpen) return;
+        // 1. Dev Menu & Animations block everything
+        if (scene.isDevMenuOpen || scene.isPowerupAnimation) return;
 
         // 2. Menu Input States (GameOver, Paused, or MainMenu/NotStarted)
-        if (scene.isGameOver || scene.isPaused || scene.isPausedEvent || !scene.gameStarted) {
+        if (scene.isGameOver || scene.isPaused || !scene.gameStarted) {
             // Force hide joystick if game over
             if (scene.isGameOver && scene.uiManager) {
                 scene.uiManager.hideJoystick();

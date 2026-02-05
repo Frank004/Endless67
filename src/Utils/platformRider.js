@@ -49,11 +49,19 @@ export function handlePlatformRiderCollision(rider, platform) {
     if (!rider.body || !platform.body) return;
     if (!rider.isPlatformRider) return;
 
-    // Arcade a veces no marca touching.up en bodies inamovibles; usar blocked.down como señal principal
+    // For sensors (checkCollision.none), physics flags like touching.down are unreliable
+    // If we are here, it's likely an overlap callback.
+    // For 'carry' mode (Coins/Powerups), we force connection on overlap.
+    const isSensor = rider.body.checkCollision.none;
+
+    // Arcade sometimes misses touching.up on immovable bodies
     const touchingDown = rider.body.touching.down || rider.body.blocked.down;
     const platformSupporting = (platform.body.touching && platform.body.touching.up) || (platform.body.blocked && platform.body.blocked.up);
 
-    if (touchingDown || platformSupporting) {
+    // If it's a sensor in carry mode, we ALWAYS accept the ride if there's an overlap (implied by function call)
+    const validConnection = (rider.riderMode === 'carry' && isSensor) || touchingDown || platformSupporting;
+
+    if (validConnection) {
         const halfWidth = rider.body.width / 2;
         const margin = rider.riderMarginX;
 
@@ -91,93 +99,99 @@ export function updatePlatformRider(rider) {
     const body = rider.body;
 
     // If on a platform
-    if (
-        rider.ridingPlatform &&
-        rider.ridingPlatform.body &&
-        (body.blocked.down || body.touching.down)
-    ) {
-        const pBody = rider.ridingPlatform.body;
-        const halfWidth = body.width / 2;
-        const margin = rider.riderMarginX;
+    // Check if we have a valid platform reference
+    if (rider.ridingPlatform && rider.ridingPlatform.body) {
 
-        // Recalculate world bounds from platform position
-        const minX = pBody.x + halfWidth + margin;
-        const maxX = pBody.x + pBody.width - halfWidth - margin;
+        // Validation: Should we still be riding?
+        // - 'carry' mode (Sensors): Assume yes until platform dies. (We don't check touching)
+        // - 'patrol'/'bound' mode: Check physical contact
+        const isCarry = rider.riderMode === 'carry';
+        const isTouching = body.blocked.down || body.touching.down;
 
-        // Share these bounds with the sprite (for custom logic to use)
-        rider.minX = minX;
-        rider.maxX = maxX;
+        if (isCarry || isTouching) {
+            const pBody = rider.ridingPlatform.body;
+            const halfWidth = body.width / 2;
+            const margin = rider.riderMarginX;
 
-        if (rider.riderMode === 'carry') {
-            // --- CARRY MODE: ShooterEnemy, coins, powerups ---
-            // Stay at fixed local offset on platform
+            // Recalculate world bounds from platform position
+            const minX = pBody.x + halfWidth + margin;
+            const maxX = pBody.x + pBody.width - halfWidth - margin;
 
-            // Ensure we have a valid local offset
-            let offset = rider.localOffsetX;
-            if (offset == null) {
-                // Fallback if not set yet
-                offset = rider.x - pBody.x;
-            }
+            // Share these bounds with the sprite (for custom logic to use)
+            rider.minX = minX;
+            rider.maxX = maxX;
 
-            // Clamp offset within platform bounds (with margin)
-            offset = Phaser.Math.Clamp(
-                offset,
-                rider.localMinOffset ?? (halfWidth + margin),
-                rider.localMaxOffset ?? (pBody.width - halfWidth - margin)
-            );
-            rider.localOffsetX = offset;
+            if (rider.riderMode === 'carry') {
+                // --- CARRY MODE: ShooterEnemy, coins, powerups ---
+                // Stay at fixed local offset on platform
 
-            // World position = platform position + fixed offset
-            rider.x = pBody.x + offset;
+                // Ensure we have a valid local offset
+                let offset = rider.localOffsetX;
+                if (offset == null) {
+                    // Fallback if not set yet
+                    offset = rider.x - pBody.x;
+                }
 
-            // Safety clamp (numerical precision)
-            if (rider.x < minX) rider.x = minX;
-            else if (rider.x > maxX) rider.x = maxX;
+                // Clamp offset within platform bounds (with margin)
+                offset = Phaser.Math.Clamp(
+                    offset,
+                    rider.localMinOffset ?? (halfWidth + margin),
+                    rider.localMaxOffset ?? (pBody.width - halfWidth - margin)
+                );
+                rider.localOffsetX = offset;
 
-            // Match platform velocity for physics alignment
-            body.velocity.x = pBody.velocity.x;
+                // World position = platform position + fixed offset
+                rider.x = pBody.x + offset;
 
-        } else if (rider.riderMode === 'bound') {
-            // --- BOUND MODE: enemies with own logic ---
-            // Only update bounds and clamp position
-            // DO NOT touch body.velocity.x, enemy handles that
-            rider.x = Phaser.Math.Clamp(rider.x, minX, maxX);
+                // Safety clamp (numerical precision)
+                if (rider.x < minX) rider.x = minX;
+                else if (rider.x > maxX) rider.x = maxX;
 
-        } else if (rider.riderMode === 'patrol' && rider.riderAutoPatrol) {
-            // --- AUTO-PATROL MODE: automatic patrol ---
-            // Only if explicitly enabled via autoPatrol option
+                // Match platform velocity for physics alignment
+                body.velocity.x = pBody.velocity.x;
 
-            // Check for wall collisions and reverse direction
-            if (body.blocked.left) {
-                rider.riderDir = 1;
-                if (rider.setFlipX) rider.setFlipX(false);
-            } else if (body.blocked.right) {
-                rider.riderDir = -1;
-                if (rider.setFlipX) rider.setFlipX(true);
-            }
+            } else if (rider.riderMode === 'bound') {
+                // --- BOUND MODE: enemies with own logic ---
+                // Only update bounds and clamp position
+                // DO NOT touch body.velocity.x, enemy handles that
+                rider.x = Phaser.Math.Clamp(rider.x, minX, maxX);
 
-            let dir = rider.riderDir;
-            if (rider.flipX !== undefined) {
-                dir = rider.flipX ? -1 : 1;
-            }
+            } else if (rider.riderMode === 'patrol' && rider.riderAutoPatrol) {
+                // --- AUTO-PATROL MODE: automatic patrol ---
+                // Only if explicitly enabled via autoPatrol option
 
-            // World velocity = platform velocity + relative velocity
-            const worldSpeed = pBody.velocity.x + (dir * rider.riderPatrolSpeed);
-            body.velocity.x = worldSpeed;
+                // Check for wall collisions and reverse direction
+                if (body.blocked.left) {
+                    rider.riderDir = 1;
+                    if (rider.setFlipX) rider.setFlipX(false);
+                } else if (body.blocked.right) {
+                    rider.riderDir = -1;
+                    if (rider.setFlipX) rider.setFlipX(true);
+                }
 
-            // Clean reversal at edges
-            if (rider.x >= maxX) {
-                rider.x = maxX;
-                rider.riderDir = -1;
-                if (rider.setFlipX) rider.setFlipX(true);
-            } else if (rider.x <= minX) {
-                rider.x = minX;
-                rider.riderDir = 1;
-                if (rider.setFlipX) rider.setFlipX(false);
+                let dir = rider.riderDir;
+                if (rider.flipX !== undefined) {
+                    dir = rider.flipX ? -1 : 1;
+                }
+
+                // World velocity = platform velocity + relative velocity
+                const worldSpeed = pBody.velocity.x + (dir * rider.riderPatrolSpeed);
+                body.velocity.x = worldSpeed;
+
+                // Clean reversal at edges
+                if (rider.x >= maxX) {
+                    rider.x = maxX;
+                    rider.riderDir = -1;
+                    if (rider.setFlipX) rider.setFlipX(true);
+                } else if (rider.x <= minX) {
+                    rider.x = minX;
+                    rider.riderDir = 1;
+                    if (rider.setFlipX) rider.setFlipX(false);
+                }
             }
         }
     } else {
-        // No longer on platform: clear reference
+        // No longer on platform (or platform died): clear reference
         rider.ridingPlatform = null;
 
         // CRITICAL: Stop running in air for patrol mode

@@ -140,8 +140,8 @@ export class MainMenu extends Phaser.Scene {
 
 		// Version (visible text)
 		// Version (visible text with background)
-		const versionStr = window.GAME_VERSION || 'v0.0.54';
-		const versionText = this.add.text(width / 2, height - 60, versionStr, {
+		const version = window.GAME_VERSION || 'v0.0.55';
+		const versionText = this.add.text(width / 2, height - 60, version, {
 			fontSize: '14px',
 			color: '#aaaaaa',
 			fontFamily: 'monospace'

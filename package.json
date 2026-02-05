@@ -1,6 +1,6 @@
 {
 	"name": "endless67",
-	"version": "0.0.52",
+	"version": "0.0.55",
 	"scripts": {
 		"67go": "vite",
 		"dev": "vite",

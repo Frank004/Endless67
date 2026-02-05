@@ -93,13 +93,17 @@ export class PlayerContext {
         if (!this.sprite || !this.sprite.body) return;
         const body = this.sprite.body;
 
-        // Detección robusta de suelo usando timestamp y blocked
-        // blocked.down: Colisión con World Bounds o Tiles estáticos (siempre es suelo real)
-        // lastGroundedTime: Actualizado por callbacks de colisión con Plataformas (para filtrar triggers)
-        const now = this.sprite.scene?.time?.now || 0;
-        const wasGroundedRecently = (now - (this.sprite.lastGroundedTime || 0)) < 50; // 50ms ventana
+        // Detección robusta de suelo
+        // blocked.down: Colisión con World Bounds o Tiles estáticos
+        // touching.down: Colisión con otros Bodies (Plataformas)
+        // NOTA: Coins/Powerups son SENSORES (checkCollision.none), por lo que NO activan touching.down
+        const isGrounded = body.blocked.down || body.touching.down;
 
-        this.sensors.onFloor = body.blocked.down || wasGroundedRecently;
+        // Use WasGroundedRecently for Coyote Time / Platform edges, logic remains same
+        const now = this.sprite.scene?.time?.now || 0;
+        const wasGroundedRecently = (now - (this.sprite.lastGroundedTime || 0)) < 50;
+
+        this.sensors.onFloor = isGrounded || wasGroundedRecently;
 
         this.sensors.touchWallLeft = body.blocked.left || body.touching.left;
         this.sensors.touchWallRight = body.blocked.right || body.touching.right;

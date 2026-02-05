@@ -13,7 +13,7 @@ import { ASSETS } from '../Config/AssetKeys.js';
 
 export const COIN_BASE_SIZE = 32;   // Canvas original del sprite
 export const COIN_VISUAL_SIZE = 24; // Tamaño visual deseado en pantalla
-export const COIN_HITBOX_SIZE = 10; // Tamaño del hitbox físico
+export const COIN_HITBOX_SIZE = 14; // Tamaño del hitbox físico
 
 export class Coin extends Phaser.Physics.Arcade.Sprite {
     constructor(scene) {
@@ -99,26 +99,42 @@ export class Coin extends Phaser.Physics.Arcade.Sprite {
 
         // Configurar física para colisiones
         // IMPORTANTE: El hitbox debe ser 24x24px (tamaño fijo), independiente del tamaño visual
+        // Configurar física para colisiones
+        // IMPORTANTE: El hitbox debe ser 24x24px (tamaño fijo), independiente del tamaño visual
         if (this.body) {
-            // Resetear body primero
-            this.body.reset(x, y);
+            // KEY FIX: Use CIRCLE body for better overlap detection
+            // Circle radius = 12px (diameter 24px) to match previous HITBOX_SIZE
+            const radius = HITBOX_SIZE / 2;
+            this.body.setCircle(radius);
 
-            // El hitbox debe ser 24x24px (tamaño fijo), independiente del tamaño visual
-            // HITBOX_SIZE ya está definido arriba (línea 73)
-            this.body.setSize(HITBOX_SIZE, HITBOX_SIZE);
-
-            // El offset debe centrar el hitbox de 24x24px en el sprite visual (~28px)
-            const trimmedWidth = this.width;
-            const trimmedHeight = this.height;
-            const offsetX = (trimmedWidth - HITBOX_SIZE) / 2;
-            const offsetY = (trimmedHeight - HITBOX_SIZE) / 2 - 2; // Subir el hitbox 2px
+            // Center the circle in the sprite (offset is relative to top-left of the sprite frame)
+            // Visual size ~28px. Hitbox 24px.
+            // Offset for circle: (VisualWidth - Diameter) / 2
+            const offsetX = (this.width - (radius * 2)) / 2;
+            const offsetY = (this.height - (radius * 2)) / 2;
             this.body.setOffset(offsetX, offsetY);
 
             this.body.allowGravity = false;
-            this.body.immovable = true;
-            // Solo overlap: no debe comportarse como plataforma/parede
+
+            // SENSOR MODE: No physical collision response, only overlap events
+            // This SOLVES the "Player jumps on Coin" bug permanently.
+            this.body.immovable = false; // Moves if pushed? No, because we won't collide.
+            this.body.moves = false; // Optimization: If it never moves physically
+
+            // Wait - if body.moves = false, overlap might not work in some dynamic cases?
+            // Actually, keep moves = true but disable collision response
+            this.body.moves = true;
+
+            // Disable physical separation logic, but keep collision enabled (none = false)
+            // If none=true, Overlap checks might be skipped by Phaser!
             this.body.checkCollision.none = false;
-            this.body.updateFromGameObject();
+            this.body.checkCollision.up = false;
+            this.body.checkCollision.down = false;
+            this.body.checkCollision.left = false;
+            this.body.checkCollision.right = false;
+
+            this.body.customSeparateX = false;
+            this.body.customSeparateY = false;
 
             // Debug: mostrar hitbox visual
             this.showHitbox = this.scene.registry.get('showCoinHitbox') !== false; // Default: true

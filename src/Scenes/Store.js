@@ -114,7 +114,7 @@ export class Store extends Phaser.Scene {
 
         // 1. Back Button (Top Left - Sprite)
         const btnX = 30; // Margin left + half button width
-        const btnY = 65 + safeAreaTop; // Top margin + safe area for notch
+        const btnY = (65 + safeAreaTop) - 30; // Top margin + safe area for notch (Shifted 30px up)
 
         const backBtn = this.add.image(btnX, btnY, 'ui_hud', 'btn-small/btn-small-back.png')
             .setOrigin(0.5)
@@ -136,7 +136,7 @@ export class Store extends Phaser.Scene {
         backBtn.on('pointerout', () => backBtn.clearTint());
 
         // 2. Title: "THE VAULT" (Logo) - Adjusted for safe area
-        const logoY = 130 + safeAreaTop;
+        const logoY = (130 + safeAreaTop) - 30;
         const logo = this.add.image(width / 2, logoY, ASSETS.STORE_LOGO)
             .setOrigin(0.5)
             .setScrollFactor(0)

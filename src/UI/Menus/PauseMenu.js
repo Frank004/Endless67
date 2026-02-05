@@ -48,9 +48,7 @@ export class PauseMenu {
             fontSize: '48px', color: '#ffd700', fontStyle: 'bold'
         }).setOrigin(0.5).setScrollFactor(0).setDepth(201).setVisible(false);
 
-        this.versionText = scene.add.text(centerX, 220, window.GAME_VERSION || 'v0.0.54', {
-            fontSize: '14px', color: '#888888'
-        }).setOrigin(0.5).setScrollFactor(0).setDepth(201).setVisible(false);
+
 
         // Button spacing
         const buttonSpacing = 70;
@@ -88,7 +86,7 @@ export class PauseMenu {
         // Aliases for compatibility
         scene.pauseMenuBg = this.bg;
         scene.pauseMenuTitle = this.title;
-        scene.versionText = this.versionText;
+
 
         // Setup Navigation Manager
         this.menuNavigation = new MenuNavigation(scene, [
@@ -123,7 +121,7 @@ export class PauseMenu {
 
         this.bg.setVisible(true);
         this.title.setVisible(true);
-        this.versionText.setVisible(true);
+
         // Buttons visibility
         Object.values(this.buttons).forEach(btn => btn.container.setVisible(true));
 
@@ -137,7 +135,7 @@ export class PauseMenu {
         const scene = this.scene;
         this.bg.setVisible(false);
         this.title.setVisible(false);
-        this.versionText.setVisible(false);
+
         // Buttons visibility
         Object.values(this.buttons).forEach(btn => btn.container.setVisible(false));
 

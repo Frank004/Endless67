@@ -18,6 +18,9 @@ export class ItemHandler {
         if (!coin || !coin.active) return;
         if (coin.getData && coin.getData('ignoreCollection')) return;
 
+        // Hack removed: No longer needed with Sensor bodies (checkCollision.none = true)
+        // Physics engine will not flag this interaction as "touching" or "blocked"
+
         // Deshabilitar colisión de inmediato para evitar múltiples triggers en el mismo coin
         if (coin.body) {
             coin.body.setEnable(false);
@@ -60,6 +63,8 @@ export class ItemHandler {
         if (!powerup || !powerup.active) return;
         if (powerup.getData && powerup.getData('ignoreCollection')) return;
 
+        // Hack removed: Sensor bodies prevent ground flags naturally
+
         // Reset spawn cooldown on collection to prevent back-to-back spawns
         scene.lastPowerupTime = Date.now();
         scene.lastPowerupSpawnHeight = player.y; // approximate
@@ -76,7 +81,7 @@ export class ItemHandler {
         } else {
             powerup.destroy();
         }
-        scene.isPausedEvent = true;
+        scene.isPowerupAnimation = true;
         scene.physics.pause();
         // Asegurar que el jugador se vea (sin animación de reemplazo)
         player.setVisible(true);
@@ -99,7 +104,7 @@ export class ItemHandler {
         scene.time.delayedCall(2000, () => {
             t.destroy();
             scene.physics.resume();
-            scene.isPausedEvent = false;
+            scene.isPowerupAnimation = false;
             if (player && player.activateInvincibility) {
                 player.activateInvincibility();
             } else if (scene.activateInvincibility) { // Fallback if player method missing (should not happen)
