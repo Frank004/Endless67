@@ -111,7 +111,11 @@ export class Coin extends Phaser.Physics.Arcade.Sprite {
             // Visual size ~28px. Hitbox 24px.
             // Offset for circle: (VisualWidth - Diameter) / 2
             const offsetX = (this.width - (radius * 2)) / 2;
-            const offsetY = (this.height - (radius * 2)) / 2;
+
+            // Correction to align visual bottom with hitbox bottom (prevents floating)
+            const VISUAL_BOTTOM_CORRECTION = -5;
+            const offsetY = ((this.height - (radius * 2)) / 2) + VISUAL_BOTTOM_CORRECTION;
+
             this.body.setOffset(offsetX, offsetY);
 
             this.body.allowGravity = false;

@@ -1,4 +1,7 @@
 import AudioSystem from '../../Core/AudioSystem.js';
+import { Coin, COIN_BASE_SIZE } from '../../../Entities/Coin.js';
+import { POWERUP_BASE_SIZE } from '../../../Entities/Powerup.js';
+import { clampToPlayableBounds } from '../../../Utils/playableBounds.js';
 import { launchItem } from '../../../Utils/physicsUtils.js';
 
 /**
@@ -46,8 +49,12 @@ export class TrashcanInteractable {
         // Play SFX
         AudioSystem.playTrashcanHit();
 
-        // Spawn item (Coin or Powerup)
-        const spawnX = trashcan.x - 25;
+        // Spawn item towards the center to avoid wall clipping
+        const baseX = trashcan.body?.center?.x ?? trashcan.x;
+        const isLeft = baseX < this.scene.scale.width / 2;
+        const spawnOffset = 0;
+        const itemSize = Math.max(COIN_BASE_SIZE, POWERUP_BASE_SIZE);
+        const spawnX = clampToPlayableBounds(this.scene, baseX + spawnOffset, itemSize, 0);
         const spawnY = trashcan.y - 35;
 
         let item;
@@ -57,9 +64,22 @@ export class TrashcanInteractable {
             // 5% Powerup
             item = this.scene.powerupPool.spawn(spawnX, spawnY);
             group = this.scene.powerups;
+
+            // Fallback: If powerup fails to spawn (pool empty?), spawn a Coin instead
+            if (!item) {
+                item = this.scene.coinPool.spawn(spawnX, spawnY);
+                group = this.scene.coins;
+            }
         } else {
             // 95% Coin
             item = this.scene.coinPool.spawn(spawnX, spawnY);
+            group = this.scene.coins;
+        }
+
+        // Final fallback: ensure a coin is spawned if pools fail unexpectedly
+        if (!item && this.scene.coins) {
+            item = new Coin(this.scene);
+            item.spawn(spawnX, spawnY);
             group = this.scene.coins;
         }
 
@@ -71,10 +91,11 @@ export class TrashcanInteractable {
             item.setData('ignoreCollection', true);
 
             const obstacles = [this.scene.stageFloor, this.scene.leftWall, this.scene.rightWall];
-            let targetX = player.x;
-            if (Math.abs(player.x - trashcan.x) < 50) {
-                targetX = this.scene.scale.width / 2;
-            }
+
+            // Fix: Always launch towards the CENTER of the screen (Safe Zone)
+            // Instead of aiming at player (who might be near a wall), aim at the middle.
+            const launchOffset = isLeft ? 120 : -120;
+            const targetX = clampToPlayableBounds(this.scene, baseX + launchOffset, itemSize, 0);
 
             launchItem(this.scene, item, targetX, obstacles);
 

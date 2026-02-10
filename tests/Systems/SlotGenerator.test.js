@@ -61,7 +61,8 @@ jest.mock('../../src/Config/SlotConfig.js', () => ({
 
 // Mock playableBounds
 jest.mock('../../src/Utils/playableBounds.js', () => ({
-    getPlayableBounds: jest.fn(() => ({ minX: 50, maxX: 350, centerX: 200, width: 300 }))
+    getPlayableBounds: jest.fn(() => ({ minX: 50, maxX: 350, centerX: 200, width: 300 })),
+    clampToPlayableBounds: jest.fn((scene, x) => (typeof x === 'number' ? x : 200))
 }));
 
 describe('SlotGenerator', () => {

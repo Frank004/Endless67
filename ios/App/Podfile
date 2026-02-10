@@ -1,7 +1,7 @@
+require 'fileutils'
 require_relative '../../node_modules/.pnpm/@capacitor+ios@7.4.5_@capacitor+core@7.4.5/node_modules/@capacitor/ios/scripts/pods_helpers'
 
 platform :ios, '14.0'
-project 'Endless67Runner.xcodeproj'
 use_frameworks!
 
 # workaround to avoid Xcode caching of Pods that requires
@@ -16,20 +16,53 @@ def capacitor_pods
   pod 'CapacitorSplashScreen', :path => '../../node_modules/.pnpm/@capacitor+splash-screen@7.0.4_@capacitor+core@7.4.5/node_modules/@capacitor/splash-screen'
 end
 
-target 'Endless67Runner' do
+project 'App.xcodeproj'
+
+target 'Endless 67 Runner' do
   capacitor_pods
   # Add your Pods here
 end
 
 post_install do |installer|
   assertDeploymentTarget(installer)
-  
+
+  # Ensure CapacitorCordova headers are discoverable in builds.
+  cordova_headers_root = File.expand_path(
+    '../../node_modules/.pnpm/@capacitor+ios@7.4.5_@capacitor+core@7.4.5/node_modules/@capacitor/ios/CapacitorCordova/CapacitorCordova',
+    __dir__
+  )
+  public_headers_dir = File.join(installer.sandbox.public_headers.root.to_s, 'CapacitorCordova')
+  FileUtils.mkdir_p(public_headers_dir)
+  public_headers = Dir.glob(File.join(cordova_headers_root, 'Classes', 'Public', '*.h'))
+  public_headers << File.join(cordova_headers_root, 'CapacitorCordova.h')
+  public_headers.each do |header|
+    next unless File.exist?(header)
+    FileUtils.ln_sf(header, File.join(public_headers_dir, File.basename(header)))
+  end
+
   installer.pods_project.targets.each do |target|
+    next unless target.name == 'CapacitorCordova'
     target.build_configurations.each do |config|
-      # Fix for "double-quoted include" error in Xcode 15+
-      config.build_settings['CLANG_WARN_QUOTED_INCLUDE_IN_FRAMEWORK_HEADER'] = 'NO'
-      # Allow non-modular includes (Fixes 'Cordova' module not found errors)
-      config.build_settings['CLANG_ALLOW_NON_MODULAR_INCLUDES_IN_FRAMEWORK_MODULES'] = 'YES'
+      header_search_paths = Array(config.build_settings['HEADER_SEARCH_PATHS'] || '$(inherited)')
+      header_search_paths << '${PODS_ROOT}/Headers/Public'
+      header_search_paths << '${PODS_ROOT}/Headers/Public/CapacitorCordova'
+      config.build_settings['HEADER_SEARCH_PATHS'] = header_search_paths.uniq
     end
+  end
+
+  # Normalize CapacitorCordova header imports to local headers.
+  cordova_headers_root = File.join(
+    File.expand_path('../../node_modules/.pnpm/@capacitor+ios@7.4.5_@capacitor+core@7.4.5/node_modules/@capacitor/ios', __dir__),
+    'CapacitorCordova',
+    'CapacitorCordova'
+  )
+  cordova_header_files = Dir.glob(File.join(cordova_headers_root, 'Classes', 'Public', '*.h'))
+  cordova_header_files << File.join(cordova_headers_root, 'CapacitorCordova.h')
+  cordova_header_files.each do |file_path|
+    next unless File.exist?(file_path)
+    content = File.read(file_path)
+    updated = content.gsub(/#import <CapacitorCordova\/([^>]+)>/, '#import "\\1"')
+    next if updated == content
+    File.write(file_path, updated)
   end
 end

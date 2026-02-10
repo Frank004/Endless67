@@ -2,6 +2,9 @@ import GameState from '../../Core/GameState.js';
 import ScoreManager from '../Gameplay/ScoreManager.js';
 import AudioSystem from '../Core/AudioSystem.js';
 import { PLAYER_CONFIG } from '../../Config/PlayerConfig.js';
+import { COIN_BASE_SIZE } from '../../Entities/Coin.js';
+import { POWERUP_BASE_SIZE } from '../../Entities/Powerup.js';
+import { clampToPlayableBounds } from '../../Utils/playableBounds.js';
 import { launchItem } from '../../Utils/physicsUtils.js';
 
 export class PlayerHandler {
@@ -209,8 +212,9 @@ export class PlayerHandler {
         AudioSystem.playTrashcanHit();
 
         // --- NEW LOGIC: Spawn Bouncing Item (Coin or Powerup) ---
-        // Fix offset: Trashcan appears to offset coin to the right, adjusting spawnX left by 25px
-        const spawnX = trashcan.x - 25;
+        const itemSize = Math.max(COIN_BASE_SIZE, POWERUP_BASE_SIZE);
+        const baseX = trashcan.body?.center?.x ?? trashcan.x;
+        const spawnX = clampToPlayableBounds(scene, baseX, itemSize, 0);
         const spawnY = trashcan.y - 35; // Slightly higher to ensure it clears the can lid
 
         // 5% Chance for Powerup, 95% for Coin
@@ -221,6 +225,12 @@ export class PlayerHandler {
             // Spawn Powerup
             item = scene.powerupPool.spawn(spawnX, spawnY);
             group = scene.powerups;
+
+            // Fallback: If powerup fails to spawn (pool empty), spawn a Coin instead
+            if (!item) {
+                item = scene.coinPool.spawn(spawnX, spawnY);
+                group = scene.coins;
+            }
         } else {
             // Spawn Coin
             item = scene.coinPool.spawn(spawnX, spawnY);
@@ -241,9 +251,10 @@ export class PlayerHandler {
 
             // SMART TARGETING: If player is standing on/near the trashcan, Launch towards center of screen
             // to avoid shooting the item into a nearby wall.
-            let targetX = player.x;
-            if (Math.abs(player.x - trashcan.x) < 50) {
-                targetX = scene.scale.width / 2;
+            let targetX = clampToPlayableBounds(scene, player.x, itemSize, 0);
+            if (Math.abs(player.x - baseX) < 50) {
+                const launchOffset = baseX < scene.scale.width / 2 ? 120 : -120;
+                targetX = clampToPlayableBounds(scene, baseX + launchOffset, itemSize, 0);
             }
 
             launchItem(scene, item, targetX, obstacles);

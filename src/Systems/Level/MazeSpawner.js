@@ -2,7 +2,7 @@ import { MAZE_ROW_HEIGHT } from '../../Data/MazePatterns.js';
 import { WALLS } from '../../Config/GameConstants.js';
 import { ASSETS } from '../../Config/AssetKeys.js';
 import { SLOT_CONFIG } from '../../Config/SlotConfig.js';
-import { getPlayableBounds } from '../../Utils/playableBounds.js';
+import { clampToPlayableBounds, getPlayableBounds } from '../../Utils/playableBounds.js';
 import { ENEMY_CONFIG } from '../../Config/EnemyConfig.js';
 import { MazeVisuals } from '../Visuals/MazeVisuals.js';
 import { ItemSpawnStrategy } from './ItemSpawnStrategy.js';
@@ -47,8 +47,8 @@ export class MazeSpawner {
         const TILE = MAZE_CONFIG.TILE_SIZE;
         const wallWidth = WALLS.WIDTH;
 
-        const leftPlayable = wallWidth;
-        const rightPlayable = gameWidth - wallWidth;
+        const leftPlayable = bounds.left;
+        const rightPlayable = bounds.right;
         const playableWidth = Math.max(TILE, rightPlayable - leftPlayable);
         const centerX = (leftPlayable + rightPlayable) / 2;
         let type = config.type;
@@ -127,30 +127,30 @@ export class MazeSpawner {
 
         // --- CALCULATE GAP & SEGMENTS ---
         let gapX = centerX;
-        let gapStart = wallWidth;
-        let gapEnd = gameWidth - wallWidth;
+        let gapStart = leftPlayable;
+        let gapEnd = rightPlayable;
         let wallSegments = []; // For spawning enemies
 
         if (type === 'left') {
-            gapStart = Math.max(wallWidth, w1);
-            gapEnd = gameWidth - wallWidth;
-            wallSegments.push({ min: wallWidth, max: Math.min(w1Eff, gameWidth - wallWidth) });
+            gapStart = Math.max(leftPlayable, leftPlayable + w1Eff);
+            gapEnd = rightPlayable;
+            wallSegments.push({ min: leftPlayable, max: Math.min(leftPlayable + w1Eff, rightPlayable) });
         } else if (type === 'right') {
-            gapStart = wallWidth;
-            gapEnd = Math.min(gameWidth - wallWidth, gameWidth - w1Eff);
-            wallSegments.push({ min: Math.max(wallWidth, gameWidth - w1Eff), max: gameWidth - wallWidth });
+            gapStart = leftPlayable;
+            gapEnd = Math.min(rightPlayable, rightPlayable - w1Eff);
+            wallSegments.push({ min: Math.max(leftPlayable, rightPlayable - w1Eff), max: rightPlayable });
         } else if (type === 'split') {
-            gapStart = Math.max(wallWidth, w1Eff);
-            gapEnd = Math.min(gameWidth - wallWidth, gameWidth - w2Eff);
-            wallSegments.push({ min: wallWidth, max: Math.min(w1Eff, gameWidth - wallWidth) });
-            wallSegments.push({ min: Math.max(wallWidth, gameWidth - w2Eff), max: gameWidth - wallWidth });
+            gapStart = Math.max(leftPlayable, leftPlayable + w1Eff);
+            gapEnd = Math.min(rightPlayable, rightPlayable - w2Eff);
+            wallSegments.push({ min: leftPlayable, max: Math.min(leftPlayable + w1Eff, rightPlayable) });
+            wallSegments.push({ min: Math.max(leftPlayable, rightPlayable - w2Eff), max: rightPlayable });
         } else if (type === 'center') {
             const leftGapEnd = centerX - w1 / 2;
             const rightGapStart = centerX + w1 / 2;
             const useLeftGap = Phaser.Math.Between(0, 1) === 0;
-            gapStart = useLeftGap ? wallWidth : Math.max(wallWidth, rightGapStart);
-            gapEnd = useLeftGap ? Math.min(gameWidth - wallWidth, leftGapEnd) : gameWidth - wallWidth;
-            wallSegments.push({ min: Math.max(wallWidth, leftGapEnd), max: Math.min(gameWidth - wallWidth, rightGapStart) });
+            gapStart = useLeftGap ? leftPlayable : Math.max(leftPlayable, rightGapStart);
+            gapEnd = useLeftGap ? Math.min(rightPlayable, leftGapEnd) : rightPlayable;
+            wallSegments.push({ min: Math.max(leftPlayable, leftGapEnd), max: Math.min(rightPlayable, rightGapStart) });
         }
 
         gapX = gapStart + (gapEnd - gapStart) / 2;
@@ -159,9 +159,7 @@ export class MazeSpawner {
         gapX = Phaser.Math.Clamp(gapX, gapStart + gapMargin, gapEnd - gapMargin);
 
         // --- SPAWN ITEMS (Delegate to Strategy) ---
-        const { minX, maxX } = getPlayableBounds(scene, MAZE_CONFIG.TILE_SIZE);
-        const itemMargin = WALLS.WIDTH + WALLS.MARGIN + 16;
-        const safeX = Phaser.Math.Clamp(gapX, Math.max(minX, itemMargin), Math.min(maxX, gameWidth - itemMargin));
+        const safeX = clampToPlayableBounds(scene, gapX, MAZE_CONFIG.TILE_SIZE, 16);
 
         const ITEM_SIZE = MAZE_CONFIG.TILE_SIZE;
         const ITEM_HALF = ITEM_SIZE / 2;

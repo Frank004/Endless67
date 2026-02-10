@@ -11,6 +11,7 @@ export const ASSETS = {
     UI_ICONS: 'ui_icons',
     ENEMY_ATLAS: 'enemy_atlas',
     STORE: 'store',
+    UI_MODAL: 'ui_modal',
 
 
     // Generated Textures

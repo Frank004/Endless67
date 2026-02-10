@@ -1,3 +1,4 @@
+import { ASSETS } from '../../Config/AssetKeys.js';
 import { UIHelpers } from '../../Utils/UIHelpers.js';
 
 export class ExtraLifeModal extends Phaser.GameObjects.Container {
@@ -26,14 +27,40 @@ export class ExtraLifeModal extends Phaser.GameObjects.Container {
         );
         this.add(overlay);
 
-        // Modal Background (Dark Cyberpunk Style)
-        const bg = this.scene.add.rectangle(centerX, centerY, width, height, 0x111111);
-        bg.setStrokeStyle(4, 0x00ffff); // Cyan Border
-        this.add(bg);
+        // Modal Background (Sprite-based: top, tiled center, bottom)
+        const topFrame = this.scene.textures.getFrame(ASSETS.UI_MODAL, 'modal-top.png');
+        const bottomFrame = this.scene.textures.getFrame(ASSETS.UI_MODAL, 'modal-bottom.png');
+        const centerFrame = this.scene.textures.getFrame(ASSETS.UI_MODAL, 'modal-center.png');
 
-        // Header Background
-        const headerBg = this.scene.add.rectangle(centerX, centerY - height / 2 + 40, width, 80, 0x000000);
-        this.add(headerBg);
+        const topH = topFrame?.height || 53;
+        const bottomH = bottomFrame?.height || 64;
+        const centerH = Math.max(0, height - topH - bottomH);
+
+        const top = this.scene.add.image(
+            centerX,
+            centerY - height / 2 + topH / 2,
+            ASSETS.UI_MODAL,
+            'modal-top.png'
+        );
+        this.add(top);
+
+        const center = this.scene.add.tileSprite(
+            centerX,
+            centerY - height / 2 + topH + centerH / 2,
+            width,
+            centerH,
+            ASSETS.UI_MODAL,
+            'modal-center.png'
+        );
+        this.add(center);
+
+        const bottom = this.scene.add.image(
+            centerX,
+            centerY + height / 2 - bottomH / 2,
+            ASSETS.UI_MODAL,
+            'modal-bottom.png'
+        );
+        this.add(bottom);
 
         // "EXTRA LIFE" Title
         const titleText = this.scene.add.text(centerX, centerY - 160, 'EXTRA LIFE', {

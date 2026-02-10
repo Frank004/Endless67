@@ -1,6 +1,6 @@
 import { COIN_BASE_SIZE } from '../../Entities/Coin.js';
 import { POWERUP_BASE_SIZE } from '../../Entities/Powerup.js';
-import { getPlayableBounds } from '../../Utils/playableBounds.js';
+import { clampToPlayableBounds, getPlayableBounds } from '../../Utils/playableBounds.js';
 
 export class ItemSpawnStrategy {
     constructor(scene) {
@@ -15,6 +15,8 @@ export class ItemSpawnStrategy {
     spawnInZone(x, y, typePreference = 'auto') {
         const difficulty = this.scene.difficultyManager;
         const mechanicsConfig = difficulty ? difficulty.getMechanicsConfig() : { powerups: true, powerupChance: 8, coins: true, coinChance: 60 };
+        const powerupX = clampToPlayableBounds(this.scene, x, POWERUP_BASE_SIZE, 30);
+        const coinX = clampToPlayableBounds(this.scene, x, COIN_BASE_SIZE, 0);
 
         // 1. Check Powerup eligibility
         if (typePreference === 'powerup' || typePreference === 'auto') {
@@ -38,7 +40,7 @@ export class ItemSpawnStrategy {
             if (distanceDelta >= POWERUP_MIN_DISTANCE && now - lastTime >= POWERUP_COOLDOWN) {
                 // Explicit verification for Maze usually forces chance check unless 'powerup' is strictly requested
                 if (typePreference === 'powerup' || Math.random() < POWERUP_CHANCE) {
-                    const powerup = this.scene.powerupPool.spawn(x, y);
+                    const powerup = this.scene.powerupPool.spawn(powerupX, y);
                     if (powerup) {
                         if (this.scene.powerups) this.scene.powerups.add(powerup, true);
                         this.scene.lastPowerupSpawnHeight = y;
@@ -56,7 +58,7 @@ export class ItemSpawnStrategy {
             // For now, use global mech config + simple valid check.
 
             if (typePreference === 'coin' || Math.random() < coinChance) {
-                const coin = this.scene.coinPool.spawn(x, y);
+                const coin = this.scene.coinPool.spawn(coinX, y);
                 if (coin) {
                     if (this.scene.coins) this.scene.coins.add(coin, true);
                     return 'coin';
@@ -83,9 +85,9 @@ export class ItemSpawnStrategy {
 
         // Powerup Config
         const isDev = this.scene.registry?.get('isDevMode');
-        // REFACTORED: Increased default cooldowns and set non-zero for dev mode to prevent spam
-        const POWERUP_MIN_DISTANCE = isDev ? 1000 : 4000; // was 0 : 2000
-        const POWERUP_COOLDOWN = isDev ? 5000 : 30000;   // was 0 : 15000
+        // Align with spawnInZone rules to avoid frequent powerups
+        const POWERUP_MIN_DISTANCE = isDev ? 1000 : 4000;
+        const POWERUP_COOLDOWN = isDev ? 5000 : 30000;
         const POWERUP_CHANCE = (mechanicsConfig.powerups ? mechanicsConfig.powerupChance : 0) / 100;
 
         const logPowerups = this.scene.registry?.get('logPowerups') === true;
@@ -132,12 +134,11 @@ export class ItemSpawnStrategy {
             const distanceOk = distanceDelta >= POWERUP_MIN_DISTANCE; // 2000 units
 
             const cooldownDelta = now - lastTime;
-            const cooldownOk = cooldownDelta >= POWERUP_COOLDOWN; // 15s
-
+            const cooldownOk = cooldownDelta >= POWERUP_COOLDOWN;
             const chanceOk = Math.random() < POWERUP_CHANCE;
 
             if (distanceOk && cooldownOk && chanceOk) {
-                logPw(`    ⚡ Powerup eligible: dist=${distanceDelta.toFixed(0)} cooldown=${cooldownDelta}ms chance=${POWERUP_CHANCE}`);
+                logPw(`    ⚡ Powerup eligible: dist=${distanceDelta.toFixed(0)} cooldown=${cooldownDelta}ms chance=${(POWERUP_CHANCE * 100).toFixed(0)}%`);
             }
             return distanceOk && cooldownOk && chanceOk;
         };
@@ -194,24 +195,53 @@ export class ItemSpawnStrategy {
         const yEnd = slotData.yEnd; // yEnd is smaller (higher up)
 
         // We iterate attempts
+        // We iterate attempts
         while (attempts < maxAttempts) {
             attempts++;
 
-            // Random pos
-            const itemX = Phaser.Math.Between(minItemX, maxItemX);
             const itemY = Phaser.Math.FloatBetween(yEnd + 50, yStart - 50); // Padding
 
+            // 1. Determine spawn intent first
+            let intent = null;
+
+            if (canSpawnPowerup(itemY)) {
+                intent = 'powerup';
+            } else {
+                const coinChance = (mechanicsConfig.coins ? mechanicsConfig.coinChance : 0) / 100;
+                if (Math.random() < coinChance) intent = 'coin';
+            }
+
+            if (!intent) continue;
+
+            // 2. Calculate safe X based on intent size
+            let itemX;
+            if (intent === 'powerup') {
+                const halfSize = (POWERUP_BASE_SIZE || 64) / 2;
+                const margin = halfSize + 30; // Increased visual breathing room (prevent wall clipping)
+                const safeMin = minItemX + margin;
+                const safeMax = maxItemX - margin;
+
+                // Safety check if bounds are inverted (should not happen but safe)
+                if (safeMin > safeMax) itemX = minItemX + (maxItemX - minItemX) / 2;
+                else itemX = Phaser.Math.Between(safeMin, safeMax);
+                itemX = clampToPlayableBounds(this.scene, itemX, POWERUP_BASE_SIZE, 30);
+
+            } else {
+                // Coin
+                const safeMin = minItemX; // Coins are small enough for base bounds
+                const safeMax = maxItemX;
+                itemX = Phaser.Math.Between(safeMin, safeMax);
+                itemX = clampToPlayableBounds(this.scene, itemX, COIN_BASE_SIZE, 0);
+            }
+
+            // 3. Validation
             if (tooCloseToOtherItems(itemX, itemY)) continue;
             if (collidesWithPlatform(itemX, itemY)) continue;
 
-            // Try Powerup first
-            if (canSpawnPowerup(itemY)) {
-                if (spawnPowerup(itemX, itemY)) continue;
-            }
-
-            // Try Coin (Chance based on config)
-            const coinChance = (mechanicsConfig.coins ? mechanicsConfig.coinChance : 0) / 100;
-            if (Math.random() < coinChance) {
+            // 4. Spawn
+            if (intent === 'powerup') {
+                spawnPowerup(itemX, itemY);
+            } else {
                 spawnCoin(itemX, itemY);
             }
         }

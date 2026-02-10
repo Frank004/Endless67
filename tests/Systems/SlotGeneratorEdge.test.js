@@ -26,7 +26,8 @@ jest.mock('../../src/Config/SlotConfig.js', () => ({
     getItemBounds: jest.fn(() => ({ minX: 50, maxX: 350 }))
 }));
 jest.mock('../../src/Utils/playableBounds.js', () => ({
-    getPlayableBounds: jest.fn(() => ({ minX: 50, maxX: 350, centerX: 200, width: 300 }))
+    getPlayableBounds: jest.fn(() => ({ minX: 50, maxX: 350, centerX: 200, width: 300 })),
+    clampToPlayableBounds: jest.fn((scene, x) => (typeof x === 'number' ? x : 200))
 }));
 jest.mock('../../src/Utils/PatternTransformer.js', () => ({
     PatternTransformer: jest.fn().mockImplementation(() => ({
