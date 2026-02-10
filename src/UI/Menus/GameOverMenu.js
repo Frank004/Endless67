@@ -146,6 +146,7 @@ export class GameOverMenu {
 
         const confirmBtn = scene.add.image(centerX, centerY + 100, 'ui_hud', 'btn/btn-confirm.png')
             .setOrigin(0.5).setDepth(301).setScrollFactor(0).setInteractive({ useHandCursor: true });
+        UIHelpers.applyButtonEffects(confirmBtn);
 
         // Use InputManager to create mobile text input
         const htmlInput = scene.inputManager.createMobileTextInput({

@@ -1,4 +1,5 @@
 import { STORE_CARD_CONSTANTS } from './StoreCardConstants.js';
+import { UIHelpers } from '../../Utils/UIHelpers.js';
 import { StoreCardBackground } from './StoreCardBackground.js';
 import { StoreCardLabels } from './StoreCardLabels.js';
 
@@ -38,6 +39,7 @@ export class StoreCard extends Phaser.GameObjects.Container {
         // Set Size and Input
         this.setSize(STORE_CARD_CONSTANTS.WIDTH, STORE_CARD_CONSTANTS.HEIGHT);
         this._setupInput();
+        UIHelpers.applyButtonEffects(this, { hoverScale: 1.03, useCurrentScale: true });
 
         // Pointer Events
         this.on('pointerup', (pointer) => {

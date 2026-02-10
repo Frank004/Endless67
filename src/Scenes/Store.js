@@ -123,17 +123,9 @@ export class Store extends Phaser.Scene {
             .setInteractive({ useHandCursor: true });
 
         backBtn.on('pointerdown', () => {
-            this.tweens.add({
-                targets: backBtn,
-                scale: 0.9,
-                duration: 50,
-                yoyo: true
-            });
             this._handleBack();
         });
-
-        backBtn.on('pointerover', () => backBtn.setTint(0xcccccc));
-        backBtn.on('pointerout', () => backBtn.clearTint());
+        UIHelpers.applyButtonEffects(backBtn);
 
         // 2. Title: "THE VAULT" (Logo) - Adjusted for safe area
         const logoY = (130 + safeAreaTop) - 30;
@@ -346,6 +338,7 @@ export class Store extends Phaser.Scene {
                 hitAreaCallback: Phaser.Geom.Circle.Contains,
                 useHandCursor: true
             });
+            UIHelpers.applyButtonEffects(circle, { hoverScale: 1.2, clickScale: 0.9, useCurrentScale: true });
 
             circle.on('pointerdown', () => {
                 this._blockSwipe = true; // Signal to ignore global swipe

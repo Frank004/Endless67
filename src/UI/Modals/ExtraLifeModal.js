@@ -28,9 +28,9 @@ export class ExtraLifeModal extends Phaser.GameObjects.Container {
         this.add(overlay);
 
         // Modal Background (Sprite-based: top, tiled center, bottom)
-        const topFrame = this.scene.textures.getFrame(ASSETS.UI_MODAL, 'modal-top.png');
-        const bottomFrame = this.scene.textures.getFrame(ASSETS.UI_MODAL, 'modal-bottom.png');
-        const centerFrame = this.scene.textures.getFrame(ASSETS.UI_MODAL, 'modal-center.png');
+        const topFrame = this.scene.textures.getFrame(ASSETS.UI_HUD, 'modal/modal-top.png');
+        const bottomFrame = this.scene.textures.getFrame(ASSETS.UI_HUD, 'modal/modal-bottom.png');
+        const centerFrame = this.scene.textures.getFrame(ASSETS.UI_HUD, 'modal/modal-center.png');
 
         const topH = topFrame?.height || 53;
         const bottomH = bottomFrame?.height || 64;
@@ -39,8 +39,8 @@ export class ExtraLifeModal extends Phaser.GameObjects.Container {
         const top = this.scene.add.image(
             centerX,
             centerY - height / 2 + topH / 2,
-            ASSETS.UI_MODAL,
-            'modal-top.png'
+            ASSETS.UI_HUD,
+            'modal/modal-top.png'
         );
         this.add(top);
 
@@ -49,27 +49,27 @@ export class ExtraLifeModal extends Phaser.GameObjects.Container {
             centerY - height / 2 + topH + centerH / 2,
             width,
             centerH,
-            ASSETS.UI_MODAL,
-            'modal-center.png'
+            ASSETS.UI_HUD,
+            'modal/modal-center.png'
         );
         this.add(center);
 
         const bottom = this.scene.add.image(
             centerX,
             centerY + height / 2 - bottomH / 2,
-            ASSETS.UI_MODAL,
-            'modal-bottom.png'
+            ASSETS.UI_HUD,
+            'modal/modal-bottom.png'
         );
         this.add(bottom);
 
         // "EXTRA LIFE" Title
-        const titleText = this.scene.add.text(centerX, centerY - 160, 'EXTRA LIFE', {
+        const titleText = this.scene.add.text(centerX, centerY - 150, 'EXTRA LIFE', {
             fontSize: '36px',
-            fontFamily: 'Arial',
-            color: '#00ffff',
+            fontFamily: 'Pixelify Sans',
+            color: '#F9C150',
             align: 'center',
             fontStyle: 'bold',
-            stroke: '#008888',
+            stroke: '#000000',
             strokeThickness: 4,
             shadow: { offsetX: 2, offsetY: 2, color: '#000000', blur: 4, stroke: true, fill: true }
         }).setOrigin(0.5);
@@ -79,22 +79,13 @@ export class ExtraLifeModal extends Phaser.GameObjects.Container {
         const closeBtnX = centerX + (width / 2) - 25;
         const closeBtnY = centerY - (height / 2) + 25;
 
-        // Hit Area for Close Button (Transparent Circle on top)
-        const closeHitArea = this.scene.add.circle(closeBtnX, closeBtnY, 30, 0xff0000, 0.001); // Almost invisible
-        closeHitArea.setInteractive({ useHandCursor: true });
+        const closeBtn = this.scene.add.image(closeBtnX, closeBtnY, ASSETS.UI_HUD, 'btn-small/btn-small-x.png');
+        closeBtn.setOrigin(0.5);
+        closeBtn.setInteractive({ useHandCursor: true });
+        UIHelpers.applyButtonEffects(closeBtn);
+        this.add(closeBtn);
 
-        const closeBtnVisual = this.scene.add.circle(closeBtnX, closeBtnY, 18, 0x333333);
-        closeBtnVisual.setStrokeStyle(2, 0xffffff);
-
-        const closeX = this.scene.add.text(closeBtnX, closeBtnY, 'X', {
-            fontSize: '20px', color: '#ffffff', fontStyle: 'bold'
-        }).setOrigin(0.5);
-
-        this.add(closeBtnVisual);
-        this.add(closeX);
-        this.add(closeHitArea); // Add LAST to ensure it catches clicks
-
-        closeHitArea.on('pointerdown', () => {
+        closeBtn.on('pointerdown', () => {
             console.log('[ExtraLifeModal] Close/Skip clicked');
             this.startCloseAnimation();
             if (this.onCloseCallback) this.onCloseCallback();
@@ -114,9 +105,10 @@ export class ExtraLifeModal extends Phaser.GameObjects.Container {
         }).setOrigin(0.5);
         this.add(heartText);
 
-        const helpText = this.scene.add.text(centerX, centerY + 65, 'WATCH AD TO\nREVIVE FREE!', {
+        const helpText = this.scene.add.text(centerX, centerY + 75, 'WATCH AD TO\nREVIVE FREE!', {
             fontSize: '20px',
-            color: '#ffffff',
+            fontFamily: 'Pixelify Sans',
+            color: '#F9C150',
             align: 'center',
             fontStyle: 'bold',
             stroke: '#000000',
@@ -126,39 +118,18 @@ export class ExtraLifeModal extends Phaser.GameObjects.Container {
 
         // --- REVIVE BUTTON ---
         const playBtnY = centerY + 150;
-        const btnWidth = 220;
-        const btnHeight = 70;
-
-        // Visual group
-        const btnBox = this.scene.add.rectangle(centerX, playBtnY, btnWidth, btnHeight, 0x00aa00);
-        btnBox.setStrokeStyle(3, 0xffffff);
-        this.add(btnBox);
-
-        const btnShine = this.scene.add.rectangle(centerX, playBtnY - 15, btnWidth, btnHeight / 2, 0xffffff, 0.2);
-        this.add(btnShine);
-
-        const btnText = this.scene.add.text(centerX + 15, playBtnY, 'REVIVE', {
-            fontSize: '28px',
-            fontFamily: 'Arial',
-            color: '#ffffff',
-            fontStyle: 'bold',
-            shadow: { offsetX: 1, offsetY: 1, color: '#000000', blur: 2, fill: true }
-        }).setOrigin(0.5);
-        this.add(btnText);
-
-        const playIcon = this.scene.add.triangle(centerX - 60, playBtnY, 0, 0, 0, 24, 20, 12, 0xffffff);
-        this.add(playIcon);
+        const reviveBtn = this.scene.add.image(centerX, playBtnY, ASSETS.UI_HUD, 'btn/btn-revive.png');
+        reviveBtn.setOrigin(0.5);
+        reviveBtn.setInteractive({ useHandCursor: true });
+        UIHelpers.applyButtonEffects(reviveBtn, { enableClick: false });
+        this.add(reviveBtn);
 
         // Interaction Zone (Added LAST)
-        const btnHitZone = this.scene.add.zone(centerX, playBtnY, btnWidth, btnHeight);
-        btnHitZone.setInteractive({ useHandCursor: true });
-        this.add(btnHitZone);
-
-        btnHitZone.on('pointerdown', () => {
+        reviveBtn.on('pointerdown', () => {
             console.log('[ExtraLifeModal] Revive Clicked');
             // Animate visuals
             this.scene.tweens.add({
-                targets: [btnBox, btnShine, btnText, playIcon],
+                targets: reviveBtn,
                 scale: 0.95,
                 duration: 100,
                 yoyo: true,

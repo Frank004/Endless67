@@ -4,6 +4,56 @@
 
 export class UIHelpers {
     static DEFAULT_BUTTON_WIDTH = 260;
+    static isDesktop(scene) {
+        return scene?.sys?.game?.device?.os?.desktop === true;
+    }
+
+    static applyButtonEffects(target, options = {}) {
+        if (!target || !target.scene) return;
+        const {
+            hoverScale = 1.1,
+            clickScale = 0.95,
+            enableHover = true,
+            enableClick = true,
+            useCurrentScale = false
+        } = options;
+
+        const baseScaleX = target.scaleX;
+        const baseScaleY = target.scaleY;
+        let hoverBaseX = baseScaleX;
+        let hoverBaseY = baseScaleY;
+        const isDesktop = UIHelpers.isDesktop(target.scene);
+
+        if (enableHover && isDesktop) {
+            target.on('pointerover', () => {
+                if (!target.scene) return;
+                hoverBaseX = useCurrentScale ? target.scaleX : baseScaleX;
+                hoverBaseY = useCurrentScale ? target.scaleY : baseScaleY;
+                target.setScale(hoverBaseX * hoverScale, hoverBaseY * hoverScale);
+            });
+            target.on('pointerout', () => {
+                if (!target.scene) return;
+                target.setScale(hoverBaseX, hoverBaseY);
+            });
+        }
+
+        if (enableClick) {
+            target.on('pointerdown', () => {
+                if (!target.scene) return;
+                const clickBaseX = useCurrentScale ? target.scaleX : baseScaleX;
+                const clickBaseY = useCurrentScale ? target.scaleY : baseScaleY;
+                target.setScale(clickBaseX, clickBaseY);
+                target.scene.tweens.add({
+                    targets: target,
+                    scaleX: clickBaseX * clickScale,
+                    scaleY: clickBaseY * clickScale,
+                    duration: 50,
+                    yoyo: true,
+                    ignoreGlobalTimeScale: true
+                });
+            });
+        }
+    }
 
     /**
      * Create a button with an icon and text
@@ -64,9 +114,11 @@ export class UIHelpers {
             }
         };
 
-        // Bind Pointer Events
-        container.on('pointerover', () => buttonObj.select());
-        container.on('pointerout', () => buttonObj.deselect());
+        // Bind Pointer Events (hover only on desktop)
+        if (UIHelpers.isDesktop(container.scene)) {
+            container.on('pointerover', () => buttonObj.select());
+            container.on('pointerout', () => buttonObj.deselect());
+        }
 
         if (callback) {
             container.on('pointerdown', () => buttonObj.trigger());
@@ -222,9 +274,11 @@ export class UIHelpers {
             }
         };
 
-        // Bind Pointer Events
-        container.on('pointerover', () => buttonObj.select());
-        container.on('pointerout', () => buttonObj.deselect());
+        // Bind Pointer Events (hover only on desktop)
+        if (UIHelpers.isDesktop(container.scene)) {
+            container.on('pointerover', () => buttonObj.select());
+            container.on('pointerout', () => buttonObj.deselect());
+        }
 
         if (callback) {
             container.on('pointerdown', () => buttonObj.trigger());

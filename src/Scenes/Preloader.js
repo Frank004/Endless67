@@ -178,8 +178,7 @@ export class Preloader extends Phaser.Scene {
         // MAIN_BG loaded in Boot
         // UI_HUD loaded in Boot, checking anyway
         if (!this.textures.exists(ASSETS.UI_ICONS)) this.load.atlas(ASSETS.UI_ICONS, 'assets/ui/icons.png' + v, 'assets/ui/icons.json' + v);
-        if (!this.textures.exists(ASSETS.UI_HUD)) this.load.atlas(ASSETS.UI_HUD, 'assets/ui/ui.png' + v, 'assets/ui/ui.json' + v);
-        if (!this.textures.exists(ASSETS.UI_MODAL)) this.load.multiatlas(ASSETS.UI_MODAL, 'assets/ui/modal.json' + v, 'assets/ui');
+        if (!this.textures.exists(ASSETS.UI_HUD)) this.load.multiatlas(ASSETS.UI_HUD, 'assets/ui/ui.json' + v, 'assets/ui');
 
         if (!this.textures.exists(ASSETS.COINS)) this.load.multiatlas(ASSETS.COINS, 'assets/spritesheets/coins.json' + v, 'assets/spritesheets');
         if (!this.textures.exists('basketball')) this.load.multiatlas('basketball', 'assets/spritesheets/basketball.json' + v, 'assets/spritesheets');

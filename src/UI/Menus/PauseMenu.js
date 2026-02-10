@@ -27,9 +27,8 @@ export class PauseMenu {
         this.pauseButton = scene.add.image(pauseButtonX, pauseButtonY, 'ui_hud', 'btn-small/btn-small-pause.png')
             .setScrollFactor(0).setDepth(201).setInteractive({ useHandCursor: true })
             .setOrigin(0.5)
-            .on('pointerdown', () => this.toggle())
-            .on('pointerover', () => this.pauseButton.setTint(0xcccccc))
-            .on('pointerout', () => this.pauseButton.clearTint());
+            .on('pointerdown', () => this.toggle());
+        UIHelpers.applyButtonEffects(this.pauseButton);
 
         // Alias for compatibility if needed (scene.pauseButton used elsewhere?)
         scene.pauseButton = this.pauseButton;
