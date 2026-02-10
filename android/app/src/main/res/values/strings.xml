@@ -1,0 +1,7 @@
+<?xml version='1.0' encoding='utf-8'?>
+<resources>
+    <string name="app_name">Endless67</string>
+    <string name="title_activity_main">Endless67</string>
+    <string name="package_name">com.ednless67runner.app</string>
+    <string name="custom_url_scheme">com.ednless67runner.app</string>
+</resources>

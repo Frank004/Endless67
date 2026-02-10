@@ -1,7 +1,7 @@
 import type { CapacitorConfig } from '@capacitor/cli';
 
 const config: CapacitorConfig = {
-  appId: 'com.frank004.endless67',
+  appId: 'com.ednless67runner.app',
   appName: 'Endless67',
   webDir: 'dist',
 
