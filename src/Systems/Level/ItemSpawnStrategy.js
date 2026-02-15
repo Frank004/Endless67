@@ -1,6 +1,7 @@
 import { COIN_BASE_SIZE } from '../../Entities/Coin.js';
 import { POWERUP_BASE_SIZE } from '../../Entities/Powerup.js';
 import { clampToPlayableBounds, getPlayableBounds } from '../../Utils/playableBounds.js';
+import { getItemBounds } from '../../Config/SlotConfig.js';
 
 export class ItemSpawnStrategy {
     constructor(scene) {
@@ -15,7 +16,7 @@ export class ItemSpawnStrategy {
     spawnInZone(x, y, typePreference = 'auto') {
         const difficulty = this.scene.difficultyManager;
         const mechanicsConfig = difficulty ? difficulty.getMechanicsConfig() : { powerups: true, powerupChance: 8, coins: true, coinChance: 60 };
-        const powerupX = clampToPlayableBounds(this.scene, x, POWERUP_BASE_SIZE, 30);
+        const powerupX = clampToPlayableBounds(this.scene, x, POWERUP_BASE_SIZE, 50);
         const coinX = clampToPlayableBounds(this.scene, x, COIN_BASE_SIZE, 0);
 
         // 1. Check Powerup eligibility
@@ -110,11 +111,12 @@ export class ItemSpawnStrategy {
         };
 
         const collidesWithPlatform = (itemX, itemY) => {
+            const PADDING = 10; // Extra buffer to prevent overlapping edges
             for (const plat of spawnedPlatforms) {
-                const platLeft = plat.x - plat.width / 2 - ITEM_HALF;
-                const platRight = plat.x + plat.width / 2 + ITEM_HALF;
-                const platTop = plat.y - plat.height / 2 - ITEM_HALF;
-                const platBottom = plat.y + plat.height / 2 + ITEM_HALF;
+                const platLeft = plat.x - plat.width / 2 - ITEM_HALF - PADDING;
+                const platRight = plat.x + plat.width / 2 + ITEM_HALF + PADDING;
+                const platTop = plat.y - plat.height / 2 - ITEM_HALF - PADDING;
+                const platBottom = plat.y + plat.height / 2 + ITEM_HALF + PADDING;
 
                 if (itemX >= platLeft && itemX <= platRight &&
                     itemY >= platTop && itemY <= platBottom) {
@@ -213,24 +215,13 @@ export class ItemSpawnStrategy {
 
             if (!intent) continue;
 
-            // 2. Calculate safe X based on intent size
-            let itemX;
+            // 2. Calculate safe X
+            let itemX = Phaser.Math.Between(minItemX, maxItemX);
+
             if (intent === 'powerup') {
-                const halfSize = (POWERUP_BASE_SIZE || 64) / 2;
-                const margin = halfSize + 30; // Increased visual breathing room (prevent wall clipping)
-                const safeMin = minItemX + margin;
-                const safeMax = maxItemX - margin;
-
-                // Safety check if bounds are inverted (should not happen but safe)
-                if (safeMin > safeMax) itemX = minItemX + (maxItemX - minItemX) / 2;
-                else itemX = Phaser.Math.Between(safeMin, safeMax);
-                itemX = clampToPlayableBounds(this.scene, itemX, POWERUP_BASE_SIZE, 30);
-
+                // Stronger clamp for powerups (50px margin)
+                itemX = clampToPlayableBounds(this.scene, itemX, POWERUP_BASE_SIZE, 50);
             } else {
-                // Coin
-                const safeMin = minItemX; // Coins are small enough for base bounds
-                const safeMax = maxItemX;
-                itemX = Phaser.Math.Between(safeMin, safeMax);
                 itemX = clampToPlayableBounds(this.scene, itemX, COIN_BASE_SIZE, 0);
             }
 
