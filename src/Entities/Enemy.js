@@ -7,6 +7,7 @@ import { JumpBehavior } from './Behaviors/JumpBehavior.js';
 
 import { ENEMY_CONFIG } from '../Config/EnemyConfig.js';
 import { ASSETS } from '../Config/AssetKeys.js';
+import { registerEnemyAnimations } from '../Utils/animations.js';
 
 export class PatrolEnemy extends Phaser.Physics.Arcade.Sprite {
     constructor(scene, x = 0, y = 0) {
@@ -14,6 +15,11 @@ export class PatrolEnemy extends Phaser.Physics.Arcade.Sprite {
         super(scene, x, y, ASSETS.ENEMY_ATLAS, 'patrol-idle1.png');
         this.setDepth(20);
         this.isDead = false;
+
+        // Ensure enemy animations exist before FSM plays them
+        if (!scene.anims.exists('enemy_idle')) {
+            registerEnemyAnimations(scene);
+        }
 
         // Use 'patrol' mode: platformRider takes full control of movement and bounds
         enablePlatformRider(this, {
@@ -24,8 +30,6 @@ export class PatrolEnemy extends Phaser.Physics.Arcade.Sprite {
         });
 
         // Strategy Pattern: Usar PatrolBehavior only for extra custom logic if needed (now reduced)
-        // this.patrolBehavior = new PatrolBehavior(this, ENEMY_CONFIG.PATROL.SPEED);
-        // this.patrolConfig = null; 
 
         // Initialize State Machine
         this.fsm = new StateMachine('idle', this);
@@ -117,12 +121,6 @@ export class PatrolEnemy extends Phaser.Physics.Arcade.Sprite {
         this.setVelocityX(0);
         this.setVelocityY(0);  // Sin velocidad Y inicial
 
-        // Debug: Verificar tamaño visual (commented out)
-        // console.log(`  📏 Enemy spawn: ...`);
-
-        // Pop-in effect (comentado temporalmente para debug)
-        // this.setScale(0);
-        // this.scene.tweens.add({ targets: this, scale: 1, duration: 400, ease: 'Back.out' });
     }
 
     /**
@@ -156,7 +154,6 @@ export class PatrolEnemy extends Phaser.Physics.Arcade.Sprite {
      * Iniciar patrullaje (Legacy/Deprecated - use autoPatrol in platformRider)
      */
     patrol(minX, maxX, speed = ENEMY_CONFIG.PATROL.SPEED) {
-        // this.patrolBehavior.startPatrol(minX, maxX, speed);
         this.riderPatrolSpeed = speed;
         this.riderPatrolSpeed = speed;
         this.riderAutoPatrol = true;
@@ -208,8 +205,6 @@ export class PatrolEnemy extends Phaser.Physics.Arcade.Sprite {
                 console.log(`  🔄 PatrolEnemy: x=${this.x.toFixed(1)}, onPlat=${!!this.ridingPlatform}`);
             }
         }
-
-        // Cleanup offscreen enemies
 
         // Cleanup offscreen enemies
         if (this.y > this.scene.player.y + 900) {
@@ -498,23 +493,6 @@ export class JumperShooterEnemy extends Phaser.Physics.Arcade.Sprite {
             this.setFlipX(this.scene.player.x < this.x);
         }
 
-        // Efecto visual dinámico: squash and stretch basado en velocidad
-        /*
-        if (this.body) {
-            const velocityY = this.body.velocity.y;
-
-            // Cuando sube (velocidad negativa): estirar verticalmente
-            // Cuando baja (velocidad positiva): comprimir verticalmente
-            const stretchFactor = Math.abs(velocityY) / 500; // Normalizar
-            const scaleY = 1 + (velocityY < 0 ? stretchFactor * 0.15 : -stretchFactor * 0.1);
-            const scaleX = 1 + (velocityY < 0 ? -stretchFactor * 0.1 : stretchFactor * 0.15);
-
-            // Aplicar escala suave usando lerp manual
-            const lerpX = this.scaleX + (scaleX - this.scaleX) * 0.3;
-            const lerpY = this.scaleY + (scaleY - this.scaleY) * 0.3;
-            // this.setScale(lerpX, lerpY);
-        }
-        */
 
         // Cleanup offscreen
         if (this.y > this.scene.player.y + 900) {

@@ -21,63 +21,48 @@ Language & Style:
 - camelCase is used only where it improves clarity (local variables, helpers).
 - Avoid deep inheritance chains.
 
-Project Structure:
-- Organize code by responsibility:
-  - src/Scenes/        → Phaser Scenes (orchestration only)
-  - src/Entities/      → Player, Platforms, Enemies, Pickups
-  - src/Systems/       → ChunkSystem, SpawnSystem, PoolSystem, CollisionSystem
-  - src/UI/            → HUD, Menus, Overlays
-  - src/Input/         → Keyboard, Touch, Gesture handling
-  - src/Utils/         → Math, Random, Bounds, Debug helpers
-  - src/Config/        → Constants, tuning values, gameplay rules
-  - src/Assets/        → Asset keys and pack definitions
+Project Structure & Architecture:
+- The project follows a strictly decoupled architecture:
+  - src/Scenes/        → Orchestrators. Should remain thin (~500 lines max).
+  - src/Entities/      → Game objects with component-based logic (Visuals, Physics, Controller).
+  - src/Systems/       → Specialized managers (SlotGenerator, CollisionManager, UIManager, etc.).
+  - src/Core/          → Global Singletons (GameState, EventBus) and Initializers.
+  - src/Config/        → Centralized constants (GAME_CONFIG, PLAYER_CONFIG, SLOT_CONFIG).
+  - src/Utils/         → Stateless helper functions (DeviceDetection, Animations).
 
-Naming Conventions (Strict):
-- PascalCase:
-  - Scenes (MainScene, GameScene)
-  - Systems (ChunkSystem, PlatformSystem)
-  - Entities (Player, Platform)
-  - Pools (PlatformPool, CoinPool)
-  - Controllers & Managers
-  - State objects (GameState)
+Patterns & Conventions:
+- Slot-based Procedural Generation:
+  - Use `SlotGenerator` to orchestrate level chunks.
+  - Each slot should have a defined height (`SLOT_CONFIG.slotHeight`).
+  - Use Strategies for different slot types (Maze, PlatformBatch).
+  - Grid logic should be decoupled from Phaser (see `GridGenerator`).
+- Event-Driven Communication:
+  - Use `EventBus` and `Events` constant for decoupled state changes (e.g., `PLAYER_MOVE`, `PAUSE_TOGGLE`).
+  - Avoid direct scene-to-scene calls where possible.
+- Component-Based Entities:
+  - Entities (like `Player`) should delegate logic to `Visuals`, `Physics`, and `Controller` (FSM) components.
+- Resource Management:
+  - Use explicit cleanup based on `cleanupDistance`.
+  - Recalculate and recycle objects using the `RiserManager` (lava) and camera position as a reference.
 
-- camelCase:
-  - Local variables
-  - Function arguments
-  - Utility/helper functions
-  - Internal instance properties
+Performance Optimizations (Mobile-First):
+- Mobile Height Adjustment: Logic in `main.js` handles dynamic height to avoid letterboxing.
+- Throttling:
+  - Audio updates: Every 3 frames on mobile.
+  - Platform/Item updates: Every 2 frames on mobile.
+- Object Pooling: Mandatory for repeatable objects (coins, platforms, particles).
+- Batch Updates: Use `GameInitializer.updateWalls` for efficient wall rendering.
 
-- UPPERCASE:
-  - Constants and tuning values (GRAVITY_Y, TILE_SIZE, CHUNK_WIDTH)
+Technical Details:
+- Gravity/Physics: Default gravity Y=1200 (`main.js`). Player uses Arcade Physics.
+- Input: `InputManager` handles Keyboard, Gamepad, and Touch, emitting events via `EventBus`.
+- UI: Managed by `UIManager`. Menus (Pause, Settings) should be modular components.
 
-Phaser 3 Best Practices:
-- Use Arcade Physics unless Matter is strictly required.
-- Scenes must remain thin and declarative.
-- Gameplay logic lives in Systems and Entities, not directly in Scenes.
-- Use Groups and object pools for all repeatable objects.
-- Disable objects instead of destroying them:
-  - setActive(false)
-  - setVisible(false)
-- Remove all listeners on scene shutdown.
-- Avoid deep container nesting; it adds transform and render overhead.
-- Control depth explicitly to avoid display list churn.
-
-Game Loop Rules:
-- update() must be minimal and predictable.
-- No allocations inside update().
-- No random generation inside update() unless guarded.
-- Use delta only for movement; logic should be frame-independent and deterministic.
-- Delegate logic to systems (ChunkSystem.Update, SpawnSystem.Update).
-
-Procedural Generation & Chunking:
-- Chunk generation must be position-based, never frame-based.
-- Only one chunk may be generated per threshold.
-- Always guard chunk generation with explicit flags.
-- Track:
-  - lastChunkX
-  - nextChunkTriggerX
-- Chunks must reuse pooled objects.
-- Recycle chunk objects when exiting camera bounds.
+Code Style (Reiteration):
+- PascalCase for Classes, Systems, and Entities.
+- camelCase for instances, variables, and helpers.
+- UPPERCASE for keys and constants.
+- Never use `localStorage` directly; use `GameState` or a dedicated service.
 
 Rendering & Performance:
 - Use texture atlases exclusively.
